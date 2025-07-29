@@ -379,20 +379,12 @@
                 margin: 15px 0;
                 padding: 0 1rem;
             }
-            
-            .hero-section .feature-list .checkmark {
-        color: #00ff88 !important;
-        -webkit-text-fill-color: #00ff88;
-        margin-right: 0.5rem;  
-            }
         }
 
-        .checkmark {
-    color: #00ff88 !important; /* Force green color on all devices */
-    margin-right: 0.8rem;
-    font-size: 1.2rem;
-    flex-shrink: 0;
-    -webkit-text-fill-color: #00ff88; /* For iOS/Safari */
+        .fa-check-circle {
+            color: #00ff88;
+            margin-right: 0.8rem;
+            font-size: 1.2rem;
         }
 
         /* UPDATED CTA BUTTON - CENTERED */
@@ -1223,8 +1215,8 @@
         }
 
         .modal-logo {
-            width: 80px;
-            height: 80px;
+            width: 120px;
+            height: 120px;
             object-fit: contain;
             margin-right: 20px;
         }
@@ -1638,6 +1630,18 @@
             .hero-headshot {
                 width: 80px;
             }
+
+            /* Added for mobile clients text */
+            .clients-scroll-container p {
+                white-space: normal;
+                display: inline;
+            }
+            
+            /* Added for content-block-4 padding */
+            .content-block-4 {
+                padding-left: 32px;
+                padding-right: 32px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1715,10 +1719,10 @@
             </div>
             
             <div class="feature-list">
-                <p><span class="checkmark">✔</span> Proudly ranked <span class="highlight-text">Top #10 LinkedIn Voices 2025</span> in the Paid Ads & Web Analytics space.</p>
-                <p><span class="checkmark">✔</span> Simple flat-rate management fee on a rolling 30 day contract.</p>
-                <p><span class="checkmark">✔</span> Transparent reporting with full account ownership and access for my clients.</p>
-                <p><span class="checkmark">✔</span> Always Reachable: Say no to agency middlemen, I'm always just a quick phone call away!</p>
+                <p><i class="fas fa-check-circle"></i> Proudly ranked <span class="highlight-text">Top #10 LinkedIn Voices 2025</span> in the Paid Ads & Web Analytics space.</p>
+                <p><i class="fas fa-check-circle"></i> Simple flat-rate management fee on a rolling 30 day contract.</p>
+                <p><i class="fas fa-check-circle"></i> Transparent reporting with full account ownership and access for my clients.</p>
+                <p><i class="fas fa-check-circle"></i> Always Reachable: Say no to agency middlemen, I'm always just a quick phone call away!</p>
             </div>
             
             <div class="cta">
@@ -1768,7 +1772,7 @@
     <div class="clients-section">
         <div class="clients-scroll-container">
 <br>
-            <p>Trusted by Leading UK Brands & Agencies</p>
+            <p>Trusted by Leading UK<br>Brands & Agencies</p>
             <div class="clients-scroll-track">
                 <div class="client-placeholder">
                     <img src="images/dc-logo_white.png" alt="Design Cloud Logo">
@@ -1849,7 +1853,7 @@
                     <i class="fas fa-star"></i>
                     <i class="fas fa-star"></i>
                 </div>
-                <div class="service-tag">Lead Generation</div>
+                <div class="service-tag">E-Commerce</div>
                 <p class="testimonial-text">"... Anthony was successful during this time in increasing our avg. monthly sales generated via Google Ads by approximately <span class="highlight-percentage">+283%</span> while maintaining a healthy ROAS..."</p>
                 <br>
                 <p class="testimonial-author">Kevin Walsh</p>
@@ -2220,7 +2224,7 @@ This assumes your actual spend on the ads themselves will be between £0 - £4,0
             <button class="close-modal" onclick="closeModal('pricingModal2')">&times;</button>
             <div class="pricing-section">
                 <h4>Google Ads Account</h4>
-                <p>You have selected: You have a live Google Ads account or one which has at least served ads in the last 6 months.</p>
+                <p><strong>You've selected: You have a live Google Ads account or one which has at least served ads in the last 6 months.</strong></p>
             </div>
             <div class="pricing-section">
                 <h4>Pricing</h4>
