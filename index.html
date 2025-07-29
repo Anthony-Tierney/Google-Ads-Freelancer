@@ -381,16 +381,18 @@
             }
             
             .hero-section .feature-list .checkmark {
-                margin-right: 0.5rem;
-                color: #00ff88; /* Ensure checkmarks are green on mobile */
+        color: #00ff88 !important;
+        -webkit-text-fill-color: #00ff88;
+        margin-right: 0.5rem;  
             }
         }
 
         .checkmark {
-            color: #00ff88;
-            margin-right: 0.8rem;
-            font-size: 1.2rem;
-            flex-shrink: 0;
+    color: #00ff88 !important; /* Force green color on all devices */
+    margin-right: 0.8rem;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    -webkit-text-fill-color: #00ff88; /* For iOS/Safari */
         }
 
         /* UPDATED CTA BUTTON - CENTERED */
