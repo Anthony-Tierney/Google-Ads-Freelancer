@@ -382,6 +382,7 @@
             
             .hero-section .feature-list .checkmark {
                 margin-right: 0.5rem;
+                color: #00ff88; /* Ensure checkmarks are green on mobile */
             }
         }
 
@@ -459,8 +460,16 @@
         /* Mobile-specific padding for clients-scroll-container p */
         @media (max-width: 768px) {
             .clients-scroll-container p {
-                padding-left: 100px;
-                padding-right: 100px;
+                padding-left: 20px;
+                padding-right: 20px;
+                font-size: 1.3rem;
+                line-height: 1.3;
+                white-space: normal;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
         }
 
@@ -652,6 +661,23 @@
             margin-right: 3px; /* Small space between stars */
         }
 
+        /* Service Tag Styles */
+        .service-tag {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: 60%; /* Reduced width by 40% */
+        }
+
         /* Mobile-specific styles for highlights - ensure they wrap */
         @media (max-width: 768px) {
             .highlight-percentage {
@@ -664,6 +690,10 @@
                 white-space: normal;
                 display: inline;
                 font-size: 1.2rem; /* Larger on mobile */
+            }
+
+            .service-tag {
+                width: 60%; /* Maintain reduced width on mobile */
             }
         }
 
@@ -1261,6 +1291,7 @@
             position: absolute;
             top: 20px;
             right: 20px;
+            z-index: 3000; /* Ensure close button appears above all content */
         }
 
         .modal-body {
@@ -1362,6 +1393,45 @@
             font-size: 1.2rem;
         }
 
+        /* Pricing Modal Styles */
+        .pricing-modal-content {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            animation: gradient 15s ease infinite;
+        }
+
+        .pricing-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .pricing-section h4 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #00ff88;
+        }
+
+        .pricing-section p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #ffffff; /* Changed from red to white */
+        }
+
+        .pricing-none {
+            color: #ffffff; /* Changed from red to white */
+            font-weight: bold;
+        }
+
         @media (max-width: 768px) {
             .modal-content {
                 margin: 10% auto;
@@ -1371,18 +1441,21 @@
             
             .modal-header {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: center; /* Center items on mobile */
+                text-align: center; /* Center text on mobile */
             }
             
             .modal-logo {
                 margin-bottom: 15px;
                 margin-right: 0;
+                margin: 0 auto 15px; /* Center logo on mobile */
             }
             
             .modal-info-row {
                 flex-wrap: wrap;
                 gap: 10px;
                 margin-bottom: 15px;
+                justify-content: center; /* Center info boxes on mobile */
             }
             
             .modal-info-box {
@@ -1438,6 +1511,17 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                z-index: 3000; /* Ensure close button appears above all content */
+            }
+
+            /* Pricing modal adjustments */
+            .pricing-modal-content {
+                margin: 20% auto;
+                padding: 20px;
+            }
+            
+            .pricing-section {
+                padding: 15px;
             }
         }
 
@@ -1602,12 +1686,13 @@
     <nav class="main-menu">
         <div class="menu-container">
             <div class="logo-placeholder">
-                <img src="/images/at-logo.png" alt="Anthony Tierney Logo">
+                <img src="images/at-logo.png" alt="Anthony Tierney Logo">
             </div>
             <div class="menu-items" id="mobileMenuItems">
                 <a href="#home" class="menu-item">Home</a>
                 <a href="#testimonials" class="menu-item">Testimonials</a>
                 <a href="#services" class="menu-item">Services</a>
+                <a href="#faq" class="menu-item">FAQs & Pricing</a>
                 <a href="#contact" class="menu-item">Contact</a>
             </div>
             <div class="burger-menu-icon" id="burgerIcon">
@@ -1747,6 +1832,7 @@
                     <i class="fas fa-star"></i>
                     <i class="fas fa-star"></i>
                 </div>
+                <div class="service-tag">Lead Generation</div>
                 <p class="testimonial-text">"In 2021 we were getting roughly 30 leads per month at around £25 per lead. Fast forward to today and we're now achieving <span class="highlight-text">350 - 400 leads</span> per month consistently at an even lower CPA of ~£20!"</p>
                 <p class="testimonial-author">Stacey Blair</p>
                 <p class="testimonial-role">Head of Marketing, FCT</p>
@@ -1761,6 +1847,7 @@
                     <i class="fas fa-star"></i>
                     <i class="fas fa-star"></i>
                 </div>
+                <div class="service-tag">Lead Generation</div>
                 <p class="testimonial-text">"... Anthony was successful during this time in increasing our avg. monthly sales generated via Google Ads by approximately <span class="highlight-percentage">+283%</span> while maintaining a healthy ROAS..."</p>
                 <br>
                 <p class="testimonial-author">Kevin Walsh</p>
@@ -1776,6 +1863,7 @@
                     <i class="fas fa-star"></i>
                     <i class="fas fa-star"></i>
                 </div>
+                <div class="service-tag">Lead Generation</div>
                 <p class="testimonial-text">"Anthony went above & beyond managing our Google Ads - assisting with landing page optimisation, server-side and offline conversion tracking & new CRM analytics. His ability to optimise beyond ads and see the full customer journey <span class="highlight-text">exceeded our expectations</span>."</p>
                 <p class="testimonial-author">James Rigby</p>
                 <p class="testimonial-role">CEO, Design Cloud</p>
@@ -1833,7 +1921,7 @@
             <a href="#contact" class="services-cta-button">Get in Touch</a>
         </div>
         
-        <h2 class="section-title">Frequently Asked Questions</h2>
+        <h2 class="section-title">FAQs & Pricing</h2>
         <div class="faq-accordion">
             <div class="faq-item">
                 <button class="faq-question" onclick="toggleFaq(this)">
@@ -1844,9 +1932,9 @@
                     <p>This depends! Click one of the options below to bring up the relevant pricing tiers:
 <br>
 <br>
-<u>Click here</u> if you <b>DO NOT</b> have an existing ads account and therfore need a completely new setup.
-<u>Click here</u> if you <B>DO</b> have an existing ads account which is either running ads right now or has done within the last 6 months.
-
+<a href="javascript:void(0);" onclick="openModal('pricingModal1')" style="color: #00ff88; text-decoration: underline;">Click here</a> if you <b>DO NOT</b> have an existing ads account and therfore need a completely new setup.
+<br>
+<a href="javascript:void(0);" onclick="openModal('pricingModal2')" style="color: #00ff88; text-decoration: underline;">Click here</a> if you <B>DO</b> have an existing ads account which is either running ads right now or has done within the last 6 months.
 </p>
                 </div>
             </div>
@@ -2101,6 +2189,43 @@ Fill out the form below and I'll get back to you within 24 hours.</p>
                         <p>When customers take long periods of time to convert and have a longer consideration phase, this can be challenging in a world were tracking users over time is becoming more and more challenging (GDPR, Consent Mode V2, cookie-less browsing, VPNs. etc). Working with my clients to implement and harness the power of OCT and 3rd party softwares which improve tracking capabilities is one of my specialities.</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Modal 1 (No existing account) -->
+    <div id="pricingModal1" class="modal">
+        <div class="pricing-modal-content">
+            <button class="close-modal" onclick="closeModal('pricingModal1')">&times;</button>
+            <div class="pricing-section">
+                <h4>Google Ads Account</h4>
+                <p class="pricing-none">You've Selected: None (You need a brand new ads account setup)</p>
+            </div>
+            <div class="pricing-section">
+                <h4>Pricing</h4>
+                <p>Just £399 per month for full monthly account management + a one-off setup fee of £99 in month 1 ONLY. Please read the below:
+<br>
+<br>
+This assumes your actual spend on the ads themselves will be between £0 - £4,000 per month. For larger spends, please reach out for a bespoke quote. 
+</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Modal 2 (Existing account) -->
+    <div id="pricingModal2" class="modal">
+        <div class="pricing-modal-content">
+            <button class="close-modal" onclick="closeModal('pricingModal2')">&times;</button>
+            <div class="pricing-section">
+                <h4>Google Ads Account</h4>
+                <p>You have selected: You have a live Google Ads account or one which has at least served ads in the last 6 months.</p>
+            </div>
+            <div class="pricing-section">
+                <h4>Pricing</h4>
+                <p>Full account management from just £399 per month based on a monthy ad spend amount of £0 - £4,000. For accounts spending above £4,000 per month:
+<br>
+<br>
+Please reach out for a bespoke quote.</p>
             </div>
         </div>
     </div>
