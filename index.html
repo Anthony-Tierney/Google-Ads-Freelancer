@@ -361,6 +361,10 @@
             align-items: flex-start;
             width: 100%;
         }
+        .cta p {
+            font-size: 1.5rem; /* Increased font size */
+            margin-bottom: 1rem;
+        }
         .cta-button-glass {
             display: inline-block;
             background: rgba(255, 255, 255, 0.1);
@@ -1172,7 +1176,7 @@
             top: 20px;
             right: 20px;
             background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             width: 44px;
@@ -1673,32 +1677,32 @@
         </div>
         <div class="hero-right">
             <div class="contact-form-1">
-                <form id="heroForm">
+                <form id="heroForm" action="/thank-you" method="POST">
                     <div class="name-email-row">
                         <div class="name-group">
                             <label for="hero-name">Your Name</label>
-                            <input type="text" id="hero-name" required>
+                            <input type="text" id="hero-name" name="name" required>
                             <div class="error-message" id="hero-name-error"></div>
                         </div>
                         <div class="email-group">
                             <label for="hero-email">Email Address</label>
-                            <input type="email" id="hero-email" required>
+                            <input type="email" id="hero-email" name="email" required>
                             <div class="error-message" id="hero-email-error"></div>
                         </div>
                     </div>
                     <div class="form-row-1">
                         <div class="form-group-3">
                             <label for="hero-company">Company Name</label>
-                            <input type="text" id="hero-company">
+                            <input type="text" id="hero-company" name="company">
                         </div>
                         <div class="form-group-4">
                             <label for="hero-website">Company Website</label>
-                            <input type="text" id="hero-website">
+                            <input type="text" id="hero-website" name="website">
                         </div>
                     </div>
                     <div class="form-group-5">
                         <label for="hero-message">How Can I Help You?</label>
-                        <textarea id="hero-message" required></textarea>
+                        <textarea id="hero-message" name="message" required></textarea>
                         <div class="error-message" id="hero-message-error"></div>
                     </div>
                     <button type="submit" class="form-submit">Send Message</button>
@@ -1778,7 +1782,7 @@
                 <br>
                 <p class="testimonial-author">Stacey Blair</p>
                 <p class="testimonial-role">Head of Marketing, FCT</p>
-                <a href="https://maps.app.goo.gl/7P5gzg97EEKHYroy8" class="testimonial-link">Click here to read the full review on Google</a>
+                <a href="https://maps.app.goo.gl/kqAptPDABtjCeYXj9" class="testimonial-link" target="_blank" rel="noopener noreferrer">Click here to read the full review on Google</a>
                 <button class="testimonial-cta" onclick="openModal('modal2')">Case Study</button>
             </div>
             <div class="testimonial-card-1">
@@ -1794,7 +1798,7 @@
                 <br>
                 <p class="testimonial-author">Kevin Walsh</p>
                 <p class="testimonial-role">CEO, Kanturo</p>
-                <a href="https://www.linkedin.com/in/anthony-tierney/details/recommendations/" class="testimonial-link">Click here to read the full review on LinkedIn</a>
+                <a href="https://www.linkedin.com/in/anthony-tierney/details/recommendations/" class="testimonial-link" target="_blank" rel="noopener noreferrer">Click here to read the full review on LinkedIn</a>
                 <button class="testimonial-cta" onclick="openModal('modal1')">Case Study</button>
             </div>
             <div class="testimonial-card-3">
@@ -1809,7 +1813,7 @@
                 <p class="testimonial-text">"Anthony went above & beyond managing our Google Ads - assisting with landing page optimisation, server-side and offline conversion tracking & new CRM analytics. His ability to optimise beyond ads and see the full customer journey <span class="highlight-text">exceeded our expectations</span>."</p>
                 <p class="testimonial-author">James Rigby</p>
                 <p class="testimonial-role">CEO, Design Cloud</p>
-                <a href="#" class="testimonial-link">Click here to read the full review on LinkedIn</a>
+                <a href="#" class="testimonial-link" target="_blank" rel="noopener noreferrer">Click here to read the full review on LinkedIn</a>
                 <button class="testimonial-cta" onclick="openModal('modal3')">Case Study</button>
             </div>
         </div>
@@ -1927,32 +1931,32 @@ I can work around my client's needs. Outside of comms, my time would be spent on
 Fill out the form below and I'll get back to you within 24 hours.</p>
         </div>
         <div class="contact-form-2">
-            <form id="contactForm">
+            <form id="contactForm" action="/thank-you" method="POST">
                 <div class="name-email-row">
                     <div class="name-group">
                         <label for="name">Your Name</label>
-                        <input type="text" id="name" required>
+                        <input type="text" id="name" name="name" required>
                         <div class="error-message" id="name-error"></div>
                     </div>
                     <div class="email-group">
                         <label for="email">Email Address</label>
-                        <input type="email" id="email" required>
+                        <input type="email" id="email" name="email" required>
                         <div class="error-message" id="email-error"></div>
                     </div>
                 </div>
                 <div class="form-row-2">
                     <div class="form-group-8">
                         <label for="company">Company Name</label>
-                        <input type="text" id="company">
+                        <input type="text" id="company" name="company">
                     </div>
                     <div class="form-group-9">
                         <label for="website">Company Website</label>
-                        <input type="text" id="website">
+                        <input type="text" id="website" name="website">
                     </div>
                 </div>
                 <div class="form-group-10">
                     <label for="message">How Can I Help You?</label>
-                    <textarea id="message" required></textarea>
+                    <textarea id="message" name="message" required></textarea>
                     <div class="error-message" id="message-error"></div>
                 </div>
                 <button type="submit" class="form-submit">Send Message</button>
@@ -2155,7 +2159,7 @@ Fill out the form below and I'll get back to you within 24 hours.</p>
             </div>
             <div class="pricing-section">
                 <h4>Pricing</h4>
-                <p>Just £x per month for full monthly account management + a one-off setup fee of £99 in month 1 ONLY. Please read the below:
+                <p>Just £399 per month for full monthly account management + a one-off setup fee of £99 in month 1 ONLY. Please read the below:
 <br>
 <br>
 This assumes your actual spend on the ads themselves will be between £0 - £4,000 per month. For larger spends, please reach out for a bespoke quote. 
@@ -2172,7 +2176,7 @@ This assumes your actual spend on the ads themselves will be between £0 - £4,0
             </div>
             <div class="pricing-section">
                 <h4>Pricing</h4>
-                <p>Full account management from just £x per month based on a monthy ad spend amount of £0 - £4,000. For accounts spending above £4,000 per month:
+                <p>Full account management from just £399 per month based on a monthy ad spend amount of £0 - £4,000. For accounts spending above £4,000 per month:
 <br>
 <br>
 Please reach out for a bespoke quote.</p>
@@ -2240,16 +2244,8 @@ Please reach out for a bespoke quote.</p>
             isValid &= validateField('hero-email', 'Email');
             isValid &= validateField('hero-message', 'Message');
             if (isValid) {
-                // Replaced alert with a custom message box or modal if needed, for this example, I'll use console.log
-                console.log('Thank you for your message! I\'ll get back to you within 24 hours.');
-                this.reset();
-                // Remove all validation classes
-                this.querySelectorAll('.error, .success').forEach(field => {
-                    field.classList.remove('error', 'success');
-                });
-                this.querySelectorAll('.error-message.show').forEach(error => {
-                    error.classList.remove('show');
-                });
+                // Submit the form
+                this.submit();
             }
         });
         // Contact form validation
@@ -2260,16 +2256,8 @@ Please reach out for a bespoke quote.</p>
             isValid &= validateField('email', 'Email');
             isValid &= validateField('message', 'Message');
             if (isValid) {
-                // Replaced alert with a custom message box or modal if needed, for this example, I'll use console.log
-                console.log('Thank you for your message! I\'ll get back to you within 24 hours.');
-                this.reset();
-                // Remove all validation classes
-                this.querySelectorAll('.error, .success').forEach(field => {
-                    field.classList.remove('error', 'success');
-                });
-                this.querySelectorAll('.error-message.show').forEach(error => {
-                    error.classList.remove('show');
-                });
+                // Submit the form
+                this.submit();
             }
         });
         // Real-time validation
