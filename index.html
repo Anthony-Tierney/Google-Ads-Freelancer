@@ -373,6 +373,8 @@
                 margin-bottom: 0;
                 padding-left: 1.8rem; /* Space for checkmark */
                 text-indent: -1.8rem; /* Pull text back to align with other lines */
+                margin-left: 0; /* Remove any left margin */
+                padding-right: 1rem; /* Add right padding to prevent overflow */
             }
 
             .hero-section .feature-list {
@@ -449,6 +451,8 @@
             font-weight: bold;
             margin: 0;
             color: #ffffff;
+            text-align: center;
+            white-space: nowrap;
         }
 
         /* Mobile-specific padding for clients-scroll-container p */
@@ -459,9 +463,8 @@
                 font-size: 1.3rem;
                 line-height: 1.3;
                 white-space: normal;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
+                display: block;
+                text-align: center;
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
@@ -1198,11 +1201,11 @@
         .modal-content {
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
             background-size: 400% 400%;
-            margin: 5% auto;
+            margin: 5% 10%; /* Reduced left/right margin to make modal 40% wider */
             padding: 30px;
             border-radius: 15px;
             max-width: 800px;
-            width: 90%;
+            width: 80%; /* Increased width */
             position: relative;
             animation: gradient 15s ease infinite;
         }
@@ -1634,7 +1637,8 @@
             /* Added for mobile clients text */
             .clients-scroll-container p {
                 white-space: normal;
-                display: inline;
+                display: block;
+                text-align: center;
             }
             
             /* Added for content-block-4 padding */
@@ -1772,7 +1776,7 @@
     <div class="clients-section">
         <div class="clients-scroll-container">
 <br>
-            <p>Trusted by Leading UK<br>Brands & Agencies</p>
+            <p>Trusted by Leading UK Brands & Agencies</p>
             <div class="clients-scroll-track">
                 <div class="client-placeholder">
                     <img src="images/dc-logo_white.png" alt="Design Cloud Logo">
@@ -1991,6 +1995,7 @@
         <div class="centered-text">
             <h2 class="section-title">Ready to Scale Your Business with Google Ads?</h2>
             <p>Let's discuss how I can help unlock your accounts full potential.
+<br>
 <br>
 Fill out the form below and I'll get back to you within 24 hours.</p>
         </div>
