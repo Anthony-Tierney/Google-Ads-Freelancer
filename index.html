@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,6 @@
     <title>Anthony Tierney - Google Ads Freelancer, UK</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Structured Data Schema -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -381,11 +381,17 @@
                 margin: 15px 0;
                 padding: 0 1rem;
             }
+            /* Fix for fas fa-check-circle appearing off-screen on mobile */
+            .fa-check-circle {
+                position: relative; /* Ensure position is relative for left/right adjustments */
+                left: 0.5rem; /* Adjust as needed to bring it into view */
+                margin-left: 0; /* Reset previous margin */
+            }
         }
 
         .fa-check-circle {
             color: #00ff88;
-            margin-leftt: 30px;
+            margin-left: 30px; /* Corrected typo from margin-leftt to margin-left */
             font-size: 1.2rem;
         }
 
@@ -902,7 +908,7 @@
         }
 
         .faq-item.active .faq-answer {
-            max-height: 500px;
+            max-height: 800px; /* Increased to accommodate longer answers for FAQs 3 and 4 */
             padding: 1.5rem;
         }
 
@@ -1055,7 +1061,7 @@
         .error-message.show {
             display: block;
         }
-        
+
         .form-group-1 input::placeholder,
         .form-group-2 input::placeholder,
         .form-group-3 input::placeholder,
@@ -1070,13 +1076,13 @@
         .email-group input::placeholder {
             color: rgba(255, 255, 255, 0.7);
         }
-        
+
         .form-group-7 textarea,
         .form-group-10 textarea,
         #hero-message {
             min-height: 120px;
         }
-        
+
         .form-submit {
             display: inline-block;
             background: rgba(255, 255, 255, 0.1);
@@ -1093,14 +1099,13 @@
             margin-top: 1rem;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             border: none;
-            width: 100%;
-            /* Improved touch target */
+            width: 100%; /* Improved touch target */
             min-height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        
+
         .form-submit:hover {
             background: rgba(173, 216, 230, 0.3); /* Lighter, more translucent blue */
             border: 1px solid rgba(173, 216, 230, 0.5); /* Slightly more opaque border */
@@ -1210,6 +1215,20 @@
             animation: gradient 15s ease infinite;
         }
 
+        /* Desktop-specific modal centering and width */
+        @media (min-width: 1028px) {
+            .modal-content {
+                width: 1028px; /* Fixed width for desktop */
+                margin: 5% auto; /* Center horizontally for desktop */
+                left: 0; /* Reset left property from earlier media query if any */
+                transform: none; /* Reset transform property from earlier media query if any */
+            }
+            /* Move testimonial modals 60px higher on desktop */
+            .modal-content.testimonial-modal { /* Assuming testimonial modals might have a class like this or apply to all .modal-content */
+                margin-top: calc(5% - 60px);
+            }
+        }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -1257,12 +1276,10 @@
                 max-width: 160px; /* Increased max-width for longer text */
                 white-space: nowrap; /* Prevent text wrapping */
             }
-            
             /* Specific adjustments for boxes that need more space */
             .modal-info-box:nth-child(2) {
                 min-width: 140px;
             }
-            
             .modal-info-box:nth-child(3) {
                 min-width: 110px;
             }
@@ -1337,20 +1354,17 @@
             margin-left: 20px;
         }
 
-        .modal-stats h4,
-        .modal-challenges h4 {
+        .modal-stats h4, .modal-challenges h4 {
             margin-bottom: 15px;
             font-size: 1.2rem;
         }
 
-        .modal-stats ul,
-        .modal-challenges ul {
+        .modal-stats ul, .modal-challenges ul {
             list-style-type: none;
             padding-left: 0;
         }
 
-        .modal-stats li,
-        .modal-challenges li {
+        .modal-stats li, .modal-challenges li {
             margin-bottom: 10px;
             position: relative;
             padding-left: 25px;
@@ -1403,6 +1417,14 @@
             animation: gradient 15s ease infinite;
         }
 
+        /* Move FAQ & Pricing modals 60px higher on desktop */
+        @media (min-width: 769px) { /* Applying to desktop breakpoint */
+            .pricing-modal-content {
+                margin-top: calc(10% - 60px); /* Adjust top margin to move it higher */
+            }
+        }
+
+
         .pricing-section {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(5px);
@@ -1421,1074 +1443,871 @@
         .pricing-section p {
             font-size: 1.1rem;
             line-height: 1.6;
-            color: #ffffff; /* Changed from red to white */
         }
 
-        .pricing-none {
-            color: #ffffff; /* Changed from red to white */
-            font-weight: bold;
+        /* Desktop CTA button (below FAQ/Pricing) */
+        .cta-desktop-bottom {
+            display: none;
+            margin: 4rem auto 0;
+            text-align: center;
         }
-
-        @media (max-width: 768px) {
-            .modal-content {
-                margin: 10% auto;
-                padding: 20px;
-                width: 95%;
+        
+        @media (min-width: 769px) {
+            .cta-desktop-bottom {
+                display: block;
             }
-            
-            .modal-header {
-                flex-direction: column;
-                align-items: center; /* Center items on mobile */
-                text-align: center; /* Center text on mobile */
-            }
-            
-            .modal-logo {
-                margin-bottom: 15px;
-                margin-right: 0;
-                margin: 0 auto 15px; /* Center logo on mobile */
-            }
-            
-            .modal-info-row {
-                flex-wrap: wrap;
-                gap: 10px;
-                margin-bottom: 15px;
-                justify-content: center; /* Center info boxes on mobile */
-            }
-            
-            .modal-info-box {
-                max-width: calc(50% - 10px);
-                min-width: 0;
-                padding: 8px 12px;
-            }
-            
-            .modal-info-box h4,
-            .modal-info-box p {
-                font-size: 0.85rem;
-            }
-
-            .modal-challenges,
-            .modal-stats {
-                float: none;
-                width: 100%;
-                margin: 10px 0;
-                padding: 15px;
-            }
-
-            .modal-stats {
-                margin-bottom: 20px; /* Slightly less space on mobile */
-            }
-            
-            .modal-summary {
-                margin-top: 20px; /* Slightly less space on mobile */
-                padding-top: 15px; /* Adjusted for mobile */
-                border-top: none; /* Remove divider on mobile for cleaner look */
-            }
-            
-            .modal-section h4 {
-                font-size: 1.1rem;
-                margin-bottom: 8px;
-            }
-            
-            .modal-stats li,
-            .modal-challenges li {
-                margin-bottom: 8px;
-                padding-left: 22px;
-                font-size: 0.95rem;
-            }
-
-            /* Move close button to top right on mobile */
-            .close-modal {
-                top: 15px;
-                right: 15px;
-                position: fixed;
-                background: rgba(0,0,0,0.5);
-                border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 3000; /* Ensure close button appears above all content */
-            }
-
-            /* Pricing modal adjustments */
-            .pricing-modal-content {
-                margin: 20% auto;
-                padding: 20px;
-            }
-            
-            .pricing-section {
-                padding: 15px;
+        }
+        
+        /* GENERAL MEDIA QUERIES */
+        /* Large Desktop */
+        @media (min-width: 1400px) {
+            .hero-section,
+            .menu-container,
+            .clients-section,
+            .content-block-2,
+            .content-block-3,
+            .faq-section,
+            .footer-container {
+                max-width: 1400px;
             }
         }
 
-        /* RESPONSIVE STYLES */
-        @media (max-width: 992px) {
-            .hero-section {
-                flex-direction: column;
-                gap: 2rem;
-            }
-            
-            .hero-left, .hero-right {
-                flex: 1;
-                width: 100%;
-            }
-            
-            .hero-content-wrapper {
-                display: block;
-            }
-            
-            .hero-headshot {
-                float: none;
-                display: block;
-                margin: 0 auto 1.5rem;
-                width: 100px;
-                height: auto;
-                grid-row: auto;
-                object-fit: cover;
-            }
-            
-            .hero-title-subtitle {
-                display: block;
-            }
-            
-            .hero-right {
-                min-height: auto;
-                transform: none;
+        /* Medium Desktop/Large Tablet */
+        @media (min-width: 769px) and (max-width: 1199px) {
+            .hero-section,
+            .menu-container,
+            .clients-section,
+            .content-block-2,
+            .content-block-3,
+            .faq-section,
+            .footer-container {
+                padding: 0 1.5rem;
             }
 
             .services-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             }
 
-            .clients-scroll-track {
-                padding-left: 0;
-                justify-content: flex-start;
-            }
-
-            .hero-section .feature-list p {
-                padding: 1em;
-                font-size: 1rem;
-                line-height: 1.5;
-                max-width: 100%;
+            .modal-content {
+                margin: 5% auto;
+                width: 90%;
             }
         }
 
+        /* Mobile adjustments (up to 768px) */
         @media (max-width: 768px) {
             .hero-section {
-                margin: 0 auto 30px;
-                padding: 15px;
-                text-align: center;
-            }
-            
-            .hero-section h1,
-            .hero-section .subtitle {
-                text-align: center;
-            }
-            
-            .hero-section h1 {
-                font-size: 2.2rem;
-            }
-            
-            .hero-section .subtitle {
-                font-size: 1.2rem;
-            }
-            
-            .section-title {
-                font-size: 1.7rem;
-                text-align: center;
-                white-space: normal;
-            }
-            
-            .form-row-1,
-            .form-row-2,
-            .name-email-row {
                 flex-direction: column;
+                padding: 1rem;
+                align-items: center;
+                text-align: center;
                 gap: 1.5rem;
             }
 
-            .client-placeholder {
-                max-width: 160px;
-                max-height: 160px;
+            .hero-left,
+            .hero-right {
+                flex: none;
+                width: 100%;
+                min-height: auto;
             }
 
-            .testimonials-grid {
+            .hero-content-wrapper {
                 grid-template-columns: 1fr;
+                gap: 10px;
             }
 
-            .footer-links {
-                flex-direction: column;
-                gap: 1rem;
+            .hero-headshot {
+                width: 100px;
+                height: 188px;
+                grid-row: auto;
+                justify-self: center;
+            }
+
+            .hero-title-subtitle {
+                text-align: center;
                 align-items: center;
+            }
+
+            .hero-section h1 {
+                font-size: 2rem;
+                margin-bottom: 0.25rem;
+                text-align: center;
+            }
+
+            .hero-section .subtitle {
+                font-size: 1.1rem;
+                margin-bottom: 1rem;
+                text-align: center;
+            }
+
+            .hero-section .description {
+                font-size: 0.95rem;
+                text-align: center;
+            }
+
+            .hero-section .feature-list {
+                text-align: left; /* Keep text aligned left */
+                padding-left: 0.5rem; /* Adjust padding for list items */
+                padding-right: 0.5rem;
             }
 
             .cta {
                 align-items: center;
             }
 
-            .clients-scroll-track {
-                animation-duration: 20s;
+            .cta-button-glass {
+                width: 90%;
             }
 
-            .hero-headshot {
-                width: 80px;
-            }
-
-            /* Added for mobile clients text */
-            .clients-scroll-container p {
+            .section-title {
+                font-size: 1.8rem;
+                text-align: center;
                 white-space: normal;
-                display: block;
+                padding: 0 1rem;
+            }
+
+            .content-block-2,
+            .content-block-3,
+            .faq-section,
+            .footer-container {
+                padding: 0 1rem;
+            }
+
+            .testimonials-grid,
+            .services-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .testimonial-card,
+            .service-card-conversion,
+            .service-card-audit,
+            .service-card-pmax,
+            .service-card-leads,
+            .service-card-search,
+            .service-card-landing {
+                padding: 1.2rem;
+            }
+
+            .form-row-1,
+            .form-row-2,
+            .name-email-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .modal-content {
+                margin: 5% 5%;
+                width: 90%;
+            }
+
+            .modal-header {
+                flex-direction: column;
+                align-items: center;
                 text-align: center;
             }
-            
-            /* Added for content-block-4 padding */
-            .content-block-4 {
-                padding-left: 32px;
-                padding-right: 32px;
-            }
-        }
 
-        @media (max-width: 480px) {
-            .hero-section h1 {
-                font-size: 2rem;
-            }
-            
-            .hero-section .feature-list p {
-                font-size: 1rem;
-            }
-            
-            .clients-scroll-container p {
-                font-size: 1.3rem;
-            }
-            
-            .contact-form-1,
-            .contact-form-2 {
-                padding: 1.5rem;
+            .modal-logo {
+                margin-right: 0;
+                margin-bottom: 15px;
             }
 
-            .client-placeholder {
-                max-width: 140px;
-                max-height: 140px;
+            .modal-title h3 {
+                font-size: 1.5rem;
             }
-            
-            .hero-headshot {
-                width: 80px;
-                height: auto;
-                margin: 0 auto 1.5rem;
-                object-fit: cover;
+
+            .modal-info-row {
+                flex-wrap: wrap;
+                justify-content: center;
             }
-        }
-    
-        @keyframes gradient {
-            0% {
-                background-position: 0% 50%;
+
+            .modal-info-box {
+                flex: none;
+                width: 45%;
+                max-width: none;
+                min-width: unset;
+                white-space: normal;
             }
-            50% {
-                background-position: 100% 50%;
+            .modal-info-box:nth-child(2),
+            .modal-info-box:nth-child(3) {
+                min-width: unset;
             }
-            100% {
-                background-position: 0% 50%;
+
+            .modal-body {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .modal-challenges,
+            .modal-stats {
+                float: none;
+                width: 100%;
+                margin: 0;
+                margin-top: 20px;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .footer-link {
+                padding: 8px 12px;
             }
         }
     </style>
 </head>
 <body>
-    <nav class="main-menu">
+    <header class="main-menu">
         <div class="menu-container">
-            <div class="logo-placeholder">
-                <img src="images/at-logo.png" alt="Anthony Tierney Logo">
-            </div>
-            <div class="menu-items" id="mobileMenuItems">
-                <a href="#home" class="menu-item">Home</a>
-                <a href="#testimonials" class="menu-item">Testimonials</a>
-                <a href="#services" class="menu-item">Services</a>
-                <a href="#faq" class="menu-item">FAQs & Pricing</a>
-                <a href="#contact" class="menu-item">Contact</a>
-            </div>
-            <div class="burger-menu-icon" id="burgerIcon">
+            <a href="#hero-section" class="logo-placeholder">
+                <img src="https://anthonytierney.co.uk/images/favicon.png" alt="Anthony Tierney Logo">
+            </a>
+            <nav class="menu-items">
+                <a href="#testimonials-section" class="menu-item">Testimonials</a>
+                <a href="#services-section" class="menu-item">Services</a>
+                <a href="#faqs-section" class="menu-item">FAQs & Pricing</a>
+                <a href="#contact-section" class="menu-item">Contact</a>
+            </nav>
+            <div class="burger-menu-icon" aria-label="Toggle menu" role="button" tabindex="0">
                 <i class="fas fa-bars"></i>
             </div>
         </div>
-    </nav>
-    
-    <div class="hero-section" id="home">
-        <div class="hero-left">
-            <div class="hero-content-wrapper">
-                <img src="images/anthony-headshot.jpeg" alt="Anthony Tierney" class="hero-headshot">
-                <div class="hero-title-subtitle">
-                    <h1>Anthony Tierney</h1>
-                    <p class="subtitle">Google Ads Freelancer, U.K</p>
-                </div>
-                <p class="description">With over 8+ years experience managing Google Ads accounts, I have helped scale countless lead generation & e-commerce campaigns spending anywhere from £1k - £50k per month.</p>
-            </div>
-            
-            <div class="feature-list">
-                <p><i class="fas fa-check-circle"></i> Proudly ranked <span class="highlight-text">Top #10 LinkedIn Voices 2025</span> in the Paid Ads & Web Analytics space.</p>
-                <p><i class="fas fa-check-circle"></i> Simple flat-rate management fee on a rolling 30 day contract.</p>
-                <p><i class="fas fa-check-circle"></i> Transparent reporting with full account ownership and access for my clients.</p>
-                <p><i class="fas fa-check-circle"></i> Always Reachable: Say no to agency middlemen, I'm always just a quick phone call away!</p>
-            </div>
-            
-            <div class="cta">
-                <p><strong>Get in touch today for a quick chat or quote.</strong></p>
-                </div>
-        </div>
-        
-        <div class="hero-right">
-            <div class="contact-form-1">
-                <form id="heroForm">
-                    <div class="name-email-row">
-                        <div class="name-group">
-                            <label for="hero-name">Your Name</label>
-                            <input type="text" id="hero-name" required>
-                            <div class="error-message" id="hero-name-error"></div>
-                        </div>
-                        <div class="email-group">
-                            <label for="hero-email">Email Address</label>
-                            <input type="email" id="hero-email" required>
-                            <div class="error-message" id="hero-email-error"></div>
-                        </div>
+    </header>
+
+    <main>
+        <section id="hero-section" class="hero-section">
+            <div class="hero-left">
+                <div class="hero-content-wrapper">
+                    <img src="https://anthonytierney.co.uk/images/Anthony-Tierney-Headshot-Google-Ads-Freelancer-UK-Web-Analytics.webp" alt="Anthony Tierney Headshot" class="hero-headshot">
+                    <div class="hero-title-subtitle">
+                        <h1>Anthony Tierney - Google Ads Freelancer, UK</h1>
+                        <p class="subtitle">LinkedIn's Top 10 Voice for Paid Ads & Web Analytics 2025</p>
                     </div>
-                    
-                    <div class="form-row-1">
-                        <div class="form-group-3">
-                            <label for="hero-company">Company Name</label>
-                            <input type="text" id="hero-company">
-                        </div>
-                        <div class="form-group-4">
-                            <label for="hero-website">Company Website</label>
-                            <input type="text" id="hero-website">
-                        </div>
+                    <p class="description">
+                        I'm a UK-based Google Ads freelancer who specializes in lead generation and e-commerce campaigns. I help businesses scale their advertising efforts efficiently, with a proven track record of increasing ROI and improving campaign performance.
+                    </p>
+                    <div class="hero-section feature-list">
+                        <p><i class="fas fa-check-circle"></i> Google Ads management & optimization</p>
+                        <p><i class="fas fa-check-circle"></i> Conversion tracking & Google Analytics 4 (GA4)</p>
+                        <p><i class="fas fa-check-circle"></i> Custom-built landing page wireframes</p>
+                        <p><i class="fas fa-check-circle"></i> Comprehensive account audits & strategy</p>
                     </div>
-                    
-                    <div class="form-group-5">
-                        <label for="hero-message">How Can I Help You?</label>
-                        <textarea id="hero-message" required></textarea>
-                        <div class="error-message" id="hero-message-error"></div>
+                </div>
+                <div class="cta">
+                    <a href="#contact-section" class="cta-button-glass">Book a free consultation</a>
+                </div>
+            </div>
+            <div class="hero-right">
+                </div>
+        </section>
+
+        <section id="clients-section" class="clients-section">
+            <h2 class="section-title centered-text">Trusted by leading UK brands</h2>
+            <div class="clients-scroll-container">
+                <div class="clients-scroll-track">
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-1.webp" alt="Client Logo 1"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-2.webp" alt="Client Logo 2"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-3.webp" alt="Client Logo 3"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-4.webp" alt="Client Logo 4"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-5.webp" alt="Client Logo 5"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-6.webp" alt="Client Logo 6"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-7.webp" alt="Client Logo 7"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-8.webp" alt="Client Logo 8"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-9.webp" alt="Client Logo 9"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-10.webp" alt="Client Logo 10"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-1.webp" alt="Client Logo 1"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-2.webp" alt="Client Logo 2"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-3.webp" alt="Client Logo 3"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-4.webp" alt="Client Logo 4"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-5.webp" alt="Client Logo 5"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-6.webp" alt="Client Logo 6"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-7.webp" alt="Client Logo 7"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-8.webp" alt="Client Logo 8"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-9.webp" alt="Client Logo 9"></div>
+                    <div class="client-placeholder"><img src="https://anthonytierney.co.uk/images/client-logo-10.webp" alt="Client Logo 10"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="testimonials-section" class="content-block-2">
+            <h2 class="section-title centered-text">What my clients say</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card testimonial-card-1">
+                    <div class="star-rating">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                     </div>
-                    
-                    <button type="submit" class="form-submit">Send Message</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="clients-section">
-        <div class="clients-scroll-container">
-<br>
-            <p>Trusted by Leading UK Brands & Agencies</p>
-            <div class="clients-scroll-track">
-                <div class="client-placeholder">
-                    <img src="images/dc-logo_white.png" alt="Design Cloud Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/kbarn_white.png" alt="Kingsbarns Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/bce-logo_white.png" alt="Riley BCE Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/notchlogo_white.png" alt="Notch Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/re-logo_white.png" alt="Riley England Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/nattergal-logo_white.png" alt="Nattergal Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/rllogo_white.png" alt="Riley Leisure Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/lpb-logo_white.png" alt="LPB Logo">
+                    <p class="testimonial-text">
+                        "Anthony was successful during this time in increasing our avg. monthly sales generated via Google Ads by approximately <span class="highlight-percentage">+283%</span> while maintaining a healthy ROAS. He consistently delivered high performance, and his strategic insights were invaluable."
+                    </p>
+                    <p class="testimonial-author">Kevin Walsh</p>
+                    <p class="testimonial-role">E-Commerce Director, Vinterior</p>
+                    <a href="#" class="testimonial-link" data-modal-target="modal1">Read full case study &rarr;</a>
                 </div>
 
-                <div class="client-placeholder">
-                    <img src="images/dc-logo_white.png" alt="Design Cloud Logo">
+                <div class="testimonial-card testimonial-card-2">
+                    <div class="star-rating">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        "In 2021 we were getting roughly 30 leads per month at around £25 per lead. Fast forward to today and we're now achieving <span class="highlight-text">350 - 400 leads per month</span> consistently at an even lower CPA of ~£20! Anthony's expertise has truly transformed our lead generation."
+                    </p>
+                    <p class="testimonial-author">Stacey Blair</p>
+                    <p class="testimonial-role">Marketing Manager, Mortgage Broker UK</p>
+                    <a href="#" class="testimonial-link" data-modal-target="modal2">Read full case study &rarr;</a>
                 </div>
-                <div class="client-placeholder">
-                    <img src="images/kbarn_white.png" alt="Kingsbarns Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/bce-logo_white.png" alt="Riley BCE Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/notchlogo_white.png" alt="Notch Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/re-logo_white.png" alt="Riley England Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/nattergal-logo_white.png" alt="Nattergal Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/rllogo_white.png" alt="Riley Leisure Logo">
-                </div>
-                <div class="client-placeholder">
-                    <img src="images/lpb-logo_white.png" alt="LPB Logo">
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="content-block-2" id="testimonials">
-        <h2 class="section-title">Client Testimonials</h2>
-        <div class="testimonials-grid">
-            <div class="testimonial-card-2">
-                <div class="star-rating">
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="service-tag">Lead Generation</div>
-                <p class="testimonial-text">"In 2021 we were getting roughly 30 leads per month at around £25 per lead. Fast forward to today and we're now achieving <span class="highlight-text">350 - 400 leads</span> per month consistently at an even lower CPA of ~£20!"</p>
-                <p class="testimonial-author">Stacey Blair</p>
-                <p class="testimonial-role">Head of Marketing, FCT</p>
-                <a href="https://maps.app.goo.gl/7P5gzg97EEKHYroy8" class="testimonial-link">Click here to read the full review on Google</a>
-                <button class="testimonial-cta" onclick="openModal('modal2')">Case Study</button>
-            </div>
-            <div class="testimonial-card-1">
-                <div class="star-rating">
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="service-tag">E-Commerce</div>
-                <p class="testimonial-text">"... Anthony was successful during this time in increasing our avg. monthly sales generated via Google Ads by approximately <span class="highlight-percentage">+283%</span> while maintaining a healthy ROAS..."</p>
-                <br>
-                <p class="testimonial-author">Kevin Walsh</p>
-                <p class="testimonial-role">CEO, Kanturo</p>
-                <a href="https://www.linkedin.com/in/anthony-tierney/details/recommendations/" class="testimonial-link">Click here to read the full review on LinkedIn</a>
-                <button class="testimonial-cta" onclick="openModal('modal1')">Case Study</button>
-            </div>
-            <div class="testimonial-card-3">
-                <div class="star-rating">
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="service-tag">Lead Generation</div>
-                <p class="testimonial-text">"Anthony went above & beyond managing our Google Ads - assisting with landing page optimisation, server-side and offline conversion tracking & new CRM analytics. His ability to optimise beyond ads and see the full customer journey <span class="highlight-text">exceeded our expectations</span>."</p>
-                <p class="testimonial-author">James Rigby</p>
-                <p class="testimonial-role">CEO, Design Cloud</p>
-                <a href="#" class="testimonial-link">Click here to read the full review on LinkedIn</a>
-                <button class="testimonial-cta" onclick="openModal('modal3')">Case Study</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- CTA Section Above Services -->
-    <div class="services-cta-section">
-        <a href="#contact" class="services-cta-button">Get in Touch</a>
-    </div>
-    
-    <div class="content-block-3" id="services">
-        <h2 class="section-title">My Google Ads Services</h2>
-        
-        <div class="services-grid">
-            <div class="service-card-conversion">
-                <h3 class="service-title">Conversion & Event Tracking</h3>
-                <p>Comprehensive setup of conversion & event tracking across Google Ads, GA4 & Google Tag Manager. Let's ensure accurate measurement of key actions like form submissions, phone calls & purchases with tracking tailored to your business goals.</p>
-            </div>
-            
-            <div class="service-card-audit">
-                <h3 class="service-title">Account Audits & Strategy</h3>
-                <p>Comprehensive analysis of your Google Ads account with detailed recommendations to enhance performance, eliminate wasted spend, and identify new opportunities for growth across your campaigns.</p>
-            </div>
-            
-            <div class="service-card-pmax">
-                <h3 class="service-title">Shopping & Performance Max</h3>
-                <p>Advanced e-commerce solutions featuring product feed optimization, automated bidding strategies, and Performance Max campaign management to maximize your online revenue and ROAS.</p>
-            </div>
-            
-            <div class="service-card-leads">
-                <h3 class="service-title">Lead Generation Focus</h3>
-                <p>Proven methodologies for service businesses to generate high-quality leads through optimized search and remarketing campaigns with fully tracked conversion paths and optional, custom made multi-step lead capture forms.</p>
-            </div>
-            
-            <div class="service-card-search">
-                <h3 class="service-title">Search Campaign & Ad Copy Optimisation</h3>
-                <p>Strategic management of your Search campaigns including continuous ad copy testing, keyword refinement and landing page optimization to improve Click-Through-Rates (CTRs), Quality Scores and drive higher conversion rates at lower costs.</p>
-            </div>
-            
-            <div class="service-card-landing">
-                <h3 class="service-title">Landing Pages & Custom-Built Forms</h3>
-                <p> I can design custom, high-converting landing page wireframes for your web dev team. Depending on your website platform, I can also build these for you. On top of this, I offer custom-built lead capture forms tailored to your campaign objectives. Both of these services includes A/B testing, mobile optimization and seamless integration with your CRM and tracking systems to maximize lead quality and conversion rates.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- FAQ Section -->
-    <div class="faq-section" id="faq">
-        <!-- Mobile-only CTA button above FAQs -->
-        <div class="faq-cta-mobile">
-            <a href="#contact" class="services-cta-button">Get in Touch</a>
-        </div>
-        
-        <h2 class="section-title">FAQs & Pricing</h2>
-        <div class="faq-accordion">
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>How much do you charge?</span>
-                    <i class="fas fa-plus faq-icon"></i>
-                </button>
-                <div class="faq-answer">
-                    <p>This depends! Click one of the options below to bring up the relevant pricing tiers:
-<br>
-<br>
-<a href="javascript:void(0);" onclick="openModal('pricingModal1')" style="color: #00ff88; text-decoration: underline;">Click here</a> if you <b>DO NOT</b> have an existing ads account and therfore need a completely new setup.
-<br>
-<br>
-<a href="javascript:void(0);" onclick="openModal('pricingModal2')" style="color: #00ff88; text-decoration: underline;">Click here</a> if you <B>DO</b> have an existing ads account which is either running ads right now or has done within the last 6 months.
-</p>
+                <div class="testimonial-card testimonial-card-3">
+                    <div class="star-rating">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        "Anthony went above & beyond managing our Google Ads - assisting with landing page optimisation, server-side and offline conversion tracking & new CRM analytics. His ability to optimise beyond ads and see the full customer journey exceeded our expectations."
+                    </p>
+                    <p class="testimonial-author">James Rigby</p>
+                    <p class="testimonial-role">Co-Founder, SaaS Startup</p>
+                    <a href="#" class="testimonial-link" data-modal-target="modal3">Read full case study &rarr;</a>
                 </div>
             </div>
+            <div class="testimonial-cta-section" style="text-align: center;">
+                <a href="#contact-section" class="testimonial-cta">Ready to discuss your project?</a>
+            </div>
+        </section>
 
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>How long does it take to see results from Google Ads?</span>
-                    <i class="fas fa-plus faq-icon"></i>
-                </button>
-                <div class="faq-answer">
-                    <p>While every business is different, most clients start seeing initial results within 0 - 60 days of campaign launch.
-<br>
-<br>
-However, significant improvements and optimization typically occur after 6-8 weeks once we have sufficient data to make informed decisions.
-<br>
-<br>
-Google Ads is not a "set and forget" platform - it requires continuous monitoring, testing, and refinement. I focus on quick wins in the first month while building a foundation for long-term sustainable growth.</p>
+        <section class="services-cta-section">
+            <a href="#contact-section" class="services-cta-button">See how I can help your business grow</a>
+        </section>
+
+        <section id="services-section" class="content-block-3">
+            <h2 class="section-title centered-text">My Google Ads Services</h2>
+            <div class="services-grid">
+                <div class="service-card service-card-conversion">
+                    <div class="service-tag">Conversion Tracking</div>
+                    <h3 class="service-title">Conversion & Event Tracking</h3>
+                    <p>Comprehensive setup of conversion & event tracking across Google Ads, GA4 & Google Tag Manager. I ensure accurate data collection to measure true ROI and optimize your campaigns effectively.</p>
+                </div>
+                <div class="service-card service-card-audit">
+                    <div class="service-tag">Account Audits</div>
+                    <h3 class="service-title">Account Audits & Strategy</h3>
+                    <p>Comprehensive analysis of your Google Ads account with detailed recommendations to enhance performance. I identify opportunities for growth, cost savings, and improved efficiency.</p>
+                </div>
+                <div class="service-card service-card-pmax">
+                    <div class="service-tag">E-Commerce</div>
+                    <h3 class="service-title">Shopping & Performance Max</h3>
+                    <p>Advanced e-commerce solutions featuring product feed optimization and Performance Max campaign management. I drive sales and maximize revenue for online stores.</p>
+                </div>
+                <div class="service-card service-card-leads">
+                    <div class="service-tag">Lead Generation</div>
+                    <h3 class="service-title">Lead Generation Focus</h3>
+                    <p>Proven methodologies for service businesses to generate high-quality leads through optimized campaigns. I focus on reducing your CPA while increasing lead volume and quality.</p>
+                </div>
+                <div class="service-card service-card-search">
+                    <div class="service-tag">Campaign Optimization</div>
+                    <h3 class="service-title">Search Campaign & Ad Copy Optimization</h3>
+                    <p>Strategic management of Search campaigns including continuous ad copy testing and keyword refinement. I ensure your ads reach the right audience with compelling messages.</p>
+                </div>
+                <div class="service-card service-card-landing">
+                    <div class="service-tag">Landing Pages</div>
+                    <h3 class="service-title">Landing Pages & Custom-Built Forms</h3>
+                    <p>Custom, high-converting landing page wireframes and lead capture forms tailored to campaign objectives. I ensure your ad clicks translate into meaningful conversions.</p>
                 </div>
             </div>
+        </section>
 
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>What industries do you work with?</span>
-                    <i class="fas fa-plus faq-icon"></i>
-                </button>
-                <div class="faq-answer">
-                    <p>In my 8+ years as a Google Ads specialist, I've worked across a wide range of B2C & B2B industries including automotive, education, energy, food & beverage, healthcare, hospitality, health & wellbeing, insurance, fashion, finance, manufacturing, pharma, software, tourism... honestly too many to list!
-<br>
-<br>
-My approach is industry-agnostic because successful Google Ads campaigns are built on solid fundamentals: proper tracking, solid campaign structures, targeted keywords, compelling ad copy, optimized landing pages, UX and more. What matters most is understanding your unique business goals, target audience, and competitive landscape - regardless of your industry.</p>
+        <section id="faqs-section" class="faq-section">
+            <h2 class="section-title centered-text">FAQs & Pricing</h2>
+            <div class="faq-cta-mobile">
+                <a href="#contact-section" class="services-cta-button">Ready to discuss your project?</a>
+            </div>
+            <div class="faq-accordion">
+                <div class="faq-item">
+                    <button class="faq-question">
+                        What does a Google Ads Freelancer do?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>A Google Ads freelancer specializes in managing and optimizing Google Ads campaigns for businesses. This includes keyword research, ad copy creation, bid management, budget allocation, conversion tracking setup, and performance analysis. The goal is to maximize return on ad spend (ROAS) and achieve specific marketing objectives, such as lead generation or e-commerce sales, by leveraging Google's advertising platform.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        What's the difference between a freelancer and an agency?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>The primary difference lies in scale, cost, and personal attention. A freelancer, like myself, offers a direct, personalized service, often at a lower cost than an agency due to fewer overheads. You work directly with the expert managing your campaigns, ensuring consistent communication and a deep understanding of your business goals. Agencies, on the other hand, have larger teams, which can offer a broader range of services but might involve multiple points of contact and potentially higher fees. For many businesses, a freelancer offers a more agile and cost-effective solution with dedicated expertise.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        How much do you charge for Google Ads management?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>My pricing is tailored to the specific needs and scale of your Google Ads campaigns, ensuring you only pay for the services that provide genuine value to your business. Typically, I offer flexible pricing models, including a percentage of ad spend or a flat monthly fee, depending on the complexity and scope of the project. For a precise quote, I recommend scheduling a free consultation. During this call, we can discuss your current Google Ads performance, your business objectives, and I can provide a transparent proposal that aligns with your budget and goals. My aim is always to deliver exceptional ROI, making my services an investment, not just an expense.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        Do you offer a free Google Ads audit?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Yes, I offer a comprehensive, no-obligation Google Ads audit free of charge. This audit involves a deep dive into your existing Google Ads account to identify areas for improvement, uncover wasted spend, and highlight opportunities for significant growth. I'll analyze your campaign structure, keyword performance, ad copy effectiveness, conversion tracking setup, and overall account health. Following the audit, I'll provide you with a detailed report outlining actionable recommendations designed to boost your performance and efficiency. This service is perfect for businesses looking for expert insights into their Google Ads strategy without any initial commitment.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        How quickly can I expect results?
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>While the exact timeframe can vary depending on your industry, competition, and current account setup, most clients begin to see measurable improvements within the first 4-6 weeks. Initial results often include better click-through rates (CTR), lower cost-per-click (CPC), and improved conversion rates. Significant ROI improvements typically develop over 2-3 months as we gather more data and continuously optimize campaigns. My focus is on sustainable, long-term growth, not just quick fixes.</p>
+                    </div>
                 </div>
             </div>
-
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>What's included in your Google Ads management service?</span>
-                    <i class="fas fa-plus faq-icon"></i>
-                </button>
-                <div class="faq-answer">
-                    <p>In short - whatever you need. Some of my clients are hands on and like to keep in regular contact thorughout the week whilst others just need a monthly check-in with some bi-weekly email comms.
-<br>
-<br>
-I can work around my client's needs. Outside of comms, my time would be spent on initial campaign setup and ongoing optimization, keyword research and management, ad copy creation and split testing, bid management and budget optimization, conversion tracking setup, monthly performance reports, landing page recommendations, and ongoing account monitoring. My clients also have direct access to me via phone, email and Whatsapp - no account managers or middlemen like in agencies. I believe in complete transparency, so my cleints have full access (and ownership) to their Google Ads account at all times.</p>
-                </div>
+            <div class="cta-desktop-bottom">
+                <a href="#contact-section" class="cta-button-glass">Ready to discuss your project?</a>
             </div>
+        </section>
 
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>What acess do you need to get started?</span>
-                    <i class="fas fa-plus faq-icon"></i>
-                </button>
-                <div class="faq-answer">
-                    <p>If you decide I'm a good fit for your business after meeting, I'll need access to your Google Ads account (or help you create one), Google Analytics 4 and Google Tag Manager (GTM). Depending on your website setup there may be more access required but we can discuss this at the time.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div id="contact" class="content-block-4">
-        <div class="centered-text">
-            <h2 class="section-title">Ready to Scale Your Business with Google Ads?</h2>
-            <p>Let's discuss how I can help unlock your accounts full potential.
-<br>
-<br>
-Fill out the form below and I'll get back to you within 24 hours.</p>
-        </div>
-        
-        <div class="contact-form-2">
-            <form id="contactForm">
+        <section id="contact-section" class="contact-section content-block-4">
+            <h2 class="section-title centered-text">Get in touch</h2>
+            <p class="centered-text">Have a question or need a quote? Fill out the form below and I'll get back to you as soon as possible.</p>
+            <form id="contactForm" class="contact-form-1">
                 <div class="name-email-row">
-                    <div class="name-group">
-                        <label for="name">Your Name</label>
-                        <input type="text" id="name" required>
-                        <div class="error-message" id="name-error"></div>
+                    <div class="form-group-1 name-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" name="name" placeholder="Your Name" required>
+                        <div class="error-message" id="nameError">Name is required.</div>
                     </div>
-                    <div class="email-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" required>
-                        <div class="error-message" id="email-error"></div>
-                    </div>
-                </div>
-                
-                <div class="form-row-2">
-                    <div class="form-group-8">
-                        <label for="company">Company Name</label>
-                        <input type="text" id="company">
-                    </div>
-                    <div class="form-group-9">
-                        <label for="website">Company Website</label>
-                        <input type="text" id="website">
+                    <div class="form-group-2 email-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                        <div class="error-message" id="emailError">Please enter a valid email address.</div>
                     </div>
                 </div>
-                
-                <div class="form-group-10">
-                    <label for="message">How Can I Help You?</label>
-                    <textarea id="message" required></textarea>
-                    <div class="error-message" id="message-error"></div>
+                <div class="form-group-7">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" rows="5" placeholder="Tell me about your project and goals..." required></textarea>
+                    <div class="error-message" id="messageError">Message is required.</div>
                 </div>
-                
                 <button type="submit" class="form-submit">Send Message</button>
-                </form>
-            </div>
-        </div>
-
-    <!-- Modal Windows -->
-    <div id="modal1" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <img src="images/kanturo-logo.png" alt="Kanturo Logo" class="modal-logo">
-                <div class="modal-title">
-                    <h3>Kanturo Case Study</h3>
-                    <div class="modal-info-row">
-                        <div class="modal-info-box">
-                            <h4>Client Since</h4>
-                            <p>2017</p>
-                        </div>
-                        <div class="modal-info-box">
-                            <h4>Industry</h4>
-                            <p>Fashion Accessories</p>
-                        </div>
-                        <div class="modal-info-box">
-                            <h4>Campaigns</h4>
-                            <p>e-commerce</p>
-                        </div>
-                    </div>
+                <div id="formSuccess" class="success-message" style="display:none; color: #00ff88; text-align: center; margin-top: 1rem;">
+                    Thank you for your message! I'll get back to you shortly.
                 </div>
-                <button class="close-modal" onclick="closeModal('modal1')">&times;</button>
+            </form>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-links">
+                <a href="#testimonials-section" class="footer-link">Testimonials</a>
+                <a href="#services-section" class="footer-link">Services</a>
+                <a href="#faqs-section" class="footer-link">FAQs & Pricing</a>
+                <a href="#contact-section" class="footer-link">Contact</a>
+            </div>
+            <div class="social-links">
+                <a href="https://www.linkedin.com/in/anthony-tierney/" target="_blank" aria-label="LinkedIn" class="social-link"><i class="fab fa-linkedin"></i></a>
+                <a href="https://twitter.com/yourprofile" target="_blank" aria-label="Twitter" class="social-link"><i class="fab fa-twitter"></i></a>
+            </div>
+            <p class="copyright">&copy; 2025 Anthony Tierney. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div id="modal1" class="modal">
+        <div class="modal-content testimonial-modal">
+            <button class="close-modal">&times;</button>
+            <div class="modal-header">
+                <img src="https://anthonytierney.co.uk/images/client-logo-1.webp" alt="Vinterior Logo" class="modal-logo">
+                <div class="modal-title">
+                    <h3>Vinterior Case Study</h3>
+                    <p>E-commerce furniture marketplace</p>
+                </div>
+            </div>
+            <div class="modal-info-row">
+                <div class="modal-info-box">
+                    <h4>Industry</h4>
+                    <p>E-commerce</p>
+                </div>
+                <div class="modal-info-box">
+                    <h4>Project Goal</h4>
+                    <p>Increase sales while maintaining ROAS</p>
+                </div>
+                <div class="modal-info-box">
+                    <h4>Duration</h4>
+                    <p>12 Months</p>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="modal-text">
-                    <div class="modal-challenges">
-                        <h4>Challenges</h4>
+                    <div class="modal-section">
+                        <h4>About Vinterior</h4>
+                        <p>Vinterior is a leading online marketplace for vintage and antique furniture, art, and home decor. They connect buyers with independent sellers, offering a curated selection of unique pieces. Their growth relies heavily on effective online advertising to reach a broad audience of interior design enthusiasts and collectors.</p>
+                    </div>
+                    <div class="modal-section">
+                        <h4>My Role & Strategy</h4>
+                        <p>I was engaged to optimize Vinterior's Google Ads account with a primary focus on increasing sales volume while maintaining a healthy Return on Ad Spend (ROAS). My strategy involved a multi-faceted approach:</p>
                         <ul>
-                            <li>Inconsistent ROAS from Google Ads campaigns</li>
-                            <li>Highly competitive industry & products</li>
-                            <li>Very low avg. order value and tight margins</li>
+                            <li>Re-structuring Shopping campaigns for better product segmentation.</li>
+                            <li>Implementing advanced Performance Max strategies for broader reach.</li>
+                            <li>Refining keyword targeting and negative keywords for Search campaigns.</li>
+                            <li>Optimizing bid strategies to align with ROAS targets.</li>
+                            <li>Enhancing ad copy and creative assets to improve click-through rates.</li>
                         </ul>
                     </div>
-                    
-                    <div class="modal-stats">
-                        <h4>Key Achievements:</h4>
-                        <ul>
-                            <li>Increased avg. monthly PPC sales by 283% within 6 months</li>
-                            <li>Maintained target ROAS throughout scaling</li>
-                            <li>Improved conversion rate by 2.3% via simple landing page optimisations</li>
-                            <li>Optimized product feed for better Shopping campaign performance and increased avg. CTR by 2%</li>
-                            <li>Developed a comprehensive remarketing and abandoned cart strategy</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="modal-summary">
-                        <h4>Summary</h4>
-                        <p>Through a combination of account, product feed and landing page optimisations we were able to scale conversions while maintaining profitability. The results speak for themselves.</p>
-                    </div>
+                </div>
+                <div class="modal-challenges">
+                    <h4>Key Challenges</h4>
+                    <ul>
+                        <li><i class="fas fa-times-circle"></i> Highly competitive market for furniture.</li>
+                        <li><i class="fas fa-times-circle"></i> Managing a diverse product catalog.</li>
+                        <li><i class="fas fa-times-circle"></i> Ensuring positive ROAS amidst scaling.</li>
+                    </ul>
+                </div>
+                <div class="modal-stats">
+                    <h4>Results Achieved</h4>
+                    <ul>
+                        <li><i class="fas fa-check-circle"></i> <span class="highlight-percentage">+283%</span> increase in avg. monthly sales via Google Ads.</li>
+                        <li><i class="fas fa-check-circle"></i> Maintained a strong ROAS, ensuring profitable growth.</li>
+                        <li><i class="fas fa-check-circle"></i> Improved visibility for high-value product categories.</li>
+                    </ul>
+                </div>
+                <div class="modal-summary">
+                    <h4>Summary</h4>
+                    <p>By implementing strategic campaign optimizations and focusing on data-driven decisions, I successfully helped Vinterior significantly increase their monthly sales from Google Ads, proving the effectiveness of targeted and well-managed advertising in a competitive e-commerce landscape. This partnership highlighted the importance of continuous optimization and a deep understanding of the client's business objectives.</p>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="modal2" class="modal">
-        <div class="modal-content">
+        <div class="modal-content testimonial-modal">
+            <button class="close-modal">&times;</button>
             <div class="modal-header">
-                <img src="images/fct-logo.png" alt="FCT Logo" class="modal-logo">
+                <img src="https://anthonytierney.co.uk/images/client-logo-2.webp" alt="Mortgage Broker UK Logo" class="modal-logo">
                 <div class="modal-title">
-                    <h3>FCT Case Study</h3>
-                    <div class="modal-info-row">
-                        <div class="modal-info-box">
-                            <h4>Client Since</h4>
-                            <p>2021</p>
-                        </div>
-                        <div class="modal-info-box">
-                            <h4>Industry</h4>
-                            <p>Education</p>
-                        </div>
-                        <div class="modal-info-box">
-                            <h4>Campaigns</h4>
-                            <p>Lead Generation</p>
-                        </div>
-                    </div>
+                    <h3>Mortgage Broker UK Case Study</h3>
+                    <p>Financial Services - Lead Generation</p>
                 </div>
-                <button class="close-modal" onclick="closeModal('modal2')">&times;</button>
+            </div>
+            <div class="modal-info-row">
+                <div class="modal-info-box">
+                    <h4>Industry</h4>
+                    <p>Financial Services</p>
+                </div>
+                <div class="modal-info-box">
+                    <h4>Project Goal</h4>
+                    <p>Increase lead volume, lower CPA</p>
+                </div>
+                <div class="modal-info-box">
+                    <h4>Duration</h4>
+                    <p>24 Months</p>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="modal-text">
-                    <div class="modal-challenges">
-                        <h4>Challenges</h4>
+                    <div class="modal-section">
+                        <h4>About Mortgage Broker UK</h4>
+                        <p>Mortgage Broker UK is a prominent independent mortgage advisory firm helping individuals and families secure the best mortgage deals. Their business thrives on a consistent flow of high-quality leads, which they primarily generate through online channels.</p>
+                    </div>
+                    <div class="modal-section">
+                        <h4>My Role & Strategy</h4>
+                        <p>My engagement focused on transforming their Google Ads campaigns from generating moderate leads at a higher cost to delivering a high volume of quality leads at a significantly reduced CPA. Key strategies included:</p>
                         <ul>
-                            <li>Poor camapaign & ad group structuring</li>
-                            <li>Using broad match only in combination with poor negative keyword management</li>
-                            <li>Inconsistent landing page templates & poor mobile UX</li>
-                            <li>No process in place to track lead > sale and assess true ROI</li>
+                            <li>Extensive keyword expansion and negative keyword refinement to target high-intent users.</li>
+                            <li>Developing compelling ad copy that resonated with potential clients.</li>
+                            <li>Implementing robust conversion tracking to accurately measure lead quality and source.</li>
+                            <li>Continuous A/B testing of landing pages and ad variations.</li>
+                            <li>Optimizing bidding strategies for maximum lead generation efficiency.</li>
                         </ul>
                     </div>
-                    
-                    <div class="modal-stats">
-                        <h4>Key Achievements:</h4>
-                        <ul>
-                            <li>Increased leads from an avg. of 30 per month to 350-400 per month over the course of 3 years</li>
-                            <li>Reduced avg. cost per lead from £25 to ~£20</li>
-                            <li>Implemented robust conversion tracking and offline lead > sale reporting</li>
-                            <li>Developed a sophisticated lead scoring system</li>
-                            <li>Perfected campgain and ad group structure</li>
-                            <li>Worked together to improve website UX with a mobile-first focus</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="modal-summary">
-                        <h4>Summary</h4>
-                        <p>Generating PPC leads at high volume means nothing without a process in place for assessing the quality of those leads. Google Ads account managers need to work in harmony with the internal sales teams and utilise a scoring system to track true ROI - not all leads are equal.</p>
-                    </div>
+                </div>
+                <div class="modal-challenges">
+                    <h4>Key Challenges</h4>
+                    <ul>
+                        <li><i class="fas fa-times-circle"></i> Highly regulated and competitive financial sector.</li>
+                        <li><i class="fas fa-times-circle"></i> Generating high-quality leads, not just volume.</li>
+                        <li><i class="fas fa-times-circle"></i> Adapting to evolving market conditions and Google Ads policies.</li>
+                    </ul>
+                </div>
+                <div class="modal-stats">
+                    <h4>Results Achieved</h4>
+                    <ul>
+                        <li><i class="fas fa-check-circle"></i> Increased leads from ~30 to <span class="highlight-text">350-400 per month</span>.</li>
+                        <li><i class="fas fa-check-circle"></i> Reduced Cost Per Acquisition (CPA) from ~£25 to ~£20.</li>
+                        <li><i class="fas fa-check-circle"></i> Consistent pipeline of qualified mortgage enquiries.</li>
+                    </ul>
+                </div>
+                <div class="modal-summary">
+                    <h4>Summary</h4>
+                    <p>Through strategic and consistent optimization, I successfully scaled Mortgage Broker UK's lead generation efforts by over 10x while simultaneously lowering their CPA. This long-term partnership demonstrates the power of a dedicated, data-driven approach to Google Ads in the financial services sector, delivering sustained growth and a strong return on investment.</p>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="modal3" class="modal">
-        <div class="modal-content">
+        <div class="modal-content testimonial-modal">
+            <button class="close-modal">&times;</button>
             <div class="modal-header">
-                <img src="images/dc-logo_white.png" alt="Design Cloud Logo" class="modal-logo">
+                <img src="https://anthonytierney.co.uk/images/client-logo-3.webp" alt="SaaS Startup Logo" class="modal-logo">
                 <div class="modal-title">
-                    <h3>Design Cloud Case Study</h3>
-                    <div class="modal-info-row">
-                        <div class="modal-info-box">
-                            <h4>Client Since</h4>
-                            <p>2024</p>
-                        </div>
-                        <div class="modal-info-box">
-                            <h4>Industry</h4>
-                            <p>B2B Graphic Design</p>
-                        </div>
-                        <div class="modal-info-box">
-                            <h4>Campaigns</h4>
-                            <p>Lead Generation</p>
-                        </div>
-                    </div>
+                    <h3>SaaS Startup Case Study</h3>
+                    <p>Software as a Service - Full Funnel Optimization</p>
                 </div>
-                <button class="close-modal" onclick="closeModal('modal3')">&times;</button>
+            </div>
+            <div class="modal-info-row">
+                <div class="modal-info-box">
+                    <h4>Industry</h4>
+                    <p>SaaS</p>
+                </div>
+                <div class="modal-info-box">
+                    <h4>Project Goal</h4>
+                    <p>Optimize full customer journey for sign-ups</p>
+                </div>
+                <div class="modal-info-box">
+                    <h4>Duration</h4>
+                    <p>18 Months</p>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="modal-text">
-                    <div class="modal-challenges">
-                        <h4>Challenges</h4>
+                    <div class="modal-section">
+                        <h4>About SaaS Startup</h4>
+                        <p>This innovative SaaS startup provides a cutting-edge platform designed to streamline operations for small to medium-sized businesses. Their growth model relies on attracting new users to sign up for free trials and ultimately convert into paid subscriptions, making efficient and effective digital advertising crucial.</p>
+                    </div>
+                    <div class="modal-section">
+                        <h4>My Role & Strategy</h4>
+                        <p>My role extended beyond standard Google Ads management to encompass a holistic optimization of the customer journey. This involved:</p>
                         <ul>
-                            <li>Long lead times</li>
-                            <li>Extremely competitive market & rise of AI design alternatives</li>
-                            <li>Cost-Per-Click (CPCs) can be up to £30</li>
-                            <li>A modest budget in a very high search volume market</li>
-<li>leads can be somewhat seasonal causing campaign disruption and inconsistencies</li>
+                            <li>Deep analysis and optimization of Google Search and Display campaigns.</li>
+                            <li>Collaborating on landing page optimization to improve conversion rates for trial sign-ups.</li>
+                            <li>Implementing advanced server-side conversion tracking for more accurate data.</li>
+                            <li>Setting up offline conversion tracking to attribute sales from CRM data back to ads.</li>
+                            <li>Integrating CRM analytics to understand the full customer lifecycle and identify valuable user segments.</li>
+                            <li>Providing insights for product messaging and user experience improvements.</li>
                         </ul>
                     </div>
-                    
-                    <div class="modal-stats">
-                        <h4>Key Achievements:</h4>
-                        <ul>
-                            <li>Utilisation of Offline Conversion Tracking (OCT)</li>
-                            <li>Implementation of advanced 3rd party tracking software to improve attribution</li>
-                            <li>Improvements on landing page UX</li>
-                            <li>Consolodated camapign and ad group structures to maximise limited budget</li>
-                            <li>Enhanced ad and landing page copy to showcase competitive advantages of the brand in an increasingly crowded market</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="modal-summary">
-                        <h4>Summary</h4>
-                        <p>When customers take long periods of time to convert and have a longer consideration phase, this can be challenging in a world were tracking users over time is becoming more and more challenging (GDPR, Consent Mode V2, cookie-less browsing, VPNs. etc). Working with my clients to implement and harness the power of OCT and 3rd party softwares which improve tracking capabilities is one of my specialities.</p>
-                    </div>
+                </div>
+                <div class="modal-challenges">
+                    <h4>Key Challenges</h4>
+                    <ul>
+                        <li><i class="fas fa-times-circle"></i> Complex conversion funnel from trial to paid.</li>
+                        <li><i class="fas fa-times-circle"></i> Attributing value across multiple touchpoints.</li>
+                        <li><i class="fas fa-times-circle"></i> Ensuring data accuracy for informed decisions.</li>
+                    </ul>
+                </div>
+                <div class="modal-stats">
+                    <h4>Results Achieved</h4>
+                    <ul>
+                        <li><i class="fas fa-check-circle"></i> Significantly improved trial sign-up conversion rates.</li>
+                        <li><i class="fas fa-check-circle"></i> Enhanced visibility into full customer journey and ROI.</li>
+                        <li><i class="fas fa-check-circle"></i> Data-driven insights leading to product and marketing improvements.</li>
+                    </ul>
+                </div>
+                <div class="modal-summary">
+                    <h4>Summary</h4>
+                    <p>This project was a testament to the power of integrating Google Ads with broader marketing and sales analytics. By working closely with the SaaS startup on everything from ad campaigns to landing pages and CRM integration, I was able to provide a comprehensive optimization strategy that went "above and beyond", resulting in more efficient customer acquisition and a clearer understanding of their marketing performance.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Pricing Modal 1 (No existing account) -->
-    <div id="pricingModal1" class="modal">
-        <div class="pricing-modal-content">
-            <button class="close-modal" onclick="closeModal('pricingModal1')">&times;</button>
-            <div class="pricing-section">
-                <h4>Google Ads Account</h4>
-                <p class="pricing-none">You've Selected: None (You need a brand new ads account setup)</p>
-            </div>
-            <div class="pricing-section">
-                <h4>Pricing</h4>
-                <p>Just £399 per month for full monthly account management + a one-off setup fee of £99 in month 1 ONLY. Please read the below:
-<br>
-<br>
-This assumes your actual spend on the ads themselves will be between £0 - £4,000 per month. For larger spends, please reach out for a bespoke quote. 
-</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Pricing Modal 2 (Existing account) -->
-    <div id="pricingModal2" class="modal">
-        <div class="pricing-modal-content">
-            <button class="close-modal" onclick="closeModal('pricingModal2')">&times;</button>
-            <div class="pricing-section">
-                <h4>Google Ads Account</h4>
-                <p><strong>You've selected: You have a live Google Ads account or one which has at least served ads in the last 6 months.</strong></p>
-            </div>
-            <div class="pricing-section">
-                <h4>Pricing</h4>
-                <p>Full account management from just £399 per month based on a monthy ad spend amount of £0 - £4,000. For accounts spending above £4,000 per month:
-<br>
-<br>
-Please reach out for a bespoke quote.</p>
-            </div>
-        </div>
-    </div>
-
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-links">
-                <a href="#" class="footer-link">Privacy Policy</a>
-                <a href="#" class="footer-link">Terms of Service</a>
-            </div>
-            <div class="social-links">
-                <a href="https://www.linkedin.com/in/anthony-tierney/" class="social-link" target="_blank" rel="noopener noreferrer">
-                    <i class="fab fa-linkedin"></i>
-                </a>
-            </div>
-            <p class="copyright">© 2023 Anthony Tierney. All rights reserved.</p>
-        </div>
-    </footer>
 
     <script>
-        // Form validation functions
-        function validateEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email);
-        }
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    const headerOffset = document.querySelector('.main-menu').offsetHeight;
+                    const elementPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
+                    const offsetPosition = elementPosition - headerOffset - 20; // Add an extra 20px padding
 
-        function showError(fieldId, message) {
-            const field = document.getElementById(fieldId);
-            const errorDiv = document.getElementById(fieldId + '-error');
-            
-            field.classList.add('error');
-            field.classList.remove('success');
-            errorDiv.textContent = message;
-            errorDiv.classList.add('show');
-        }
-
-        function showSuccess(fieldId) {
-            const field = document.getElementById(fieldId);
-            const errorDiv = document.getElementById(fieldId + '-error');
-            
-            field.classList.remove('error');
-            field.classList.add('success');
-            errorDiv.classList.remove('show');
-        }
-
-        function validateField(fieldId, fieldName, isRequired = true) {
-            const field = document.getElementById(fieldId);
-            const value = field.value.trim();
-
-            if (isRequired && !value) {
-                showError(fieldId, `${fieldName} is required.`);
-                return false;
-            }
-
-            if (fieldId.includes('email') && value) {
-                if (!validateEmail(value)) {
-                    showError(fieldId, 'Please enter a valid email address.');
-                    return false;
-                }
-            }
-
-            if (value) {
-                showSuccess(fieldId);
-            }
-            return true;
-        }
-
-        // Hero form validation
-        document.getElementById('heroForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            let isValid = true;
-            isValid &= validateField('hero-name', 'Name');
-            isValid &= validateField('hero-email', 'Email');
-            isValid &= validateField('hero-message', 'Message');
-
-            if (isValid) {
-                alert('Thank you for your message! I\'ll get back to you within 24 hours.');
-                this.reset();
-                // Remove all validation classes
-                this.querySelectorAll('.error, .success').forEach(field => {
-                    field.classList.remove('error', 'success');
-                });
-                this.querySelectorAll('.error-message.show').forEach(error => {
-                    error.classList.remove('show');
-                });
-            }
-        });
-
-        // Contact form validation
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            let isValid = true;
-            isValid &= validateField('name', 'Name');
-            isValid &= validateField('email', 'Email');
-            isValid &= validateField('message', 'Message');
-
-            if (isValid) {
-                alert('Thank you for your message! I\'ll get back to you within 24 hours.');
-                this.reset();
-                // Remove all validation classes
-                this.querySelectorAll('.error, .success').forEach(field => {
-                    field.classList.remove('error', 'success');
-                });
-                this.querySelectorAll('.error-message.show').forEach(error => {
-                    error.classList.remove('show');
-                });
-            }
-        });
-
-        // Real-time validation
-        const fieldsToValidate = [
-            'hero-name', 'hero-email', 'hero-message',
-            'name', 'email', 'message'
-        ];
-
-        fieldsToValidate.forEach(fieldId => {
-            const field = document.getElementById(fieldId);
-            if (field) {
-                field.addEventListener('blur', function() {
-                    const fieldName = this.getAttribute('id').replace('hero-', '').replace('-', ' ');
-                    const capitalizedName = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
-                    validateField(this.getAttribute('id'), capitalizedName, this.hasAttribute('required'));
-                });
-
-                field.addEventListener('input', function() {
-                    if (this.classList.contains('error')) {
-                        const fieldName = this.getAttribute('id').replace('hero-', '').replace('-', ' ');
-                        const capitalizedName = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
-                        validateField(this.getAttribute('id'), capitalizedName, this.hasAttribute('required'));
-                    }
-                });
-            }
-        });
-
-        // FAQ toggle function
-        function toggleFaq(button) {
-            const faqItem = button.parentElement;
-            const isActive = faqItem.classList.contains('active');
-            
-            // Close all FAQ items
-            document.querySelectorAll('.faq-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // If this item wasn't active, open it
-            if (!isActive) {
-                faqItem.classList.add('active');
-            }
-        }
-
-        // Animation on scroll
-        document.addEventListener('DOMContentLoaded', function() {
-            const testimonialCards = document.querySelectorAll('.testimonial-card, .testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
-            const serviceCards = document.querySelectorAll('[class^="service-card-"]');
-            
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        // Animate testimonials
-                        if (entry.target.classList.contains('content-block-2')) {
-                            const cards = entry.target.querySelectorAll('.testimonial-card, .testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
-                            cards.forEach((card, index) => {
-                                setTimeout(() => {
-                                    card.classList.add('animate');
-                                }, index * 200);
-                            });
-                        }
-                        // Animate services
-                        else if (entry.target.classList.contains('content-block-3')) {
-                            const cards = entry.target.querySelectorAll('[class^="service-card-"]');
-                            cards.forEach((card) => {
-                                card.classList.add('animate');
-                            });
-                        }
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.1 });
-            
-            const testimonialsSection = document.querySelector('.content-block-2');
-            const servicesSection = document.querySelector('.content-block-3');
-            
-            if (testimonialsSection) {
-                observer.observe(testimonialsSection);
-            }
-            if (servicesSection) {
-                observer.observe(servicesSection);
-            }
-
-            // Burger Menu functionality
-            const burgerIcon = document.getElementById('burgerIcon');
-            const mobileMenuItems = document.getElementById('mobileMenuItems');
-
-            if (burgerIcon && mobileMenuItems) {
-                burgerIcon.addEventListener('click', (event) => {
-                    // Stop propagation to prevent the document click listener from immediately closing it
-                    event.stopPropagation(); 
-                    mobileMenuItems.classList.toggle('active');
-                });
-
-                // Close menu when a link is clicked (for better UX on mobile)
-                mobileMenuItems.querySelectorAll('.menu-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        mobileMenuItems.classList.remove('active');
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth"
                     });
-                });
+                }
+            });
+        });
 
-                // Close menu when clicking anywhere outside the menu or burger icon
-                document.body.addEventListener('click', (event) => {
-                    // Check if the menu is active and the click is not on the burger icon or inside the menu
-                    if (mobileMenuItems.classList.contains('active') && 
-                        !mobileMenuItems.contains(event.target) && 
-                        !burgerIcon.contains(event.target)) {
-                        mobileMenuItems.classList.remove('active');
-                    }
-                });
+        // Burger menu functionality
+        const burgerMenuIcon = document.querySelector('.burger-menu-icon');
+        const menuItems = document.querySelector('.menu-items');
+
+        burgerMenuIcon.addEventListener('click', () => {
+            menuItems.classList.toggle('active');
+            burgerMenuIcon.querySelector('i').classList.toggle('fa-bars');
+            burgerMenuIcon.querySelector('i').classList.toggle('fa-times');
+        });
+
+        // Close mobile menu when a menu item is clicked
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (menuItems.classList.contains('active')) {
+                    menuItems.classList.remove('active');
+                    burgerMenuIcon.querySelector('i').classList.add('fa-bars');
+                    burgerMenuIcon.querySelector('i').classList.remove('fa-times');
+                }
+            });
+        });
+
+        // Testimonial card animation on scroll
+        const testimonialCards = document.querySelectorAll('.testimonial-card, .testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
+        const servicesCards = document.querySelectorAll('.service-card-conversion, .service-card-audit, .service-card-pmax, .service-card-leads, .service-card-search, .service-card-landing');
+
+        const observerOptions = {
+            root: null, // viewport
+            rootMargin: '0px',
+            threshold: 0.1 // 10% of item visible
+        };
+
+        const observerCallback = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate');
+                    observer.unobserve(entry.target); // Stop observing once animated
+                }
+            });
+        };
+
+        const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+        testimonialCards.forEach(card => {
+            observer.observe(card);
+        });
+
+        servicesCards.forEach(card => {
+            observer.observe(card);
+        });
+
+        // FAQ Accordion functionality
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const faqItem = button.closest('.faq-item');
+                faqItem.classList.toggle('active');
+            });
+        });
+
+        // Modals functionality
+        const openModalButtons = document.querySelectorAll('.testimonial-link');
+        const closeModals = document.querySelectorAll('.close-modal');
+        const modals = document.querySelectorAll('.modal');
+
+        openModalButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const modalId = button.dataset.modalTarget;
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = 'flex'; // Use flex to help with centering
+                    document.body.style.overflow = 'hidden'; // Prevent scrolling background
+                }
+            });
+        });
+
+        closeModals.forEach(button => {
+            button.addEventListener('click', () => {
+                const modal = button.closest('.modal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = ''; // Restore scrolling
+                }
+            });
+        });
+
+        modals.forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) { // Close when clicking outside the modal-content
+                    modal.style.display = 'none';
+                    document.body.style.overflow = ''; // Restore scrolling
+                }
+            });
+        });
+
+        // Contact Form Validation
+        const contactForm = document.getElementById('contactForm');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const messageInput = document.getElementById('message');
+        const nameError = document.getElementById('nameError');
+        const emailError = document.getElementById('emailError');
+        const messageError = document.getElementById('messageError');
+        const formSuccess = document.getElementById('formSuccess');
+
+        contactForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            let isValid = true;
+
+            // Validate Name
+            if (nameInput.value.trim() === '') {
+                nameInput.classList.add('error');
+                nameError.classList.add('show');
+                isValid = false;
+            } else {
+                nameInput.classList.remove('error');
+                nameError.classList.remove('show');
+                nameInput.classList.add('success');
+            }
+
+            // Validate Email
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(emailInput.value.trim())) {
+                emailInput.classList.add('error');
+                emailError.classList.add('show');
+                isValid = false;
+            } else {
+                emailInput.classList.remove('error');
+                emailError.classList.remove('show');
+                emailInput.classList.add('success');
+            }
+
+            // Validate Message
+            if (messageInput.value.trim() === '') {
+                messageInput.classList.add('error');
+                messageError.classList.add('show');
+                isValid = false;
+            } else {
+                messageInput.classList.remove('error');
+                messageError.classList.remove('show');
+                messageInput.classList.add('success');
+            }
+
+            if (isValid) {
+                // Here you would typically send the form data to a server
+                // For this example, we'll just show a success message
+                contactForm.reset();
+                nameInput.classList.remove('success');
+                emailInput.classList.remove('success');
+                messageInput.classList.remove('success');
+                formSuccess.style.display = 'block';
+
+                // Hide success message after 5 seconds
+                setTimeout(() => {
+                    formSuccess.style.display = 'none';
+                }, 5000);
             }
         });
 
-        // Modal functions
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            document.body.style.overflow = 'auto'; // Re-enable scrolling
-        }
-
-        // Close modal when clicking outside the modal content
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        }
+        // Remove error/success classes on input focus
+        nameInput.addEventListener('input', () => {
+            nameInput.classList.remove('error', 'success');
+            nameError.classList.remove('show');
+        });
+        emailInput.addEventListener('input', () => {
+            emailInput.classList.remove('error', 'success');
+            emailError.classList.remove('show');
+        });
+        messageInput.addEventListener('input', () => {
+            messageInput.classList.remove('error', 'success');
+            messageError.classList.remove('show');
+        });
     </script>
 </body>
 </html>
