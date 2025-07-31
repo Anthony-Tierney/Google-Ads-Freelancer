@@ -1373,17 +1373,21 @@
             .modal-title h3 {
                 font-size: 1.5rem;
                 margin-bottom: 10px;
+                text-align: center;
             }
 
             .modal-info-row {
-                flex-direction: column;
+                flex-direction: row;
+                flex-wrap: wrap;
                 gap: 8px;
+                justify-content: center;
             }
 
             .modal-info-box {
-                min-width: auto;
-                text-align: left;
+                min-width: calc(50% - 8px);
+                text-align: center;
                 padding: 10px 12px;
+                flex: none;
             }
 
             .modal-info-box h4 {
@@ -1399,7 +1403,8 @@
             }
 
             .challenges-achievements-table {
-                display: block;
+                display: flex;
+                flex-direction: column;
             }
 
             .challenges-achievements-table thead,
@@ -1413,17 +1418,29 @@
             .challenges-achievements-table th {
                 padding: 15px;
                 font-size: 1.1rem;
+                display: none;
+            }
+
+            .challenges-achievements-table th:nth-child(2) {
+                display: block;
+                order: 3;
+                margin-top: 20px;
             }
 
             .challenges-achievements-table td {
                 width: 100%;
                 padding: 20px 15px;
                 border-right: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                border-bottom: none;
             }
 
-            .challenges-achievements-table td:last-child {
-                border-bottom: none;
+            .challenges-achievements-table td:first-child {
+                border-right: none;
+            }
+
+            .challenges-achievements-table tr {
+                display: flex;
+                flex-direction: column;
             }
 
             .challenges-achievements-table li {
@@ -1677,7 +1694,7 @@
         </div>
         <div class="hero-right">
             <div class="contact-form-1">
-                <form id="heroForm" action="/thank-you" method="POST">
+                <form id="heroForm" method="POST">
                     <div class="name-email-row">
                         <div class="name-group">
                             <label for="hero-name">Your Name</label>
@@ -1931,7 +1948,7 @@ I can work around my client's needs. Outside of comms, my time would be spent on
 Fill out the form below and I'll get back to you within 24 hours.</p>
         </div>
         <div class="contact-form-2">
-            <form id="contactForm" action="/thank-you" method="POST">
+            <form id="contactForm" method="POST">
                 <div class="name-email-row">
                     <div class="name-group">
                         <label for="name">Your Name</label>
@@ -2236,30 +2253,36 @@ Please reach out for a bespoke quote.</p>
             }
             return true;
         }
-        // Hero form validation
+        // Form submission with redirect
+        function handleFormSubmit(formId, e) {
+            e.preventDefault();
+            let isValid = true;
+            
+            // Validate all required fields
+            const form = document.getElementById(formId);
+            const requiredFields = form.querySelectorAll('[required]');
+            
+            requiredFields.forEach(field => {
+                const fieldName = field.getAttribute('name') || field.getAttribute('id');
+                isValid &= validateField(field.id || field.name, fieldName);
+            });
+            
+            if (isValid) {
+                // Redirect to thank-you page
+                window.location.href = 'https://www.anthonytierney.co.uk/thank-you';
+            }
+        }
+        
+        // Hero form validation and submission
         document.getElementById('heroForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            let isValid = true;
-            isValid &= validateField('hero-name', 'Name');
-            isValid &= validateField('hero-email', 'Email');
-            isValid &= validateField('hero-message', 'Message');
-            if (isValid) {
-                // Submit the form
-                this.submit();
-            }
+            handleFormSubmit('heroForm', e);
         });
-        // Contact form validation
+        
+        // Contact form validation and submission
         document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            let isValid = true;
-            isValid &= validateField('name', 'Name');
-            isValid &= validateField('email', 'Email');
-            isValid &= validateField('message', 'Message');
-            if (isValid) {
-                // Submit the form
-                this.submit();
-            }
+            handleFormSubmit('contactForm', e);
         });
+        
         // Real-time validation
         const fieldsToValidate = [
             'hero-name', 'hero-email', 'hero-message',
