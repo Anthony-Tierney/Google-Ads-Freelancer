@@ -1217,13 +1217,14 @@
         }
 
         .challenges-achievements-table th {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #00ff88;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            .challenges-achievements-table th {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #00ff88;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
         }
 
         .challenges-achievements-table td {
@@ -1276,55 +1277,51 @@
         }
 
 * Mobile responsive styles for the challenges/achievements table */
+
 @media (max-width: 768px) {
     .challenges-achievements-table {
-        display: flex;
-        flex-direction: column;
+        display: block;
     }
 
     .challenges-achievements-table thead {
         display: flex;
-        flex-direction: column;
-        order: 1;
+        flex-wrap: wrap;
+    }
+
+    .challenges-achievements-table th {
+        width: 100%;
+        padding: 15px;
+        font-size: 1.1rem;
+        display: block;
+        text-align: center;
+        order: 1; /* Challenges header comes first */
+    }
+
+    .challenges-achievements-table th:nth-child(2) {
+        order: 3; /* Key Achievements header comes after challenges */
+        margin-top: 20px;
     }
 
     .challenges-achievements-table tbody {
         display: flex;
-        flex-direction: column;
+        flex-wrap: wrap;
     }
 
     .challenges-achievements-table tr {
         display: flex;
         flex-direction: column;
-    }
-
-    .challenges-achievements-table th {
-        padding: 15px;
-        font-size: 1.1rem;
-        display: block;
-        text-align: center;
-        order: 1;
-    }
-
-    .challenges-achievements-table th:nth-child(2) {
-        order: 3;
-        margin-top: 20px;
+        width: 100%;
     }
 
     .challenges-achievements-table td {
         width: 100%;
         padding: 20px 15px;
-        border-right: none;
-        border-bottom: none;
-        order: 2;
-    }
-
-    .challenges-achievements-table td:first-child {
-        border-right: none;
+        display: block;
+        order: 2; /* Challenges content */
     }
 
     .challenges-achievements-table td:nth-child(2) {
-        order: 4;
+        order: 4; /* Achievements content comes after its header */
     }
 
     .challenges-achievements-table li {
