@@ -1275,6 +1275,65 @@
             font-size: 1.1rem;
         }
 
+* Mobile responsive styles for the challenges/achievements table */
+@media (max-width: 768px) {
+    .challenges-achievements-table {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .challenges-achievements-table thead {
+        display: flex;
+        flex-direction: column;
+        order: 1;
+    }
+
+    .challenges-achievements-table tbody {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .challenges-achievements-table tr {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .challenges-achievements-table th {
+        padding: 15px;
+        font-size: 1.1rem;
+        display: block;
+        text-align: center;
+        order: 1;
+    }
+
+    .challenges-achievements-table th:nth-child(2) {
+        order: 3;
+        margin-top: 20px;
+    }
+
+    .challenges-achievements-table td {
+        width: 100%;
+        padding: 20px 15px;
+        border-right: none;
+        border-bottom: none;
+        order: 2;
+    }
+
+    .challenges-achievements-table td:first-child {
+        border-right: none;
+    }
+
+    .challenges-achievements-table td:nth-child(2) {
+        order: 4;
+    }
+
+    .challenges-achievements-table li {
+        font-size: 0.9rem;
+        margin-bottom: 12px;
+        padding-left: 20px;
+    }
+}
+
         /* Summary section styling */
         .modal-summary {
             background: rgba(255, 255, 255, 0.1);
