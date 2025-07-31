@@ -1217,14 +1217,13 @@
         }
 
         .challenges-achievements-table th {
-            .challenges-achievements-table th {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #00ff88;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ff88;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
         }
 
         .challenges-achievements-table td {
@@ -1275,61 +1274,6 @@
             font-weight: bold;
             font-size: 1.1rem;
         }
-
-* Mobile responsive styles for the challenges/achievements table */
-
-@media (max-width: 768px) {
-    .challenges-achievements-table {
-        display: block;
-    }
-
-    .challenges-achievements-table thead {
-        display: flex;
-        flex-wrap: wrap;
-    }
-
-    .challenges-achievements-table th {
-        width: 100%;
-        padding: 15px;
-        font-size: 1.1rem;
-        display: block;
-        text-align: center;
-        order: 1; /* Challenges header comes first */
-    }
-
-    .challenges-achievements-table th:nth-child(2) {
-        order: 3; /* Key Achievements header comes after challenges */
-        margin-top: 20px;
-    }
-
-    .challenges-achievements-table tbody {
-        display: flex;
-        flex-wrap: wrap;
-    }
-
-    .challenges-achievements-table tr {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .challenges-achievements-table td {
-        width: 100%;
-        padding: 20px 15px;
-        display: block;
-        order: 2; /* Challenges content */
-    }
-
-    .challenges-achievements-table td:nth-child(2) {
-        order: 4; /* Achievements content comes after its header */
-    }
-
-    .challenges-achievements-table li {
-        font-size: 0.9rem;
-        margin-bottom: 12px;
-        padding-left: 20px;
-    }
-}
 
         /* Summary section styling */
         .modal-summary {
@@ -1429,21 +1373,17 @@
             .modal-title h3 {
                 font-size: 1.5rem;
                 margin-bottom: 10px;
-                text-align: center;
             }
 
             .modal-info-row {
-                flex-direction: row;
-                flex-wrap: wrap;
+                flex-direction: column;
                 gap: 8px;
-                justify-content: center;
             }
 
             .modal-info-box {
-                min-width: calc(50% - 8px);
-                text-align: center;
+                min-width: auto;
+                text-align: left;
                 padding: 10px 12px;
-                flex: none;
             }
 
             .modal-info-box h4 {
@@ -1458,9 +1398,53 @@
                 padding: 20px;
             }
 
+            /* NEW CODE STARTS HERE */
+
+            .challenges-achievements-table thead {
+                display: block; /* Make thead a block element to take full width */
+            }
+
+            .challenges-achievements-table tbody {
+                display: block; /* Make tbody a block element to stack below thead */
+            }
+
+            .challenges-achievements-table tr {
+                display: block; /* Make table rows stack vertically */
+                margin-bottom: 20px; /* Add some space between the stacked rows */
+            }
+
+            .challenges-achievements-table th {
+                display: block; /* Make table headers block elements */
+                text-align: left; /* Align text to the left for better readability on mobile */
+                padding: 15px 0; /* Adjust padding as needed */
+                border-bottom: none; /* Remove bottom border from th */
+            }
+
+            .challenges-achievements-table td {
+                display: block; /* Make table data cells block elements */
+                width: 100%; /* Ensure they take full width */
+                padding: 0; /* Remove padding as it will be applied to the ul/li */
+                border-right: none; /* Remove right border */
+                border-bottom: none; /* Remove bottom border */
+            }
+
+            .challenges-achievements-table td ul {
+                padding-left: 0; /* Remove default ul padding */
+            }
+
+            .challenges-achievements-table li {
+                margin-bottom: 8px; /* Adjust spacing between list items */
+                padding-left: 25px; /* Maintain padding for icon */
+            }
+
+            .challenges-achievements-table td:first-child {
+                border-right: none; /* Ensure no right border for the first td on mobile */
+            }
+            /* NEW CODE ENDS HERE */
+
+
             .challenges-achievements-table {
-                display: flex;
-                flex-direction: column;
+                display: block;
             }
 
             .challenges-achievements-table thead,
@@ -1474,29 +1458,17 @@
             .challenges-achievements-table th {
                 padding: 15px;
                 font-size: 1.1rem;
-                display: none;
-            }
-
-            .challenges-achievements-table th:nth-child(2) {
-                display: block;
-                order: 3;
-                margin-top: 20px;
             }
 
             .challenges-achievements-table td {
                 width: 100%;
                 padding: 20px 15px;
                 border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .challenges-achievements-table td:last-child {
                 border-bottom: none;
-            }
-
-            .challenges-achievements-table td:first-child {
-                border-right: none;
-            }
-
-            .challenges-achievements-table tr {
-                display: flex;
-                flex-direction: column;
             }
 
             .challenges-achievements-table li {
@@ -1750,7 +1722,7 @@
         </div>
         <div class="hero-right">
             <div class="contact-form-1">
-                <form id="heroForm" method="POST">
+                <form id="heroForm" action="/thank-you" method="POST">
                     <div class="name-email-row">
                         <div class="name-group">
                             <label for="hero-name">Your Name</label>
@@ -2004,7 +1976,7 @@ I can work around my client's needs. Outside of comms, my time would be spent on
 Fill out the form below and I'll get back to you within 24 hours.</p>
         </div>
         <div class="contact-form-2">
-            <form id="contactForm" method="POST">
+            <form id="contactForm" action="/thank-you" method="POST">
                 <div class="name-email-row">
                     <div class="name-group">
                         <label for="name">Your Name</label>
@@ -2309,36 +2281,30 @@ Please reach out for a bespoke quote.</p>
             }
             return true;
         }
-        // Form submission with redirect
-        function handleFormSubmit(formId, e) {
+        // Hero form validation
+        document.getElementById('heroForm').addEventListener('submit', function(e) {
             e.preventDefault();
             let isValid = true;
-            
-            // Validate all required fields
-            const form = document.getElementById(formId);
-            const requiredFields = form.querySelectorAll('[required]');
-            
-            requiredFields.forEach(field => {
-                const fieldName = field.getAttribute('name') || field.getAttribute('id');
-                isValid &= validateField(field.id || field.name, fieldName);
-            });
-            
+            isValid &= validateField('hero-name', 'Name');
+            isValid &= validateField('hero-email', 'Email');
+            isValid &= validateField('hero-message', 'Message');
             if (isValid) {
-                // Redirect to thank-you page
-                window.location.href = 'https://www.anthonytierney.co.uk/thank-you';
+                // Submit the form
+                this.submit();
             }
-        }
-        
-        // Hero form validation and submission
-        document.getElementById('heroForm').addEventListener('submit', function(e) {
-            handleFormSubmit('heroForm', e);
         });
-        
-        // Contact form validation and submission
+        // Contact form validation
         document.getElementById('contactForm').addEventListener('submit', function(e) {
-            handleFormSubmit('contactForm', e);
+            e.preventDefault();
+            let isValid = true;
+            isValid &= validateField('name', 'Name');
+            isValid &= validateField('email', 'Email');
+            isValid &= validateField('message', 'Message');
+            if (isValid) {
+                // Submit the form
+                this.submit();
+            }
         });
-        
         // Real-time validation
         const fieldsToValidate = [
             'hero-name', 'hero-email', 'hero-message',
