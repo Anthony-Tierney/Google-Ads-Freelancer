@@ -479,6 +479,7 @@
             max-width: 1200px;
             margin: 5rem auto;
             padding: 0 2rem;
+            scroll-margin-top: 100px;
         }
         .testimonials-grid {
             display: grid;
@@ -670,6 +671,7 @@
             max-width: 1200px;
             margin: 5rem auto;
             padding: 0 2rem;
+            scroll-margin-top: 100px;
         }
         .services-grid {
             display: grid;
@@ -757,6 +759,7 @@
             max-width: 1200px;
             margin: 5rem auto;
             padding: 0 2rem;
+            scroll-margin-top: 100px;
         }
         /* Mobile-only CTA button above FAQs */
         .faq-cta-mobile {
@@ -1201,78 +1204,125 @@
             padding: 30px;
         }
 
-        /* Challenges and achievements table styling */
+        /* UPDATED CHALLENGES AND ACHIEVEMENTS TABLE STYLING */
+
         .modal-challenges-achievements {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
-            margin-bottom: 25px;
+            margin-bottom: 20px; 
         }
 
         .challenges-achievements-table {
-            width: 100%;
             border-collapse: collapse;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            margin-top: 20px;       /* Space above the box */
+            margin-bottom: 20px;    /* Space below the box */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .challenges-achievements-table th, 
+        .challenges-achievements-table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .challenges-achievements-table th {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #00ff88;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .challenges-achievements-table td {
-            padding: 25px 20px;
-            vertical-align: top;
-            width: 50%;
-        }
-
-        .challenges-achievements-table td:first-child {
-            border-right: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .challenges-achievements-table ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .challenges-achievements-table li {
-            margin-bottom: 15px;
-            padding-left: 25px;
-            position: relative;
-            line-height: 1.6;
+            background: rgba(255, 255, 255, 0.15);
             color: #ffffff;
-            font-size: 0.95rem;
-        }
-
-        .challenges-achievements-table li:last-child {
-            margin-bottom: 0;
-        }
-
-        .challenge-item::before {
-            content: "✕";
-            position: absolute;
-            left: 0;
-            top: 0;
-            color: #ff4444;
             font-weight: bold;
-            font-size: 1.1rem;
+            text-align: center;
         }
 
-        .achievement-item::before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            top: 0;
-            color: #00ff88;
-            font-weight: bold;
-            font-size: 1.1rem;
+        .challenges-achievements-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Mobile responsive styles */
+        @media screen and (max-width: 768px) {
+            .challenges-achievements-table {
+                display: flex;
+                flex-direction: column;
+                background: transparent;
+                border: none;
+            }
+            
+            .challenges-achievements-table thead {
+                display: none;
+            }
+            
+            .challenges-achievements-table tbody {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            /* Create column sections */
+            .challenges-achievements-table tbody::before {
+                content: "Challenges";
+                background: rgba(255, 255, 255, 0.15);
+                color: #ffffff;
+                font-weight: bold;
+                padding: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                order: 1;
+                text-align: center;
+            }
+            
+            .challenges-achievements-table tbody::after {
+                content: "Achievements";
+                background: rgba(0, 255, 136, 0.2);
+                color: #ffffff;
+                font-weight: bold;
+                padding: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                order: 8;
+                text-align: center;
+            }
+            
+            .challenges-achievements-table tr {
+                display: contents;
+            }
+            
+            /* First column cells */
+            .challenges-achievements-table td:nth-child(1) {
+                order: 2;
+                display: block;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                padding: 12px;
+                background: rgba(255, 255, 255, 0.1);
+            }
+            
+            /* Second column cells */
+            .challenges-achievements-table td:nth-child(2) {
+                order: 9;
+                display: block;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                padding: 12px;
+                background: rgba(255, 255, 255, 0.1);
+            }
+            
+            /* Adjust ordering for each row */
+            .challenges-achievements-table tr:nth-child(1) td:nth-child(1) { order: 2; }
+            .challenges-achievements-table tr:nth-child(2) td:nth-child(1) { order: 3; }
+            .challenges-achievements-table tr:nth-child(3) td:nth-child(1) { order: 4; }
+            .challenges-achievements-table tr:nth-child(4) td:nth-child(1) { order: 5; }
+            .challenges-achievements-table tr:nth-child(5) td:nth-child(1) { order: 6; }
+            .challenges-achievements-table tr:nth-child(6) td:nth-child(1) { order: 7; }
+            
+            .challenges-achievements-table tr:nth-child(1) td:nth-child(2) { order: 9; }
+            .challenges-achievements-table tr:nth-child(2) td:nth-child(2) { order: 10; }
+            .challenges-achievements-table tr:nth-child(3) td:nth-child(2) { order: 11; }
+            .challenges-achievements-table tr:nth-child(4) td:nth-child(2) { order: 12; }
+            .challenges-achievements-table tr:nth-child(5) td:nth-child(2) { order: 13; }
+            .challenges-achievements-table tr:nth-child(6) td:nth-child(2) { order: 14; }
         }
 
         /* Summary section styling */
@@ -1373,17 +1423,21 @@
             .modal-title h3 {
                 font-size: 1.5rem;
                 margin-bottom: 10px;
+                text-align: center;
             }
 
             .modal-info-row {
-                flex-direction: column;
+                flex-direction: row;
+                flex-wrap: wrap;
                 gap: 8px;
+                justify-content: center;
             }
 
             .modal-info-box {
-                min-width: auto;
-                text-align: left;
+                min-width: calc(50% - 8px);
+                text-align: center;
                 padding: 10px 12px;
+                flex: none;
             }
 
             .modal-info-box h4 {
@@ -1396,97 +1450,6 @@
 
             .modal-body {
                 padding: 20px;
-            }
-
-            /* NEW CODE STARTS HERE */
-
-            .challenges-achievements-table thead {
-                display: block; /* Make thead a block element to take full width */
-            }
-
-            .challenges-achievements-table tbody {
-                display: block; /* Make tbody a block element to stack below thead */
-            }
-
-            .challenges-achievements-table tr {
-                display: block; /* Make table rows stack vertically */
-                margin-bottom: 20px; /* Add some space between the stacked rows */
-            }
-
-            .challenges-achievements-table th {
-                display: block; /* Make table headers block elements */
-                text-align: left; /* Align text to the left for better readability on mobile */
-                padding: 15px 0; /* Adjust padding as needed */
-                border-bottom: none; /* Remove bottom border from th */
-            }
-
-            .challenges-achievements-table td {
-                display: block; /* Make table data cells block elements */
-                width: 100%; /* Ensure they take full width */
-                padding: 0; /* Remove padding as it will be applied to the ul/li */
-                border-right: none; /* Remove right border */
-                border-bottom: none; /* Remove bottom border */
-            }
-
-            .challenges-achievements-table td ul {
-                padding-left: 0; /* Remove default ul padding */
-            }
-
-            .challenges-achievements-table li {
-                margin-bottom: 8px; /* Adjust spacing between list items */
-                padding-left: 25px; /* Maintain padding for icon */
-            }
-
-            .challenges-achievements-table td:first-child {
-                border-right: none; /* Ensure no right border for the first td on mobile */
-            }
-            /* NEW CODE ENDS HERE */
-
-
-            .challenges-achievements-table {
-                display: block;
-            }
-
-            .challenges-achievements-table thead,
-            .challenges-achievements-table tbody,
-            .challenges-achievements-table th,
-            .challenges-achievements-table td,
-            .challenges-achievements-table tr {
-                display: block;
-            }
-
-            .challenges-achievements-table th {
-                padding: 15px;
-                font-size: 1.1rem;
-            }
-
-            .challenges-achievements-table td {
-                width: 100%;
-                padding: 20px 15px;
-                border-right: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            }
-
-            .challenges-achievements-table td:last-child {
-                border-bottom: none;
-            }
-
-            .challenges-achievements-table li {
-                font-size: 0.9rem;
-                margin-bottom: 12px;
-                padding-left: 20px;
-            }
-
-            .modal-summary {
-                padding: 20px;
-            }
-
-            .modal-summary h4 {
-                font-size: 1.2rem;
-            }
-
-            .modal-summary p {
-                font-size: 0.95rem;
             }
 
             .close-modal {
@@ -1522,15 +1485,6 @@
 
             .modal-title h3 {
                 font-size: 1.3rem;
-            }
-
-            .challenges-achievements-table th {
-                padding: 12px;
-                font-size: 1rem;
-            }
-
-            .challenges-achievements-table td {
-                padding: 15px 12px;
             }
 
             .modal-summary {
@@ -1680,6 +1634,68 @@
                 background-position: 0% 50%;
             }
         }
+        
+        /* Form styling for the new forms */
+        .static-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .static-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .static-form input,
+        .static-form textarea {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 1rem;
+            backdrop-filter: blur(5px);
+            min-height: 44px;
+            transition: border-color 0.3s ease;
+        }
+        .static-form textarea {
+            min-height: 120px;
+        }
+        .static-form input:focus,
+        .static-form textarea:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        .static-form button[type="submit"] {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: none;
+            width: 100%;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .static-form button[type="submit"]:hover {
+            background: rgba(173, 216, 230, 0.3);
+            border: 1px solid rgba(173, 216, 230, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
     </style>
 </head>
 <body>
@@ -1722,19 +1738,21 @@
         </div>
         <div class="hero-right">
             <div class="contact-form-1">
-                <form id="heroForm" action="/thank-you" method="POST">
+                <form class="static-form" action="https://api.staticforms.xyz/submit" method="post">
+                    <input type="hidden" name="accessKey" value="sf_bagffkl92ei7icnn5af7hg0a">
+                    <input type="hidden" name="redirectTo" value="https://www.anthonytierney.co.uk/thank-you">
+                    
                     <div class="name-email-row">
                         <div class="name-group">
                             <label for="hero-name">Your Name</label>
                             <input type="text" id="hero-name" name="name" required>
-                            <div class="error-message" id="hero-name-error"></div>
                         </div>
                         <div class="email-group">
                             <label for="hero-email">Email Address</label>
                             <input type="email" id="hero-email" name="email" required>
-                            <div class="error-message" id="hero-email-error"></div>
                         </div>
                     </div>
+                    
                     <div class="form-row-1">
                         <div class="form-group-3">
                             <label for="hero-company">Company Name</label>
@@ -1745,12 +1763,13 @@
                             <input type="text" id="hero-website" name="website">
                         </div>
                     </div>
+                    
                     <div class="form-group-5">
                         <label for="hero-message">How Can I Help You?</label>
                         <textarea id="hero-message" name="message" required></textarea>
-                        <div class="error-message" id="hero-message-error"></div>
                     </div>
-                    <button type="submit" class="form-submit">Send Message</button>
+                    
+                    <button type="submit">Send Message</button>
                 </form>
             </div>
         </div>
@@ -1976,19 +1995,21 @@ I can work around my client's needs. Outside of comms, my time would be spent on
 Fill out the form below and I'll get back to you within 24 hours.</p>
         </div>
         <div class="contact-form-2">
-            <form id="contactForm" action="/thank-you" method="POST">
+            <form class="static-form" action="https://api.staticforms.xyz/submit" method="post">
+                <input type="hidden" name="accessKey" value="YOUR_ACCESS_KEY_HERE">
+                <input type="hidden" name="redirectTo" value="https://www.anthonytierney.co.uk/thank-you">
+                
                 <div class="name-email-row">
                     <div class="name-group">
                         <label for="name">Your Name</label>
                         <input type="text" id="name" name="name" required>
-                        <div class="error-message" id="name-error"></div>
                     </div>
                     <div class="email-group">
                         <label for="email">Email Address</label>
                         <input type="email" id="email" name="email" required>
-                        <div class="error-message" id="email-error"></div>
                     </div>
                 </div>
+                
                 <div class="form-row-2">
                     <div class="form-group-8">
                         <label for="company">Company Name</label>
@@ -1999,15 +2020,16 @@ Fill out the form below and I'll get back to you within 24 hours.</p>
                         <input type="text" id="website" name="website">
                     </div>
                 </div>
+                
                 <div class="form-group-10">
                     <label for="message">How Can I Help You?</label>
                     <textarea id="message" name="message" required></textarea>
-                    <div class="error-message" id="message-error"></div>
                 </div>
-                <button type="submit" class="form-submit">Send Message</button>
-                </form>
-            </div>
+                
+                <button type="submit">Send Message</button>
+            </form>
         </div>
+    </div>
     <div id="modal1" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -2036,28 +2058,30 @@ Fill out the form below and I'll get back to you within 24 hours.</p>
                     <table class="challenges-achievements-table">
                         <thead>
                             <tr>
-                                <th>Challenges</th>
-                                <th>Key Achievements</th>
+                                <th style="text-align: center;">Challenges</th>
+                                <th style="text-align: center;">Key Achievements</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>
-                                    <ul>
-                                        <li class="challenge-item">Inconsistent ROAS from Google Ads campaigns</li>
-                                        <li class="challenge-item">Highly competitive industry & products</li>
-                                        <li class="challenge-item">Very low avg. order value and tight margins</li>
-                                    </ul>
-                                </td>
-                                <td>
-                                    <ul>
-                                        <li class="achievement-item">Increased avg. monthly PPC sales by 283% within 6 months</li>
-                                        <li class="achievement-item">Maintained target ROAS throughout scaling</li>
-                                        <li class="achievement-item">Improved conversion rate by 2.3% via simple landing page optimisations</li>
-                                        <li class="achievement-item">Optimized product feed for better Shopping campaign performance and increased avg. CTR by 2%</li>
-                                        <li class="achievement-item">Developed a comprehensive remarketing and abandoned cart strategy</li>
-                                    </ul>
-                                </td>
+                                <td data-label="Challenges">❌ Inconsistent ROAS from Google Ads campaigns</td>
+                                <td data-label="Achievements">✅ Increased avg. monthly PPC sales by 283% within 6 months</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges">❌ Highly competitive industry & products</td>
+                                <td data-label="Achievements">✅ Maintained target ROAS throughout scaling</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges">❌ Very low avg. order value and tight margins</td>
+                                <td data-label="Achievements">✅ Improved conversion rate by 2.3% via simple landing page optimisations</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges"></td>
+                                <td data-label="Achievements">✅ Optimized product feed for better Shopping campaign performance and increased avg. CTR by 2%</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges"></td>
+                                <td data-label="Achievements">✅ Developed a comprehensive remarketing and abandoned cart strategy</td>
                             </tr>
                         </tbody>
                     </table>
@@ -2097,30 +2121,34 @@ Fill out the form below and I'll get back to you within 24 hours.</p>
                     <table class="challenges-achievements-table">
                         <thead>
                             <tr>
-                                <th>Challenges</th>
-                                <th>Key Achievements</th>
+                                <th style="text-align: center;">Challenges</th>
+                                <th style="text-align: center;">Key Achievements</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>
-                                    <ul>
-                                        <li class="challenge-item">Poor camapaign & ad group structuring</li>
-                                        <li class="challenge-item">Using broad match only in combination with poor negative keyword management</li>
-                                        <li class="challenge-item">Inconsistent landing page templates & poor mobile UX</li>
-                                        <li class="challenge-item">No process in place to track lead > sale and assess true ROI</li>
-                                    </ul>
-                                </td>
-                                <td>
-                                    <ul>
-                                        <li class="achievement-item">Increased leads from an avg. of 30 per month to 350-400 per month over the course of 3 years</li>
-                                        <li class="achievement-item">Reduced avg. cost per lead from £25 to ~£20</li>
-                                        <li class="achievement-item">Implemented robust conversion tracking and offline lead > sale reporting</li>
-                                        <li class="achievement-item">Developed a sophisticated lead scoring system</li>
-                                        <li class="achievement-item">Perfected campgain and ad group structure</li>
-                                        <li class="achievement-item">Worked together to improve website UX with a mobile-first focus</li>
-                                    </ul>
-                                </td>
+                                <td data-label="Challenges">❌ Poor camapaign & ad group structuring</td>
+                                <td data-label="Achievements">✅ Increased leads from an avg. of 30 per month to 350-400 per month over the course of 3 years</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges">❌ Using broad match only in combination with poor negative keyword management</td>
+                                <td data-label="Achievements">✅ Reduced avg. cost per lead from £25 to ~£20</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges">❌ Inconsistent landing page templates & poor mobile UX</td>
+                                <td data-label="Achievements">✅ Implemented robust conversion tracking and offline lead > sale reporting</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges">❌ No process in place to track lead > sale and assess true ROI</td>
+                                <td data-label="Achievements">✅ Developed a sophisticated lead scoring system</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges"></td>
+                                <td data-label="Achievements">✅ Perfected campgain and ad group structure</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges"></td>
+                                <td data-label="Achievements">✅ Worked together to improve website UX with a mobile-first focus</td>
                             </tr>
                         </tbody>
                     </table>
@@ -2160,30 +2188,30 @@ Fill out the form below and I'll get back to you within 24 hours.</p>
                     <table class="challenges-achievements-table">
                         <thead>
                             <tr>
-                                <th>Challenges</th>
-                                <th>Key Achievements</th>
+                                <th style="text-align: center;">Challenges</th>
+                                <th style="text-align: center;">Key Achievements</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>
-                                    <ul>
-                                        <li class="challenge-item">Long lead times</li>
-                                        <li class="challenge-item">Extremely competitive market & rise of AI design alternatives</li>
-                                        <li class="challenge-item">Cost-Per-Click (CPCs) can be up to £30</li>
-                                        <li class="challenge-item">A modest budget in a very high search volume market</li>
-                                        <li class="challenge-item">leads can be somewhat seasonal causing campaign disruption and inconsistencies</li>
-                                    </ul>
-                                </td>
-                                <td>
-                                    <ul>
-                                        <li class="achievement-item">Utilisation of Offline Conversion Tracking (OCT)</li>
-                                        <li class="achievement-item">Implementation of advanced 3rd party tracking software to improve attribution</li>
-                                        <li class="achievement-item">Improvements on landing page UX</li>
-                                        <li class="achievement-item">Consolodated camapign and ad group structures to maximise limited budget</li>
-                                        <li class="achievement-item">Enhanced ad and landing page copy to showcase competitive advantages of the brand in an increasingly crowded market</li>
-                                    </ul>
-                                </td>
+                                <td data-label="Challenges">❌ Long lead times</td>
+                                <td data-label="Achievements">✅ Utilisation of Offline Conversion Tracking (OCT)</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges">❌ Extremely competitive market & rise of AI design alternatives</td>
+                                <td data-label="Achievements">✅ Implementation of advanced 3rd party tracking software to improve attribution</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges">❌ Cost-Per-Click (CPCs) can be up to £30</td>
+                                <td data-label="Achievements">✅ Improvements on landing page UX</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges">❌ A modest budget in a very high search volume market</td>
+                                <td data-label="Achievements">✅ Consolodated camapaign and ad group structures to maximise limited budget</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Challenges">❌ leads can be somewhat seasonal causing campaign disruption and inconsistencies</td>
+                                <td data-label="Achievements">✅ Enhanced ad and landing page copy to showcase competitive advantages of the brand in an increasingly crowded market</td>
                             </tr>
                         </tbody>
                     </table>
@@ -2248,85 +2276,49 @@ Please reach out for a bespoke quote.</p>
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return emailRegex.test(email);
         }
-        function showError(fieldId, message) {
-            const field = document.getElementById(fieldId);
-            const errorDiv = document.getElementById(fieldId + '-error');
-            field.classList.add('error');
-            field.classList.remove('success');
-            errorDiv.textContent = message;
-            errorDiv.classList.add('show');
-        }
-        function showSuccess(fieldId) {
-            const field = document.getElementById(fieldId);
-            const errorDiv = document.getElementById(fieldId + '-error');
-            field.classList.remove('error');
-            field.classList.add('success');
-            errorDiv.classList.remove('show');
-        }
-        function validateField(fieldId, fieldName, isRequired = true) {
-            const field = document.getElementById(fieldId);
-            const value = field.value.trim();
-            if (isRequired && !value) {
-                showError(fieldId, `${fieldName} is required.`);
-                return false;
-            }
-            if (fieldId.includes('email') && value) {
-                if (!validateEmail(value)) {
-                    showError(fieldId, 'Please enter a valid email address.');
-                    return false;
+        
+        function validateForm(form) {
+            let isValid = true;
+            const requiredFields = form.querySelectorAll('[required]');
+            
+            requiredFields.forEach(field => {
+                const value = field.value.trim();
+                if (!value) {
+                    isValid = false;
+                    field.style.borderColor = '#ff4444';
+                } else if (field.type === 'email' && !validateEmail(value)) {
+                    isValid = false;
+                    field.style.borderColor = '#ff4444';
+                } else {
+                    field.style.borderColor = '';
                 }
-            }
-            if (value) {
-                showSuccess(fieldId);
-            }
-            return true;
+            });
+            
+            return isValid;
         }
-        // Hero form validation
-        document.getElementById('heroForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            let isValid = true;
-            isValid &= validateField('hero-name', 'Name');
-            isValid &= validateField('hero-email', 'Email');
-            isValid &= validateField('hero-message', 'Message');
-            if (isValid) {
-                // Submit the form
-                this.submit();
-            }
-        });
-        // Contact form validation
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            let isValid = true;
-            isValid &= validateField('name', 'Name');
-            isValid &= validateField('email', 'Email');
-            isValid &= validateField('message', 'Message');
-            if (isValid) {
-                // Submit the form
-                this.submit();
-            }
-        });
-        // Real-time validation
-        const fieldsToValidate = [
-            'hero-name', 'hero-email', 'hero-message',
-            'name', 'email', 'message'
-        ];
-        fieldsToValidate.forEach(fieldId => {
-            const field = document.getElementById(fieldId);
-            if (field) {
-                field.addEventListener('blur', function() {
-                    const fieldName = this.getAttribute('id').replace('hero-', '').replace('-', ' ');
-                    const capitalizedName = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
-                    validateField(this.getAttribute('id'), capitalizedName, this.hasAttribute('required'));
-                });
-                field.addEventListener('input', function() {
-                    if (this.classList.contains('error')) {
-                        const fieldName = this.getAttribute('id').replace('hero-', '').replace('-', ' ');
-                        const capitalizedName = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
-                        validateField(this.getAttribute('id'), capitalizedName, this.hasAttribute('required'));
+        
+        // Add form validation on submit
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('.static-form');
+            
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    if (!validateForm(this)) {
+                        e.preventDefault();
+                        alert('Please fill out all required fields correctly.');
                     }
                 });
-            }
+            });
+            
+            // Add input event listeners to clear error styles
+            const inputs = document.querySelectorAll('.static-form input, .static-form textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    this.style.borderColor = '';
+                });
+            });
         });
+        
         // FAQ toggle function
         function toggleFaq(button) {
             const faqItem = button.parentElement;
@@ -2340,6 +2332,7 @@ Please reach out for a bespoke quote.</p>
                 faqItem.classList.add('active');
             }
         }
+        
         // Animation on scroll
         document.addEventListener('DOMContentLoaded', function() {
             const testimonialCards = document.querySelectorAll('.testimonial-card, .testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
@@ -2367,29 +2360,35 @@ Please reach out for a bespoke quote.</p>
                     }
                 });
             }, { threshold: 0.1 });
+            
             const testimonialsSection = document.querySelector('.content-block-2');
             const servicesSection = document.querySelector('.content-block-3');
+            
             if (testimonialsSection) {
                 observer.observe(testimonialsSection);
             }
             if (servicesSection) {
                 observer.observe(servicesSection);
             }
+            
             // Burger Menu functionality
             const burgerIcon = document.getElementById('burgerIcon');
             const mobileMenuItems = document.getElementById('mobileMenuItems');
+            
             if (burgerIcon && mobileMenuItems) {
                 burgerIcon.addEventListener('click', (event) => {
                     // Stop propagation to prevent the document click listener from immediately closing it
                     event.stopPropagation(); 
                     mobileMenuItems.classList.toggle('active');
                 });
+                
                 // Close menu when a link is clicked (for better UX on mobile)
                 mobileMenuItems.querySelectorAll('.menu-item').forEach(item => {
                     item.addEventListener('click', () => {
                         mobileMenuItems.classList.remove('active');
                     });
                 });
+                
                 // Close menu when clicking anywhere outside the menu or burger icon
                 document.body.addEventListener('click', (event) => {
                     // Check if the menu is active and the click is not on the burger icon or inside the menu
@@ -2401,15 +2400,18 @@ Please reach out for a bespoke quote.</p>
                 });
             }
         });
+        
         // Modal functions
         function openModal(modalId) {
             document.getElementById(modalId).style.display = 'block'; 
             document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
         }
+        
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
             document.body.style.overflow = 'auto'; // Re-enable scrolling
         }
+        
         // Close modal when clicking outside the modal content
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
