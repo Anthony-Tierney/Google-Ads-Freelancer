@@ -137,9 +137,7 @@
             animation: gradient 15s ease infinite;
             min-height: 100vh;
             overflow-x: hidden;
-            /* scroll-behavior: smooth; */ /* Removed for custom smooth scroll */
         }
-        /* Updated scroll-padding-top to account for sticky header height */
         :target {
             scroll-padding-top: 120px;
         }
@@ -188,26 +186,23 @@
             font-size: 1.25rem;
             font-weight: 500;
             transition: opacity 0.3s ease;
-            margin-right: 20px; /* Added spacing between menu items */
-            /* Improved touch targets for mobile */
+            margin-right: 20px;
             padding: 12px 16px;
             border-radius: 8px;
         }
         .menu-item:last-child {
-            margin-right: 0; /* Remove margin from the last item */
+            margin-right: 0;
         }
         .menu-item:hover {
             opacity: 0.8;
             background: rgba(255, 255, 255, 0.1);
         }
-        /* Burger Menu Styles for Mobile */
         .burger-menu-icon {
-            display: none; /* Hidden by default for desktop */
+            display: none;
             font-size: 2rem;
             color: #ffffff;
             cursor: pointer;
-            margin-left: auto; /* Push to the right */
-            /* Improved touch target */
+            margin-left: auto;
             padding: 12px;
             border-radius: 8px;
             transition: background 0.3s ease;
@@ -217,55 +212,53 @@
         }
         @media (max-width: 768px) {
             .menu-container {
-                justify-content: space-between; /* Space out logo and burger icon */
+                justify-content: space-between;
             }
             .menu-items {
-                display: none; /* Hide menu items by default on mobile */
+                display: none;
                 flex-direction: column;
-                /* Solid royal blue background for mobile menu, no transparency or blur */
-                background: rgb(73,145,196); /* Solid royal blue */
-                backdrop-filter: none; /* Removed blur */
-                border: 0px; /* no border */
-                border-top: none; /* Remove top border to blend with fixed header */
+                background: rgb(73,145,196);
+                backdrop-filter: none;
+                border: 0px;
+                border-top: none;
                 position: absolute;
-                top: 80px; /* Position below the header */
-                right: 0; /* Align to the right */
-                left: auto; /* Override previous left:0 to ensure right alignment */
-                max-width: 250px; /* Reduced width of the dropdown */
-                width: 70%; /* Responsive width up to max-width */
+                top: 80px;
+                right: 0;
+                left: auto;
+                max-width: 250px;
+                width: 70%;
                 padding: 1rem 0;
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
                 border-radius: 0 0 10px 10px;
             }
             .menu-items.active {
-                display: flex; /* Show menu items when active */
+                display: flex;
             }
             .menu-item {
-                margin: 0.5rem 0; /* Adjust spacing for vertical menu */
-                padding: 16px 2rem; /* Increased padding for better touch targets - minimum 44px height */
-                color: #ffffff; /* Changed text color to white for better contrast on royal blue */
-                text-align: right; /* Right-align text as requested */
-                text-shadow: none; /* Removed text shadow for better contrast on lighter background */
-                min-height: 44px; /* Ensure minimum touch target size */
+                margin: 0.5rem 0;
+                padding: 16px 2rem;
+                color: #ffffff;
+                text-align: right;
+                text-shadow: none;
+                min-height: 44px;
                 display: flex;
                 align-items: center;
                 justify-content: flex-end;
             }
             .menu-item:hover {
-                background: rgb(100, 150, 255); /* Slightly lighter solid blue on hover */
+                background: rgb(100, 150, 255);
             }
             .burger-menu-icon {
-                display: block; /* Show burger icon on mobile */
-                min-width: 44px; /* Ensure minimum touch target size */
+                display: block;
+                min-width: 44px;
                 min-height: 44px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
         }
-        /* UPDATED HERO SECTION WITH TEXT WRAPPING */
         .hero-section {
-            max-width: 1300px; /* Increased max-width for more room */
+            max-width: 1300px;
             margin: 20px auto;
             padding: 15px;
             display: flex;
@@ -311,28 +304,28 @@
         }
         .subtitle-wrapper { 
             display: flex;
-            justify-content: flex-start; /* Aligned left on desktop */
+            justify-content: flex-start;
             align-items: center;
             width: 100%;
             gap: 1rem;
         }
         .hero-social-link { 
-            background-color: #0077B5; /* LinkedIn Blue */
+            background-color: #0077B5;
             color: #ffffff;
-            font-size: 1.8rem; /* Slightly smaller icon */
+            font-size: 1.8rem;
             transition: transform 0.3s ease;
-            padding: 10px; /* Adjusted padding */
+            padding: 10px;
             border-radius: 8px;
-            min-width: 48px; /* Adjusted size */
-            min-height: 48px; /* Adjusted size */
+            min-width: 48px;
+            min-height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
             animation: bounce 2s ease-in-out infinite 1s; 
         }
         .hero-social-link:hover { 
-            transform: translateY(-3px) scale(1.05); /* Added scale on hover */
-            background-color: #005582; /* Darker LinkedIn Blue on hover */
+            transform: translateY(-3px) scale(1.05);
+            background-color: #005582;
         }
         .hero-section .subtitle {
             font-size: 1.4rem;
@@ -341,11 +334,11 @@
             text-align: left;
         }
         .hero-section .description {
-            margin-top: 1rem; /* Added margin for desktop */
+            margin-top: 1rem;
             margin-bottom: 0;
             font-size: 1.1rem;
             line-height: 1.7;
-            grid-column: 2 / 3; /* Position description in the second column */
+            grid-column: 2 / 3;
         }
         .hero-section .feature-list {
             margin: 20px 0;
@@ -354,31 +347,28 @@
             margin-bottom: 1rem;
             font-size: 1.1rem;
         }
-        /* ✅ MOBILE-ONLY OPTIMIZATION */
         @media (max-width: 600px) {
             .hero-section .feature-list p {
                 white-space: normal;
                 font-size: 1rem;
                 text-align: left;
                 margin-bottom: 0;
-                padding-left: 1.8rem; /* Space for checkmark */
-                text-indent: -1.8rem; /* Pull text back to align with other lines */
-                margin-left: 0; /* Remove any left margin */
-                padding-right: 1rem; /* Add right padding to prevent overflow */
+                padding-left: 1.8rem;
+                text-indent: -1.8rem;
+                margin-left: 0;
+                padding-right: 1rem;
             }
             .hero-section .feature-list {
                 margin: 15px 0;
                 padding: 0 1rem;
             }
         }
-        /* Removed .fa-check-circle CSS */
         .feature-list .checkmark {
             color: #00ff88;
-            margin-right: 10px; /* Space between checkmark and text */
+            margin-right: 10px;
             font-size: 1.2rem;
             font-weight: bold;
         }
-        /* UPDATED CTA BUTTON - CENTERED */
         .cta {
             display: flex;
             flex-direction: column;
@@ -386,7 +376,7 @@
             width: 100%;
         }
         .cta p {
-            font-size: 1.5rem; /* Increased font size */
+            font-size: 1.5rem;
             margin-bottom: 1rem;
         }
         .cta-button-glass {
@@ -406,7 +396,6 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             text-align: center;
             width: fit-content;
-            /* Improved touch target */
             min-height: 44px;
             display: flex;
             align-items: center;
@@ -418,7 +407,6 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
-        /* CLIENTS SECTION */
         .clients-section {
             margin: 5rem auto;
             max-width: 1200px;
@@ -442,7 +430,6 @@
             text-align: center;
             white-space: nowrap;
         }
-        /* Mobile-specific padding for clients-scroll-container p */
         @media (max-width: 768px) {
             .clients-scroll-container p {
                 padding-left: 20px;
@@ -469,7 +456,6 @@
             gap: 2rem;
             transform: translateX(0%);
         }
-        /* Pause scroll on hover for desktop */
         @media (min-width: 769px) {
             .clients-scroll-track:hover {
                 animation-play-state: paused;
@@ -498,7 +484,6 @@
             max-height: 100%;
             object-fit: contain;
         }
-        /* TESTIMONIALS SECTION */
         .content-block-2 {
             max-width: 1200px;
             margin: 5rem auto;
@@ -511,19 +496,6 @@
             gap: 2rem;
             margin-top: 2rem;
         }
-        .testimonial-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(5px);
-            padding: 1.8rem;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            opacity: 0;
-            transform: translateX(-50px);
-            transition: all 2s ease;
-            display: flex;
-            flex-direction: column;
-        }
-        /* Unique testimonial card classes */
         .testimonial-card-1,
         .testimonial-card-2,
         .testimonial-card-3 {
@@ -538,7 +510,6 @@
             display: flex;
             flex-direction: column;
         }
-        .testimonial-card.animate,
         .testimonial-card-1.animate,
         .testimonial-card-2.animate,
         .testimonial-card-3.animate {
@@ -565,7 +536,6 @@
             font-size: 0.9rem;
             text-decoration: none;
             transition: opacity 0.3s ease;
-            /* Improved touch target */
             padding: 8px 0;
             display: inline-block;
         }
@@ -573,7 +543,6 @@
             opacity: 0.8;
             text-decoration: underline;
         }
-        /* New testimonial CTA button */
         .testimonial-cta {
             display: inline-block;
             background: rgba(255, 255, 255, 0.2);
@@ -601,29 +570,26 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
-        /* IMPROVED KEY STATISTICS STYLING */
         .highlight-percentage {
             color: #00ff88;
             font-weight: bold;
-            font-size: 1.4rem; /* Increased from default */
+            font-size: 1.4rem;
             text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
         }
         .highlight-text {
             color: #00ff88;
             font-weight:  bold;
-            font-size: 1.2rem; /* Increased from default */
+            font-size: 1.2rem;
             text-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
         }
-        /* Star Rating Styles */
         .star-rating {
-            color: #FFD700; /* Gold color for stars */
-            margin-bottom: 1rem; /* Space between stars and text */
-            font-size: 1.2rem; /* Slightly larger stars */
+            color: #FFD700;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
         }
         .star-rating .fas {
-            margin-right: 3px; /* Small space between stars */
+            margin-right: 3px;
         }
-        /* Service Tag Styles */
         .service-tag {
             display: inline-block;
             background: rgba(255, 255, 255, 0.1);
@@ -637,25 +603,23 @@
             margin-bottom: 1rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            width: fit-content; /* Reduced width by 40% */
+            width: fit-content;
         }
-        /* Mobile-specific styles for highlights - ensure they wrap */
         @media (max-width: 768px) {
             .highlight-percentage {
                 white-space: normal;
                 display: inline;
-                font-size: 1.5rem; /* Even larger on mobile for better visibility */
+                font-size: 1.5rem;
             }
             .highlight-text {
                 white-space: normal;
                 display: inline;
-                font-size: 1.2rem; /* Larger on mobile */
+                font-size: 1.2rem;
             }
             .service-tag {
-                width: fit-content; /* Maintain reduced width on mobile */
+                width: fit-content;
             }
         }
-        /* UPDATED CTA BUTTON ABOVE SERVICES - MADE IT SMALLER */
         .services-cta-section {
             max-width: 1200px;
             margin: 3rem auto;
@@ -668,29 +632,27 @@
             backdrop-filter: blur(10px);
             border: 2px solid rgba(255, 255, 255, 0.3);
             color: #ffffff;
-            padding: 12px 24px; /* Reduced from 16px 32px */
-            border-radius: 8px; /* Reduced from 12px */
-            font-size: 1rem; /* Reduced from 1.2rem */
-            font-weight: 500; /* Reduced from 600 */
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
             text-decoration: none;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Reduced shadow */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             text-align: center;
             min-height: 44px;
-            /* display: flex; */ /* This was causing issues with inline-block */
             align-items: center;
             justify-content: center;
-            width: fit-content; /* Makes the button only as wide as its content */
-            margin: 0 auto; /* Centers the button */
+            width: fit-content;
+            margin: 0 auto;
         }
         .services-cta-button:hover {
             background: rgba(255, 255, 255, 0.25);
             border: 2px solid rgba(255, 255, 255, 0.4);
-            transform: translateY(-2px); /* Reduced from -3px */
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); /* Reduced shadow */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
-        /* UPDATED SERVICES SECTION */
         .content-block-3 {
             max-width: 1200px;
             margin: 5rem auto;
@@ -772,7 +734,6 @@
             opacity: 1;
             transform: translateX(0);
         }
-        /* Service card hover effect */
         .services-grid > [class^="service-card-"]:hover {
             transform: translateY(-8px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.15);
@@ -783,14 +744,12 @@
             margin-bottom: 1rem;
             color: #00ff88;
         }
-        /* FAQ SECTION STYLES */
         .faq-section {
             max-width: 1200px;
             margin: 5rem auto;
             padding: 0 2rem;
             scroll-margin-top: 100px;
         }
-        /* Mobile-only CTA button above FAQs */
         .faq-cta-mobile {
             display: none;
             text-align: center;
@@ -854,10 +813,9 @@
             line-height: 1.7;
             color: rgba(255, 255, 255, 0.9);
         }
-        /* CONTACT FORM STYLES */
         .contact-form-1,
         .contact-form-2 {
-            max-width: 670px; /* Slimmed down form */
+            max-width: 670px;
             width: 100%;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -873,13 +831,9 @@
             gap: 1.5rem;
             margin-bottom: 0rem;
         }
-        .form-group-1,
-        .form-group-2,
         .form-group-3,
         .form-group-4,
         .form-group-5,
-        .form-group-6,
-        .form-group-7,
         .form-group-8,
         .form-group-9,
         .form-group-10,
@@ -889,13 +843,9 @@
             margin-bottom: 0;
             position: relative;
         }
-        .form-group-1 label,
-        .form-group-2 label,
         .form-group-3 label,
         .form-group-4 label,
         .form-group-5 label,
-        .form-group-6 label,
-        .form-group-7 label,
         .form-group-8 label,
         .form-group-9 label,
         .form-group-10 label,
@@ -906,23 +856,15 @@
             font-weight: 500;
             margin-top: 7px;
         }
-        .form-group-1 input,
-        .form-group-2 input,
         .form-group-3 input,
         .form-group-4 input,
         .form-group-5 input,
-        .form-group-6 input,
-        .form-group-7 textarea,
         .form-group-8 input,
         .form-group-9 input,
         .form-group-10 textarea,
-        .form-group-1 select,
-        .form-group-2 select,
         .form-group-3 select,
         .form-group-4 select,
         .form-group-5 select,
-        .form-group-6 select,
-        .form-group-7 select,
         .form-group-8 select,
         .form-group-9 select,
         .form-group-10 select,
@@ -941,17 +883,12 @@
             font-family: Arial, sans-serif;
             font-size: 1rem;
             backdrop-filter: blur(5px);
-            /* Improved touch target */
             min-height: 44px;
             transition: border-color 0.3s ease;
         }
-        .form-group-1 input.error,
-        .form-group-2 input.error,
         .form-group-3 input.error,
         .form-group-4 input.error,
         .form-group-5 input.error,
-        .form-group-6 input.error,
-        .form-group-7 textarea.error,
         .form-group-8 input.error,
         .form-group-9 input.error,
         .form-group-10 textarea.error,
@@ -963,13 +900,9 @@
         #hero-email.error {
             border-color: #ff4444;
         }
-        .form-group-1 input.success,
-        .form-group-2 input.success,
         .form-group-3 input.success,
         .form-group-4 input.success,
         .form-group-5 input.success,
-        .form-group-6 input.success,
-        .form-group-7 textarea.success,
         .form-group-8 input.success,
         .form-group-9 input.success,
         .form-group-10 textarea.success,
@@ -990,13 +923,9 @@
         .error-message.show {
             display: block;
         }
-        .form-group-1 input::placeholder,
-        .form-group-2 input::placeholder,
         .form-group-3 input::placeholder,
         .form-group-4 input::placeholder,
         .form-group-5 input::placeholder,
-        .form-group-6 input::placeholder,
-        .form-group-7 textarea::placeholder,
         .form-group-8 input::placeholder,
         .form-group-9 input::placeholder,
         .form-group-10 textarea::placeholder,
@@ -1004,7 +933,6 @@
         .email-group input::placeholder {
             color: rgba(255, 255, 255, 0.7);
         }
-        .form-group-7 textarea,
         .form-group-10 textarea,
         #hero-message {
             min-height: 120px;
@@ -1026,19 +954,17 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             border: none;
             width: 100%;
-            /* Improved touch target */
             min-height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         .form-submit:hover {
-            background: rgba(173, 216, 230, 0.3); /* Lighter, more translucent blue */
-            border: 1px solid rgba(173, 216, 230, 0.5); /* Slightly more opaque border */
+            background: rgba(173, 216, 230, 0.3);
+            border: 1px solid rgba(173, 216, 230, 0.5);
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
-        /* FOOTER SECTION */
         .footer {
             background: rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
@@ -1061,7 +987,6 @@
             color: #ffffff;
             text-decoration: none;
             transition: opacity 0.3s ease;
-            /* Improved touch target */
             padding: 12px 16px;
             border-radius: 8px;
             min-height: 44px;
@@ -1082,7 +1007,6 @@
             color: #ffffff;
             font-size: 1.5rem;
             transition: transform 0.3s ease;
-            /* Improved touch target */
             padding: 12px;
             border-radius: 8px;
             min-width: 44px;
@@ -1099,13 +1023,11 @@
             opacity: 0.8;
             font-size: 0.9rem;
         }
-        /* CENTERED CONTACT SECTION TEXT */
         .centered-text {
             text-align: center;
             max-width: 700px;
             margin: 0 auto 2rem;
         }
-        /* MODAL STYLES (FROM PROVIDED CODE) */
         .modal {
             display: none;
             position: fixed;
@@ -1119,7 +1041,6 @@
             overflow-y: auto;
             padding: 20px 0;
         }
-
         .modal-content {
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
             background-size: 400% 400%;
@@ -1132,8 +1053,6 @@
             position: relative;
             overflow: hidden;
         }
-
-        /* Modal header improvements */
         .modal-header {
             display: flex;
             align-items: flex-start;
@@ -1142,7 +1061,6 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             background: rgba(255, 255, 255, 0.05);
         }
-
         .modal-logo {
             width: 80px;
             height: 80px;
@@ -1153,12 +1071,10 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             flex-shrink: 0;
         }
-
         .modal-title {
             flex: 1;
             min-width: 0;
         }
-
         .modal-title h3 {
             font-size: 1.8rem;
             font-weight: bold;
@@ -1166,15 +1082,12 @@
             color: #ffffff;
             line-height: 1.2;
         }
-
-        /* Info boxes styling */
         .modal-info-row {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
             margin-top: 10px;
         }
-
         .modal-info-box {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
@@ -1185,7 +1098,6 @@
             min-width: 120px;
             text-align: center;
         }
-
         .modal-info-box h4 {
             font-size: 0.85rem;
             font-weight: 600;
@@ -1194,15 +1106,12 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
         .modal-info-box p {
             font-size: 0.95rem;
             margin: 0;
             color: #ffffff;
             font-weight: 500;
         }
-
-        /* Close button styling */
         .close-modal {
             position: absolute;
             top: 20px;
@@ -1222,139 +1131,13 @@
             transition: all 0.3s ease;
             z-index: 3000;
         }
-
         .close-modal:hover {
             background: rgba(255, 255, 255, 0.25);
             transform: scale(1.1);
         }
-
-        /* Modal body styling */
         .modal-body {
             padding: 30px;
         }
-
-        /* UPDATED CHALLENGES AND ACHIEVEMENTS TABLE STYLING */
-
-        .modal-challenges-achievements {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            overflow: hidden;
-            margin-bottom: 20px; 
-        }
-
-        .challenges-achievements-table {
-            border-collapse: collapse;
-            width: 100%;
-            max-width: 900px;
-            margin: 0 auto;
-            margin-top: 20px;       /* Space above the box */
-            margin-bottom: 20px;    /* Space below the box */
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #ffffff;
-        }
-
-        .challenges-achievements-table th, 
-        .challenges-achievements-table td {
-            padding: 12px;
-            text-align: left;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .challenges-achievements-table th {
-            background: rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .challenges-achievements-table tr:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        /* Mobile responsive styles */
-        @media screen and (max-width: 768px) {
-            .challenges-achievements-table {
-                display: flex;
-                flex-direction: column;
-                background: transparent;
-                border: none;
-            }
-            
-            .challenges-achievements-table thead {
-                display: none;
-            }
-            
-            .challenges-achievements-table tbody {
-                display: flex;
-                flex-direction: column;
-            }
-            
-            /* Create column sections */
-            .challenges-achievements-table tbody::before {
-                content: "Challenges";
-                background: rgba(255, 255, 255, 0.15);
-                color: #ffffff;
-                font-weight: bold;
-                padding: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                order: 1;
-                text-align: center;
-            }
-            
-            .challenges-achievements-table tbody::after {
-                content: "Achievements";
-                background: rgba(0, 255, 136, 0.2);
-                color: #ffffff;
-                font-weight: bold;
-                padding: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                order: 8;
-                text-align: center;
-            }
-            
-            .challenges-achievements-table tr {
-                display: contents;
-            }
-            
-            /* First column cells */
-            .challenges-achievements-table td:nth-child(1) {
-                order: 2;
-                display: block;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.1);
-            }
-            
-            /* Second column cells */
-            .challenges-achievements-table td:nth-child(2) {
-                order: 9;
-                display: block;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.1);
-            }
-            
-            /* Adjust ordering for each row */
-            .challenges-achievements-table tr:nth-child(1) td:nth-child(1) { order: 2; }
-            .challenges-achievements-table tr:nth-child(2) td:nth-child(1) { order: 3; }
-            .challenges-achievements-table tr:nth-child(3) td:nth-child(1) { order: 4; }
-            .challenges-achievements-table tr:nth-child(4) td:nth-child(1) { order: 5; }
-            .challenges-achievements-table tr:nth-child(5) td:nth-child(1) { order: 6; }
-            .challenges-achievements-table tr:nth-child(6) td:nth-child(1) { order: 7; }
-            
-            .challenges-achievements-table tr:nth-child(1) td:nth-child(2) { order: 9; }
-            .challenges-achievements-table tr:nth-child(2) td:nth-child(2) { order: 10; }
-            .challenges-achievements-table tr:nth-child(3) td:nth-child(2) { order: 11; }
-            .challenges-achievements-table tr:nth-child(4) td:nth-child(2) { order: 12; }
-            .challenges-achievements-table tr:nth-child(5) td:nth-child(2) { order: 13; }
-            .challenges-achievements-table tr:nth-child(6) td:nth-child(2) { order: 14; }
-        }
-
-        /* Summary section styling */
         .modal-summary {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -1362,22 +1145,18 @@
             border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-
         .modal-summary h4 {
             font-size: 1.3rem;
             font-weight: bold;
             margin: 0 0 15px 0;
             color: #00ff88;
         }
-
         .modal-summary p {
             font-size: 1rem;
             line-height: 1.7;
             color: #ffffff;
             margin: 0;
         }
-
-        /* Pricing modal specific styles - keeping original simple styling */
         .pricing-modal-content {
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
             background-size: 400% 400%;
@@ -1395,9 +1174,8 @@
                 margin-top: 40px !important;
             }
             
-            /* Add 50px to hero-section top margin on desktop only */
             .hero-section {
-                margin: 50px auto; /* Original 20px + 50px = 70px */
+                margin: 50px auto;
             }
         }
             
@@ -1423,64 +1201,52 @@
             color: #ffffff;
             font-weight: bold;
         }
-
-        /* Responsive design (FROM PROVIDED CODE) */
         @media (max-width: 768px) {
             .modal {
                 padding: 10px 0;
             }
-
             .modal-content {
                 width: 95%;
                 margin: 20px auto;
                 border-radius: 15px;
             }
-
             .modal-header {
                 flex-direction: column;
                 text-align: center;
                 padding: 20px;
                 gap: 15px;
             }
-
             .modal-logo {
                 width: 60px;
                 height: 60px;
                 margin: 0 auto;
             }
-
             .modal-title h3 {
                 font-size: 1.5rem;
                 margin-bottom: 10px;
                 text-align: center;
             }
-
             .modal-info-row {
                 flex-direction: row;
                 flex-wrap: wrap;
                 gap: 8px;
                 justify-content: center;
             }
-
             .modal-info-box {
                 min-width: calc(50% - 8px);
                 text-align: center;
                 padding: 10px 12px;
                 flex: none;
             }
-
             .modal-info-box h4 {
                 font-size: 0.8rem;
             }
-
             .modal-info-box p {
                 font-size: 0.9rem;
             }
-
             .modal-body {
                 padding: 20px;
             }
-
             .close-modal {
                 width: 40px;
                 height: 40px;
@@ -1488,7 +1254,6 @@
                 top: 15px;
                 right: 15px;
             }
-
             .pricing-modal-content {
                 margin: 20% auto;
                 padding: 20px;
@@ -1497,38 +1262,30 @@
                 padding: 15px;
             }
         }
-
         @media (max-width: 480px) {
             .modal-content {
                 width: 98%;
                 margin: 10px auto;
             }
-
             .modal-header {
                 padding: 15px;
             }
-
             .modal-body {
                 padding: 15px;
             }
-
             .modal-title h3 {
                 font-size: 1.3rem;
             }
-
             .modal-summary {
                 padding: 15px;
             }
-
             .pricing-section {
                 padding: 15px;
             }
         }
-        /* RESPONSIVE STYLES */
         .headshot-container { display: contents; }
         .mobile-only-icon { display: none; }
         .desktop-only-icon { display: flex; }
-
         @media (max-width: 992px) {
             .hero-section {
                 flex-direction: column;
@@ -1544,7 +1301,7 @@
             .hero-headshot {
                 float: none;
                 display: block;
-                margin: 0; /* Reset margin */
+                margin: 0;
                 grid-row: auto;
                 object-fit: cover;
             }
@@ -1584,7 +1341,7 @@
                 margin-bottom: 1.5rem;
             }
             .hero-section .description {
-                margin-top: 1.5rem; /* Adds line break on mobile */
+                margin-top: 1.5rem;
             }
         }
         @media (max-width: 768px) {
@@ -1615,7 +1372,7 @@
             .form-row-2,
             .name-email-row {
                 flex-direction: column;
-                gap: 1.5rem; /* Equal spacing for mobile form fields */
+                gap: 1.5rem;
             }
             .client-placeholder {
                 max-width: 160px;
@@ -1638,13 +1395,11 @@
             .hero-headshot {
                 width: 80px;
             }
-            /* Added for mobile clients text */
             .clients-scroll-container p {
                 white-space: normal;
                 display: block;
                 text-align: center;
             }
-            /* Added for content-block-4 padding */
             .content-block-4 {
                 padding-left: 32px;
                 padding-right: 32px;
@@ -1671,7 +1426,7 @@
             .hero-headshot {
                 width: 80px;
                 height: auto;
-                margin: 0 auto; /* Center headshot within its container */
+                margin: 0 auto;
                 object-fit: cover;
             }
         }
@@ -1686,8 +1441,6 @@
                 background-position: 0% 50%;
             }
         }
-        
-        /* Keyframes for the bounce animation */
         @keyframes bounce {
             0%, 20%, 50%, 80%, 100% {
                 transform: translateY(0);
@@ -1699,8 +1452,6 @@
                 transform: translateY(-10px);
             }
         }
-
-        /* Form styling for the new forms */
         .static-form {
             display: flex;
             flex-direction: column;
@@ -1761,8 +1512,6 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
-        
-        /* NEW CASE STUDIES SECTION STYLES */
         .case-studies-section {
             max-width: 1200px;
             margin: 5rem auto;
@@ -1774,7 +1523,7 @@
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
             margin-top: 2rem;
-            align-items: stretch; /* Ensures cards in the same row have equal height */
+            align-items: stretch;
         }
         .case-study-card-1,
         .case-study-card-2,
@@ -1819,10 +1568,9 @@
             letter-spacing: 0.5px;
             width: fit-content;
         }
-        /* Updated B2B tag style - renamed to case-study-type-tag */
         .case-study-type-tag {
             display: inline-block;
-            background: rgba(231, 60, 126, 0.3); /* Pink color */
+            background: rgba(231, 60, 126, 0.3);
             backdrop-filter: blur(5px);
             border: 1px solid rgba(231, 60, 126, 0.5);
             color: #ffffff;
@@ -1851,7 +1599,7 @@
             object-fit: contain;
         }
         .case-study-text {
-            margin-bottom: 1.5rem; /* Added margin-bottom for spacing */
+            margin-bottom: 1.5rem;
             line-height: 1.7;
             flex-grow: 1;
             display: flex;
@@ -1867,7 +1615,7 @@
             margin-top: 0rem;
             flex-wrap: wrap;
             gap: 1rem;
-            flex-grow: 1; /* Allow this to grow to push button down */
+            flex-grow: 1;
         }
         .scorecard {
             background: rgba(255, 255, 255, 0.15);
@@ -2112,7 +1860,6 @@
                         <p>Consistently generating over £200k worth of Sales Qualified Leads (SQLs) per month from only £2,000 in ad spend - delivering a potential ROAS of 88x+.</p>
                     </div>
                 </div>
-                <!-- AMEND 4: Added CTA button -->
                 <a href="#contact" class="services-cta-button" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
             </div>
             <div class="case-study-card-2">
@@ -2137,7 +1884,6 @@
                         <p>Supporting one of the UK's top marketing agencies managing 4 of their top-spending e-commerce accounts which operate within a wide variety of sectors. Over £11m+ in online sales generated annually via Google Ads alone.</p>
                     </div>
                 </div>
-                <!-- AMEND 4: Added CTA button -->
                 <a href="#contact" class="services-cta-button" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
             </div>
             <div class="case-study-card-3">
@@ -2162,7 +1908,6 @@
                         <p>Over 9,000 conversions achieved in 2024 via Google Ads alone. This was a 77% increase year-on-year and achieved alongside a 30% decrease in overall CPA.</p>
                     </div>
                 </div>
-                <!-- AMEND 4: Added CTA button -->
                 <a href="#contact" class="services-cta-button" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
             </div>
         </div>
@@ -2184,21 +1929,19 @@
             </div>
             <div class="service-card-pmax">
                 <h3 class="service-title">Shopping & Performance Max</h3>
-                <!-- AMEND 5: Updated text -->
                 <p>Whether you require Shopping or PMAX assistance for e-commerce, I can assist with campaign & product feed optimisation and setting the correct budgets and bidding strategy targets to help you scale your sales whilst improving or maintaining your target ROAS.</p>
             </div>
             <div class="service-card-leads">
-                <!-- AMEND 6: Updated title -->
                 <h3 class="service-title">Lead Generation</h3>
-                <p>Proven methodologies for service businesses to generate high-quality leads through optimized search and remarketing campaigns with fully tracked conversion paths and optional, custom made multi-step lead capture forms.</p>
+                <p>Proven methodologies for service businesses to generate high-quality leads through optimised search and remarketing campaigns with fully tracked conversion paths and optional, custom made multi-step lead capture forms.</p>
             </div>
             <div class="service-card-search">
                 <h3 class="service-title">Search Campaign & Ad Copy Optimisation</h3>
-                <p>Strategic management of your Search campaigns including continuous ad copy testing, keyword refinement and landing page optimization to improve Click-Through-Rates (CTRs), Quality Scores and drive higher conversion rates at lower costs.</p>
+                <p>Strategic management of your Search campaigns including continuous ad copy testing, keyword refinement and landing page optimisation to improve Click-Through-Rates (CTRs), Quality Scores and drive higher conversion rates at lower costs.</p>
             </div>
             <div class="service-card-landing">
                 <h3 class="service-title">Landing Pages & Custom-Built Forms</h3>
-                <p> I can design custom, high-converting landing page wireframes for your web dev team. Depending on your website platform, I can also build these for you. On top of this, I offer custom-built lead capture forms tailored to your campaign objectives. Both of these services includes A/B testing, mobile optimization and seamless integration with your CRM and tracking systems to maximize lead quality and conversion rates.</p>
+                <p> I can design custom, high-converting landing page wireframes for your web dev team. Depending on your website platform, I can also build these for you. On top of this, I offer custom-built lead capture forms tailored to your campaign objectives. Both of these services includes A/B testing, mobile optimisation and seamless integration with your CRM and tracking systems to maximize lead quality and conversion rates.</p>
             </div>
         </div>
     </div>
@@ -2265,11 +2008,10 @@ I can work around my client's needs. Outside of comms, my time would be spent on
             </div>
             <div class="faq-item">
                 <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>What acess do you need to get started?</span>
+                    <span>What access do you need to get started?</span>
                     <i class="fas fa-plus faq-icon"></i>
                 </button>
                 <div class="faq-answer">
-                    <!-- AMEND 7: Updated text -->
                     <p>If you decide I'm a good fit for your business after meeting, I'll need access to your Google Ads account (or help you to create one), Google Analytics 4 and Google Tag Manager (GTM). Depending on your website setup there may be more access required but we can discuss this at the time.</p>
                 </div>
             </div>
@@ -2355,8 +2097,8 @@ Please reach out for a bespoke quote.</p>
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-links">
-                <a href="#" class="footer-link">Privacy Policy</a>
-                <a href="#" class="footer-link">Terms of Service</a>
+                <a href="https://anthonytierney.co.uk/privacy-policy" class="footer-link">Privacy Policy</a>
+                <a href="https://anthonytierney.co.uk/terms-of-service" class="footer-link">Terms of Service</a>
             </div>
             <div class="social-links">
                 <a href="https://www.linkedin.com/in/anthony-tierney/" class="social-link" target="_blank" rel="noopener noreferrer">
@@ -2443,7 +2185,7 @@ Please reach out for a bespoke quote.</p>
                     if (entry.isIntersecting) {
                         // Animate testimonials
                         if (entry.target.classList.contains('content-block-2')) {
-                            const cards = entry.target.querySelectorAll('.testimonial-card, .testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
+                            const cards = entry.target.querySelectorAll('.testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
                             cards.forEach((card, index) => {
                                 setTimeout(() => {
                                     card.classList.add('animate');
@@ -2491,21 +2233,17 @@ Please reach out for a bespoke quote.</p>
             
             if (burgerIcon && mobileMenuItems) {
                 burgerIcon.addEventListener('click', (event) => {
-                    // Stop propagation to prevent the document click listener from immediately closing it
                     event.stopPropagation(); 
                     mobileMenuItems.classList.toggle('active');
                 });
                 
-                // Close menu when a link is clicked (for better UX on mobile)
                 mobileMenuItems.querySelectorAll('.menu-item').forEach(item => {
                     item.addEventListener('click', () => {
                         mobileMenuItems.classList.remove('active');
                     });
                 });
                 
-                // Close menu when clicking anywhere outside the menu or burger icon
                 document.body.addEventListener('click', (event) => {
-                    // Check if the menu is active and the click is not on the burger icon or inside the menu
                     if (mobileMenuItems.classList.contains('active') && 
                         !mobileMenuItems.contains(event.target) && 
                         !burgerIcon.contains(event.target)) {
@@ -2527,7 +2265,7 @@ Please reach out for a bespoke quote.</p>
                         const startPosition = window.pageYOffset;
                         const distance = targetPosition - startPosition;
                         let startTime = null;
-                        const duration = 1000; // 1 second for a slower scroll
+                        const duration = 1000;
 
                         function animation(currentTime) {
                             if (startTime === null) startTime = currentTime;
@@ -2537,7 +2275,6 @@ Please reach out for a bespoke quote.</p>
                             if (timeElapsed < duration) requestAnimationFrame(animation);
                         }
 
-                        // Easing function for a smooth scroll effect
                         function ease(t, b, c, d) {
                             t /= d / 2;
                             if (t < 1) return c / 2 * t * t + b;
@@ -2554,15 +2291,14 @@ Please reach out for a bespoke quote.</p>
         // Modal functions
         function openModal(modalId) {
             document.getElementById(modalId).style.display = 'block'; 
-            document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+            document.body.style.overflow = 'hidden';
         }
         
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
-            document.body.style.overflow = 'auto'; // Re-enable scrolling
+            document.body.style.overflow = 'auto';
         }
         
-        // Close modal when clicking outside the modal content
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
                 event.target.style.display = 'none';
@@ -2572,4 +2308,3 @@ Please reach out for a bespoke quote.</p>
     </script>
 </body>
 </html>
-
