@@ -54,7 +54,7 @@
                     "@type": "Offer",
                     "itemOffered": {
                         "@type": "Service",
-                        "name": "Lead Generation Focus",
+                        "name": "Lead Generation",
                         "description": "Proven methodologies for service businesses to generate high-quality leads through optimized campaigns."
                     }
                 },
@@ -137,7 +137,7 @@
             animation: gradient 15s ease infinite;
             min-height: 100vh;
             overflow-x: hidden;
-            scroll-behavior: smooth; /* Smooth scrolling for anchor links */
+            /* scroll-behavior: smooth; */ /* Removed for custom smooth scroll */
         }
         /* Updated scroll-padding-top to account for sticky header height */
         :target {
@@ -148,9 +148,13 @@
             backdrop-filter: blur(10px);
             padding: 0.25rem 0;
             width: 100%;
-            position: sticky;
-            top: 0;
             z-index: 1000;
+        }
+        @media (min-width: 993px) {
+            .main-menu {
+                position: sticky;
+                top: 0;
+            }
         }
         .menu-container {
             max-width: 1200px;
@@ -261,24 +265,28 @@
         }
         /* UPDATED HERO SECTION WITH TEXT WRAPPING */
         .hero-section {
-            max-width: 1200px;
+            max-width: 1300px; /* Increased max-width for more room */
             margin: 20px auto;
             padding: 15px;
             display: flex;
-            gap: 3rem;
+            gap: 2rem; 
+            align-items: flex-start;
         }
         .hero-left {
-            flex: 0 1 746.2px;
+            flex: 1.5; 
             display: flex;
             flex-direction: column;
             position: relative;
+        }
+        .hero-right {
+            flex: 0.8; 
+            min-height: 400px;
         }
         .hero-content-wrapper {
             display: grid;
             grid-template-columns: 120px 1fr;
             gap: 20px;
             align-items: start;
-            margin-bottom: 0;
         }
         .hero-headshot {
             width: 120px;
@@ -301,24 +309,39 @@
             line-height: 1.2;
             text-align: left;
         }
-        .hero-right {
-            flex: 1;
-            min-height: 400px;
+        .subtitle-wrapper { 
+            display: flex;
+            justify-content: flex-start; /* Aligned left on desktop */
+            align-items: center;
+            width: 100%;
+            gap: 1rem;
         }
-        .hero-section h1 {
-            font-size: 2.8rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            line-height: 1.2;
-            text-align: left;
+        .hero-social-link { 
+            background-color: #0077B5; /* LinkedIn Blue */
+            color: #ffffff;
+            font-size: 1.8rem; /* Slightly smaller icon */
+            transition: transform 0.3s ease;
+            padding: 10px; /* Adjusted padding */
+            border-radius: 8px;
+            min-width: 48px; /* Adjusted size */
+            min-height: 48px; /* Adjusted size */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: bounce 2s ease-in-out infinite 1s; 
+        }
+        .hero-social-link:hover { 
+            transform: translateY(-3px) scale(1.05); /* Added scale on hover */
+            background-color: #005582; /* Darker LinkedIn Blue on hover */
         }
         .hero-section .subtitle {
             font-size: 1.4rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0; 
             opacity: 0.9;
             text-align: left;
         }
         .hero-section .description {
+            margin-top: 1rem; /* Added margin for desktop */
             margin-bottom: 0;
             font-size: 1.1rem;
             line-height: 1.7;
@@ -586,7 +609,7 @@
         }
         .highlight-text {
             color: #00ff88;
-            font-weight: bold;
+            font-weight:  bold;
             font-size: 1.2rem; /* Increased from default */
             text-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
         }
@@ -654,7 +677,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Reduced shadow */
             text-align: center;
             min-height: 44px;
-            display: flex;
+            /* display: flex; */ /* This was causing issues with inline-block */
             align-items: center;
             justify-content: center;
             width: fit-content; /* Makes the button only as wide as its content */
@@ -687,7 +710,7 @@
             border: 1px solid rgba(86, 227, 159, 0.3);
             opacity: 0;
             transform: translateX(-100px);
-            transition: all 2s ease;
+            transition: all 0.5s ease;
         }
         .service-card-audit {
             background: rgba(255, 255, 255, 0.1);
@@ -697,7 +720,7 @@
             border: 1px solid rgba(118, 75, 162, 0.3);
             opacity: 0;
             transform: translateX(-100px);
-            transition: all 2s ease 0.2s;
+            transition: all 0.5s ease 0.1s;
         }
         .service-card-pmax {
             background: rgba(255, 255, 255, 0.1);
@@ -707,7 +730,7 @@
             border: 1px solid rgba(102, 126, 234, 0.3);
             opacity: 0;
             transform: translateX(-100px);
-            transition: all 2s ease 0.4s;
+            transition: all 0.5s ease 0.2s;
         }
         .service-card-leads {
             background: rgba(255, 255, 255, 0.1);
@@ -717,7 +740,7 @@
             border: 1px solid rgba(240, 147, 251, 0.3);
             opacity: 0;
             transform: translateX(100px);
-            transition: all 2s ease 0.4s;
+            transition: all 0.5s ease 0.2s;
         }
         .service-card-search {
             background: rgba(255, 255, 255, 0.1);
@@ -727,7 +750,7 @@
             border: 1px solid rgba(86, 227, 159, 0.3);
             opacity: 0;
             transform: translateX(100px);
-            transition: all 2s ease 0.2s;
+            transition: all 0.5s ease 0.1s;
         }
         .service-card-landing {
             background: rgba(255, 255, 255, 0.1);
@@ -737,7 +760,7 @@
             border: 1px solid rgba(255, 193, 7, 0.3);
             opacity: 0;
             transform: translateX(100px);
-            transition: all 2s ease;
+            transition: all 0.5s ease;
         }
         .service-card-conversion.animate,
         .service-card-audit.animate,
@@ -747,6 +770,11 @@
         .service-card-landing.animate {
             opacity: 1;
             transform: translateX(0);
+        }
+        /* Service card hover effect */
+        .services-grid > [class^="service-card-"]:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
         }
         .service-title {
             font-size: 1.4rem;
@@ -828,7 +856,7 @@
         /* CONTACT FORM STYLES */
         .contact-form-1,
         .contact-form-2 {
-            max-width: 700px;
+            max-width: 670px; /* Slimmed down form */
             width: 100%;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -1496,6 +1524,10 @@
             }
         }
         /* RESPONSIVE STYLES */
+        .headshot-container { display: contents; }
+        .mobile-only-icon { display: none; }
+        .desktop-only-icon { display: flex; }
+
         @media (max-width: 992px) {
             .hero-section {
                 flex-direction: column;
@@ -1511,9 +1543,7 @@
             .hero-headshot {
                 float: none;
                 display: block;
-                margin: 0 auto 1.5rem;
-                width: 100px;
-                height: auto;
+                margin: 0; /* Reset margin */
                 grid-row: auto;
                 object-fit: cover;
             }
@@ -1537,6 +1567,24 @@
                 line-height: 1.5;
                 max-width: 100%;
             }
+            .desktop-only-icon { display: none; }
+            .mobile-only-icon { 
+                display: flex; 
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 1001;
+            }
+            .headshot-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+            .hero-section .description {
+                margin-top: 1.5rem; /* Adds line break on mobile */
+            }
         }
         @media (max-width: 768px) {
             .hero-section {
@@ -1547,6 +1595,9 @@
             .hero-section h1,
             .hero-section .subtitle {
                 text-align: center;
+            }
+            .subtitle-wrapper {
+                justify-content: center;
             }
             .hero-section h1 {
                 font-size: 2.2rem;
@@ -1619,7 +1670,7 @@
             .hero-headshot {
                 width: 80px;
                 height: auto;
-                margin: 0 auto 1.5rem;
+                margin: 0 auto; /* Center headshot within its container */
                 object-fit: cover;
             }
         }
@@ -1635,6 +1686,19 @@
             }
         }
         
+        /* Keyframes for the bounce animation */
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-20px);
+            }
+            60% {
+                transform: translateY(-10px);
+            }
+        }
+
         /* Form styling for the new forms */
         .static-form {
             display: flex;
@@ -1696,6 +1760,143 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
+        
+        /* NEW CASE STUDIES SECTION STYLES */
+        .case-studies-section {
+            max-width: 1200px;
+            margin: 5rem auto;
+            padding: 0 2rem;
+            scroll-margin-top: 100px;
+        }
+        .case-studies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+            align-items: stretch; /* Ensures cards in the same row have equal height */
+        }
+        .case-study-card-1,
+        .case-study-card-2,
+        .case-study-card-3 {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            padding: 1.8rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: all 2s ease;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+        .case-study-card-1.animate,
+        .case-study-card-2.animate,
+        .case-study-card-3.animate {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .case-study-tags-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .case-study-service-tag {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: fit-content;
+        }
+        /* Updated B2B tag style - renamed to case-study-type-tag */
+        .case-study-type-tag {
+            display: inline-block;
+            background: rgba(231, 60, 126, 0.3); /* Pink color */
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(231, 60, 126, 0.5);
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: fit-content;
+        }
+        .case-study-logo-placeholder {
+            width: 120px;
+            height: 120px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .case-study-logo-placeholder img {
+            max-width: 80%;
+            max-height: 80%;
+            object-fit: contain;
+        }
+        .case-study-text {
+            margin-bottom: 1.5rem; /* Added margin-bottom for spacing */
+            line-height: 1.7;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        .scorecards-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 0rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            flex-grow: 1; /* Allow this to grow to push button down */
+        }
+        .scorecard {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+        .scorecard h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0 0 6px 0;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .scorecard p {
+            font-size: 0.95rem;
+            margin: 0;
+            color: #ffffff;
+            font-weight: 500;
+        }
+        @media (max-width: 768px) {
+            .scorecards-container {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1707,6 +1908,7 @@
             <div class="menu-items" id="mobileMenuItems">
                 <a href="#home" class="menu-item">Home</a>
                 <a href="#testimonials" class="menu-item">Testimonials</a>
+                <a href="#case-studies" class="menu-item">Case Studies</a>
                 <a href="#services" class="menu-item">Services</a>
                 <a href="#faq" class="menu-item">FAQs & Pricing</a>
                 <a href="#contact" class="menu-item">Contact</a>
@@ -1719,12 +1921,19 @@
     <div class="hero-section" id="home">
         <div class="hero-left">
             <div class="hero-content-wrapper">
-                <img src="images/anthony-headshot.jpeg" alt="Anthony Tierney" class="hero-headshot">
+                <div class="headshot-container">
+                    <img src="images/anthony-headshot.jpeg" alt="Anthony Tierney" class="hero-headshot">
+                </div>
                 <div class="hero-title-subtitle">
                     <h1>Anthony Tierney</h1>
-                    <p class="subtitle">Google Ads Freelancer, U.K</p>
+                    <div class="subtitle-wrapper">
+                        <p class="subtitle">Google Ads Freelancer, U.K</p>
+                        <a href="https://www.linkedin.com/in/anthony-tierney/" class="hero-social-link desktop-only-icon" target="_blank" rel="noopener noreferrer">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                    </div>
+                    <p class="description">In my 8+ years experience specialising in Google Ads, I've scaled countless lead generation & e-commerce campaigns to record levels of conversions.</p>
                 </div>
-                <p class="description">With over 8+ years experience managing Google Ads accounts, I have helped scale countless lead generation & e-commerce campaigns spending anywhere from £1k - £50k per month.</p>
             </div>
             <div class="feature-list">
                 <p><span class="checkmark">✓</span> Proudly ranked <span class="highlight-text">Top #10 LinkedIn Voices 2025</span> in the Paid Ads & Web Analytics space.</p>
@@ -1733,7 +1942,7 @@
                 <p><span class="checkmark">✓</span> Always Reachable: Say no to agency middlemen, I'm always just a quick phone call away!</p>
             </div>
             <div class="cta">
-                <p><strong>Get in touch today for a quick chat or quote.</strong></p>
+                <p><strong>Get in touch via the form or by messaging me on <a href="https://www.linkedin.com/in/anthony-tierney/" target="_blank" rel="noopener noreferrer" style="color: #00ff88; text-decoration: underline;">LinkedIn</a>.</strong></p>
                 </div>
         </div>
         <div class="hero-right">
@@ -1841,13 +2050,11 @@
                     <i class="fas fa-star"></i>
                     <i class="fas fa-star"></i>
                 </div>
-                <div class="service-tag">Lead Generation</div>
                 <p class="testimonial-text">"In 2021 we were getting roughly 30 leads per month at around £25 per lead. Fast forward to today and we're now achieving <span class="highlight-text">350 - 400 leads</span> per month consistently at an even lower CPA of ~£20!"</p>
                 <br>
                 <p class="testimonial-author">Stacey Blair</p>
                 <p class="testimonial-role">Head of Marketing, FCT</p>
                 <a href="https://maps.app.goo.gl/kqAptPDABtjCeYXj9" class="testimonial-link" target="_blank" rel="noopener noreferrer">Click here to read the full review on Google</a>
-                <button class="testimonial-cta" onclick="openModal('modal2')">Case Study</button>
             </div>
             <div class="testimonial-card-1">
                 <div class="star-rating">
@@ -1857,13 +2064,11 @@
                     <i class="fas fa-star"></i>
                     <i class="fas fa-star"></i>
                 </div>
-                <div class="service-tag">E-Commerce</div>
                 <p class="testimonial-text">"... Anthony was successful during this time in increasing our avg. monthly sales generated via Google Ads by approximately <span class="highlight-percentage">+283%</span> while maintaining a healthy ROAS..."</p>
                 <br>
                 <p class="testimonial-author">Kevin Walsh</p>
                 <p class="testimonial-role">CEO, Kanturo</p>
                 <a href="https://www.linkedin.com/in/anthony-tierney/details/recommendations/" class="testimonial-link" target="_blank" rel="noopener noreferrer">Click here to read the full review on LinkedIn</a>
-                <button class="testimonial-cta" onclick="openModal('modal1')">Case Study</button>
             </div>
             <div class="testimonial-card-3">
                 <div class="star-rating">
@@ -1873,15 +2078,95 @@
                     <i class="fas fa-star"></i>
                     <i class="fas fa-star"></i>
                 </div>
-                <div class="service-tag">Lead Generation</div>
                 <p class="testimonial-text">"Anthony went above & beyond managing our Google Ads - assisting with landing page optimisation, server-side and offline conversion tracking & new CRM analytics. His ability to optimise beyond ads and see the full customer journey <span class="highlight-text">exceeded our expectations</span>."</p>
                 <p class="testimonial-author">James Rigby</p>
                 <p class="testimonial-role">CEO, Design Cloud</p>
-                <a href="#" class="testimonial-link" target="_blank" rel="noopener noreferrer">Click here to read the full review on LinkedIn</a>
-                <button class="testimonial-cta" onclick="openModal('modal3')">Case Study</button>
+                <a href="https://www.linkedin.com/in/anthony-tierney/" class="testimonial-link" target="_blank" rel="noopener noreferrer">Click here to read the full review on LinkedIn</a>
             </div>
         </div>
     </div>
+    
+    <div class="case-studies-section" id="case-studies">
+        <h2 class="section-title">Case Studies</h2>
+        <div class="case-studies-grid">
+            <div class="case-study-card-1">
+                <div class="case-study-logo-placeholder">
+                    <img src="images/nattergal-logo_white.png" alt="Nattergal Logo">
+                </div>
+                <div class="case-study-tags-container">
+                    <div class="case-study-service-tag">Lead Generation</div>
+                    <div class="case-study-type-tag">B2B</div>
+                </div>
+                <div class="scorecards-container">
+                    <div class="scorecard">
+                        <h4>Client Since</h4>
+                        <p>March 2025</p>
+                    </div>
+                    <div class="scorecard">
+                        <h4>Industry</h4>
+                        <p>Consulting</p>
+                    </div>
+                    <div class="scorecard">
+                        <h4>Highlights</h4>
+                        <p>Consistently generating over £200k worth of Sales Qualified Leads (SQLs) per month from only £2,000 in ad spend - delivering a potential ROAS of 88x+.</p>
+                    </div>
+                </div>
+                <!-- AMEND 4: Added CTA button -->
+                <a href="#contact" class="services-cta-button" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
+            </div>
+            <div class="case-study-card-2">
+                <div class="case-study-logo-placeholder">
+                    <img src="images/db_logo.png" alt="Digital Blueprint Logo">
+                </div>
+                <div class="case-study-tags-container">
+                    <div class="case-study-service-tag">E-Commerce</div>
+                    <div class="case-study-type-tag">B2B</div>
+                </div>
+                <div class="scorecards-container">
+                    <div class="scorecard">
+                        <h4>Client Since</h4>
+                        <p>August 2021</p>
+                    </div>
+                    <div class="scorecard">
+                        <h4>Industry</h4>
+                        <p>Many</p>
+                    </div>
+                    <div class="scorecard">
+                        <h4>Highlights</h4>
+                        <p>Supporting one of the UK's best marketing agencies: managing 4 of their top-spending e-commerce clients within a wide variety of sectors. Over £11m+ in online sales generated annualy via Google Ads alone.</p>
+                    </div>
+                </div>
+                <!-- AMEND 4: Added CTA button -->
+                <a href="#contact" class="services-cta-button" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
+            </div>
+            <div class="case-study-card-3">
+                <div class="case-study-logo-placeholder">
+                    <img src="images/notchlogo_white.png" alt="Notch Logo">
+                </div>
+                <div class="case-study-tags-container">
+                    <div class="case-study-service-tag">Lead Generation</div>
+                    <div class="case-study-type-tag">B2B & B2C</div>
+                </div>
+                <div class="scorecards-container">
+                    <div class="scorecard">
+                        <h4>Client Since</h4>
+                        <p>January 2024</p>
+                    </div>
+                    <div class="scorecard">
+                        <h4>Industry</h4>
+                        <p>SaaS</p>
+                    </div>
+                    <div class="scorecard">
+                        <h4>Highlights</h4>
+                        <p>Over 9,000+ Free Trial Downloads achieved in 2024 via Google Ads alone. This was a 77% increase in conversions year-on-year and achieved alongside a 30% decrease on overall CPA.</p>
+                    </div>
+                </div>
+                <!-- AMEND 4: Added CTA button -->
+                <a href="#contact" class="services-cta-button" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
+            </div>
+        </div>
+    </div>
+    
     <div class="services-cta-section">
         <a href="#contact" class="services-cta-button">Get in Touch</a>
     </div>
@@ -1898,10 +2183,12 @@
             </div>
             <div class="service-card-pmax">
                 <h3 class="service-title">Shopping & Performance Max</h3>
-                <p>Advanced e-commerce solutions featuring product feed optimization, automated bidding strategies, and Performance Max campaign management to maximize your online revenue and ROAS.</p>
+                <!-- AMEND 5: Updated text -->
+                <p>Whether you require Shopping or PMAX assistance for e-commerce, I can assist with campaign & product feed optimisation and setting the correct budgets and bidding strategy targets to help you scale your sales whilst improving or maintaining your target ROAS.</p>
             </div>
             <div class="service-card-leads">
-                <h3 class="service-title">Lead Generation Focus</h3>
+                <!-- AMEND 6: Updated title -->
+                <h3 class="service-title">Lead Generation</h3>
                 <p>Proven methodologies for service businesses to generate high-quality leads through optimized search and remarketing campaigns with fully tracked conversion paths and optional, custom made multi-step lead capture forms.</p>
             </div>
             <div class="service-card-search">
@@ -1981,7 +2268,8 @@ I can work around my client's needs. Outside of comms, my time would be spent on
                     <i class="fas fa-plus faq-icon"></i>
                 </button>
                 <div class="faq-answer">
-                    <p>If you decide I'm a good fit for your business after meeting, I'll need access to your Google Ads account (or help you create one), Google Analytics 4 and Google Tag Manager (GTM). Depending on your website setup there may be more access required but we can discuss this at the time.</p>
+                    <!-- AMEND 7: Updated text -->
+                    <p>If you decide I'm a good fit for your business after meeting, I'll need access to your Google Ads account (or help you to create one), Google Analytics 4 and Google Tag Manager (GTM). Depending on your website setup there may be more access required but we can discuss this at the time.</p>
                 </div>
             </div>
         </div>
@@ -2030,199 +2318,6 @@ Fill out the form below and I'll get back to you within 24 hours.</p>
             </form>
         </div>
     </div>
-    <div id="modal1" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <img src="images/kanturo-logo.png" alt="Kanturo Logo" class="modal-logo">
-                <div class="modal-title">
-                    <h3>Kanturo Case Study</h3>
-                    <div class="modal-info-row">
-                        <div class="modal-info-box">
-                            <h4>Client Since</h4>
-                            <p>2017</p>
-                        </div>
-                        <div class="modal-info-box">
-                            <h4>Industry</h4>
-                            <p>Fashion Accessories</p>
-                        </div>
-                        <div class="modal-info-box">
-                            <h4>Campaigns</h4>
-                            <p>e-commerce</p>
-                        </div>
-                    </div>
-                </div>
-                <button class="close-modal" onclick="closeModal('modal1')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="modal-challenges-achievements">
-                    <table class="challenges-achievements-table">
-                        <thead>
-                            <tr>
-                                <th style="text-align: center;">Challenges</th>
-                                <th style="text-align: center;">Key Achievements</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td data-label="Challenges">❌ Inconsistent ROAS from Google Ads campaigns</td>
-                                <td data-label="Achievements">✅ Increased avg. monthly PPC sales by 283% within 6 months</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges">❌ Highly competitive industry & products</td>
-                                <td data-label="Achievements">✅ Maintained target ROAS throughout scaling</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges">❌ Very low avg. order value and tight margins</td>
-                                <td data-label="Achievements">✅ Improved conversion rate by 2.3% via simple landing page optimisations</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges"></td>
-                                <td data-label="Achievements">✅ Optimized product feed for better Shopping campaign performance and increased avg. CTR by 2%</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges"></td>
-                                <td data-label="Achievements">✅ Developed a comprehensive remarketing and abandoned cart strategy</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="modal-summary">
-                    <h4>Summary</h4>
-                    <p>Through a combination of account, product feed and landing page optimisations we were able to scale conversions while maintaining profitability. The results speak for themselves.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="modal2" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <img src="images/fct-logo.png" alt="FCT Logo" class="modal-logo">
-                <div class="modal-title">
-                    <h3>FCT Case Study</h3>
-                    <div class="modal-info-row">
-                        <div class="modal-info-box">
-                            <h4>Client Since</h4>
-                            <p>2021</p>
-                        </div>
-                        <div class="modal-info-box">
-                            <h4>Industry</h4>
-                            <p>Education</p>
-                        </div>
-                        <div class="modal-info-box">
-                            <h4>Campaigns</h4>
-                            <p>Lead Generation</p>
-                        </div>
-                    </div>
-                </div>
-                <button class="close-modal" onclick="closeModal('modal2')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="modal-challenges-achievements">
-                    <table class="challenges-achievements-table">
-                        <thead>
-                            <tr>
-                                <th style="text-align: center;">Challenges</th>
-                                <th style="text-align: center;">Key Achievements</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td data-label="Challenges">❌ Poor camapaign & ad group structuring</td>
-                                <td data-label="Achievements">✅ Increased leads from an avg. of 30 per month to 350-400 per month over the course of 3 years</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges">❌ Using broad match only in combination with poor negative keyword management</td>
-                                <td data-label="Achievements">✅ Reduced avg. cost per lead from £25 to ~£20</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges">❌ Inconsistent landing page templates & poor mobile UX</td>
-                                <td data-label="Achievements">✅ Implemented robust conversion tracking and offline lead > sale reporting</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges">❌ No process in place to track lead > sale and assess true ROI</td>
-                                <td data-label="Achievements">✅ Developed a sophisticated lead scoring system</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges"></td>
-                                <td data-label="Achievements">✅ Perfected campgain and ad group structure</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges"></td>
-                                <td data-label="Achievements">✅ Worked together to improve website UX with a mobile-first focus</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="modal-summary">
-                    <h4>Summary</h4>
-                    <p>Generating PPC leads at high volume means nothing without a process in place for assessing the quality of those leads. Google Ads account managers need to work in harmony with the internal sales teams and utilise a scoring system to track true ROI - not all leads are equal.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="modal3" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <img src="images/dc-logo_white.png" alt="Design Cloud Logo" class="modal-logo">
-                <div class="modal-title">
-                    <h3>Design Cloud Case Study</h3>
-                    <div class="modal-info-row">
-                        <div class="modal-info-box">
-                            <h4>Client Since</h4>
-                            <p>2024</p>
-                        </div>
-                        <div class="modal-info-box">
-                            <h4>Industry</h4>
-                            <p>B2B Graphic Design</p>
-                        </div>
-                        <div class="modal-info-box">
-                            <h4>Campaigns</h4>
-                            <p>Lead Generation</p>
-                        </div>
-                    </div>
-                </div>
-                <button class="close-modal" onclick="closeModal('modal3')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="modal-challenges-achievements">
-                    <table class="challenges-achievements-table">
-                        <thead>
-                            <tr>
-                                <th style="text-align: center;">Challenges</th>
-                                <th style="text-align: center;">Key Achievements</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td data-label="Challenges">❌ Long lead times</td>
-                                <td data-label="Achievements">✅ Utilisation of Offline Conversion Tracking (OCT)</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges">❌ Extremely competitive market & rise of AI design alternatives</td>
-                                <td data-label="Achievements">✅ Implementation of advanced 3rd party tracking software to improve attribution</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges">❌ Cost-Per-Click (CPCs) can be up to £30</td>
-                                <td data-label="Achievements">✅ Improvements on landing page UX</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges">❌ A modest budget in a very high search volume market</td>
-                                <td data-label="Achievements">✅ Consolodated camapaign and ad group structures to maximise limited budget</td>
-                            </tr>
-                            <tr>
-                                <td data-label="Challenges">❌ leads can be somewhat seasonal causing campaign disruption and inconsistencies</td>
-                                <td data-label="Achievements">✅ Enhanced ad and landing page copy to showcase competitive advantages of the brand in an increasingly crowded market</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="modal-summary">
-                    <h4>Summary</h4>
-                    <p>When customers take long periods of time to convert and have a longer consideration phase, this can be challenging in a world were tracking users over time is becoming more and more challenging (GDPR, Consent Mode V2, cookie-less Browse, VPNs. etc). Working with my clients to implement and harness the power of OCT and 3rd party softwares which improve tracking capabilities is one of my specialities.</p>
-                </div>
-            </div>
-        </div>
-    </div>
     <div id="pricingModal1" class="modal">
         <div class="pricing-modal-content modal-content">
             <button class="close-modal" onclick="closeModal('pricingModal1')">×</button>
@@ -2267,9 +2362,12 @@ Please reach out for a bespoke quote.</p>
                     <i class="fab fa-linkedin"></i>
                 </a>
             </div>
-            <p class="copyright">© 2023 Anthony Tierney. All rights reserved.</p>
+            <p class="copyright">© 2025 Anthony Tierney. All rights reserved.</p>
         </div>
     </footer>
+    <a href="https://www.linkedin.com/in/anthony-tierney/" class="hero-social-link mobile-only-icon" target="_blank" rel="noopener noreferrer">
+        <i class="fab fa-linkedin"></i>
+    </a>
     <script>
         // Form validation functions
         function validateEmail(email) {
@@ -2337,6 +2435,8 @@ Please reach out for a bespoke quote.</p>
         document.addEventListener('DOMContentLoaded', function() {
             const testimonialCards = document.querySelectorAll('.testimonial-card, .testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
             const serviceCards = document.querySelectorAll('[class^="service-card-"]');
+            const caseStudyCards = document.querySelectorAll('.case-study-card-1, .case-study-card-2, .case-study-card-3');
+            
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
@@ -2356,6 +2456,15 @@ Please reach out for a bespoke quote.</p>
                                 card.classList.add('animate');
                             });
                         }
+                        // Animate case studies
+                        else if (entry.target.classList.contains('case-studies-section')) {
+                            const cards = entry.target.querySelectorAll('.case-study-card-1, .case-study-card-2, .case-study-card-3');
+                            cards.forEach((card, index) => {
+                                setTimeout(() => {
+                                    card.classList.add('animate');
+                                }, index * 200);
+                            });
+                        }
                         observer.unobserve(entry.target);
                     }
                 });
@@ -2363,12 +2472,16 @@ Please reach out for a bespoke quote.</p>
             
             const testimonialsSection = document.querySelector('.content-block-2');
             const servicesSection = document.querySelector('.content-block-3');
+            const caseStudiesSection = document.querySelector('.case-studies-section');
             
             if (testimonialsSection) {
                 observer.observe(testimonialsSection);
             }
             if (servicesSection) {
                 observer.observe(servicesSection);
+            }
+            if (caseStudiesSection) {
+                observer.observe(caseStudiesSection);
             }
             
             // Burger Menu functionality
@@ -2399,6 +2512,42 @@ Please reach out for a bespoke quote.</p>
                     }
                 });
             }
+
+            // Custom Slow Scroll
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+
+                    if (targetElement) {
+                        const menuHeight = document.querySelector('.main-menu').offsetHeight;
+                        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - menuHeight;
+                        const startPosition = window.pageYOffset;
+                        const distance = targetPosition - startPosition;
+                        let startTime = null;
+                        const duration = 1000; // 1 second for a slower scroll
+
+                        function animation(currentTime) {
+                            if (startTime === null) startTime = currentTime;
+                            const timeElapsed = currentTime - startTime;
+                            const run = ease(timeElapsed, startPosition, distance, duration);
+                            window.scrollTo(0, run);
+                            if (timeElapsed < duration) requestAnimationFrame(animation);
+                        }
+
+                        // Easing function for a smooth scroll effect
+                        function ease(t, b, c, d) {
+                            t /= d / 2;
+                            if (t < 1) return c / 2 * t * t + b;
+                            t--;
+                            return -c / 2 * (t * (t - 2) - 1) + b;
+                        }
+
+                        requestAnimationFrame(animation);
+                    }
+                });
+            });
         });
         
         // Modal functions
@@ -2422,7 +2571,3 @@ Please reach out for a bespoke quote.</p>
     </script>
 </body>
 </html>
-
-
-
-
