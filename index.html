@@ -142,6 +142,7 @@
             scroll-padding-top: 120px;
         }
         .main-menu {
+position: relative;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             padding: 0.25rem 0;
@@ -215,22 +216,22 @@
                 justify-content: space-between;
             }
             .menu-items {
-                display: none;
-                flex-direction: column;
-                background: rgb(73,145,196);
-                backdrop-filter: none;
-                border: 0px;
-                border-top: none;
-                position: absolute;
-                top: 80px;
-                right: 0;
-                left: auto;
-                max-width: 250px;
-                width: 70%;
-                padding: 1rem 0;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                border-radius: 0 0 10px 10px;
-            }
+    display: none;
+    flex-direction: column;
+    background: rgba(35, 35, 55, 0.85); /* Dark, semi-opaque background */
+    backdrop-filter: blur(10px); /* Blurs the content behind for readability */
+    -webkit-backdrop-filter: blur(10px); /* Safari compatibility */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Adds a subtle edge */
+    position: absolute;
+    top: 80px;
+    right: 0;
+    left: auto;
+    max-width: 250px;
+    width: 70%;
+    padding: 1rem 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); /* Enhanced shadow for depth */
+    border-radius: 0 0 10px 10px;
+}
             .menu-items.active {
                 display: flex;
             }
