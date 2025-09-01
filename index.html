@@ -1636,11 +1636,14 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
-        .case-studies-section {
+        .case-studies-wrapper {
             max-width: 1200px;
             margin: 5rem auto;
             padding: 0 2rem;
             scroll-margin-top: 100px;
+        }
+        .case-studies-section {
+            /* Styles moved to wrapper */
         }
         .case-studies-grid {
             display: grid;
@@ -1765,9 +1768,144 @@
             color: #ffffff;
             font-weight: 500;
         }
+
+        /* --- MOBILE CASE STUDY ACCORDION STYLES START --- */
+        .case-studies-section-mobile {
+            display: none; /* Hide on desktop by default */
+        }
+        .case-studies-accordion {
+            margin-top: 2rem;
+        }
+        .case-study-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .case-study-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: 700;
+            width: 100%;
+            text-align: left;
+            transition: background 0.3s ease;
+            min-height: 44px;
+        }
+        .case-study-question:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .case-study-question-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .case-study-question-content img {
+            height: 40px;
+            max-width: 120px;
+            object-fit: contain;
+        }
+        .case-study-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+            color: #00ff88;
+            margin-left: 1rem;
+            flex-shrink: 0;
+        }
+        .case-study-item.active .case-study-icon {
+            transform: rotate(45deg);
+        }
+        .case-study-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            background: rgba(0, 0, 0, 0.1);
+            padding: 0;
+        }
+        .case-study-item.active .case-study-answer {
+            max-height: 1000px; /* Adjust if content is larger */
+        }
+        .case-studies-sub-accordion {
+            padding: 0.5rem;
+        }
+        .case-study-sub-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            overflow: hidden;
+        }
+        .case-study-sub-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            width: 100%;
+            text-align: left;
+        }
+        .case-study-sub-icon {
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
+            color: #00ff88;
+        }
+        .case-study-sub-item.active .case-study-sub-icon {
+             transform: rotate(45deg);
+        }
+        .case-study-sub-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1.5rem;
+        }
+        .case-study-sub-item.active .case-study-sub-answer {
+             max-height: 600px;
+             padding: 1.5rem;
+             padding-top: 0;
+        }
+        .case-study-sub-answer .case-study-tags-container {
+            justify-content: flex-start;
+        }
+        .case-study-sub-answer .scorecards-container {
+            flex-direction: row;
+            gap: 1rem;
+        }
+        .case-study-sub-answer .scorecard {
+            text-align: left;
+        }
+        .case-study-sub-answer .services-cta-button {
+            margin-top: 1.5rem;
+            width: 100%;
+        }
+        /* --- MOBILE CASE STUDY ACCORDION STYLES END --- */
+
+
         @media (max-width: 768px) {
             .scorecards-container {
                 flex-direction: column;
+            }
+            .case-studies-section {
+                display: none;
+            }
+            .case-studies-section-mobile {
+                display: block;
+            }
+            .case-study-service-tag {
+                display: none;
             }
         }
     </style>
@@ -1812,7 +1950,7 @@
             <div class="headshot-container">
                 <img src="images/anthony-headshot.jpeg" alt="Anthony Tierney" class="hero-headshot">
                 <div class="floating-card floating-card-1">
-                    <h4>£1.3m+</h4>
+                    <h4>£4.8m+</h4>
                     <p>E-commerce Sales 2024</p>
                 </div>
                 <div class="floating-card floating-card-2">
@@ -1934,80 +2072,198 @@
         </div>
     </div>
     
-    <div class="case-studies-section" id="case-studies">
-        <h2 class="section-title">Case Studies</h2>
-        <div class="case-studies-grid">
-            <div class="case-study-card-1">
-                <div class="case-study-logo-placeholder">
-                    <img src="images/nattergal-logo_white.png" alt="Nattergal Logo">
-                </div>
-                <div class="case-study-tags-container">
-                    <div class="case-study-service-tag">Lead Generation</div>
-                    <div class="case-study-type-tag">B2B</div>
-                </div>
-                <div class="scorecards-container">
-                    <div class="scorecard">
-                        <h4>Client Since</h4>
-                        <p>March 2025</p>
+    <div id="case-studies" class="case-studies-wrapper">
+        <div class="case-studies-section">
+            <h2 class="section-title">Case Studies</h2>
+            <div class="case-studies-grid">
+                <div class="case-study-card-1">
+                    <div class="case-study-logo-placeholder">
+                        <img src="images/nattergal-logo_white.png" alt="Nattergal Logo">
                     </div>
-                    <div class="scorecard">
-                        <h4>Industry</h4>
-                        <p>Consulting</p>
+                    <div class="case-study-tags-container">
+                        <div class="case-study-service-tag">Lead Generation</div>
+                        <div class="case-study-type-tag">B2B</div>
                     </div>
-                    <div class="scorecard">
-                        <h4>Highlights</h4>
-                        <p>Consistently generating over £200k worth of Sales Qualified Leads (SQLs) per month from only £2,000 in ad spend - delivering a potential ROAS of 88x+. Conversion rate has improved drastically from 4% to 7%+.</p>
+                    <div class="scorecards-container">
+                        <div class="scorecard">
+                            <h4>Client Since</h4>
+                            <p>March 2025</p>
+                        </div>
+                        <div class="scorecard">
+                            <h4>Industry</h4>
+                            <p>Consulting</p>
+                        </div>
+                        <div class="scorecard">
+                            <h4>Highlights</h4>
+                            <p>Consistently generating over £200k worth of Sales Qualified Leads (SQLs) per month from only £2,000 in ad spend - delivering a potential ROAS of 88x+. Conversion rate has improved drastically from 4% to 7%+.</p>
+                        </div>
                     </div>
+                    <a href="#contact" class="services-cta-button" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
                 </div>
-                <a href="#contact" class="services-cta-button" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
+                <div class="case-study-card-2">
+                    <div class="case-study-logo-placeholder">
+                        <img src="images/db_logo.png" alt="Digital Blueprint Logo">
+                    </div>
+                    <div class="case-study-tags-container">
+                        <div class="case-study-service-tag">E-Commerce</div>
+                        <div class="case-study-type-tag">B2B</div>
+                    </div>
+                    <div class="scorecards-container">
+                        <div class="scorecard">
+                            <h4>Client Since</h4>
+                            <p>August 2021</p>
+                        </div>
+                        <div class="scorecard">
+                            <h4>Industry</h4>
+                            <p>Many</p>
+                        </div>
+                        <div class="scorecard">
+                            <h4>Highlights</h4>
+                            <p>Supporting one of the UK's top marketing agencies, managing 4 top-spending e-commerce accounts across a diverse range of sectors. Over £4.8m in annual online sales generated solely via Google Ads.</p>
+                        </div>
+                    </div>
+                    <a href="#contact" class="services-cta-button" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
+                </div>
+                <div class="case-study-card-3">
+                    <div class="case-study-logo-placeholder">
+                        <img src="images/notchlogo_white.png" alt="Notch Logo">
+                    </div>
+                    <div class="case-study-tags-container">
+                        <div class="case-study-service-tag">Lead Generation</div>
+                        <div class="case-study-type-tag">B2B & B2C</div>
+                    </div>
+                    <div class="scorecards-container">
+                        <div class="scorecard">
+                            <h4>Client Since</h4>
+                            <p>January 2024</p>
+                        </div>
+                        <div class="scorecard">
+                            <h4>Industry</h4>
+                            <p>SaaS</p>
+                        </div>
+                        <div class="scorecard">
+                            <h4>Highlights</h4>
+                            <p>A massive 77% increase in Google Ads conversions achieved in 2024. This was achieved alongside a 30% decrease in the accounts overall CPA - all whilst optimised during a disruptive new site launch.</p>
+                        </div>
+                    </div>
+                    <a href="#contact" class="services-cta-button" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
+                </div>
             </div>
-            <div class="case-study-card-2">
-                <div class="case-study-logo-placeholder">
-                    <img src="images/db_logo.png" alt="Digital Blueprint Logo">
-                </div>
-                <div class="case-study-tags-container">
-                    <div class="case-study-service-tag">E-Commerce</div>
-                    <div class="case-study-type-tag">B2B</div>
-                </div>
-                <div class="scorecards-container">
-                    <div class="scorecard">
-                        <h4>Client Since</h4>
-                        <p>August 2021</p>
+        </div>
+        <div class="case-studies-section-mobile">
+            <h2 class="section-title">Case Studies</h2>
+            <div class="case-studies-accordion">
+                 <div class="case-study-item">
+                    <button class="case-study-question" onclick="toggleCaseStudyAccordion(this)">
+                        <div class="case-study-question-content">
+                            <span>Lead Generation</span>
+                        </div>
+                        <i class="fas fa-plus case-study-icon"></i>
+                    </button>
+                    <div class="case-study-answer">
+                        <div class="case-studies-sub-accordion">
+                            <div class="case-study-sub-item">
+                                <button class="case-study-sub-question" onclick="toggleCaseStudySubAccordion(this)">
+                                    <div class="case-study-question-content">
+                                        <img src="images/nattergal-logo_white.png" alt="Nattergal Logo">
+                                        <span>Nattergal (B2B)</span>
+                                    </div>
+                                    <i class="fas fa-plus case-study-sub-icon"></i>
+                                </button>
+                                <div class="case-study-sub-answer">
+                                    <div class="case-study-tags-container">
+                                        <div class="case-study-service-tag">Lead Generation</div>
+                                    </div>
+                                    <div class="scorecards-container">
+                                        <div class="scorecard">
+                                            <h4>Client Since</h4>
+                                            <p>March 2025</p>
+                                        </div>
+                                        <div class="scorecard">
+                                            <h4>Industry</h4>
+                                            <p>Consulting</p>
+                                        </div>
+                                        <div class="scorecard">
+                                            <h4>Highlights</h4>
+                                            <p>Consistently generating over £200k worth of Sales Qualified Leads (SQLs) per month from only £2,000 in ad spend - delivering a potential ROAS of 88x+. Conversion rate has improved drastically from 4% to 7%+.</p>
+                                        </div>
+                                    </div>
+                                    <a href="#contact" class="services-cta-button">Request Full Case Study</a>
+                                </div>
+                            </div>
+                             <div class="case-study-sub-item">
+                                <button class="case-study-sub-question" onclick="toggleCaseStudySubAccordion(this)">
+                                    <div class="case-study-question-content">
+                                        <img src="images/notchlogo_white.png" alt="Notch Logo">
+                                        <span>Notch (B2B & B2C)</span>
+                                    </div>
+                                    <i class="fas fa-plus case-study-sub-icon"></i>
+                                </button>
+                                <div class="case-study-sub-answer">
+                                    <div class="case-study-tags-container">
+                                        <div class="case-study-service-tag">Lead Generation</div>
+                                    </div>
+                                    <div class="scorecards-container">
+                                        <div class="scorecard">
+                                            <h4>Client Since</h4>
+                                            <p>January 2024</p>
+                                        </div>
+                                        <div class="scorecard">
+                                            <h4>Industry</h4>
+                                            <p>SaaS</p>
+                                        </div>
+                                        <div class="scorecard">
+                                            <h4>Highlights</h4>
+                                            <p>A massive 77% increase in Google Ads conversions achieved in 2024. This was achieved alongside a 30% decrease in the accounts overall CPA - all whilst optimised during a disruptive new site launch.</p>
+                                        </div>
+                                    </div>
+                                    <a href="#contact" class="services-cta-button">Request Full Case Study</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="scorecard">
-                        <h4>Industry</h4>
-                        <p>Many</p>
-                    </div>
-                    <div class="scorecard">
-                        <h4>Highlights</h4>
-                        <p>Supporting one of the UK's top marketing agencies, managing 4 top-spending e-commerce accounts across a diverse range of sectors. Over £11m in annual online sales generated solely via Google Ads.</p>
+                </div>
+                <div class="case-study-item">
+                    <button class="case-study-question" onclick="toggleCaseStudyAccordion(this)">
+                        <div class="case-study-question-content">
+                            <span>E-Commerce</span>
+                        </div>
+                        <i class="fas fa-plus case-study-icon"></i>
+                    </button>
+                    <div class="case-study-answer">
+                        <div class="case-studies-sub-accordion">
+                            <div class="case-study-sub-item">
+                                <button class="case-study-sub-question" onclick="toggleCaseStudySubAccordion(this)">
+                                    <div class="case-study-question-content">
+                                        <img src="images/db_logo.png" alt="Digital Blueprint Logo">
+                                        <span>Digital Blueprint (B2B & B2C)</span>
+                                    </div>
+                                    <i class="fas fa-plus case-study-sub-icon"></i>
+                                </button>
+                                <div class="case-study-sub-answer">
+                                     <div class="case-study-tags-container">
+                                        <div class="case-study-service-tag">E-Commerce</div>
+                                    </div>
+                                    <div class="scorecards-container">
+                                        <div class="scorecard">
+                                            <h4>Client Since</h4>
+                                            <p>August 2021</p>
+                                        </div>
+                                        <div class="scorecard">
+                                            <h4>Industry</h4>
+                                            <p>Many</p>
+                                        </div>
+                                        <div class="scorecard">
+                                            <h4>Highlights</h4>
+                                            <p>Supporting one of the UK's top marketing agencies, managing 4 top-spending e-commerce accounts across a diverse range of sectors. Over £11m in annual online sales generated solely via Google Ads.</p>
+                                        </div>
+                                    </div>
+                                    <a href="#contact" class="services-cta-button">Request Full Case Study</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <a href="#contact" class="services-cta-button" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
-            </div>
-            <div class="case-study-card-3">
-                <div class="case-study-logo-placeholder">
-                    <img src="images/notchlogo_white.png" alt="Notch Logo">
-                </div>
-                <div class="case-study-tags-container">
-                    <div class="case-study-service-tag">Lead Generation</div>
-                    <div class="case-study-type-tag">B2B & B2C</div>
-                </div>
-                <div class="scorecards-container">
-                    <div class="scorecard">
-                        <h4>Client Since</h4>
-                        <p>January 2024</p>
-                    </div>
-                    <div class="scorecard">
-                        <h4>Industry</h4>
-                        <p>SaaS</p>
-                    </div>
-                    <div class="scorecard">
-                        <h4>Highlights</h4>
-                        <p>A massive 77% increase in Google Ads conversions achieved in 2024. This was achieved alongside a 30% decrease in the accounts overall CPA - all whilst optimised during a disruptive new site launch.</p>
-                    </div>
-                </div>
-                <a href="#contact" class="services-cta-button" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
             </div>
         </div>
     </div>
@@ -2289,6 +2545,35 @@ Please reach out for a bespoke quote.</p>
             if (!isActive) {
                 faqItem.classList.add('active');
             }
+        }
+
+        // Case Study Accordion toggle function
+        function toggleCaseStudyAccordion(button) {
+            const caseStudyItem = button.parentElement;
+            const isActive = caseStudyItem.classList.contains('active');
+            // Close all other case study items
+            document.querySelectorAll('.case-studies-accordion .case-study-item').forEach(item => {
+                if (item !== caseStudyItem) {
+                    item.classList.remove('active');
+                }
+            });
+            // Toggle the clicked item
+            caseStudyItem.classList.toggle('active');
+        }
+
+        // Case Study Sub-Accordion toggle function
+        function toggleCaseStudySubAccordion(button) {
+            const subItem = button.parentElement;
+            const isActive = subItem.classList.contains('active');
+            // Close all sibling sub-items
+            const parentContainer = subItem.parentElement;
+            parentContainer.querySelectorAll('.case-study-sub-item').forEach(item => {
+                if (item !== subItem) {
+                    item.classList.remove('active');
+                }
+            });
+            // Toggle the clicked sub-item
+            subItem.classList.toggle('active');
         }
         
         // Animation on scroll
