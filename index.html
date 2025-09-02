@@ -695,6 +695,7 @@ Fill out the form below and I'll get back to you within 24 hours.</p>
                         <input type="text" id="name" name="name" required>
                         <div class="error-message" id="name-error">Name is required.</div>
                     </div>
+
                     <div class="form-group">
                         <label for="email">Email Address</label>
                         <input type="email" id="email" name="email" required>
@@ -718,6 +719,9 @@ Fill out the form below and I'll get back to you within 24 hours.</p>
                     <textarea id="message" name="message" required></textarea>
                     <div class="error-message" id="message-error">Please let me know how I can help.</div>
                 </div>
+
+<!-- ADD THIS reCAPTCHA div here -->
+<div class="g-recaptcha" data-sitekey="6Le2AbsrAAAAANphqC3AXROSl7Tprk3BYo9s6cbx"></div>
                 
                 <button type="submit" id="submit-button">
                     <span class="button-text">Send Message</span>
@@ -777,7 +781,7 @@ Please reach out for a bespoke quote.</p>
     <a href="https://www.linkedin.com/in/anthony-tierney/" class="hero-social-link floating-mobile-linkedin-icon" target="_blank" rel="noopener noreferrer">
         <i class="fab fa-linkedin linkedin-icon-animated-2"></i>
     </a>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script src="script.js"></script>
 </body>
 </html>
-
