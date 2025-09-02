@@ -41,43 +41,14 @@ function toggleCaseStudySubAccordion(button) {
     subItem.classList.toggle('active');
 }
 
-// reCAPTCHA validation functions
-function validateRecaptcha() {
-    const recaptchaResponse = grecaptcha.getResponse();
-    if (recaptchaResponse.length === 0) {
-        showRecaptchaError();
-        return false;
-    }
-    return true;
-}
-
-function showRecaptchaError() {
-    let errorDiv = document.getElementById('recaptcha-error');
-    if (!errorDiv) {
-        errorDiv = document.createElement('div');
-        errorDiv.id = 'recaptcha-error';
-        errorDiv.className = 'error-message';
-        errorDiv.textContent = 'Please complete the reCAPTCHA verification.';
-        
-        // Insert after the reCAPTCHA div
-        const recaptchaDiv = document.querySelector('.g-recaptcha');
-        if (recaptchaDiv) {
-            recaptchaDiv.parentNode.insertBefore(errorDiv, recaptchaDiv.nextSibling);
-        }
-    }
-    errorDiv.style.display = 'block';
-}
-
-function hideRecaptchaError() {
-    const errorDiv = document.getElementById('recaptcha-error');
-    if (errorDiv) {
-        errorDiv.style.display = 'none';
-    }
-}
-
-function resetRecaptcha() {
-    if (typeof grecaptcha !== 'undefined') {
-        grecaptcha.reset();
+// reCAPTCHA v3 validation functions
+async function getRecaptchaToken() {
+    try {
+        const token = await grecaptcha.execute('6Le2AbsrAAAAANphqC3AXROSl7Tprk3BYo9s6cbx', {action: 'submit'});
+        return token;
+    } catch (error) {
+        console.error('reCAPTCHA error:', error);
+        return null;
     }
 }
 
@@ -260,14 +231,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Check reCAPTCHA if it exists
-        const recaptchaDiv = document.querySelector('.g-recaptcha');
-        if (recaptchaDiv && !validateRecaptcha()) {
+        // Get reCAPTCHA v3 token
+        const recaptchaToken = await getRecaptchaToken();
+        if (!recaptchaToken) {
+            formStatus.className = 'error';
+            formStatus.textContent = 'reCAPTCHA verification failed. Please try again.';
+            formStatus.style.display = 'block';
             return;
         }
-
-        // Hide reCAPTCHA error if validation passes
-        hideRecaptchaError();
 
         // Show spinner and disable button
         buttonText.style.display = 'none';
@@ -276,6 +247,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const formData = new FormData(form);
+            // Add reCAPTCHA token to form data
+            formData.append('g-recaptcha-response', recaptchaToken);
             const response = await fetch(form.action, {
                 method: 'POST',
                 body: formData,
@@ -289,9 +262,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 formStatus.className = 'success';
                 formStatus.textContent = "Thank you! Your message has been sent successfully. I'll be in touch soon.";
                 formStatus.style.display = 'block';
-                
-                // Reset reCAPTCHA after successful submission
-                resetRecaptcha();
             } else {
                 throw new Error('Form submission failed');
             }
@@ -304,9 +274,6 @@ document.addEventListener('DOMContentLoaded', function() {
             buttonText.style.display = 'block';
             spinner.style.display = 'none';
             submitButton.disabled = false;
-            
-            // Reset reCAPTCHA after failed submission
-            resetRecaptcha();
         }
     });
 });
