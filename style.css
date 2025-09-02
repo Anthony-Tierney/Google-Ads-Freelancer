@@ -1713,3 +1713,10 @@ transform: translateY(-4px);
         justify-content: flex-end;
     }
 }
+
+/* --- NEW RULE FOR MOBILE SERVICE CARD TEXT ALIGNMENT --- */
+@media screen and (max-width: 768px) {
+  [class^="service-card-"] p {
+    text-align: left;
+  }
+}
