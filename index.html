@@ -637,13 +637,38 @@ On top of this, I offer custom-built lead capture forms tailored to your campaig
                     <i class="fas fa-plus faq-icon"></i>
                 </button>
                 <div class="faq-answer">
-                    <strong>For Existing Ad Accounts</strong>
-                    <p>While every business is different, most clients start seeing initial results within 0 - 60 days of campaign launch.</p>
-                    <p>However, significant improvements and optimization typically occur after 6-8 weeks once we have sufficient data to make informed decisions.</p>
-                    <p>Google Ads is not a "set and forget" platform - it requires continuous monitoring, testing, and refinement. I focus on quick wins in the first month while building a foundation for long-term sustainable growth.</p>
-                    <br>
-                    <strong>For Brand New Ad Accounts</strong>
-                    <p>[Add your text for brand new ad accounts here. This might include information about the learning phase, initial data gathering, and setting realistic expectations for the first 90 days.]</p>
+                    <div class="faq-sub-accordion">
+                        <div class="faq-sub-item">
+                            <button class="faq-sub-question" onclick="toggleSubFaq(this)">
+                                <span>For Existing Ad Accounts</span>
+                                <i class="fas fa-plus faq-sub-icon"></i>
+                            </button>
+                            <div class="faq-sub-answer">
+                                <p> For those already running Google Ads, I focus on quick wins in the first month while building a foundation for long-term sustainable account growth.
+<br>
+<br>
+While every business is different, most clients start seeing initial improvements within 0 - 60 days of account refinement.
+<br>
+<br>
+Google Ads is not a "set and forget" platform - it requires continuous monitoring, testing, and optimisation.</p>
+                            </div>
+                        </div>
+                        <div class="faq-sub-item">
+                            <button class="faq-sub-question" onclick="toggleSubFaq(this)">
+                                <span>For Brand New Ad Accounts</span>
+                                <i class="fas fa-plus faq-sub-icon"></i>
+                            </button>
+                            <div class="faq-sub-answer">
+                                <p>While every business is different, most new Google Ads accounts should see conversions within the first 30 days of campaign launch.
+<br>
+<br>
+                                However, significant improvements and optimization typically occur after 6-8 weeks once we have sufficient data to make informed decisions.
+<br>
+<br>
+Google Ads is not a "set and forget" platform - it requires continuous monitoring, testing, and refinement. I focus on quick wins in the first month while building a foundation for long-term sustainable growth.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="faq-item">
@@ -791,5 +816,14 @@ Please reach out for a bespoke quote.</p>
         <i class="fab fa-linkedin linkedin-icon-animated-2"></i>
     </a>
     <script src="script.js"></script>
+
+    <script>
+        function toggleSubFaq(button) {
+            const subItem = button.parentElement;
+            if (subItem) {
+                subItem.classList.toggle('active');
+            }
+        }
+    </script>
 </body>
 </html>
