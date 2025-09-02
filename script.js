@@ -41,6 +41,46 @@ function toggleCaseStudySubAccordion(button) {
     subItem.classList.toggle('active');
 }
 
+// reCAPTCHA validation functions
+function validateRecaptcha() {
+    const recaptchaResponse = grecaptcha.getResponse();
+    if (recaptchaResponse.length === 0) {
+        showRecaptchaError();
+        return false;
+    }
+    return true;
+}
+
+function showRecaptchaError() {
+    let errorDiv = document.getElementById('recaptcha-error');
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'recaptcha-error';
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = 'Please complete the reCAPTCHA verification.';
+        
+        // Insert after the reCAPTCHA div
+        const recaptchaDiv = document.querySelector('.g-recaptcha');
+        if (recaptchaDiv) {
+            recaptchaDiv.parentNode.insertBefore(errorDiv, recaptchaDiv.nextSibling);
+        }
+    }
+    errorDiv.style.display = 'block';
+}
+
+function hideRecaptchaError() {
+    const errorDiv = document.getElementById('recaptcha-error');
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+    }
+}
+
+function resetRecaptcha() {
+    if (typeof grecaptcha !== 'undefined') {
+        grecaptcha.reset();
+    }
+}
+
 // Animation on scroll
 document.addEventListener('DOMContentLoaded', function() {
     const testimonialCards = document.querySelectorAll('.testimonial-card, .testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
@@ -220,6 +260,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Check reCAPTCHA if it exists
+        const recaptchaDiv = document.querySelector('.g-recaptcha');
+        if (recaptchaDiv && !validateRecaptcha()) {
+            return;
+        }
+
+        // Hide reCAPTCHA error if validation passes
+        hideRecaptchaError();
+
         // Show spinner and disable button
         buttonText.style.display = 'none';
         spinner.style.display = 'block';
@@ -240,6 +289,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 formStatus.className = 'success';
                 formStatus.textContent = "Thank you! Your message has been sent successfully. I'll be in touch soon.";
                 formStatus.style.display = 'block';
+                
+                // Reset reCAPTCHA after successful submission
+                resetRecaptcha();
             } else {
                 throw new Error('Form submission failed');
             }
@@ -247,10 +299,14 @@ document.addEventListener('DOMContentLoaded', function() {
             formStatus.className = 'error';
             formStatus.textContent = 'Sorry, there was an error sending your message. Please try again later.';
             formStatus.style.display = 'block';
+            
             // Hide spinner and re-enable button
             buttonText.style.display = 'block';
             spinner.style.display = 'none';
             submitButton.disabled = false;
+            
+            // Reset reCAPTCHA after failed submission
+            resetRecaptcha();
         }
     });
 });
