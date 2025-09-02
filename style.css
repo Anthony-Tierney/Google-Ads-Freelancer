@@ -1714,9 +1714,73 @@ transform: translateY(-4px);
     }
 }
 
-/* --- NEW RULE FOR MOBILE SERVICE CARD TEXT ALIGNMENT --- */
-@media screen and (max-width: 768px) {
-  [class^="service-card-"] p {
+/* --- NEW STYLES FOR NESTED FAQ ACCORDION --- */
+.faq-item.active .faq-answer {
+    /* Adjust padding for the container of the nested accordion */
+    padding: 1rem; 
+}
+.faq-sub-accordion {
+    width: 100%;
+}
+.faq-sub-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+}
+.faq-sub-item:last-child {
+    margin-bottom: 0;
+}
+.faq-sub-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #00ff88; !important;
+    font-size: 1rem;
+    font-weight: 500;
+    width: 100%;
     text-align: left;
-  }
+    min-height: 44px;
+}
+.faq-sub-icon {
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+}
+.faq-sub-item.active .faq-sub-icon {
+    transform: rotate(45deg);
+}
+.faq-sub-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+    padding: 0 1.5rem;
+}
+.faq-sub-item.active .faq-sub-answer {
+    max-height: 500px;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+}
+.faq-sub-answer p {
+    margin-bottom: 1rem;
+}
+.faq-sub-answer p:last-child {
+    margin-bottom: 0;
+}
+
+
+/* --- REVISED RULE FOR MOBILE SERVICE CARD TEXT ALIGNMENT --- */
+@media screen and (max-width: 768px) {
+    /* This forces the container of the service text to left-align its content... */
+    [class^="service-card-"] > div:not(.service-icon-placeholder) {
+      text-align: left;
+    }
+    
+    /* ...while this rule ensures the H3 title within it remains centered. */
+    [class^="service-card-"] .service-title {
+      text-align: center;
+    }
 }
