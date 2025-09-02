@@ -41,18 +41,6 @@ function toggleCaseStudySubAccordion(button) {
     subItem.classList.toggle('active');
 }
 
-// reCAPTCHA v3 validation functions
-async function getRecaptchaToken() {
-    try {
-        // Site key removed, as it's already loaded in the HTML
-        const token = await grecaptcha.execute(undefined, {action: 'submit'});
-        return token;
-    } catch (error) {
-        console.error('reCAPTCHA error:', error);
-        return null;
-    }
-}
-
 // Animation on scroll
 document.addEventListener('DOMContentLoaded', function() {
     const testimonialCards = document.querySelectorAll('.testimonial-card, .testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
@@ -232,15 +220,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Get reCAPTCHA v3 token
-        const recaptchaToken = await getRecaptchaToken();
-        if (!recaptchaToken) {
-            formStatus.className = 'error';
-            formStatus.textContent = 'reCAPTCHA verification failed. Please try again.';
-            formStatus.style.display = 'block';
-            return;
-        }
-
         // Show spinner and disable button
         buttonText.style.display = 'none';
         spinner.style.display = 'block';
@@ -248,8 +227,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const formData = new FormData(form);
-            // Add reCAPTCHA token to form data
-            formData.append('g-recaptcha-response', recaptchaToken);
             const response = await fetch(form.action, {
                 method: 'POST',
                 body: formData,
