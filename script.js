@@ -44,7 +44,8 @@ function toggleCaseStudySubAccordion(button) {
 // reCAPTCHA v3 validation functions
 async function getRecaptchaToken() {
     try {
-        const token = await grecaptcha.execute('6Le2AbsrAAAAANphqC3AXROSl7Tprk3BYo9s6cbx', {action: 'submit'});
+        // Site key removed, as it's already loaded in the HTML
+        const token = await grecaptcha.execute(undefined, {action: 'submit'});
         return token;
     } catch (error) {
         console.error('reCAPTCHA error:', error);
