@@ -191,7 +191,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <style>
         @media (max-width: 768px) {
             .services-grid {
-                grid-template-columns: 1fr; /* This stacks the service cards vertically on mobile */
+                grid-template-columns: 1fr; /* Stacks the service cards vertically */
+            }
+
+            /* This new rule targets the cards themselves to stack their internal content */
+            .service-card-conversion,
+            .service-card-audit,
+            .service-card-pmax,
+            .service-card-leads,
+            .service-card-search,
+            .service-card-landing {
+                display: flex;
+                flex-direction: column; /* This ensures the header and description stack vertically */
             }
         }
     </style>
