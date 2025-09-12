@@ -154,8 +154,57 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- REMOVED ADVANCED FORM HANDLING ---
-    // The browser will now handle form submission and redirection.
+    // --- FORM VALIDATION ---
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const messageInput = document.getElementById('message');
+            const nameError = document.getElementById('name-error');
+            const emailError = document.getElementById('email-error');
+            const messageError = document.getElementById('message-error');
+            
+            // Reset previous errors
+            [nameInput, emailInput, messageInput].forEach(input => input.classList.remove('error'));
+            [nameError, emailError, messageError].forEach(error => error.style.display = 'none');
+
+            // Name Validation: Check for empty value and numbers
+            if (nameInput.value.trim() === '') {
+                nameError.textContent = 'Name is required.';
+                nameError.style.display = 'block';
+                nameInput.classList.add('error');
+                isValid = false;
+            } else if (/\d/.test(nameInput.value)) {
+                nameError.textContent = 'Name cannot contain numbers.';
+                nameError.style.display = 'block';
+                nameInput.classList.add('error');
+                isValid = false;
+            }
+
+            // Email Validation: Check for empty value
+            if (emailInput.value.trim() === '') {
+                emailError.textContent = 'Please enter a valid email.';
+                emailError.style.display = 'block';
+                emailInput.classList.add('error');
+                isValid = false;
+            }
+
+            // Message Validation: Check for empty value
+            if (messageInput.value.trim() === '') {
+                messageError.textContent = 'Please let me know how I can help.';
+                messageError.style.display = 'block';
+                messageInput.classList.add('error');
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault(); // Prevent form submission if validation fails
+            }
+        });
+    }
 
 });
 
