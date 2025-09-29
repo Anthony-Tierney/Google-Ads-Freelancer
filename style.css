@@ -145,7 +145,7 @@ border-radius: 0 0 10px 10px;
     align-items: flex-start; /* Aligns items to the top */
 }
 .hero-left {
-    flex: 1.5; 
+    flex: 1.6; 
     display: flex;
     flex-direction: column;
     position: relative;
@@ -1784,3 +1784,4 @@ transform: translateY(-4px);
       text-align: center;
     }
 }
+
