@@ -141,11 +141,11 @@ border-radius: 0 0 10px 10px;
     margin: 20px auto;
     padding: 15px;
     display: flex;
-    gap: 2rem; 
+    gap: 2rem;
     align-items: flex-start; /* Aligns items to the top */
 }
 .hero-left {
-    flex: 1.82; 
+    flex: 1.82;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -172,7 +172,7 @@ border-radius: 0 0 10px 10px;
     line-height: 1.2;
     text-align: left;
 }
-.hero-social-link { 
+.hero-social-link {
     background-color: #0077B5;
     color: #ffffff;
     font-size: 1.8rem;
@@ -184,7 +184,7 @@ border-radius: 0 0 10px 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: bounce 2s ease-in-out infinite 1s; 
+    animation: bounce 2s ease-in-out infinite 1s;
 }
 .hero-section h1 .hero-social-link {
     display: inline-flex;
@@ -195,9 +195,9 @@ padding: 6px;      /* Decreased padding to make room for the icon */
 margin-left: 0.75rem;
 vertical-align: middle;
 transform: translateY(-4px);
-    
+
 }
-.hero-social-link:hover { 
+.hero-social-link:hover {
     transform: translateY(-3px) scale(1.05);
     background-color: #005582;
 }
@@ -540,7 +540,7 @@ transform: translateY(-4px);
 }
 .services-section {
     max-width: 1200px;
-    margin: 5rem auto;
+    margin: 5rem auto 0; /* Removed bottom margin */
     padding: 0 2rem;
     scroll-margin-top: 100px;
 }
@@ -551,6 +551,12 @@ transform: translateY(-4px);
     margin-top: 2rem;
 }
 .services-grid > [class^="service-card-"] {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+}
+.service-header {
     display: flex;
     align-items: flex-start;
     gap: 1.5rem;
@@ -649,20 +655,21 @@ transform: translateY(-4px);
 }
 .faq-section {
     max-width: 1200px;
-    margin: 5rem auto;
+    margin: 5rem auto 0; /* Removed bottom margin */
     padding: 0 2rem;
     scroll-margin-top: 100px;
 }
 .faq-cta-mobile {
-    display: none;
+    /* display: none; */ /* Removed this line */
     text-align: center;
     margin-bottom: 2rem;
 }
-@media (max-width: 768px) {
+/* Removed mobile-specific display rule */
+/* @media (max-width: 768px) {
     .faq-cta-mobile {
         display: block;
     }
-}
+} */
 .faq-accordion {
     margin-top: 2rem;
 }
@@ -674,6 +681,9 @@ transform: translateY(-4px);
     margin-bottom: 1rem;
     overflow: hidden;
     transition: all 0.3s ease;
+}
+.faq-item:last-child {
+    margin-bottom: 0; /* Removed bottom margin from last item */
 }
 .faq-question {
     display: flex;
@@ -705,7 +715,7 @@ transform: translateY(-4px);
 .faq-answer {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.4s ease, padding 0.4s ease;
+    transition: max-height: 0.4s ease, padding: 0.4s ease;
     background: rgba(255, 255, 255, 0.05);
 }
 .faq-item.active .faq-answer {
@@ -716,12 +726,17 @@ transform: translateY(-4px);
     line-height: 1.7;
     color: rgba(255, 255, 255, 0.9);
 }
+/* General rule for content-block-4 */
+.content-block-4 {
+    margin-top: 50px;
+}
 .contact-form-2 {
     max-width: 670px;
     width: 100%;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     padding: 2rem;
+    /* padding-bottom: 30px; */ /* Removed padding bottom */
     border-radius: 15px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     margin: 0 auto;
@@ -733,11 +748,14 @@ transform: translateY(-4px);
 .form-group {
     flex: 1;
     position: relative;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.5rem; /* Default margin */
 }
-.form-group:last-of-type {
+
+/* Ensure last group in the entire form has no bottom margin */
+.contact-form-2 .form-group:last-of-type {
     margin-bottom: 0;
 }
+
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
@@ -835,8 +853,8 @@ transform: translateY(-4px);
 .footer {
     background: rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(10px);
-    padding: 2rem 0;
-    margin-top: 5rem;
+    padding: 0; /* Removed top and bottom padding */
+    margin-top: 0; /* Removed margin-top */
     text-align: center;
 }
 .footer-container {
@@ -1035,18 +1053,33 @@ transform: translateY(-4px);
     position: relative;
     animation: gradient 15s ease infinite;
 }
-    
+
 @media (min-width: 769px) {
     .pricing-modal-content {
         margin-top: 40px !important;
     }
-    
+
     .hero-section {
         margin: 50px auto;
     }
     .mobile-break { display: none; }
 }
-    
+
+/* --- NEW DESKTOP CONTACT FORM STYLES --- */
+@media (min-width: 993px) {
+    .contact-info-right {
+        display: flex;
+        justify-content: flex-start; /* Align form to the left */
+        align-items: center; /* Center vertically */
+    }
+
+    .contact-info .contact-form-2 {
+        width: 400px;
+        max-width: 400px; /* Enforce the width */
+        margin: 0;
+    }
+}
+
 .pricing-section {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(5px);
@@ -1128,6 +1161,12 @@ transform: translateY(-4px);
     }
     .pricing-section {
         padding: 15px;
+    }
+    /* Add padding bottom to content-block-4 */
+    .content-block-4 {
+        padding-left: 32px;
+        padding-right: 32px;
+        padding-bottom: 30px;
     }
 }
 @media (max-width: 480px) {
@@ -1215,6 +1254,11 @@ transform: translateY(-4px);
 }
 /* --- HERO STYLES END --- */
 
+/* --- HIDE FLOATING ICON ON DESKTOP --- */
+.floating-mobile-linkedin-icon {
+    display: none; /* Hide on desktop by default */
+}
+
 @media (max-width: 992px) {
     .hero-section {
         flex-direction: column;
@@ -1246,9 +1290,9 @@ transform: translateY(-4px);
         line-height: 1.5;
         max-width: 100%;
     }
-   
-    .floating-mobile-linkedin-icon { 
-        display: flex; 
+
+    .floating-mobile-linkedin-icon {
+        display: flex; /* Show on mobile */
         position: fixed;
         bottom: 20px;
         right: 20px;
@@ -1320,6 +1364,31 @@ transform: translateY(-4px);
         flex-direction: column;
         gap: 0;
     }
+    /* Mobile Form Spacing */
+    .contact-form-2 .form-group {
+        margin-bottom: 0; /* Remove bottom margin from form groups */
+    }
+     .contact-form-2 .form-group:not(:last-of-type) {
+         margin-bottom: 1rem; /* Add consistent space below all groups except the last */
+     }
+
+    .contact-form-2 .form-group label {
+        margin-top: 8px; /* Add margin top to labels */
+    }
+    /* Ensure the first label in the form doesn't get extra top margin */
+     .contact-form-2 .form-group:first-of-type label {
+         margin-top: 0;
+     }
+     /* Remove margin bottom from groups within rows on mobile */
+     .name-email-row .form-group,
+     .form-row-2 .form-group {
+         margin-bottom: 0 !important;
+     }
+     /* Add margin top to the first label in the second row specifically */
+     .form-row-2 .form-group:first-child label {
+         margin-top: 8px;
+     }
+
     .client-placeholder {
         max-width: 160px;
         max-height: 160px;
@@ -1349,9 +1418,11 @@ transform: translateY(-4px);
         display: block;
         text-align: center;
     }
+    /* Moved content-block-4 padding here */
     .content-block-4 {
         padding-left: 32px;
         padding-right: 32px;
+        padding-bottom: 30px;
     }
     .floating-card {
         width: 140px;
@@ -1364,6 +1435,28 @@ transform: translateY(-4px);
     .floating-card-2 {
         bottom: -40px;
         left: -25px;
+    }
+
+    /* --- NEW CONTACT INFO MOBILE STYLES --- */
+    .contact-info {
+        flex-direction: column;
+        gap: 2.5rem; /* Increase gap for stacked view */
+        padding: 0; /* content-block-4 has padding on mobile */
+    }
+    .email-tel {
+        font-size: 1.1rem;
+        text-align: center !important; /* Center align on mobile */
+        padding-right: 0 !important; /* Remove right padding on mobile */
+    }
+
+    /* --- REDUCE FAQ TOP MARGIN ON MOBILE --- */
+    .faq-section {
+        margin-top: 32px;
+    }
+
+    /* Reduce case studies margin on mobile */
+    .case-studies-wrapper {
+        margin-bottom: 0 !important;
     }
 }
 @media (max-width: 480px) {
@@ -1771,18 +1864,44 @@ transform: translateY(-4px);
     margin-bottom: 0;
 }
 
-
-/* --- REVISED RULE FOR MOBILE SERVICE CARD TEXT ALIGNMENT --- */
-@media screen and (max-width: 768px) {
-    /* This forces the container of the service text to left-align its content... */
-    [class^="service-card-"] > div:not(.service-icon-placeholder) {
-      text-align: left;
-    }
-    
-    /* ...while this rule ensures the H3 title within it remains centered. */
-    [class^="service-card-"] .service-title {
-      text-align: center;
-    }
+/* --- NEW CONTACT INFO STYLES --- */
+.contact-info {
+    display: flex;
+    gap: 0; /* Removed gap */
+    align-items: center;
+    max-width: 1200px; /* Match other sections */
+    margin: 50px auto 0; /* Updated margin-top */
+    padding-bottom: 30px; /* Added padding bottom */
+    /* padding: 0 2rem; */ /* content-block-4 already has padding */
 }
-
-
+.contact-info-left {
+    flex: 1;
+}
+.contact-info-right {
+    flex: 1;
+    width: 100%;
+}
+/* Override margin auto from .contact-form-2 when it's inside .contact-info */
+.contact-info .contact-form-2 {
+    margin: 0;
+    max-width: 100%; /* Allow it to fill the flex item */
+}
+.email-tel {
+    text-align: right; /* Align text to the right */
+    font-size: 1.2rem;
+    font-weight: 500;
+    padding-right: 30px; /* Added padding right */
+}
+.email-tel p {
+    margin-bottom: 1rem;
+}
+.email-tel p:last-child {
+    margin-bottom: 0;
+}
+.email-tel a {
+    color: #00ff88; /* Match CTA green */
+    transition: opacity 0.3s ease;
+}
+.email-tel a:hover {
+    opacity: 0.8;
+}
