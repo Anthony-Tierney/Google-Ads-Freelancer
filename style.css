@@ -3,6 +3,12 @@
     padding: 0;
     box-sizing: border-box;
 }
+
+/* --- ADDED RULE --- */
+html {
+    overflow-x: hidden;
+}
+
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
@@ -12,6 +18,7 @@ body {
     animation: gradient 15s ease infinite;
     min-height: 100vh;
     overflow-x: hidden;
+    width: 100%; /* Ensured body takes full width */
 }
 :target {
     scroll-padding-top: 120px;
@@ -1459,6 +1466,8 @@ transform: translateY(-4px);
         margin-bottom: 0 !important;
     }
 }
+
+/* --- MODIFIED RULES --- */
 @media (max-width: 480px) {
     .hero-section h1 {
         font-size: 2rem;
@@ -1481,11 +1490,11 @@ transform: translateY(-4px);
     }
     .floating-card-1 {
         top: 10px;
-        right: -95px;
+        right: -25px; /* CHANGED from -95px */
     }
     .floating-card-2 {
         bottom: -40px;
-        left: -95px;
+        left: -25px; /* CHANGED from -95px */
     }
 }
 @keyframes gradient {
