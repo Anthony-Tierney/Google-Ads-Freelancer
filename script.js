@@ -12,6 +12,14 @@ function toggleFaq(button) {
     }
 }
 
+// MOVED from HTML: FAQ Sub-Accordion toggle function
+function toggleSubFaq(button) {
+    const subItem = button.parentElement;
+    if (subItem) {
+        subItem.classList.toggle('active');
+    }
+}
+
 // Case Study Accordion toggle function
 function toggleCaseStudyAccordion(button) {
     const caseStudyItem = button.parentElement;
@@ -205,6 +213,122 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // --- MOVED FROM HTML: PRICING CALCULATOR SCRIPT ---
+    const pricingTable = document.getElementById('pricingTable');
+    const slider = document.getElementById('spend-slider');
+    const spendValue = document.getElementById('spend-value');
+    const managementFee = document.getElementById('management-fee');
+    const setupFeeRow = document.getElementById('setup-fee-row'); // Get the row
+    const setupFee = document.getElementById('setup-fee');       // Get the cell
+    const accountRadios = document.querySelectorAll('input[name="account"]');
+    const googleCreditMessage = document.getElementById('googleCreditMessage'); // Get the credit message div
+
+    // Check if all elements exist before adding listeners
+    if (pricingTable && slider && spendValue && managementFee && setupFeeRow && setupFee && accountRadios.length > 0 && googleCreditMessage) {
+        
+        // State tracking for blur
+        let radioAnswered = false;
+        let sliderAnswered = false; // Slider is not considered "answered" on load, even at 0
+
+        function checkAndUnblur() {
+            // This function checks if both conditions are met
+            if (radioAnswered && sliderAnswered) {
+                pricingTable.classList.remove('blurred');
+            }
+        }
+
+        // --- Event Listener for Radios ---
+        accountRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                radioAnswered = true; // Mark radio as answered
+                checkAndUnblur();     // Check if we can unblur
+                calculateFees();      // Recalculate fees (this will hide/show the row)
+            });
+        });
+
+        // --- Event Listener for Slider ---
+        slider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value); // Get the value
+
+            if (value > 0) {
+                // If slider is moved to any value above 0
+                if (!sliderAnswered) {
+                    sliderAnswered = true; // Mark as answered
+                }
+                checkAndUnblur(); // Check if we can unblur
+            } else {
+                // If slider is moved back to 0
+                sliderAnswered = false; // Mark as "unanswered" again
+                pricingTable.classList.add('blurred'); // Re-apply the blur
+            }
+
+            // This part runs every time the slider moves
+            spendValue.textContent = formatCurrency(value) + 'pm';
+            calculateFees();
+        });
+
+        function formatCurrency(amount) {
+            return '£' + amount.toLocaleString('en-GB');
+        }
+
+    function calculateFees() {
+        const spend = parseInt(slider.value);
+        
+        // Check which radio is selected.
+        const checkedRadio = document.querySelector('input[name="account"]:checked');
+        const hasAccount = checkedRadio ? checkedRadio.value === 'yes' : false;
+        const isNo = checkedRadio ? checkedRadio.value === 'no' : false; // ADDED
+        const isOver4k = spend >= 4000; // ADDED
+
+        // Calculate management fee
+        let fee = 399;
+        if (spend > 4000) {
+            const increments = Math.floor((spend - 4000) / 500);
+            fee = 399 + (increments * 50);
+        }
+
+        // --- NEW: Cap the fee at 3500 ---
+        if (fee > 3500) {
+            fee = 3500;
+        }
+        
+        // UPDATED: Added 'pm' to the management fee
+        managementFee.textContent = formatCurrency(fee) + 'pm';
+        
+        // --- REPLACED Logic for setup fee row AND Google Credit Message ---
+        if (hasAccount) {
+            // 'Yes' is selected
+            setupFeeRow.style.display = 'none'; // Hide setup fee row
+            googleCreditMessage.style.display = 'none'; // Hide credit message
+        } else if (isNo) {
+            // 'No' is selected
+            googleCreditMessage.style.display = 'flex'; // Show credit message
+            
+            if (isOver4k) {
+                // 'No' AND '>= £4k'
+                setupFeeRow.style.display = 'none'; // Hide setup row
+            } else {
+                // 'No' AND '< £4k'
+                setupFeeRow.style.display = ''; // Show setup fee row
+                setupFee.textContent = '£99';
+            }
+        } else { 
+            // No radio selected yet
+            setupFeeRow.style.display = ''; // Show setup fee row
+            setupFee.textContent = '£99';   // Set default text
+            googleCreditMessage.style.display = 'none'; // Hide credit message
+        }
+    }
+
+        // Initial call to set fees based on default (slider=0, radio=unchecked)
+        // This will correctly show the £99 setup fee by default, but the table remains blurred
+        calculateFees(); 
+        
+        // --- ADDED: Set initial slider text to include 'pm' ---
+        spendValue.textContent = formatCurrency(parseInt(slider.value)) + 'pm';
+    }
+    // --- END: PRICING CALCULATOR SCRIPT ---
 
 });
 
