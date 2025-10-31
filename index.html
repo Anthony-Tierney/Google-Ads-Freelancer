@@ -221,9 +221,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WJX79WDD"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-<div class="page-wrapper"> <!-- ADDED WRAPPER -->
-
-<nav class="main-menu">
+<div class="page-wrapper"> <nav class="main-menu">
         <div class="menu-container">
             <div class="logo-placeholder">
                 <a href="#home">
@@ -232,10 +230,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
             <div class="menu-items" id="mobileMenuItems">
                 <a href="#home" class="menu-item">Home</a>
+                <!-- ADDED Pricing link -->
+                <a href="#pricing" class="menu-item">Pricing</a>
                 <a href="#testimonials" class="menu-item">Testimonials</a>
-                <a href="#case-studies" class="menu-item">Case Studies</a>
-                <a href="#services" class="menu-item">Services</a>
-                <a href="#faq" class="menu-item">FAQs & Pricing</a>
+<a href="#case-studies" class="menu-item">Case Studies</a>
+<a href="#services" class="menu-item">Services</a>
+<!-- RENAMED "FAQs & Pricing" to "FAQs" -->
+<a href="#faq" class="menu-item">FAQs</a>
                 <a href="#contact" class="menu-item">Contact</a>
             </div>
             <div class="burger-menu-icon" id="burgerIcon">
@@ -250,14 +251,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <h1>Scale Your Business with Expert Google Ads Management<a href="https://www.linkedin.com/in/anthony-tierney/" class="hero-social-link hero-title-linkedin-icon" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin linkedin-icon-animated-1"></i></a></h1>
             </div>
             <div class="feature-list">
-                <p><span class="checkmark">✓</span> 8+ years of hands-on Google Ads experience with B2B & B2C lead gen & e-commerce campaigns.</p>
-                <p><span class="checkmark">✓</span> Tired of dealing with agency middlemen? I'm always just a quick phone call away!</p>
-                <p><span class="checkmark">✓</span> Transparent reporting with full account ownership and access for my clients.</p>
-                <p><span class="checkmark">✓</span> Simple flat-rate management fee on a rolling 30 day contract.</p>
+                <p><span class="checkmark">&check;</span> 8+ years of hands-on Google Ads experience with B2B & B2C lead gen & e-commerce campaigns.</p>
+                <p><span class="checkmark">&check;</span> Tired of dealing with agency middlemen? I'm always just a quick phone call away!</p>
+                <p><span class="checkmark">&check;</span> Transparent reporting with full account ownership and access for my clients.</p>
+                <p><span class="checkmark">&check;</span> Simple flat-rate management fee on a rolling 30 day contract.</p>
             </div>
             <div class="hero-cta-buttons">
                 <a href="#contact" class="cta-button-glass cta-button-primary">Get in Touch</a>
-                <a href="#testimonials" class="cta-button-glass">View Testimonials</a>
+                <!-- UPDATED second CTA button to "Pricing" and link to #pricing -->
+                <a href="#pricing" class="cta-button-glass">Pricing</a>
             </div>
         </div>
         <div class="hero-right">
@@ -330,6 +332,85 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
         </div>
     </div>
+<div class="pricing-section" id="pricing">
+    <h2 class="section-title">Pricing</h2>
+    <!-- UPDATED: Added span with class for mobile-only line break -->
+    <p class="section-subtitle">Full monthly Google Ads account management from only £399pm. <span class="mobile-only-break">See below.</span></p>
+    
+    <div class="calculator-container">
+        <div class="questions-section">
+            <div class="question-group">
+                <label class="question-label">Do you have an existing Google Ads account?</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+    <input type="radio" id="account-yes" name="account" value="yes">
+    <label for="account-yes">Yes</label>
+</div>
+                    <div class="radio-option">
+                        <input type="radio" id="account-no" name="account" value="no">
+                        <label for="account-no">No</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="question-group">
+                <label class="question-label">My monthly ad spend is/will be:</label>
+                <div class="slider-container">
+                    <div class="slider-value" id="spend-value">£0</div>
+                    <input type="range" id="spend-slider" min="0" max="50000" step="500" value="0">
+                    <div class="slider-labels">
+                        <span>£0</span>
+                        <span>£50,000+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pricing-table-wrapper">
+        
+            <div class="pricing-table blurred" id="pricingTable">
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Pricing</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <!-- UPDATED: Text changed -->
+                            <td>Fixed Monthly Fee (inc. VAT)</td>
+                            <!-- UPDATED: Added 'pm' -->
+                            <td id="management-fee">£399pm</td>
+                        </tr>
+                        <tr id="setup-fee-row">
+                            <td>One-off Setup Fee</td>
+                            <td id="setup-fee">£0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pricing-table-overlay" id="pricingOverlay">
+                <p>Please answer the 2 questions to see pricing.</p>
+            </div>
+            
+            <div class="google-ads-credit-message" id="googleCreditMessage" style="display: none;">
+                <i class="fas fa-coins"></i>
+                <span>As a Google Premier Partner, I can help new advertisers obtain a free ads credit of up to £2,000!</span>
+            </div>
+        </div>
+
+        <a href="#services" class="cta-button-glass cta-button-primary cta-calculator-services">See Services Included <i class="fas fa-arrow-pointer"></i></a>
+    </div>
+
+</div>
+    
+    <!-- ADDED CTA button section -->
+    <div class="services-cta-section">
+        <a href="#contact" class="services-cta-button">Get in Touch</a>
+    </div>
+
     <div class="testimonials-section" id="testimonials">
         <h2 class="section-title">Client Testimonials</h2>
         <div class="testimonials-grid">
@@ -386,6 +467,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
     </div>
     
+    <!-- ADDED CTA button section -->
+    <div class="services-cta-section">
+        <a href="#contact" class="services-cta-button">Get in Touch</a>
+    </div>
+
     <div id="case-studies" class="case-studies-wrapper">
         <div class="case-studies-section">
             <h2 class="section-title">Case Studies</h2>
@@ -665,25 +751,9 @@ On top of this, I offer custom-built lead capture forms tailored to your campaig
         <div class="faq-cta-mobile">
             <a href="#contact" class="services-cta-button">Get in Touch</a>
         </div>
-        <h2 class="section-title">FAQs & Pricing</h2>
+        <h2 class="section-title">FAQs</h2>
         <div class="faq-accordion">
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>How much do you charge?</span>
-                    <i class="fas fa-plus faq-icon"></i>
-                </button>
-                <div class="faq-answer">
-                    <p>This depends! Click one of the options below to bring up the relevant pricing tiers:
-<br>
-<br>
-<a href="javascript:void(0);" onclick="openModal('pricingModal1')" style="color: #00ff88; text-decoration: underline;">Click here</a> if you <b>DO NOT</b> have an existing ads account and therefore need a completely new setup.
-<br>
-<br>
-<a href="javascript:void(0);" onclick="openModal('pricingModal2')" style="color: #00ff88; text-decoration: underline;">Click here</a> if you <B>DO</b> have an existing ads account which is either running ads right now or has done within the last 6 months.
-</p>
-                </div>
-            </div>
-            <div class="faq-item">
+                        <div class="faq-item">
                 <button class="faq-question" onclick="toggleFaq(this)">
                     <span>Are you Google Ads Certified?</span>
                     <i class="fas fa-plus faq-icon"></i>
@@ -782,14 +852,14 @@ Depending on your website setup, there may be more access required - but we can 
 Contact me via any of the below methods & I'll get back to you within 24 hours!</p>
         </div>
         
-        <!-- === MODIFIED CONTACT SECTION === -->
         <div class="contact-info">
             <div class="contact-info-left">
                 <div class="email-tel">
-                    <!-- Links are now styled by style.css -->
-                    <p>Email: <a href="mailto:anthony.ppc1@gmail.com" style="text-decoration: underline;">anthony.ppc1@gmail.com</a></p>
-                    <p>Tel: <a href="tel:+447397758392" style="text-decoration: underline;">+447397758392</a></p>
-<br>
+                    <!-- UPDATED: Added Font Awesome icons -->
+                    <p><i class="fas fa-envelope"></i> Email: <a href="mailto:anthony.ppc1@gmail.com" style="text-decoration: underline;">anthony.ppc1@gmail.com</a></p>
+                    <p><i class="fas fa-phone"></i> Tel: <a href="tel:+447397758392" style="text-decoration: underline;">+447397758392</a></p>
+                    <!-- ADDED: WhatsApp line with icon -->
+                    <p><i class="fab fa-whatsapp"></i> WhatsApp: <a href="https://wa.me/447397758392" target="_blank" rel="noopener noreferrer" style="text-decoration: underline;">+447397758392</a></p>
                 </div>
             </div>
             <div class="contact-info-right">
@@ -800,13 +870,15 @@ Contact me via any of the below methods & I'll get back to you within 24 hours!<
                         
                         <div class="name-email-row">
                             <div class="form-group">
-                                <label for="name">Your Name</label>
+                                <!-- UPDATED: Added red asterisk span -->
+                                <label for="name">Your Name <span class="required-asterisk">*</span></label>
                                 <input type="text" id="name" name="name" required>
                                 <div class="error-message" id="name-error">Name is required.</div>
                             </div>
 
                             <div class="form-group">
-                                <label for="email">Email Address</label>
+                                <!-- UPDATED: Added red asterisk span -->
+                                <label for="email">Email Address <span class="required-asterisk">*</span></label>
                                 <input type="email" id="email" name="email" required>
                                 <div class="error-message" id="email-error">Please enter a valid email.</div>
                             </div>
@@ -824,7 +896,8 @@ Contact me via any of the below methods & I'll get back to you within 24 hours!<
                         </div>
                         
                         <div class="form-group">
-                            <label for="message">How Can I Help You?</label>
+                            <!-- UPDATED: Added red asterisk span -->
+                            <label for="message">How Can I Help You? <span class="required-asterisk">*</span></label>
                             <textarea id="message" name="message" required></textarea>
                             <div class="error-message" id="message-error">Please let me know how I can help.</div>
                         </div>
@@ -839,9 +912,7 @@ Contact me via any of the below methods & I'll get back to you within 24 hours!<
                 </div>
             </div>
         </div>
-        <!-- === END MODIFIED CONTACT SECTION === -->
-
-    </div>
+        </div>
     <div id="pricingModal1" class="modal">
         <div class="pricing-modal-content modal-content">
             <button class="close-modal" onclick="closeModal('pricingModal1')">×</button>
@@ -878,7 +949,7 @@ Please reach out for a bespoke quote.</p>
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-links">
-                <a href="https://anthonytierney.co.uk/blog/" class="footer-link">Blog</a>
+                <a href="httpsANthonytierney.co.uk/blog/" class="footer-link">Blog</a>
                 <a href="https://anthonytierney.co.uk/privacy-policy" class="footer-link">Privacy Policy</a>
                 <a href="https://anthonytierney.co.uk/terms-of-service" class="footer-link">Terms of Service</a>
             </div>
@@ -893,9 +964,7 @@ Please reach out for a bespoke quote.</p>
     <a href="https://www.linkedin.com/in/anthony-tierney/" class="hero-social-link floating-mobile-linkedin-icon" target="_blank" rel="noopener noreferrer">
         <i class="fab fa-linkedin linkedin-icon-animated-2"></i>
     </a>
-</div> <!-- This is the closing tag for page-wrapper -->
-
-    <script src="script.js"></script>
+</div> <script src="script.js"></script>
 
     <script>
         function toggleSubFaq(button) {
@@ -905,5 +974,119 @@ Please reach out for a bespoke quote.</p>
             }
         }
     </script>
+<script>
+    // --- START: NEW PRICING CALCULATOR SCRIPT ---
+    const pricingTable = document.getElementById('pricingTable');
+    const slider = document.getElementById('spend-slider');
+    const spendValue = document.getElementById('spend-value');
+    const managementFee = document.getElementById('management-fee');
+    const setupFeeRow = document.getElementById('setup-fee-row'); // Get the row
+    const setupFee = document.getElementById('setup-fee');       // Get the cell
+    const accountRadios = document.querySelectorAll('input[name="account"]');
+    const googleCreditMessage = document.getElementById('googleCreditMessage'); // Get the credit message div
+
+    // State tracking for blur
+    let radioAnswered = false;
+    let sliderAnswered = false; // Slider is not considered "answered" on load, even at 0
+
+    function checkAndUnblur() {
+        // This function checks if both conditions are met
+        if (radioAnswered && sliderAnswered) {
+            pricingTable.classList.remove('blurred');
+        }
+    }
+
+    // --- Event Listener for Radios ---
+    accountRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            radioAnswered = true; // Mark radio as answered
+            checkAndUnblur();     // Check if we can unblur
+            calculateFees();      // Recalculate fees (this will hide/show the row)
+        });
+    });
+
+    // --- Event Listener for Slider ---
+slider.addEventListener('input', (e) => {
+    const value = parseInt(e.target.value); // Get the value
+
+    if (value > 0) {
+        // If slider is moved to any value above 0
+        if (!sliderAnswered) {
+            sliderAnswered = true; // Mark as answered
+        }
+        checkAndUnblur(); // Check if we can unblur
+    } else {
+        // If slider is moved back to 0
+        sliderAnswered = false; // Mark as "unanswered" again
+        pricingTable.classList.add('blurred'); // Re-apply the blur
+    }
+
+    // This part runs every time the slider moves
+    spendValue.textContent = formatCurrency(value) + 'pm';
+    calculateFees();
+});
+
+    function formatCurrency(amount) {
+        return '£' + amount.toLocaleString('en-GB');
+    }
+
+    function calculateFees() {
+        const spend = parseInt(slider.value);
+        
+        // Check which radio is selected.
+        const checkedRadio = document.querySelector('input[name="account"]:checked');
+        const hasAccount = checkedRadio ? checkedRadio.value === 'yes' : false;
+        const isNo = checkedRadio ? checkedRadio.value === 'no' : false; // ADDED
+        const isOver4k = spend >= 4000; // ADDED
+
+        // Calculate management fee
+        let fee = 399;
+        if (spend > 4000) {
+            const increments = Math.floor((spend - 4000) / 500);
+            fee = 399 + (increments * 50);
+        }
+
+        // --- NEW: Cap the fee at 3500 ---
+        if (fee > 3500) {
+            fee = 3500;
+        }
+        
+        // UPDATED: Added 'pm' to the management fee
+        managementFee.textContent = formatCurrency(fee) + 'pm';
+        
+        // --- REPLACED Logic for setup fee row AND Google Credit Message ---
+        if (hasAccount) {
+            // 'Yes' is selected
+            setupFeeRow.style.display = 'none'; // Hide setup fee row
+            googleCreditMessage.style.display = 'none'; // Hide credit message
+        } else if (isNo) {
+            // 'No' is selected
+            googleCreditMessage.style.display = 'flex'; // Show credit message
+            
+            if (isOver4k) {
+                // 'No' AND '>= £4k'
+                setupFeeRow.style.display = 'none'; // Hide setup row
+            } else {
+                // 'No' AND '< £4k'
+                setupFeeRow.style.display = ''; // Show setup fee row
+                setupFee.textContent = '£99';
+            }
+        } else { 
+            // No radio selected yet
+            setupFeeRow.style.display = ''; // Show setup fee row
+            setupFee.textContent = '£99';   // Set default text
+            googleCreditMessage.style.display = 'none'; // Hide credit message
+        }
+    }
+
+    // Initial call to set fees based on default (slider=0, radio=unchecked)
+    // This will correctly show the £99 setup fee by default, but the table remains blurred
+    calculateFees(); 
+    
+    // --- ADDED: Set initial slider text to include 'pm' ---
+    spendValue.textContent = formatCurrency(parseInt(slider.value)) + 'pm';
+    // --- END: NEW PRICING CALCULATOR SCRIPT ---
+</script>
 </body>
 </html>
+
