@@ -820,7 +820,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .star-rating {
     color: #FFD700;
     margin-bottom: 0;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
 .star-rating .fas {
@@ -904,7 +904,8 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .services-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    /* THIS IS THE UPDATED LINE FOR 3 CARDS PER ROW ON DESKTOP */
+    grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
     margin-top: 2rem;
 }
