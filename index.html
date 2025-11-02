@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <link rel="icon" href="favicon.ico" type="image/x-icon">
-<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
@@ -147,6 +146,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         "mainEntity": [
             {
                 "@type": "Question",
+                "name": "Where are you based?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "I am 100% UK-based but I have clients operating both nationally and internationally."
+                }
+            },
+            {
+                "@type": "Question",
                 "name": "How much do you charge?",
                 "acceptedAnswer": {
                     "@type": "Answer",
@@ -231,12 +238,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
             <div class="menu-items" id="mobileMenuItems">
                 <a href="#home" class="menu-item">Home</a>
-                <!-- ADDED Pricing link -->
                 <a href="#pricing" class="menu-item">Pricing</a>
                 <a href="#testimonials" class="menu-item">Testimonials</a>
 <a href="#case-studies" class="menu-item">Case Studies</a>
 <a href="#services" class="menu-item">Services</a>
-<!-- RENAMED "FAQs & Pricing" to "FAQs" -->
 <a href="#faq" class="menu-item">FAQs</a>
                 <a href="#contact" class="menu-item">Contact</a>
             </div>
@@ -259,7 +264,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
             <div class="hero-cta-buttons">
                 <a href="#contact" class="cta-button-glass cta-button-primary">Get in Touch</a>
-                <!-- UPDATED second CTA button to "Pricing" and link to #pricing -->
                 <a href="#pricing" class="cta-button-glass">Pricing</a>
             </div>
         </div>
@@ -335,7 +339,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
 <div class="pricing-section" id="pricing">
     <h2 class="section-title">Pricing</h2>
-    <!-- UPDATED: Added span with class for mobile-only line break -->
     <p class="section-subtitle">Full monthly Google Ads account management from only £399pm. <span class="mobile-only-break">See below.</span></p>
     
     <div class="calculator-container">
@@ -379,9 +382,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </thead>
                     <tbody>
                         <tr>
-                            <!-- UPDATED: Text changed -->
                             <td>Fixed Monthly Fee (inc. VAT)</td>
-                            <!-- UPDATED: Added 'pm' -->
                             <td id="management-fee">£399pm</td>
                         </tr>
                         <tr id="setup-fee-row">
@@ -407,7 +408,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 </div>
     
-    <!-- ADDED CTA button section -->
     <div class="services-cta-section">
         <a href="#contact" class="services-cta-button">Get in Touch</a>
     </div>
@@ -468,7 +468,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
     </div>
     
-    <!-- ADDED CTA button section -->
     <div class="services-cta-section">
         <a href="#contact" class="services-cta-button">Get in Touch</a>
     </div>
@@ -754,7 +753,16 @@ On top of this, I offer custom-built lead capture forms tailored to your campaig
         </div>
         <h2 class="section-title">FAQs</h2>
         <div class="faq-accordion">
-                        <div class="faq-item">
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span>Where are you based?</span>
+                    <i class="fas fa-plus faq-icon"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>I am 100% UK-based but I have clients operating both nationally and internationally.</p>
+                </div>
+            </div>
+            <div class="faq-item">
                 <button class="faq-question" onclick="toggleFaq(this)">
                     <span>Are you Google Ads Certified?</span>
                     <i class="fas fa-plus faq-icon"></i>
@@ -856,10 +864,8 @@ Contact me via any of the below methods & I'll get back to you within 24 hours!<
         <div class="contact-info">
             <div class="contact-info-left">
                 <div class="email-tel">
-                    <!-- UPDATED: Added Font Awesome icons -->
                     <p><i class="fas fa-envelope"></i> Email: <a href="mailto:anthony.ppc1@gmail.com" style="text-decoration: underline;">anthony.ppc1@gmail.com</a></p>
                     <p><i class="fas fa-phone"></i> Tel: <a href="tel:+447397758392" style="text-decoration: underline;">+447397758392</a></p>
-                    <!-- ADDED: WhatsApp line with icon -->
                     <p><i class="fab fa-whatsapp"></i> WhatsApp: <a href="https://wa.me/447397758392" target="_blank" rel="noopener noreferrer" style="text-decoration: underline;">Click here</a></p>
 <br class="mobile-only-break">
                 </div>
@@ -872,14 +878,12 @@ Contact me via any of the below methods & I'll get back to you within 24 hours!<
                         
                         <div class="name-email-row">
                             <div class="form-group">
-                                <!-- UPDATED: Added red asterisk span -->
                                 <label for="name">Your Name <span class="required-asterisk">*</span></label>
                                 <input type="text" id="name" name="name" required>
                                 <div class="error-message" id="name-error">Name is required.</div>
                             </div>
 
                             <div class="form-group">
-                                <!-- UPDATED: Added red asterisk span -->
                                 <label for="email">Email Address <span class="required-asterisk">*</span></label>
                                 <input type="email" id="email" name="email" required>
                                 <div class="error-message" id="email-error">Please enter a valid email.</div>
@@ -898,7 +902,6 @@ Contact me via any of the below methods & I'll get back to you within 24 hours!<
                         </div>
                         
                         <div class="form-group">
-                            <!-- UPDATED: Added red asterisk span -->
                             <label for="message">How Can I Help You? <span class="required-asterisk">*</span></label>
                             <textarea id="message" name="message" required></textarea>
                             <div class="error-message" id="message-error">Please let me know how I can help.</div>
@@ -967,11 +970,53 @@ Please reach out for a bespoke quote.</p>
         <i class="fab fa-linkedin linkedin-icon-animated-2"></i>
     </a>
 </div> 
-<!-- REMOVED inline script blocks -->
 <script src="script.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Find all service cards
+    const serviceCards = document.querySelectorAll('.services-grid > [class^="service-card-"]');
+
+    serviceCards.forEach(card => {
+        const descriptionContainer = card.querySelector('.service-description');
+        if (!descriptionContainer) return; // Safety check
+
+        const p = descriptionContainer.querySelector('p');
+        if (!p) return; // Safety check
+
+        // Check if the text is actually overflowing (clamped)
+        // scrollHeight = total height of content
+        // clientHeight = visible height of element
+        // We add a small buffer (1px) just to be safe with rounding
+        if (p.scrollHeight > (p.clientHeight + 1)) {
+            
+            // 1. Create the 'Read More' link
+            const toggleLink = document.createElement('a');
+            toggleLink.textContent = 'Read More';
+            toggleLink.className = 'read-more-toggle';
+            toggleLink.href = '#'; // Makes it keyboard-focusable
+
+            // 2. Insert the link *after* the description container, but *inside* the card
+            card.appendChild(toggleLink);
+
+            // 3. Add the click event listener
+            toggleLink.addEventListener('click', function(e) {
+                e.preventDefault(); // Stop the page from jumping to top
+                
+                // Toggle the 'expanded' class on the description container
+                const isExpanded = descriptionContainer.classList.toggle('expanded');
+                
+                // Change the link text based on the new state
+                if (isExpanded) {
+                    toggleLink.textContent = 'Read Less';
+                } else {
+                    toggleLink.textContent = 'Read More';
+                }
+            });
+        }
+    });
+});
+</script>
 
 </body>
 </html>
-
-
-
