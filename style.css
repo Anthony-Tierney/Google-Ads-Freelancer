@@ -820,7 +820,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .star-rating {
     color: #FFD700;
     margin-bottom: 0;
-    font-size: 1.1rem;
+    font-size: 1.1rem; /* UPDATED: Was 1.2rem */
 }
 
 .star-rating .fas {
@@ -904,7 +904,6 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .services-grid {
     display: grid;
-    /* THIS IS THE UPDATED LINE FOR 3 CARDS PER ROW ON DESKTOP */
     grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
     margin-top: 2rem;
@@ -913,14 +912,40 @@ input[type="range"]::-moz-range-thumb:hover {
 .services-grid > [class^="service-card-"] {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center; /* UPDATED: was flex-start */
     gap: 1rem;
+    /* Added for mobile highlight */
+    transition: border 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    border: 1px solid transparent; /* Default transparent border for transition */
 }
+
+/* Specific card borders (overridden from transparent default) */
+.service-card-conversion {
+    border-color: rgba(86, 227, 159, 0.3);
+}
+.service-card-audit {
+    border-color: rgba(118, 75, 162, 0.3);
+}
+.service-card-pmax {
+    border-color: rgba(102, 126, 234, 0.3);
+}
+.service-card-leads {
+     border-color: rgba(240, 147, 251, 0.3);
+}
+.service-card-search {
+    border-color: rgba(86, 227, 159, 0.3);
+}
+.service-card-landing {
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
 
 .service-header {
     display: flex;
-    align-items: flex-start;
-    gap: 1.5rem;
+    flex-direction: column; /* UPDATED: stack icon and title */
+    align-items: center; /* UPDATED: center icon and title */
+    gap: 1rem; /* UPDATED: was 1.5rem and for horizontal */
+    width: 100%; /* Ensure it spans card width */
 }
 
 .service-card-conversion {
@@ -928,7 +953,6 @@ input[type="range"]::-moz-range-thumb:hover {
     backdrop-filter: blur(5px);
     padding: 1.8rem;
     border-radius: 12px;
-    border: 1px solid rgba(86, 227, 159, 0.3);
     opacity: 0;
     transform: translateX(-100px);
     transition: all 0.5s ease;
@@ -939,7 +963,6 @@ input[type="range"]::-moz-range-thumb:hover {
     backdrop-filter: blur(5px);
     padding: 1.8rem;
     border-radius: 12px;
-    border: 1px solid rgba(118, 75, 162, 0.3);
     opacity: 0;
     transform: translateX(-100px);
     transition: all 0.5s ease 0.1s;
@@ -950,7 +973,6 @@ input[type="range"]::-moz-range-thumb:hover {
     backdrop-filter: blur(5px);
     padding: 1.8rem;
     border-radius: 12px;
-    border: 1px solid rgba(102, 126, 234, 0.3);
     opacity: 0;
     transform: translateX(-100px);
     transition: all 0.5s ease 0.2s;
@@ -961,7 +983,6 @@ input[type="range"]::-moz-range-thumb:hover {
     backdrop-filter: blur(5px);
     padding: 1.8rem;
     border-radius: 12px;
-    border: 1px solid rgba(240, 147, 251, 0.3);
     opacity: 0;
     transform: translateX(100px);
     transition: all 0.5s ease 0.2s;
@@ -972,7 +993,6 @@ input[type="range"]::-moz-range-thumb:hover {
     backdrop-filter: blur(5px);
     padding: 1.8rem;
     border-radius: 12px;
-    border: 1px solid rgba(86, 227, 159, 0.3);
     opacity: 0;
     transform: translateX(100px);
     transition: all 0.5s ease 0.1s;
@@ -983,7 +1003,6 @@ input[type="range"]::-moz-range-thumb:hover {
     backdrop-filter: blur(5px);
     padding: 1.8rem;
     border-radius: 12px;
-    border: 1px solid rgba(255, 193, 7, 0.3);
     opacity: 0;
     transform: translateX(100px);
     transition: all 0.5s ease;
@@ -1023,6 +1042,7 @@ input[type="range"]::-moz-range-thumb:hover {
     font-weight: bold;
     margin-bottom: 1rem;
     color: #00ff88;
+    text-align: center; /* UPDATED: Ensure text is centered */
 }
 
 .faq-section {
@@ -1416,6 +1436,49 @@ input[type="range"]::-moz-range-thumb:hover {
     overflow: hidden;
 }
 
+/* NEW: Specific styles for the service modal */
+.service-modal-content {
+    max-width: 600px; /* Smaller width for service cards */
+    background: #23a6d5; /* Simpler background */
+}
+
+#serviceModalBody [class^="service-card-"] {
+    /* Styles for the card *inside* the modal */
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    padding: 1.8rem;
+    border-radius: 0; /* Remove radius inside modal */
+    border: none; /* Remove border inside modal */
+    opacity: 1; /* Ensure it's visible */
+    transform: none; /* Ensure no transform */
+    transition: none;
+    box-shadow: none;
+}
+#serviceModalBody .service-header {
+    /* Ensure header is centered in modal too */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+#serviceModalBody .service-title {
+    text-align: center;
+}
+#serviceModalBody .service-description p {
+    /* This is the magic: un-clamp the text */
+    margin-bottom: 0;
+    overflow: visible;
+    display: block;
+    -webkit-box-orient: unset;
+    -webkit-line-clamp: unset;
+}
+#serviceModalBody .read-more-toggle {
+    /* Hide the "Read More" link inside the modal */
+    display: none;
+}
+
+
 .modal-header {
     display: flex;
     align-items: flex-start;
@@ -1606,6 +1669,13 @@ input[type="range"]::-moz-range-thumb:hover {
         margin: 20px auto;
         border-radius: 15px;
     }
+    .service-modal-content {
+        padding: 0; /* Remove padding from modal content */
+    }
+    #serviceModalBody [class^="service-card-"] {
+        padding: 1.5rem; /* Add padding to card inside modal */
+    }
+
     .modal-header {
         flex-direction: column;
         text-align: center;
@@ -1952,6 +2022,12 @@ input[type="range"]::-moz-range-thumb:hover {
         width: 80%; /* Each card takes 80% of the screen width */
         max-width: 350px; /* A bit wider to accommodate text */
         scroll-snap-align: start; /* Snap to the start of each card */
+    }
+
+    /* --- NEW: MOBILE SCROLL HIGHLIGHT --- */
+    .services-grid > [class^="service-card-"].in-view {
+        border: 2px solid #00ff88 !important; /* !important to override inline card styles */
+        box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
     }
 
     /* --- NEW: REMOVE SERVICE ANIMATION ON MOBILE --- */
@@ -2548,10 +2624,10 @@ input[type="range"]::-moz-range-thumb:hover {
     -webkit-line-clamp: 4; /* Truncate to 4 lines */
 }
 
-/* This is the 'expanded' state */
-.service-description.expanded p {
-    -webkit-line-clamp: unset; /* Show all lines */
-}
+/* This is the 'expanded' state - NO LONGER USED, MODAL IS USED */
+/* .service-description.expanded p {
+    -webkit-line-clamp: unset; 
+} */
 
 .read-more-toggle {
     display: inline-block;
