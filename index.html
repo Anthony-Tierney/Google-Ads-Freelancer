@@ -4,7 +4,7 @@
 <link rel="icon" href="favicon.ico" type="image/x-icon">
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+j=d.getElementsByTagName(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-WJX79WDD');</script>
 <meta charset="UTF-8">
@@ -204,24 +204,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     </script>
 
-    <style>
-        @media (max-width: 768px) {
-            .services-grid {
-                grid-template-columns: 1fr; /* Stacks the service cards vertically */
-            }
-
-            /* This new rule targets the cards themselves to stack their internal content */
-            .service-card-conversion,
-            .service-card-audit,
-            .service-card-pmax,
-            .service-card-leads,
-            .service-card-search,
-            .service-card-landing {
-                display: flex;
-                flex-direction: column; /* This ensures the header and description stack vertically */
-            }
-        }
-    </style>
 
 </head>
 <body>
@@ -472,11 +454,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <a href="#contact" class="services-cta-button">Get in Touch</a>
     </div>
 
-    <!-- SERVICES SECTION MOVED HERE -->
     <div class="services-section" id="services">
         <h2 class="section-title">My Google Ads Services</h2>
         <div class="services-grid">
-            <!-- CARD 1: AUDIT (SWAPPED) -->
             <div class="service-card-audit">
                 <div class="service-header">
                     <div class="service-icon-placeholder"><i class="fas fa-clipboard-check"></i></div>
@@ -486,7 +466,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <p>Comprehensive analysis of your Google Ads account with detailed recommendations to enhance performance, eliminate wasted spend, and identify new opportunities for growth across your campaigns.</p>
                 </div>
             </div>
-            <!-- CARD 2: CONVERSION (SWAPPED) -->
             <div class="service-card-conversion">
                 <div class="service-header">
                     <div class="service-icon-placeholder"><i class="fas fa-crosshairs"></i></div>
@@ -500,7 +479,6 @@ Let's ensure accurate measurement of key actions like form submissions, phone ca
                     </p>
                 </div>
             </div>
-            <!-- CARD 3: PMAX -->
             <div class="service-card-pmax">
                 <div class="service-header">
                     <div class="service-icon-placeholder"><i class="fas fa-shopping-cart"></i></div>
@@ -510,7 +488,6 @@ Let's ensure accurate measurement of key actions like form submissions, phone ca
                     <p>Whether you're running Shopping, PMAX (or both!) for e-commerce, I can assist with campaign & product feed optimisation and setting the correct budgets and bidding strategy targets to help you scale your sales whilst improving or maintaining your target ROAS.<br><br>I have experience managing shopping feeds with Shopify, WordPress, WIX, Squarespace and more.</p>
                 </div>
             </div>
-            <!-- CARD 4: LEADS -->
             <div class="service-card-leads">
                 <div class="service-header">
                     <div class="service-icon-placeholder"><i class="fas fa-funnel-dollar"></i></div>
@@ -520,7 +497,6 @@ Let's ensure accurate measurement of key actions like form submissions, phone ca
                     <p>Proven methodologies for service businesses to generate high-quality leads through optimised search and remarketing campaigns with fully tracked conversion paths from initial contact to end sale.</p>
                 </div>
             </div>
-            <!-- CARD 5: SEARCH -->
             <div class="service-card-search">
                 <div class="service-header">
                     <div class="service-icon-placeholder"><i class="fas fa-pen-alt"></i></div>
@@ -530,7 +506,6 @@ Let's ensure accurate measurement of key actions like form submissions, phone ca
                     <p>Strategic management of your Search campaigns including continuous ad copy testing, keyword refinement and landing page optimisation to improve Click-Through-Rates (CTRs), Quality Scores and drive higher conversion rates at lower costs.</p>
                 </div>
             </div>
-            <!-- CARD 6: LANDING -->
             <div class="service-card-landing">
                 <div class="service-header">
                     <div class="service-icon-placeholder"><i class="fas fa-file-alt"></i></div>
@@ -545,7 +520,8 @@ On top of this, I offer custom-built lead capture forms tailored to your campaig
             </div>
         </div>
     </div>
-    <!-- END OF MOVED SERVICES SECTION -->
+    <div class="services-cta-section">
+        <a href="#contact" class="services-cta-button">Get in Touch</a>
 
     <div id="case-studies" class="case-studies-wrapper">
         <div class="case-studies-section">
@@ -755,14 +731,8 @@ On top of this, I offer custom-built lead capture forms tailored to your campaig
     
     <div class="services-cta-section">
         <a href="#contact" class="services-cta-button">Get in Touch</a>
-    </div>
-    
-    <!-- SERVICES SECTION HAS BEEN MOVED UP -->
-    
+    </div>    
     <div class="faq-section" id="faq">
-        <div class="faq-cta-mobile">
-            <a href="#contact" class="services-cta-button">Get in Touch</a>
-        </div>
         <h2 class="section-title">FAQs</h2>
         <div class="faq-accordion">
             <div class="faq-item">
@@ -964,13 +934,11 @@ Please reach out for a bespoke quote.</p>
         </div>
     </div>
 
-    <!-- NEW: Service Modal -->
     <div id="serviceModal" class="modal">
         <div class="modal-content service-modal-content">
             <button class="close-modal" id="closeServiceModal">×</button>
             <div id="serviceModalBody">
-                <!-- Service card content will be injected here by JavaScript -->
-            </div>
+                </div>
         </div>
     </div>
 
@@ -994,108 +962,6 @@ Please reach out for a bespoke quote.</p>
     </a>
 </div> 
 <script src="script.js"></script>
-
-<!-- Updated script for Modal and Mobile Scroll Highlight -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // --- 1. "Read More" Modal Logic ---
-    const serviceModal = document.getElementById('serviceModal');
-    const serviceModalBody = document.getElementById('serviceModalBody');
-    const closeServiceModal = document.getElementById('closeServiceModal');
-
-    // Find all service cards
-    const serviceCards = document.querySelectorAll('.services-grid > [class^="service-card-"]');
-
-    serviceCards.forEach(card => {
-        const descriptionContainer = card.querySelector('.service-description');
-        if (!descriptionContainer) return;
-
-        const p = descriptionContainer.querySelector('p');
-        if (!p) return; 
-
-        // Check if the text is overflowing (clamped)
-        if (p.scrollHeight > (p.clientHeight + 1)) {
-            
-            const toggleLink = document.createElement('a');
-            toggleLink.textContent = 'Read More';
-            toggleLink.className = 'read-more-toggle';
-            toggleLink.href = '#'; 
-
-            card.appendChild(toggleLink);
-
-            toggleLink.addEventListener('click', function(e) {
-                e.preventDefault(); 
-                
-                // Get the parent card of the clicked link
-                const cardToClone = e.target.closest('[class^="service-card-"]');
-                
-                // Clone it to show in the modal
-                const clonedCard = cardToClone.cloneNode(true);
-                
-                // Clear the modal body and append the cloned card
-                serviceModalBody.innerHTML = '';
-                serviceModalBody.appendChild(clonedCard);
-                
-                // Show the modal
-                serviceModal.style.display = 'block';
-            });
-        }
-    });
-
-    // Close modal logic
-    if (closeServiceModal) {
-        closeServiceModal.onclick = function() {
-            serviceModal.style.display = 'none';
-        }
-    }
-    // Close modal on outside click
-    window.onclick = function(event) {
-        if (event.target == serviceModal) {
-            serviceModal.style.display = 'none';
-        }
-    }
-
-    // --- 2. Mobile Scroll Highlight Logic (Intersection Observer) ---
-    
-    // Check if we are on a mobile-sized screen
-    if (window.innerWidth <= 768) {
-        const servicesGrid = document.querySelector('.services-grid');
-        const mobileServiceCards = document.querySelectorAll('.services-grid > [class^="service-card-"]');
-
-        if (servicesGrid && mobileServiceCards.length > 0) {
-            
-            const observerOptions = {
-                root: servicesGrid, // The scrolling container
-                rootMargin: '0px',
-                threshold: 0.75 // 75% of the card must be visible
-            };
-
-            const observerCallback = (entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        // First, remove .in-view from all cards
-                        mobileServiceCards.forEach(card => {
-                            card.classList.remove('in-view');
-                        });
-                        // Then, add .in-view to the one that just came into view
-                        entry.target.classList.add('in-view');
-                    } else {
-                        // This handles removing the class when it scrolls out
-                        entry.target.classList.remove('in-view');
-                    }
-                });
-            };
-
-            const observer = new IntersectionObserver(observerCallback, observerOptions);
-
-            mobileServiceCards.forEach(card => {
-                observer.observe(card);
-            });
-        }
-    }
-});
-</script>
 
 </body>
 </html>
