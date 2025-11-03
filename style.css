@@ -18,6 +18,8 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     width: 100%;
+    /* ADDED to help prevent bottom gap on some layouts */
+    position: relative;
 }
 
 :target {
@@ -700,6 +702,7 @@ input[type="range"]::-moz-range-thumb:hover {
     margin-top: 2rem;
 }
 
+/* FIX APPLIED HERE: Border is set to 2px transparent to reserve space and prevent jumping. */
 .testimonial-card-1,
 .testimonial-card-2,
 .testimonial-card-3 {
@@ -707,22 +710,25 @@ input[type="range"]::-moz-range-thumb:hover {
     backdrop-filter: blur(5px);
     padding: 1.8rem;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* This ensures a fixed 2px thickness to prevent layout shift on hover */
+    border: 2px solid rgba(255, 255, 255, 0.0); 
     opacity: 0;
     transform: translateX(-50px);
     /* Updated transition to include hover properties with faster duration */
-    transition: all 2s ease, transform 0.3s ease, box-shadow 0.3s ease; 
+    transition: all 2s ease, transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease; 
     display: flex;
     flex-direction: column;
 }
 
-/* Desktop Hover Effect for Testimonials */
+/* Desktop Hover Effect for Testimonials - MODIFIED */
 @media (min-width: 769px) {
     .testimonial-card-1:hover,
     .testimonial-card-2:hover,
     .testimonial-card-3:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        /* MODIFIED: Added !important to ensure transform is applied over any lingering animation transform */
+        transform: translateY(-8px) !important; 
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15), 0 0 15px rgba(0, 255, 136, 0.5); 
+        border: 2px solid #00ff88; 
     }
 }
 
@@ -924,27 +930,34 @@ input[type="range"]::-moz-range-thumb:hover {
     gap: 1rem; /* UPDATED: was 1.5rem and for horizontal */
     /* Added for mobile highlight */
     transition: border 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
-    border: 1px solid transparent; /* Default transparent border for transition */
+    /* MODIFIED: Change default border to 2px transparent to reserve space and prevent shifting on hover. */
+    border: 2px solid transparent; 
 }
 
-/* Specific card borders (overridden from transparent default) */
+/* Specific card borders (overridden from transparent default) - MODIFIED: Increased border width to 2px for consistency */
 .service-card-conversion {
-    border-color: rgba(86, 227, 159, 0.3);
+    border-color: rgba(86, 227, 159, 0.45);
+    border-width: 2px;
 }
 .service-card-audit {
-    border-color: rgba(118, 75, 162, 0.3);
+    border-color: rgba(118, 75, 162, 0.45);
+    border-width: 2px;
 }
 .service-card-pmax {
-    border-color: rgba(102, 126, 234, 0.3);
+    border-color: rgba(102, 126, 234, 0.45);
+    border-width: 2px;
 }
 .service-card-leads {
-     border-color: rgba(240, 147, 251, 0.3);
+     border-color: rgba(240, 147, 251, 0.45);
+     border-width: 2px;
 }
 .service-card-search {
-    border-color: rgba(86, 227, 159, 0.3);
+    border-color: rgba(86, 227, 159, 0.45);
+    border-width: 2px;
 }
 .service-card-landing {
-    border-color: rgba(255, 193, 7, 0.3);
+    border-color: rgba(255, 193, 7, 0.45);
+    border-width: 2px;
 }
 
 
@@ -1040,9 +1053,11 @@ input[type="range"]::-moz-range-thumb:hover {
     transform: translateX(0);
 }
 
+/* MODIFIED: Added green glow and border to match mobile highlight */
 .services-grid > [class^="service-card-"]:hover {
     transform: translateY(-8px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15), 0 0 15px rgba(0, 255, 136, 0.5);
+    border: 2px solid #00ff88 !important; 
 }
 
 .service-title {
@@ -1072,11 +1087,13 @@ input[type="range"]::-moz-range-thumb:hover {
 .faq-item {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* MODIFIED: Set resting border to 2px transparent to reserve space and prevent shifting */
+    border: 2px solid rgba(255, 255, 255, 0.0); 
     border-radius: 12px;
     margin-bottom: 1rem;
     overflow: hidden;
-    transition: all 0.3s ease;
+    /* MODIFIED: Add box-shadow and border transition for smooth effect */
+    transition: all 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; 
 }
 
 .faq-item:last-child {
@@ -1121,6 +1138,12 @@ input[type="range"]::-moz-range-thumb:hover {
     background: rgba(255, 255, 255, 0.05);
 }
 
+/* MODIFIED: Apply green border and glow when active */
+.faq-item.active {
+    border: 2px solid #00ff88;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+}
+
 .faq-item.active .faq-answer {
     max-height: 1000px;
     padding: 1.5rem;
@@ -1129,6 +1152,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .faq-answer p {
     line-height: 1.7;
     color: rgba(255, 255, 255, 0.9);
+    text-align: left; /* FIX: Ensure main FAQ answer is left-aligned */
 }
 
 .faq-item.active .faq-answer {
@@ -1168,7 +1192,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .faq-sub-icon {
-    font-size: 1rem;
+    font-size: 1.1rem;
     transition: transform 0.3s ease;
 }
 
@@ -1190,6 +1214,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .faq-sub-answer p {
     margin-bottom: 1rem;
+    text-align: left; /* FIX: Ensure sub-FAQ answer is left-aligned */
 }
 
 .faq-sub-answer p:last-child {
@@ -1337,7 +1362,7 @@ input[type="range"]::-moz-range-thumb:hover {
     display: block;
 }
 
-/* ADDED: Style for the 'required' asterisk in the form */
+
 .required-asterisk {
     color: #ffffff; /* UPDATED: Changed from red to white */
     margin-left: 2px;
@@ -1347,10 +1372,26 @@ input[type="range"]::-moz-range-thumb:hover {
 .footer {
     background: rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(10px);
-    padding: 0;
     margin-top: 0;
     text-align: center;
+    padding: 30px 0;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    position: relative;
 }
+/* ADDED: Fix for the empty space below the footer - ensures the wrapper is the min-height, and the footer sits at the bottom */
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+.page-wrapper > *:not(.footer) {
+    flex-shrink: 0;
+}
+.footer {
+    margin-top: auto; 
+}
+
 
 .footer-container {
     max-width: 1200px;
@@ -2365,6 +2406,10 @@ margin-left: 5px;
     margin-bottom: 1rem;
     overflow: hidden;
     transition: all 0.3s ease;
+}
+
+.case-study-item:last-child {
+    margin-bottom: 0;
 }
 
 .case-study-question {
