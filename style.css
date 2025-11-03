@@ -626,10 +626,6 @@ input[type="range"]::-moz-range-thumb:hover {
         flex-direction: column;
     }
 
-    .pricing-table {
-        /* These rules were removed */
-    }
-
     .google-ads-credit-message {
         /* On mobile, it's inside a 2rem padding section, so it's fine */
         max-width: 100%; 
@@ -714,10 +710,22 @@ input[type="range"]::-moz-range-thumb:hover {
     border: 1px solid rgba(255, 255, 255, 0.2);
     opacity: 0;
     transform: translateX(-50px);
-    transition: all 2s ease;
+    /* Updated transition to include hover properties with faster duration */
+    transition: all 2s ease, transform 0.3s ease, box-shadow 0.3s ease; 
     display: flex;
     flex-direction: column;
 }
+
+/* Desktop Hover Effect for Testimonials */
+@media (min-width: 769px) {
+    .testimonial-card-1:hover,
+    .testimonial-card-2:hover,
+    .testimonial-card-3:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    }
+}
+
 
 .testimonial-card-1.animate,
 .testimonial-card-2.animate,
@@ -911,9 +919,9 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .services-grid > [class^="service-card-"] {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* UPDATED: was flex-start */
     align-items: center; /* UPDATED: was flex-start */
-    gap: 1rem;
+    gap: 1rem; /* UPDATED: was 1.5rem and for horizontal */
     /* Added for mobile highlight */
     transition: border 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
     border: 1px solid transparent; /* Default transparent border for transition */
@@ -1978,6 +1986,7 @@ input[type="range"]::-moz-range-thumb:hover {
         
         scroll-snap-type: x mandatory; /* Makes it snap to cards */
         -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+margin-left: 5px;
     }
 
     .testimonials-grid > .testimonial-card-1,
@@ -1987,18 +1996,18 @@ input[type="range"]::-moz-range-thumb:hover {
         width: 80%; /* Each card takes 80% of the screen width */
         max-width: 320px; /* But not more than 320px */
         scroll-snap-align: start; /* Snap to the start of each card */
+        /* Ensure mobile transition is none */
+        transition: none !important; 
+        opacity: 1 !important;
+        transform: none !important;
     }
     
-    /* --- NEW: REMOVE TESTIMONIAL ANIMATION ON MOBILE --- */
-    .testimonial-card-1,
-    .testimonial-card-2,
-    .testimonial-card-3,
-    .testimonial-card-1.animate,
-    .testimonial-card-2.animate,
-    .testimonial-card-3.animate {
-        opacity: 1;
-        transform: none;
-        transition: none;
+    /* --- NEW: MOBILE SCROLL HIGHLIGHT FOR TESTIMONIALS --- */
+    .testimonials-grid > .testimonial-card-1.in-view,
+    .testimonials-grid > .testimonial-card-2.in-view,
+    .testimonials-grid > .testimonial-card-3.in-view {
+        border: 2px solid #00ff88 !important; 
+        box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
     }
     
     /* --- NEW: ADD SERVICE CARD SCROLLER ON MOBILE --- */
@@ -2015,6 +2024,7 @@ input[type="range"]::-moz-range-thumb:hover {
         
         /* Override the tablet stacking */
         grid-template-columns: none; 
+margin-left: 5px;
     }
 
     .services-grid > [class^="service-card-"] {
@@ -2030,7 +2040,7 @@ input[type="range"]::-moz-range-thumb:hover {
         box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
     }
 
-    /* --- NEW: REMOVE SERVICE ANIMATION ON MOBILE --- */
+    /* --- NEW: REMOVE SERVICE AND TESTIMONIAL ANIMATION ON MOBILE --- */
     .service-card-conversion,
     .service-card-audit,
     .service-card-pmax,
@@ -2100,12 +2110,38 @@ input[type="range"]::-moz-range-thumb:hover {
         padding-right: 0 !important;
     }
 
+    /* NEW: Force contact info onto new lines on mobile */
+    .email-tel p {
+        /* Reset margin to 0 for consistent spacing */
+        margin-bottom: 0.5rem; 
+    }
+    .email-tel p a {
+        display: block; /* Make the link/number take up its own line */
+        font-weight: bold; /* Make the contact details stand out */
+    }
+    .email-tel .mobile-only-break {
+        display: none !important; /* Ensure the extra break line is not visible */
+    }
+
+
     .faq-section {
         margin-top: 32px;
     }
 
     .case-studies-wrapper {
         margin-bottom: 0 !important;
+    }
+    
+    /* This overrides the flex-direction: column rule in the services-grid media query,
+       making the internal content of the service card stack correctly. */
+    .service-card-conversion,
+    .service-card-audit,
+    .service-card-pmax,
+    .service-card-leads,
+    .service-card-search,
+    .service-card-landing {
+        display: flex;
+        flex-direction: column; 
     }
 }
 
@@ -2469,6 +2505,17 @@ input[type="range"]::-moz-range-thumb:hover {
     .case-study-service-tag {
         display: none;
     }
+    /* This overrides the flex-direction: column rule in the services-grid media query,
+       making the internal content of the service card stack correctly. */
+    .service-card-conversion,
+    .service-card-audit,
+    .service-card-pmax,
+    .service-card-leads,
+    .service-card-search,
+    .service-card-landing {
+        display: flex;
+        flex-direction: column; 
+    }
 }
 
 @media (min-width: 769px) {
@@ -2623,11 +2670,6 @@ input[type="range"]::-moz-range-thumb:hover {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 4; /* Truncate to 4 lines */
 }
-
-/* This is the 'expanded' state - NO LONGER USED, MODAL IS USED */
-/* .service-description.expanded p {
-    -webkit-line-clamp: unset; 
-} */
 
 .read-more-toggle {
     display: inline-block;
