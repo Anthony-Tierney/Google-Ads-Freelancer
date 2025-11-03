@@ -318,7 +318,7 @@ body {
 }
 
 .clients-section {
-    margin: 5rem auto;
+    margin: 40px auto;
     max-width: 1200px;
     padding: 0 2rem;
 }
@@ -378,6 +378,14 @@ body {
     }
 }
 
+/* IMPROVEMENT: Reduced client scroll animation duration on mobile */
+@media (max-width: 768px) {
+    .clients-scroll-track {
+        animation-duration: 20s;
+    }
+}
+
+
 @keyframes scroll-left {
     0% {
         transform: translateX(0%);
@@ -407,7 +415,7 @@ body {
 /* PRICING SECTION STYLES */
 .pricing-section {
     max-width: 1200px;
-    margin: 5rem auto;
+    margin: 40px auto; 
     padding: 0 2rem;
     scroll-margin-top: 100px;
 }
@@ -435,6 +443,8 @@ body {
 
 .questions-section {
     flex: none;
+    /* IMPROVEMENT: Allow questions to take full width on desktop if table is smaller */
+    flex-grow: 1; 
 }
 
 .question-group {
@@ -585,7 +595,7 @@ input[type="range"]::-moz-range-thumb:hover {
     border-bottom: none;
 }
 
-/* --- NEW: CTA Button for Calculator --- */
+/* --- RENAMED: CTA Button for Calculator to .cta-calculator-services --- */
 .cta-calculator-services {
     display: block; /* Mobile default */
     /* UPDATED: Removed top margin, added auto horizontal margins for centering */
@@ -690,7 +700,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .testimonials-section {
     max-width: 1200px;
-    margin: 5rem auto;
+    margin: 40px auto;
     padding: 0 2rem;
     scroll-margin-top: 100px;
 }
@@ -873,15 +883,15 @@ input[type="range"]::-moz-range-thumb:hover {
     }
 }
 
-.services-cta-section {
+.cta-section {
     max-width: 1200px;
-    margin: 3rem auto;
+    margin: 40px auto;
     padding: 0 2rem;
     text-align: center;
 }
 
 .services-cta-button {
-    display: inline-block;
+    display: flex;
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.3);
@@ -896,10 +906,10 @@ input[type="range"]::-moz-range-thumb:hover {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     text-align: center;
     min-height: 44px;
-    align-items: center;
-    justify-content: center;
+    align-items: center; /* This centers the text vertically */
+    justify-content: center; /* This centers the text horizontally */
     width: fit-content;
-    margin: 0 auto;
+    margin: 0 auto; /* This centers the flex container itself */
 }
 
 .services-cta-button:hover {
@@ -911,7 +921,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .services-section {
     max-width: 1200px;
-    margin: 5rem auto 0;
+    margin: 40px auto;
     padding: 0 2rem;
     scroll-margin-top: 100px;
 }
@@ -932,6 +942,8 @@ input[type="range"]::-moz-range-thumb:hover {
     transition: border 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
     /* MODIFIED: Change default border to 2px transparent to reserve space and prevent shifting on hover. */
     border: 2px solid transparent; 
+    /* ADDED: Center-aligns all text within the card container */
+    text-align: center; 
 }
 
 /* Specific card borders (overridden from transparent default) - MODIFIED: Increased border width to 2px for consistency */
@@ -1068,9 +1080,11 @@ input[type="range"]::-moz-range-thumb:hover {
     text-align: center; /* UPDATED: Ensure text is centered */
 }
 
+/* RENAMED & MARGIN UPDATED */
 .faq-section {
     max-width: 1200px;
-    margin: 5rem auto 0;
+    /* Changed from 5rem auto 0; to 40px auto; */
+    margin: 40px auto; 
     padding: 0 2rem;
     scroll-margin-top: 100px;
 }
@@ -1221,8 +1235,10 @@ input[type="range"]::-moz-range-thumb:hover {
     margin-bottom: 0;
 }
 
-.content-block-4 {
-    margin-top: 50px;
+/* RENAMED: .content-block-4 to .contact-section and margin updated */
+.contact-section {
+    /* Changed from margin-top: 50px; to 40px */
+    margin: 40px auto; 
 }
 
 .contact-form-2 {
@@ -1664,7 +1680,7 @@ input[type="range"]::-moz-range-thumb:hover {
     }
 
     .hero-section {
-        margin: 50px auto;
+        margin: 25px auto;
     }
     .mobile-break { display: none; }
 }
@@ -1776,7 +1792,7 @@ input[type="range"]::-moz-range-thumb:hover {
     .pricing-section-modal {
         padding: 15px;
     }
-    .content-block-4 {
+    .contact-section { /* Renamed from .content-block-4 */
         padding-left: 32px;
         padding-right: 32px;
         padding-bottom: 30px;
@@ -1802,6 +1818,11 @@ input[type="range"]::-moz-range-thumb:hover {
     }
     .pricing-section-modal {
         padding: 15px;
+    }
+    .contact-section { /* Renamed from .content-block-4 */
+        padding-left: 32px;
+        padding-right: 32px;
+        padding-bottom: 30px;
     }
 }
 
@@ -2027,7 +2048,7 @@ input[type="range"]::-moz-range-thumb:hover {
         
         scroll-snap-type: x mandatory; /* Makes it snap to cards */
         -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-margin-left: 5px;
+        margin-left: 0; /* FIXED: Removed conflicting 5px margin */
     }
 
     .testimonials-grid > .testimonial-card-1,
@@ -2065,7 +2086,7 @@ margin-left: 5px;
         
         /* Override the tablet stacking */
         grid-template-columns: none; 
-margin-left: 5px;
+        margin-left: 0; /* FIXED: Removed conflicting 5px margin */
     }
 
     .services-grid > [class^="service-card-"] {
@@ -2121,7 +2142,7 @@ margin-left: 5px;
         display: block;
         text-align: center;
     }
-    .content-block-4 {
+    .contact-section { /* Renamed from .content-block-4 */
         padding-left: 32px;
         padding-right: 32px;
         padding-bottom: 30px;
@@ -2247,9 +2268,11 @@ margin-left: 5px;
     gap: 1.5rem;
 }
 
+/* MARGIN UPDATED */
 .case-studies-wrapper {
     max-width: 1200px;
-    margin: 5rem auto;
+    /* Changed from 5rem auto to 40px auto; */
+    margin: 40px auto; 
     padding: 0 2rem;
     scroll-margin-top: 100px;
 }
@@ -2564,23 +2587,40 @@ margin-left: 5px;
 }
 
 @media (min-width: 769px) {
+    /* IMPROVEMENT: Ensure card header stacks properly when space is tight on larger screens */
+    .case-study-card-1,
+    .case-study-card-2,
+    .case-study-card-3 {
+        padding-top: 1.8rem;
+    }
+    
     .case-study-header {
         display: flex;
-        justify-content: space-between;
+        flex-direction: column; /* IMPROVEMENT: Stack elements for better vertical space usage */
+        justify-content: center;
         align-items: center;
         width: 100%;
         margin-bottom: 1.5rem;
     }
 
     .case-study-logo-placeholder {
-        margin: 0;
+        margin: 0 auto 1rem; /* Re-center logo */
         height: auto;
     }
 
     .case-study-tags-container {
         margin-bottom: 0;
-        justify-content: flex-end;
+        justify-content: center; /* Center tags */
     }
+}
+
+/* RENAMED: .contact-info from 'contact' to 'contact-section' */
+.contact-section {
+    max-width: 1200px;
+    /* Added to align with the new .contact-section margin rule */
+    margin: 40px auto; 
+    padding: 0 2rem;
+    scroll-margin-top: 100px;
 }
 
 .contact-info {
@@ -2588,8 +2628,8 @@ margin-left: 5px;
     gap: 0;
     align-items: center;
     max-width: 1200px;
-    margin: 50px auto 0;
-    padding-bottom: 30px;
+    /* Removed redundant margin-top: 50px auto 0; and padding-bottom: 30px; */
+    /* This section now uses the .contact-section margin/padding */
 }
 
 .contact-info-left {
