@@ -1,3 +1,8 @@
+.page-wrapper {
+    overflow: hidden;
+    width: 100%;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -5,7 +10,7 @@
 }
 
 html {
-    overflow-x: hidden;
+    /* overflow-x: hidden; */
 }
 
 body {
@@ -16,7 +21,7 @@ body {
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
     min-height: 100vh;
-    overflow-x: hidden;
+    /* overflow-x: hidden; */
     width: 100%;
 }
 
@@ -710,19 +715,20 @@ input[type="range"]::-moz-range-thumb:hover {
     border: 1px solid rgba(255, 255, 255, 0.2);
     opacity: 0;
     transform: translateX(-50px);
-    /* Updated transition to include hover properties with faster duration */
-    transition: all 2s ease, transform 0.3s ease, box-shadow 0.3s ease; 
+    /* UPDATED transition to include border-color */
+    transition: all 2s ease, transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; 
     display: flex;
     flex-direction: column;
 }
 
-/* Desktop Hover Effect for Testimonials */
+/* Desktop Hover Effect for Testimonials - UPDATED with glow */
 @media (min-width: 769px) {
     .testimonial-card-1:hover,
     .testimonial-card-2:hover,
     .testimonial-card-3:hover {
         transform: translateY(-8px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        border: 1px solid #00ff88;
+        box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
     }
 }
 
@@ -1040,9 +1046,11 @@ input[type="range"]::-moz-range-thumb:hover {
     transform: translateX(0);
 }
 
+/* UPDATED with desktop glow effect */
 .services-grid > [class^="service-card-"]:hover {
     transform: translateY(-8px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    border: 1px solid #00ff88;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
 }
 
 .service-title {
@@ -1077,6 +1085,12 @@ input[type="range"]::-moz-range-thumb:hover {
     margin-bottom: 1rem;
     overflow: hidden;
     transition: all 0.3s ease;
+}
+
+/* NEW: Active (clicked) glow effect for FAQ */
+.faq-item.active {
+    border: 1px solid #00ff88;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
 }
 
 .faq-item:last-child {
@@ -2229,7 +2243,8 @@ padding: 0;
     border: 1px solid rgba(255, 255, 255, 0.2);
     opacity: 0;
     transform: translateX(-50px);
-    transition: all 2s ease;
+    /* UPDATED transition for hover effect */
+    transition: all 2s ease, transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     display: flex;
     flex-direction: column;
     text-align: center;
@@ -2240,6 +2255,17 @@ padding: 0;
 .case-study-card-3.animate {
     opacity: 1;
     transform: translateX(0);
+}
+
+/* NEW: Desktop Hover Effect for Case Studies */
+@media (min-width: 769px) {
+    .case-study-card-1:hover,
+    .case-study-card-2:hover,
+    .case-study-card-3:hover {
+        transform: translateY(-8px);
+        border: 1px solid #00ff88;
+        box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+    }
 }
 
 .case-study-tags-container {
@@ -2627,7 +2653,7 @@ padding: 0;
     
     /* Center the text */
     display: flex;
-    align-items: center;
+    align-itemss: center;
     justify-content: center;
     text-align: center;
     padding: 1rem;
