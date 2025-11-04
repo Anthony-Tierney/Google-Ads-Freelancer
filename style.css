@@ -696,12 +696,34 @@ input[type="range"]::-moz-range-thumb:hover {
     .mobile-only-break {
         display: block;
     }
+    
+    /* FIX: Ensure Titles are Centered within the Viewport */
+    .testimonials-section {
+        padding: 0; /* Keep: For scroll container margin management */
+    }
+    .services-section {
+        padding: 0; /* Keep: For scroll container margin management */
+    }
+    /* MODIFIED: Add back horizontal padding to section titles on mobile */
+    .section-title {
+        font-size: 1.5rem;
+        text-align: center;
+        white-space: normal;
+        padding: 0 2rem; /* FIXED TITLE PADDING */
+    }
+    
+    /* MODIFIED: Testimonial Card Padding Request */
+    .testimonial-card-1,
+    .testimonial-card-2,
+    .testimonial-card-3 {
+        padding: 1.8rem 10px; /* Adjusted padding-left and padding-right to 10px */
+    }
 }
 
 .testimonials-section {
     max-width: 1200px;
     margin: 40px auto;
-    padding: 0 2rem;
+    padding: 0 2rem; /* Kept for desktop title centering */
     scroll-margin-top: 100px;
 }
 
@@ -922,7 +944,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .services-section {
     max-width: 1200px;
     margin: 40px auto;
-    padding: 0 2rem;
+    padding: 0 2rem; /* Kept for desktop title centering */
     scroll-margin-top: 100px;
 }
 
@@ -2005,6 +2027,7 @@ input[type="range"]::-moz-range-thumb:hover {
         font-size: 1.5rem;
         text-align: center;
         white-space: normal;
+        padding: 0 2rem; /* FIXED TITLE PADDING */
     }
     .form-row-2, .name-email-row {
         flex-direction: column;
@@ -2038,17 +2061,18 @@ input[type="range"]::-moz-range-thumb:hover {
     
     /* --- MODIFIED FOR TESTIMONIAL SCROLLER --- */
     .testimonials-section {
-        padding: 0; /* Remove side padding to allow full-width scroll */
+        padding: 0; /* FIXED: Remove section padding to allow scroll container to manage margins */
     }
     .testimonials-grid {
         display: flex; /* Change from grid to flex */
         overflow-x: auto; /* Enable horizontal scrolling */
         gap: 1.5rem; /* Space between cards */
-        padding: 1rem 2rem; /* Add padding to the scroll container itself */
+        padding: 1rem 2rem; /* Added margin/padding to the scroll container itself */
+        margin-left: 10px; /* REQUESTED: Add margin-left of 10px */
         
         scroll-snap-type: x mandatory; /* Makes it snap to cards */
         -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-        margin-left: 0; /* FIXED: Removed conflicting 5px margin */
+        /* margin-left: 0; This line was removed in the previous step */
     }
 
     .testimonials-grid > .testimonial-card-1,
@@ -2062,6 +2086,10 @@ input[type="range"]::-moz-range-thumb:hover {
         transition: none !important; 
         opacity: 1 !important;
         transform: none !important;
+        
+        /* REQUESTED: Set padding-left/right to 10px. */
+        padding-left: 10px; 
+        padding-right: 10px;
     }
     
     /* --- NEW: MOBILE SCROLL HIGHLIGHT FOR TESTIMONIALS --- */
@@ -2074,20 +2102,22 @@ input[type="range"]::-moz-range-thumb:hover {
     
     /* --- NEW: ADD SERVICE CARD SCROLLER ON MOBILE --- */
     .services-section {
-        padding: 0; /* Remove side padding for full-width scroll */
+        padding: 0; /* FIXED: Remove section padding for full-width scroll */
     }
     .services-grid {
-        display: flex; /* Override grid */
-        overflow-x: auto; /* Enable horizontal scrolling */
-        gap: 1.5rem; /* Space between cards */
-        padding: 1rem 2rem; /* Add padding to the scroll container */
-        scroll-snap-type: x mandatory; /* Snap to cards */
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-        
-        /* Override the tablet stacking */
-        grid-template-columns: none; 
-        margin-left: 0; /* FIXED: Removed conflicting 5px margin */
-    }
+    display: flex; /* Override grid */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    gap: 1.5rem; /* Space between cards */
+    padding: 1rem 2rem; /* Added padding to the scroll container */
+    scroll-snap-type: x mandatory; /* Snap to cards */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    
+    /* Corrected: This line sets the margin left */
+    margin-left: 10px; 
+    
+    /* Removed conflicting 'margin-left: 0;' and kept grid-template-columns */
+    grid-template-columns: none; 
+}
 
     .services-grid > [class^="service-card-"] {
         flex-shrink: 0; /* Prevent cards from shrinking */
