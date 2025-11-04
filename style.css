@@ -18,8 +18,6 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     width: 100%;
-    /* ADDED to help prevent bottom gap on some layouts */
-    position: relative;
 }
 
 :target {
@@ -318,7 +316,7 @@ body {
 }
 
 .clients-section {
-    margin: 40px auto;
+    margin: 5rem auto;
     max-width: 1200px;
     padding: 0 2rem;
 }
@@ -378,14 +376,6 @@ body {
     }
 }
 
-/* IMPROVEMENT: Reduced client scroll animation duration on mobile */
-@media (max-width: 768px) {
-    .clients-scroll-track {
-        animation-duration: 20s;
-    }
-}
-
-
 @keyframes scroll-left {
     0% {
         transform: translateX(0%);
@@ -415,7 +405,7 @@ body {
 /* PRICING SECTION STYLES */
 .pricing-section {
     max-width: 1200px;
-    margin: 40px auto; 
+    margin: 5rem auto;
     padding: 0 2rem;
     scroll-margin-top: 100px;
 }
@@ -443,8 +433,6 @@ body {
 
 .questions-section {
     flex: none;
-    /* IMPROVEMENT: Allow questions to take full width on desktop if table is smaller */
-    flex-grow: 1; 
 }
 
 .question-group {
@@ -595,7 +583,7 @@ input[type="range"]::-moz-range-thumb:hover {
     border-bottom: none;
 }
 
-/* --- RENAMED: CTA Button for Calculator to .cta-calculator-services --- */
+/* --- NEW: CTA Button for Calculator --- */
 .cta-calculator-services {
     display: block; /* Mobile default */
     /* UPDATED: Removed top margin, added auto horizontal margins for centering */
@@ -696,34 +684,12 @@ input[type="range"]::-moz-range-thumb:hover {
     .mobile-only-break {
         display: block;
     }
-    
-    /* FIX: Ensure Titles are Centered within the Viewport */
-    .testimonials-section {
-        padding: 0; /* Keep: For scroll container margin management */
-    }
-    .services-section {
-        padding: 0; /* Keep: For scroll container margin management */
-    }
-    /* MODIFIED: Add back horizontal padding to section titles on mobile */
-    .section-title {
-        font-size: 1.5rem;
-        text-align: center;
-        white-space: normal;
-        padding: 0 2rem; /* FIXED TITLE PADDING */
-    }
-    
-    /* MODIFIED: Testimonial Card Padding Request */
-    .testimonial-card-1,
-    .testimonial-card-2,
-    .testimonial-card-3 {
-        padding: 1.8rem 10px; /* Adjusted padding-left and padding-right to 10px */
-    }
 }
 
 .testimonials-section {
     max-width: 1200px;
-    margin: 40px auto;
-    padding: 0 2rem; /* Kept for desktop title centering */
+    margin: 5rem auto;
+    padding: 0 2rem;
     scroll-margin-top: 100px;
 }
 
@@ -734,7 +700,6 @@ input[type="range"]::-moz-range-thumb:hover {
     margin-top: 2rem;
 }
 
-/* FIX APPLIED HERE: Border is set to 2px transparent to reserve space and prevent jumping. */
 .testimonial-card-1,
 .testimonial-card-2,
 .testimonial-card-3 {
@@ -742,25 +707,22 @@ input[type="range"]::-moz-range-thumb:hover {
     backdrop-filter: blur(5px);
     padding: 1.8rem;
     border-radius: 12px;
-    /* This ensures a fixed 2px thickness to prevent layout shift on hover */
-    border: 2px solid rgba(255, 255, 255, 0.0); 
+    border: 1px solid rgba(255, 255, 255, 0.2);
     opacity: 0;
     transform: translateX(-50px);
     /* Updated transition to include hover properties with faster duration */
-    transition: all 2s ease, transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease; 
+    transition: all 2s ease, transform 0.3s ease, box-shadow 0.3s ease; 
     display: flex;
     flex-direction: column;
 }
 
-/* Desktop Hover Effect for Testimonials - MODIFIED */
+/* Desktop Hover Effect for Testimonials */
 @media (min-width: 769px) {
     .testimonial-card-1:hover,
     .testimonial-card-2:hover,
     .testimonial-card-3:hover {
-        /* MODIFIED: Added !important to ensure transform is applied over any lingering animation transform */
-        transform: translateY(-8px) !important; 
-        box-shadow: 0 10px 20px rgba(0,0,0,0.15), 0 0 15px rgba(0, 255, 136, 0.5); 
-        border: 2px solid #00ff88; 
+        transform: translateY(-8px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
     }
 }
 
@@ -905,15 +867,15 @@ input[type="range"]::-moz-range-thumb:hover {
     }
 }
 
-.cta-section {
+.services-cta-section {
     max-width: 1200px;
-    margin: 40px auto;
+    margin: 3rem auto;
     padding: 0 2rem;
     text-align: center;
 }
 
 .services-cta-button {
-    display: flex;
+    display: inline-block;
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.3);
@@ -928,10 +890,10 @@ input[type="range"]::-moz-range-thumb:hover {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     text-align: center;
     min-height: 44px;
-    align-items: center; /* This centers the text vertically */
-    justify-content: center; /* This centers the text horizontally */
+    align-items: center;
+    justify-content: center;
     width: fit-content;
-    margin: 0 auto; /* This centers the flex container itself */
+    margin: 0 auto;
 }
 
 .services-cta-button:hover {
@@ -943,8 +905,8 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .services-section {
     max-width: 1200px;
-    margin: 40px auto;
-    padding: 0 2rem; /* Kept for desktop title centering */
+    margin: 5rem auto 0;
+    padding: 0 2rem;
     scroll-margin-top: 100px;
 }
 
@@ -962,36 +924,27 @@ input[type="range"]::-moz-range-thumb:hover {
     gap: 1rem; /* UPDATED: was 1.5rem and for horizontal */
     /* Added for mobile highlight */
     transition: border 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
-    /* MODIFIED: Change default border to 2px transparent to reserve space and prevent shifting on hover. */
-    border: 2px solid transparent; 
-    /* ADDED: Center-aligns all text within the card container */
-    text-align: center; 
+    border: 1px solid transparent; /* Default transparent border for transition */
 }
 
-/* Specific card borders (overridden from transparent default) - MODIFIED: Increased border width to 2px for consistency */
+/* Specific card borders (overridden from transparent default) */
 .service-card-conversion {
-    border-color: rgba(86, 227, 159, 0.45);
-    border-width: 2px;
+    border-color: rgba(86, 227, 159, 0.3);
 }
 .service-card-audit {
-    border-color: rgba(118, 75, 162, 0.45);
-    border-width: 2px;
+    border-color: rgba(118, 75, 162, 0.3);
 }
 .service-card-pmax {
-    border-color: rgba(102, 126, 234, 0.45);
-    border-width: 2px;
+    border-color: rgba(102, 126, 234, 0.3);
 }
 .service-card-leads {
-     border-color: rgba(240, 147, 251, 0.45);
-     border-width: 2px;
+     border-color: rgba(240, 147, 251, 0.3);
 }
 .service-card-search {
-    border-color: rgba(86, 227, 159, 0.45);
-    border-width: 2px;
+    border-color: rgba(86, 227, 159, 0.3);
 }
 .service-card-landing {
-    border-color: rgba(255, 193, 7, 0.45);
-    border-width: 2px;
+    border-color: rgba(255, 193, 7, 0.3);
 }
 
 
@@ -1087,11 +1040,9 @@ input[type="range"]::-moz-range-thumb:hover {
     transform: translateX(0);
 }
 
-/* MODIFIED: Added green glow and border to match mobile highlight */
 .services-grid > [class^="service-card-"]:hover {
     transform: translateY(-8px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.15), 0 0 15px rgba(0, 255, 136, 0.5);
-    border: 2px solid #00ff88 !important; 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
 }
 
 .service-title {
@@ -1102,11 +1053,9 @@ input[type="range"]::-moz-range-thumb:hover {
     text-align: center; /* UPDATED: Ensure text is centered */
 }
 
-/* RENAMED & MARGIN UPDATED */
 .faq-section {
     max-width: 1200px;
-    /* Changed from 5rem auto 0; to 40px auto; */
-    margin: 40px auto; 
+    margin: 5rem auto 0;
     padding: 0 2rem;
     scroll-margin-top: 100px;
 }
@@ -1123,13 +1072,11 @@ input[type="range"]::-moz-range-thumb:hover {
 .faq-item {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(5px);
-    /* MODIFIED: Set resting border to 2px transparent to reserve space and prevent shifting */
-    border: 2px solid rgba(255, 255, 255, 0.0); 
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     margin-bottom: 1rem;
     overflow: hidden;
-    /* MODIFIED: Add box-shadow and border transition for smooth effect */
-    transition: all 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; 
+    transition: all 0.3s ease;
 }
 
 .faq-item:last-child {
@@ -1172,12 +1119,6 @@ input[type="range"]::-moz-range-thumb:hover {
     overflow: hidden;
     transition: max-height 0.4s ease, padding 0.4s ease;
     background: rgba(255, 255, 255, 0.05);
-}
-
-/* MODIFIED: Apply green border and glow when active */
-.faq-item.active {
-    border: 2px solid #00ff88;
-    box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
 }
 
 .faq-item.active .faq-answer {
@@ -1228,7 +1169,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .faq-sub-icon {
-    font-size: 1.1rem;
+    font-size: 1rem;
     transition: transform 0.3s ease;
 }
 
@@ -1257,10 +1198,8 @@ input[type="range"]::-moz-range-thumb:hover {
     margin-bottom: 0;
 }
 
-/* RENAMED: .content-block-4 to .contact-section and margin updated */
-.contact-section {
-    /* Changed from margin-top: 50px; to 40px */
-    margin: 40px auto; 
+.content-block-4 {
+    margin-top: 50px;
 }
 
 .contact-form-2 {
@@ -1417,19 +1356,6 @@ input[type="range"]::-moz-range-thumb:hover {
     margin-left: calc(-50vw + 50%);
     position: relative;
 }
-/* ADDED: Fix for the empty space below the footer - ensures the wrapper is the min-height, and the footer sits at the bottom */
-.page-wrapper {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-.page-wrapper > *:not(.footer) {
-    flex-shrink: 0;
-}
-.footer {
-    margin-top: auto; 
-}
-
 
 .footer-container {
     max-width: 1200px;
@@ -1702,7 +1628,7 @@ input[type="range"]::-moz-range-thumb:hover {
     }
 
     .hero-section {
-        margin: 25px auto;
+        margin: 50px auto;
     }
     .mobile-break { display: none; }
 }
@@ -1814,7 +1740,7 @@ input[type="range"]::-moz-range-thumb:hover {
     .pricing-section-modal {
         padding: 15px;
     }
-    .contact-section { /* Renamed from .content-block-4 */
+    .content-block-4 {
         padding-left: 32px;
         padding-right: 32px;
         padding-bottom: 30px;
@@ -1840,11 +1766,6 @@ input[type="range"]::-moz-range-thumb:hover {
     }
     .pricing-section-modal {
         padding: 15px;
-    }
-    .contact-section { /* Renamed from .content-block-4 */
-        padding-left: 32px;
-        padding-right: 32px;
-        padding-bottom: 30px;
     }
 }
 
@@ -2027,7 +1948,6 @@ input[type="range"]::-moz-range-thumb:hover {
         font-size: 1.5rem;
         text-align: center;
         white-space: normal;
-        padding: 0 2rem; /* FIXED TITLE PADDING */
     }
     .form-row-2, .name-email-row {
         flex-direction: column;
@@ -2061,18 +1981,17 @@ input[type="range"]::-moz-range-thumb:hover {
     
     /* --- MODIFIED FOR TESTIMONIAL SCROLLER --- */
     .testimonials-section {
-        padding: 0; /* FIXED: Remove section padding to allow scroll container to manage margins */
+        padding: 0; /* Remove side padding to allow full-width scroll */
     }
     .testimonials-grid {
         display: flex; /* Change from grid to flex */
         overflow-x: auto; /* Enable horizontal scrolling */
         gap: 1.5rem; /* Space between cards */
-        padding: 1rem 2rem; /* Added margin/padding to the scroll container itself */
-        margin-left: 10px; /* REQUESTED: Add margin-left of 10px */
+        padding: 1rem 2rem; /* Add padding to the scroll container itself */
         
         scroll-snap-type: x mandatory; /* Makes it snap to cards */
         -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-        /* margin-left: 0; This line was removed in the previous step */
+margin-left: 5px;
     }
 
     .testimonials-grid > .testimonial-card-1,
@@ -2086,10 +2005,6 @@ input[type="range"]::-moz-range-thumb:hover {
         transition: none !important; 
         opacity: 1 !important;
         transform: none !important;
-        
-        /* REQUESTED: Set padding-left/right to 10px. */
-        padding-left: 10px; 
-        padding-right: 10px;
     }
     
     /* --- NEW: MOBILE SCROLL HIGHLIGHT FOR TESTIMONIALS --- */
@@ -2102,22 +2017,20 @@ input[type="range"]::-moz-range-thumb:hover {
     
     /* --- NEW: ADD SERVICE CARD SCROLLER ON MOBILE --- */
     .services-section {
-        padding: 0; /* FIXED: Remove section padding for full-width scroll */
+        padding: 0; /* Remove side padding for full-width scroll */
     }
     .services-grid {
-    display: flex; /* Override grid */
-    overflow-x: auto; /* Enable horizontal scrolling */
-    gap: 1.5rem; /* Space between cards */
-    padding: 1rem 2rem; /* Added padding to the scroll container */
-    scroll-snap-type: x mandatory; /* Snap to cards */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-    
-    /* Corrected: This line sets the margin left */
-    margin-left: 10px; 
-    
-    /* Removed conflicting 'margin-left: 0;' and kept grid-template-columns */
-    grid-template-columns: none; 
-}
+        display: flex; /* Override grid */
+        overflow-x: auto; /* Enable horizontal scrolling */
+        gap: 1.5rem; /* Space between cards */
+        padding: 1rem 2rem; /* Add padding to the scroll container */
+        scroll-snap-type: x mandatory; /* Snap to cards */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        
+        /* Override the tablet stacking */
+        grid-template-columns: none; 
+margin-left: 5px;
+    }
 
     .services-grid > [class^="service-card-"] {
         flex-shrink: 0; /* Prevent cards from shrinking */
@@ -2172,7 +2085,7 @@ input[type="range"]::-moz-range-thumb:hover {
         display: block;
         text-align: center;
     }
-    .contact-section { /* Renamed from .content-block-4 */
+    .content-block-4 {
         padding-left: 32px;
         padding-right: 32px;
         padding-bottom: 30px;
@@ -2298,11 +2211,9 @@ input[type="range"]::-moz-range-thumb:hover {
     gap: 1.5rem;
 }
 
-/* MARGIN UPDATED */
 .case-studies-wrapper {
     max-width: 1200px;
-    /* Changed from 5rem auto to 40px auto; */
-    margin: 40px auto; 
+    margin: 5rem auto;
     padding: 0 2rem;
     scroll-margin-top: 100px;
 }
@@ -2461,10 +2372,6 @@ input[type="range"]::-moz-range-thumb:hover {
     transition: all 0.3s ease;
 }
 
-.case-study-item:last-child {
-    margin-bottom: 0;
-}
-
 .case-study-question {
     display: flex;
     justify-content: space-between;
@@ -2617,40 +2524,23 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 @media (min-width: 769px) {
-    /* IMPROVEMENT: Ensure card header stacks properly when space is tight on larger screens */
-    .case-study-card-1,
-    .case-study-card-2,
-    .case-study-card-3 {
-        padding-top: 1.8rem;
-    }
-    
     .case-study-header {
         display: flex;
-        flex-direction: column; /* IMPROVEMENT: Stack elements for better vertical space usage */
-        justify-content: center;
+        justify-content: space-between;
         align-items: center;
         width: 100%;
         margin-bottom: 1.5rem;
     }
 
     .case-study-logo-placeholder {
-        margin: 0 auto 1rem; /* Re-center logo */
+        margin: 0;
         height: auto;
     }
 
     .case-study-tags-container {
         margin-bottom: 0;
-        justify-content: center; /* Center tags */
+        justify-content: flex-end;
     }
-}
-
-/* RENAMED: .contact-info from 'contact' to 'contact-section' */
-.contact-section {
-    max-width: 1200px;
-    /* Added to align with the new .contact-section margin rule */
-    margin: 40px auto; 
-    padding: 0 2rem;
-    scroll-margin-top: 100px;
 }
 
 .contact-info {
@@ -2658,8 +2548,8 @@ input[type="range"]::-moz-range-thumb:hover {
     gap: 0;
     align-items: center;
     max-width: 1200px;
-    /* Removed redundant margin-top: 50px auto 0; and padding-bottom: 30px; */
-    /* This section now uses the .contact-section margin/padding */
+    margin: 50px auto 0;
+    padding-bottom: 30px;
 }
 
 .contact-info-left {
