@@ -1997,14 +1997,14 @@ input[type="range"]::-moz-range-thumb:hover {
     .testimonials-grid > .testimonial-card-2,
     .testimonials-grid > .testimonial-card-3 {
         flex-shrink: 0; /* Prevent cards from shrinking */
-        width: 80%; /* Each card takes 80% of the screen width */
-        max-width: 320px; /* But not more than 320px */
-        scroll-snap-align: start; /* Snap to the start of each card */
-        /* Ensure mobile transition is none */
-        transition: none !important; 
-        opacity: 1 !important;
-        transform: none !important;
-    }
+    width: 80%; /* Each card takes 80% of the screen width */
+    max-width: 320px; /* But not more than 320px */
+    scroll-snap-align: start; /* Snap to the start of each card */
+    /* Ensure mobile transition is none */
+    transition: none !important; 
+    opacity: 1 !important;
+    transform: none !important;
+    padding: 1.8rem 15px;    }
     
     /* --- NEW: MOBILE SCROLL HIGHLIGHT FOR TESTIMONIALS --- */
     .testimonials-grid > .testimonial-card-1.in-view,
@@ -2019,16 +2019,14 @@ input[type="range"]::-moz-range-thumb:hover {
         padding: 0; /* Remove side padding for full-width scroll */
     }
     .services-grid {
-        display: flex; /* Override grid */
-        overflow-x: auto; /* Enable horizontal scrolling */
-        gap: 1.5rem; /* Space between cards */
-        padding: 1rem 2rem; /* Add padding to the scroll container */
-        scroll-snap-type: x mandatory; /* Snap to cards */
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-        
-        /* Override the tablet stacking */
-        grid-template-columns: none; 
-margin-left: 5px;
+        display: flex;
+    overflow-x: auto; /* <-- CHANGE THIS */
+    gap: 1.5rem;
+    padding: 1rem 2rem;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    grid-template-columns: none;
+    margin-left: 5px;
     }
 
     .services-grid > [class^="service-card-"] {
