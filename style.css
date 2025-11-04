@@ -1741,8 +1741,8 @@ input[type="range"]::-moz-range-thumb:hover {
         padding: 15px;
     }
     .content-block-4 {
-        padding-left: 32px;
-        padding-right: 32px;
+        padding-left: 0px;
+        padding-right: 0px;
         padding-bottom: 30px;
     }
 }
@@ -2004,7 +2004,7 @@ input[type="range"]::-moz-range-thumb:hover {
     transition: none !important; 
     opacity: 1 !important;
     transform: none !important;
-    padding: 15px;    }
+    padding: 1.8rem 15px;    }
     
     /* --- NEW: MOBILE SCROLL HIGHLIGHT FOR TESTIMONIALS --- */
     .testimonials-grid > .testimonial-card-1.in-view,
@@ -2082,11 +2082,6 @@ input[type="range"]::-moz-range-thumb:hover {
         display: block;
         text-align: center;
     }
-    .content-block-4 {
-        padding-left: 32px;
-        padding-right: 32px;
-        padding-bottom: 30px;
-    }
     .floating-card {
         width: 140px;
         height: 91px;
@@ -2128,6 +2123,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
     .faq-section {
         margin-top: 32px;
+padding: 0;
     }
 
     .case-studies-wrapper {
@@ -2211,7 +2207,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .case-studies-wrapper {
     max-width: 1200px;
     margin: 5rem auto;
-    padding: 0 2rem;
+    padding: 0;
     scroll-margin-top: 100px;
 }
 
@@ -2686,4 +2682,3 @@ input[type="range"]::-moz-range-thumb:hover {
 .read-more-toggle:hover {
     text-decoration: underline;
 }
-
