@@ -389,6 +389,12 @@ document.addEventListener('DOMContentLoaded', function() {
             mobileServiceCards.forEach(card => {
                 mobileObserver.observe(card);
             });
+            
+            // --- FIX: Manually highlight the first service card on load ---
+            const firstServiceCard = mobileServiceCards[0];
+            if (firstServiceCard) {
+                firstServiceCard.classList.add('in-view');
+            }
         }
         
         // --- Testimonial Cards Highlight ---
