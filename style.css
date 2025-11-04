@@ -2004,7 +2004,7 @@ input[type="range"]::-moz-range-thumb:hover {
     transition: none !important; 
     opacity: 1 !important;
     transform: none !important;
-    padding: 1.8rem 15px;    }
+    padding: 15px;    }
     
     /* --- NEW: MOBILE SCROLL HIGHLIGHT FOR TESTIMONIALS --- */
     .testimonials-grid > .testimonial-card-1.in-view,
@@ -2686,3 +2686,4 @@ input[type="range"]::-moz-range-thumb:hover {
 .read-more-toggle:hover {
     text-decoration: underline;
 }
+
