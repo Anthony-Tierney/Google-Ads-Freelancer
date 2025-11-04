@@ -33,7 +33,7 @@ body {
     z-index: 1000;
 }
 
-@media (min-width: 993px) {
+@media (max-width: 992px) {
     .main-menu {
         position: sticky;
         top: 0;
