@@ -2127,7 +2127,7 @@ input[type="range"]::-moz-range-thumb:hover {
     .contact-info {
         flex-direction: column;
         gap: 2.5rem;
-        padding: 0;
+        padding: 0 32px 30px; /* MODIFIED: Set 32px L/R padding, keeping 30px bottom padding */
     }
     .email-tel {
         font-size: 1.1rem;
@@ -2151,7 +2151,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
     .faq-section {
         margin-top: 32px;
-padding: 0;
+        padding: 0 32px; /* MODIFIED: Set 32px L/R padding */
     }
 
     .case-studies-wrapper {
@@ -2235,7 +2235,7 @@ padding: 0;
 .case-studies-wrapper {
     max-width: 1200px;
     margin: 5rem auto;
-    padding: 0;
+    padding: 0 32px; /* MODIFIED: Set 32px L/R padding for all screen sizes */
     scroll-margin-top: 100px;
 }
 
@@ -2720,6 +2720,4 @@ padding: 0;
 
 .read-more-toggle:hover {
     text-decoration: underline;
-}
-}
 }
