@@ -2,6 +2,23 @@
     width: 100%;
 }
 
+/* --- NEW: Desktop Section Spacing --- */
+@media (min-width: 769px) {
+    .page-wrapper > :not(.main-menu):not(.footer):not(.hero-section) {
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-top: 0;
+        margin-bottom: 80px;
+    }
+
+    /* NEW: Specific override for hero-section margin-top */
+    .page-wrapper > .hero-section {
+        margin-top: 50px;
+        margin-bottom: 80px; /* Also ensure it has the correct bottom margin */
+    }
+}
+/* --- END: Desktop Section Spacing --- */
+
 * {
     margin: 0;
     padding: 0;
@@ -1640,9 +1657,7 @@ input[type="range"]::-moz-range-thumb:hover {
         margin-top: 40px !important;
     }
 
-    .hero-section {
-        margin: 50px auto;
-    }
+    /* REMOVED the conflicting .hero-section rule from here */
     .mobile-break { display: none; }
 }
 
@@ -2338,11 +2353,10 @@ padding: 0;
 
 .scorecards-container {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     margin-top: 0rem;
     flex-wrap: wrap;
     gap: 1rem;
-    flex-grow: 1;
 }
 
 .scorecard {
@@ -2351,7 +2365,7 @@ padding: 0;
     padding: 12px 16px;
     border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.25);
-    flex: 1;
+    /* flex: 1; */ /* REMOVED TO FIX WIDTH CONSISTENCY */
     min-width: 120px;
     text-align: center;
 }
@@ -2706,4 +2720,6 @@ padding: 0;
 
 .read-more-toggle:hover {
     text-decoration: underline;
+}
+}
 }
