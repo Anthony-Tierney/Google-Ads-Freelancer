@@ -2235,7 +2235,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .case-studies-wrapper {
     max-width: 1200px;
     margin: 5rem auto;
-    padding: 0 32px; /* MODIFIED: Set 32px L/R padding for all screen sizes */
+    padding: 0 32px;
     scroll-margin-top: 100px;
 }
 
@@ -2257,7 +2257,6 @@ input[type="range"]::-moz-range-thumb:hover {
     border: 1px solid rgba(255, 255, 255, 0.2);
     opacity: 0;
     transform: translateX(-50px);
-    /* UPDATED transition for hover effect */
     transition: all 2s ease, transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     display: flex;
     flex-direction: column;
@@ -2271,7 +2270,6 @@ input[type="range"]::-moz-range-thumb:hover {
     transform: translateX(0);
 }
 
-/* NEW: Desktop Hover Effect for Case Studies */
 @media (min-width: 769px) {
     .case-study-card-1:hover,
     .case-study-card-2:hover,
@@ -2303,7 +2301,7 @@ input[type="range"]::-moz-range-thumb:hover {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    width: fit-content;
+    width: 153.78px;
 }
 
 .case-study-type-tag {
@@ -2318,7 +2316,7 @@ input[type="range"]::-moz-range-thumb:hover {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    width: fit-content;
+    width: 94.85px;
 }
 
 .case-study-logo-placeholder {
