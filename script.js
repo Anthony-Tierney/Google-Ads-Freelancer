@@ -125,7 +125,176 @@ document.addEventListener('DOMContentLoaded', function() {
     if (caseStudiesSection) {
         observer.observe(caseStudiesSection);
     }
+
+// Desktop Service Cards Carousel - Add to script.js inside DOMContentLoaded
+
+
     
+// Service Cards Carousel (Desktop Only)
+    if (window.innerWidth > 768) {
+        const servicesSection = document.querySelector('.services-section');
+        const servicesGrid = document.querySelector('.services-grid');
+        const serviceCards = document.querySelectorAll('.services-grid > [class^="service-card-"]');
+        
+        if (servicesSection && servicesGrid && serviceCards.length > 0) {
+            
+            // 1. Create the NEW main carousel container
+            const carouselContainer = document.createElement('div');
+            carouselContainer.className = 'carousel-container-wrapper'; // This is our new relative parent
+
+            // --- START: ADDED CODE ---
+            // Create and add the counter element
+            const counterElement = document.createElement('div');
+            counterElement.className = 'service-card-counter';
+            carouselContainer.appendChild(counterElement);
+            // --- END: ADDED CODE ---
+
+            // 2. Wrap the services grid in its existing wrapper
+            const wrapper = document.createElement('div');
+            wrapper.className = 'services-grid-wrapper';
+            
+            // 3. Put the grid wrapper inside the new main container
+            carouselContainer.appendChild(wrapper);
+
+            // 4. Put the grid inside its wrapper
+            // We MUST insert the new container into the DOM *before* appending the grid
+            servicesGrid.parentNode.insertBefore(carouselContainer, servicesGrid);
+            wrapper.appendChild(servicesGrid); // Now we move the grid
+            
+            let currentIndex = 1;
+            const cardsPerView = 1;
+            const totalSlides = serviceCards.length;
+            
+            // Create navigation controls
+            const navContainer = document.createElement('div');
+            navContainer.className = 'carousel-nav';
+            
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'carousel-btn carousel-prev';
+            prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            prevBtn.setAttribute('aria-label', 'Previous services');
+            
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'carousel-btn carousel-next';
+            nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            nextBtn.setAttribute('aria-label', 'Next services');
+            
+            navContainer.appendChild(prevBtn);
+            navContainer.appendChild(nextBtn);
+
+            // Insert nav container into the *new* main container, before the wrapper
+            carouselContainer.insertBefore(navContainer, wrapper);
+            
+            // Create indicators
+            const indicatorsContainer = document.createElement('div');
+            indicatorsContainer.className = 'carousel-indicators';
+            
+            for (let i = 0; i < totalSlides; i++) {
+                const indicator = document.createElement('div');
+                indicator.className = 'carousel-indicator';
+                if (i === 0) indicator.classList.add('active');
+                indicator.setAttribute('data-slide', i);
+                indicator.setAttribute('aria-label', `Go to slide ${i + 1}`);
+                indicatorsContainer.appendChild(indicator);
+            }
+            
+            // Insert indicators *after* the new main container
+            carouselContainer.parentNode.insertBefore(indicatorsContainer, carouselContainer.nextSibling);
+            
+            // Replace the old updateCarousel function with this one
+            function updateCarousel() {
+                if (serviceCards.length === 0) return;
+
+                // 1. Get dimensions
+                const cardWidth = serviceCards[0].offsetWidth;
+                const wrapperWidth = wrapper.offsetWidth;
+                const gap = 32; // 2rem from your CSS
+
+                // 2. Calculate the total offset to the *start* of the active card
+                // This is (width + gap) * index
+                const offsetToCard = currentIndex * (cardWidth + gap);
+
+                // 3. Calculate the offset needed to center *a* card
+                // This is (wrapper_width / 2) - (card_width / 2)
+                const centerOffset = (wrapperWidth / 2) - (cardWidth / 2);
+
+                // 4. The new transform is the centering offset - the offset to the active card
+                const newTransform = centerOffset - offsetToCard;
+
+                servicesGrid.style.transform = `translateX(${newTransform}px)`;
+
+                // Update active classes
+                serviceCards.forEach((card, index) => {
+                    card.classList.toggle('service-card-active', index === currentIndex);
+                });
+
+                // Update buttons state
+                prevBtn.disabled = currentIndex === 0;
+                nextBtn.disabled = currentIndex >= totalSlides - 1; // Use >=
+                
+                // Update indicators
+                document.querySelectorAll('.carousel-indicator').forEach((indicator, index) => {
+                    indicator.classList.toggle('active', index === currentIndex);
+                });
+
+                // --- START: ADDED CODE ---
+                // Update the counter text
+                if (counterElement) {
+                    counterElement.textContent = `${currentIndex + 1} / ${totalSlides}`;
+                }
+                // --- END: ADDED CODE ---
+            }
+            
+            // Navigation handlers
+            prevBtn.addEventListener('click', () => {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateCarousel();
+                }
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                if (currentIndex < totalSlides - 1) {
+                    currentIndex++;
+                    updateCarousel();
+                }
+            });
+            
+            // Indicator handlers
+            document.querySelectorAll('.carousel-indicator').forEach(indicator => {
+                indicator.addEventListener('click', (e) => {
+                    currentIndex = parseInt(e.target.getAttribute('data-slide'));
+                    updateCarousel();
+                });
+            });
+            
+            // Keyboard navigation
+            servicesSection.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                    currentIndex--;
+                    updateCarousel();
+                } else if (e.key === 'ArrowRight' && currentIndex < totalSlides - 1) {
+                    currentIndex++;
+                    updateCarousel();
+                }
+            });
+            
+            // Handle window resize
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    if (window.innerWidth > 768) {
+                        updateCarousel();
+                    }
+                }, 250);
+            });
+            
+            // Initial update
+            updateCarousel();
+        }
+    }
+
     // Burger Menu functionality
     const burgerIcon = document.getElementById('burgerIcon');
     const mobileMenuItems = document.getElementById('mobileMenuItems');
@@ -300,58 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     // --- END: PRICING CALCULATOR SCRIPT ---
 
-    // --- 1. "Read More" Modal Logic ---
-    const serviceModal = document.getElementById('serviceModal');
-    const serviceModalBody = document.getElementById('serviceModalBody');
-    const closeServiceModal = document.getElementById('closeServiceModal');
-
-    // Find all service cards
-    const allServiceCards = document.querySelectorAll('.services-grid > [class^="service-card-"]');
-
-    allServiceCards.forEach(card => {
-        const descriptionContainer = card.querySelector('.service-description');
-        if (!descriptionContainer) return;
-
-        const p = descriptionContainer.querySelector('p');
-        if (!p) return; 
-
-        // Check if the text is overflowing (clamped)
-        // Using a small tolerance (1) because clientHeight can be fractional
-        if (p.scrollHeight > (p.clientHeight + 1)) {
-            
-            const toggleLink = document.createElement('a');
-            toggleLink.textContent = 'Read More';
-            toggleLink.className = 'read-more-toggle';
-            toggleLink.href = '#'; 
-
-            card.appendChild(toggleLink);
-
-            toggleLink.addEventListener('click', function(e) {
-                e.preventDefault(); 
-                
-                // Get the parent card of the clicked link
-                const cardToClone = e.target.closest('[class^="service-card-"]');
-                
-                // Clone it to show in the modal
-                const clonedCard = cardToClone.cloneNode(true);
-                
-                // Clear the modal body and append the cloned card
-                serviceModalBody.innerHTML = '';
-                serviceModalBody.appendChild(clonedCard);
-                
-                // Show the modal
-                serviceModal.style.display = 'block';
-            });
-        }
-    });
-
-    // Close modal logic
-    if (closeServiceModal) {
-        closeServiceModal.onclick = function() {
-            serviceModal.style.display = 'none';
-        }
-    }
-
+    
     // --- 2. Mobile Scroll Highlight Logic (Intersection Observer) ---
     
     // Check if we are on a mobile-sized screen
