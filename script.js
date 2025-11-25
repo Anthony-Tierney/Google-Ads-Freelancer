@@ -49,27 +49,63 @@ function toggleCaseStudySubAccordion(button) {
     subItem.classList.toggle('active');
 }
 
-// Modal functions
-function openModal(modalId) {
-    document.getElementById(modalId).style.display = 'block'; 
-    document.body.style.overflow = 'hidden';
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-    document.body.style.overflow = 'auto';
-}
-
-window.onclick = function(event) {
-    // This now handles both general modals and the specific service modal
-    if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-}
-
 // Animation on scroll and DOM Ready Logic
 document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- 6) Desktop Navigation Highlighting Logic (Intersection Observer) ---
+    const sections = document.querySelectorAll(
+        '#home, #pricing, #testimonials, #services, #case-studies, #faq, #contact'
+    );
+    const navLinks = document.querySelectorAll('.main-menu .menu-item');
+    const menuContainer = document.querySelector('.main-menu');
+    
+    // Function to add the active class to the corresponding menu link
+    function activateLink(id) {
+        navLinks.forEach(link => {
+            link.classList.remove('active-link');
+            if (link.getAttribute('href') === `#${id}`) {
+                link.classList.add('active-link');
+            }
+        });
+    }
+    
+    // Intersection Observer Callback for section visibility
+    const navObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // Determine which section is most in view (or the first one visible)
+                const visibleSections = Array.from(sections)
+                    .filter(sec => {
+                        const rect = sec.getBoundingClientRect();
+                        // Check if at least 10% of the section is visible
+                        return rect.top < (window.innerHeight * 0.9) && rect.bottom > (window.innerHeight * 0.1);
+                    })
+                    .sort((a, b) => {
+                        // Sort by distance from top (closer to top is higher priority)
+                        return a.getBoundingClientRect().top - b.getBoundingClientRect().top;
+                    });
+
+                if (visibleSections.length > 0) {
+                    activateLink(visibleSections[0].id);
+                } else if (window.scrollY === 0) {
+                    // Special case for top of page
+                    activateLink('home');
+                }
+            }
+        });
+    }, {
+        root: null,
+        rootMargin: '-50% 0px -49% 0px', // When the section center passes the viewport center
+        threshold: 0 // We use rootMargin to handle the actual centering logic
+    });
+    
+    // Observe all main sections
+    sections.forEach(section => {
+        navObserver.observe(section);
+    });
+
+    // --- End Desktop Navigation Highlighting Logic ---
+
     const testimonialCards = document.querySelectorAll('.testimonial-card, .testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
     const serviceCards = document.querySelectorAll('[class^="service-card-"]');
     const caseStudyCards = document.querySelectorAll('.case-study-card-1, .case-study-card-2, .case-study-card-3');
@@ -192,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function() {
             for (let i = 0; i < totalSlides; i++) {
                 const indicator = document.createElement('div');
                 indicator.className = 'carousel-indicator';
-                if (i === 0) indicator.classList.add('active');
+                if (i === 1) indicator.classList.add('active');
                 indicator.setAttribute('data-slide', i);
                 indicator.setAttribute('aria-label', `Go to slide ${i + 1}`);
                 indicatorsContainer.appendChild(indicator);
@@ -200,7 +236,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Insert indicators *after* the new main container
             carouselContainer.parentNode.insertBefore(indicatorsContainer, carouselContainer.nextSibling);
-            
+
+            // New logic to handle clicking on any card
+            serviceCards.forEach((card, index) => {
+                card.addEventListener('click', () => {
+                    // Only move the carousel if the clicked card is not already the active one
+                    if (index !== currentIndex) {
+                        currentIndex = index;
+                        updateCarousel();
+                    }
+                });
+            });
+
             // Replace the old updateCarousel function with this one
             function updateCarousel() {
                 if (serviceCards.length === 0) return;
@@ -355,117 +402,76 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- PRICING CALCULATOR SCRIPT ---
-    const pricingTable = document.getElementById('pricingTable');
+    // --- PRICING CALCULATOR SCRIPT (Dynamic Pricing and Progress Bar) ---
     const slider = document.getElementById('spend-slider');
     const spendValue = document.getElementById('spend-value');
     const managementFee = document.getElementById('management-fee');
-    const setupFeeRow = document.getElementById('setup-fee-row');
-    const setupFee = document.getElementById('setup-fee');
-    const accountRadios = document.querySelectorAll('input[name="account"]');
-    const googleCreditMessage = document.getElementById('googleCreditMessage');
+    const maxSpendNotification = document.getElementById('max-spend-notification');
+    // NEW: Element for the static label beneath the slider
+    const maxSpendLabel = document.getElementById('max-spend-label');
 
-    // Check if all elements exist before adding listeners
-    if (pricingTable && slider && spendValue && managementFee && setupFeeRow && setupFee && accountRadios.length > 0 && googleCreditMessage) {
+    // Check if slider elements exist
+    if (slider && spendValue && managementFee && maxSpendNotification && maxSpendLabel) {
         
-        // State tracking for blur
-        let radioAnswered = false;
-        let sliderAnswered = false;
-
-        function checkAndUnblur() {
-            // This function checks if both conditions are met
-            if (radioAnswered && sliderAnswered) {
-                pricingTable.classList.remove('blurred');
-            }
-        }
-
-        // --- Event Listener for Radios ---
-        accountRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                radioAnswered = true;
-                checkAndUnblur();
-                calculateFees();
-            });
-        });
-
-        // --- Event Listener for Slider ---
-        slider.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-
-            if (value > 0) {
-                // If slider is moved to any value above 0
-                if (!sliderAnswered) {
-                    sliderAnswered = true;
-                }
-                checkAndUnblur();
-            } else {
-                // If slider is moved back to 0
-                sliderAnswered = false;
-                pricingTable.classList.add('blurred');
-            }
-
-            // This part runs every time the slider moves
-            spendValue.textContent = formatCurrency(value) + 'pm';
-            calculateFees();
-        });
-
         function formatCurrency(amount) {
-            return '£' + amount.toLocaleString('en-GB');
+            // Use Math.round to ensure clean thousands separation when sliding
+            return '£' + Math.round(amount).toLocaleString('en-GB');
         }
 
         function calculateFees() {
             const spend = parseInt(slider.value);
+            const maxSpend = parseInt(slider.getAttribute('max'));
+            let calculatedFee = 0; // Initialize fee
             
-            // Check which radio is selected.
-            const checkedRadio = document.querySelector('input[name="account"]:checked');
-            const hasAccount = checkedRadio ? checkedRadio.value === 'yes' : false;
-            const isNo = checkedRadio ? checkedRadio.value === 'no' : false;
-            const isOver4k = spend >= 4000;
+            // Calculate progress percentage for the green bar
+            const progress = (spend / maxSpend) * 100;
+            slider.style.setProperty('--slider-progress', `${progress}%`);
+            
+            // --- New Tiered Fee Logic ---
+            if (spend === 0) {
+                // £0 spend = £0 fee
+                calculatedFee = 0;
+            } else if (spend >= 100 && spend <= 4000) {
+                // £100 to £4,000 spend = £399 fee
+                calculatedFee = 399;
+            } else if (spend >= 4100 && spend <= 10000) {
+                // £4,100 to £10,000 spend = 10% of the slider value, rounded
+                calculatedFee = Math.round(spend * 0.10);
+            } else if (spend > 0 && spend < 100) {
+                // Spend between £0 and £100 defaults to the £399 tier
+                calculatedFee = 399; 
+            }
+            // --- End Tiered Fee Logic ---
 
-            // Calculate management fee
-            let fee = 399;
-            if (spend > 4000) {
-                const increments = Math.floor((spend - 4000) / 500);
-                fee = 399 + (increments * 50);
+            // Set fee display
+            managementFee.textContent = formatCurrency(calculatedFee) + 'pm';
+            
+            // Calculate spend text for the value above the slider
+            let spendText = formatCurrency(spend);
+            
+            // Determine the max label text (for the slider-labels area)
+            let maxLabelText = formatCurrency(maxSpend);
+            
+            if (spend === maxSpend) {
+                spendText += '+pm';
+                maxLabelText += '+'; // Add plus sign only when max is reached
+                maxSpendNotification.classList.add('show-notification');
+            } else {
+                spendText += 'pm';
+                // maxLabelText remains "£10,000" (from formatCurrency(maxSpend))
+                maxSpendNotification.classList.remove('show-notification');
             }
 
-            // Cap the fee at 3500
-            if (fee > 3500) {
-                fee = 3500;
-            }
-            
-            managementFee.textContent = formatCurrency(fee) + 'pm';
-            
-            // Logic for setup fee row AND Google Credit Message
-            if (hasAccount) {
-                // 'Yes' is selected
-                setupFeeRow.style.display = 'none'; // Hide setup fee row
-                googleCreditMessage.style.display = 'none'; // Hide credit message
-            } else if (isNo) {
-                // 'No' is selected
-                googleCreditMessage.style.display = 'flex'; // Show credit message
-                
-                if (isOver4k) {
-                    // 'No' AND '>= £4k'
-                    setupFeeRow.style.display = 'none'; // Hide setup row
-                } else {
-                    // 'No' AND '< £4k'
-                    setupFeeRow.style.display = ''; // Show setup fee row
-                    setupFee.textContent = '£99';
-                }
-            } else { 
-                // No radio selected yet (Initial state)
-                setupFeeRow.style.display = ''; // Show setup fee row
-                setupFee.textContent = '£99';   // Set default text
-                googleCreditMessage.style.display = 'none'; // Hide credit message
-            }
+            // Update displays
+            spendValue.textContent = spendText;
+            maxSpendLabel.textContent = maxLabelText; // Update the static label element
         }
 
-        // Initial call to set fees based on default (slider=0, radio=unchecked)
+        // --- Event Listener for Slider ---
+        slider.addEventListener('input', calculateFees);
+
+        // Initial call to set fees based on default (slider=0)
         calculateFees(); 
-        
-        // Set initial slider text to include 'pm'
-        spendValue.textContent = formatCurrency(parseInt(slider.value)) + 'pm';
     }
     // --- END: PRICING CALCULATOR SCRIPT ---
 
