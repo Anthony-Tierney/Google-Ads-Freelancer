@@ -13,7 +13,11 @@ overflow-x: hidden;
         margin-bottom: 80px;
     }
 
-    /* NEW: Specific override for hero-section margin-top */
+    /* Hide the mobile counter on desktop */
+.mobile-service-counter {
+    display: none;
+
+}
     .page-wrapper > .hero-section {
         margin-top: 50px;
         margin-bottom: 80px; /* Also ensure it has the correct bottom margin */
@@ -736,7 +740,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 @media (max-width: 768px) {
     .section-subtitle {
-        font-size: 1rem;
+        font-size: 1.2rem;
     }
 
     .calculator-container {
@@ -1762,6 +1766,23 @@ margin-top:4px;
         text-align: center;
         white-space: normal;
     }
+
+.mobile-service-counter {
+    display: block; /* Show the counter */
+    text-align: center;
+    margin: 1rem auto 0px 5px;
+
+    /* Using styles from your desktop counter/hero-badge for consistency */
+    background: rgba(0, 255, 136, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 255, 136, 0.4);
+    color: #00ff88;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    width: fit-content;
+}
     .hero-section {
         margin: 0 auto 30px;
         padding: 0 15px 15px;
@@ -1962,7 +1983,7 @@ padding: 1rem 2rem;
     .floating-card-1 {
         top: 10px;
         /* UPDATED: Small Mobile 'right' value moved 75px right */
-        right: -100px; /* -25 - 75 = -100 */
+        right: -100px; /* -25 - 75 = -95 */
     }
     .floating-card-2 {
         bottom: -40px;
