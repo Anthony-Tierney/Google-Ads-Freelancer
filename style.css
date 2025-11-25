@@ -1587,6 +1587,9 @@ margin-top:4px;
     /* REMOVED the conflicting .hero-section rule from here */
     .mobile-break { display: none; }
 }
+.desktop-break { 
+        display: block; 
+    }
 
 @media (min-width: 993px) {
     .contact-info-right {
@@ -2431,6 +2434,10 @@ padding: 1rem 2rem;
     .case-studies-section {
         display: none;
     }
+/* Ensure the desktop break is hidden on all small screens (mobile-first approach) */
+.desktop-break { 
+    display: none; 
+}
     .case-studies-section-mobile {
         display: block;
     }
