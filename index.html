@@ -2,15 +2,11 @@
 <html lang="en">
 <head>
 <link rel="icon" type="image/png" href="images/favicon.png">
-	
-<!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+'https://www.googletagmanager.com/gtm.js?id='+i+dl+'';f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-WJX79WDD');</script>
-<!-- End Google Tag Manager -->
-
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Anthony Tierney, Google Ads freelancer. Ranked LinkedIn's Top 10 Voices for Paid Ads UK 2025. Lead gen & e-commerce expert. Find out more...">
@@ -98,6 +94,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     "@type": "Service",
                     "name": "Conversion & Event Tracking",
                     "description": "Comprehensive setup of conversion & event tracking across Google Ads, GA4 & Google Tag Manager."
+                }
+            },
+            {
+                "@type": "Offer",
+                "itemOffered": {
+                    "@type": "Service",
+                    "name": "Account Audits",
+                    "description": "Comprehensive analysis of your Google Ads account with detailed recommendations to enhance performance."
                 }
             },
             {
@@ -253,7 +257,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 "name": "What access do you need to get started?",
                 "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "To get started, I'll need access to your Google Ads account, Google Analytics 4, and Google Tag Manager (GTM). If you don't have these set up, I can help you create them. Depending on your website, further access may be required, which we can discuss."
+                    "text": "To get started, I'll need access to your Google Ads account, Google Analytics 4, and Google Tag Manager (GTM). If you don't have these set up, I can help you create them. Depending on your website setup, there may be more access required - but we can discuss this at the time."
                 }
             }
         ]
@@ -264,11 +268,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </head>
 <body>
 
-<!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WJX79WDD"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
 <div class="page-wrapper"> <nav class="main-menu">
         <div class="menu-container">
             <div class="logo-placeholder">
@@ -381,74 +382,62 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <h2 class="section-title">Pricing</h2>
     <p class="section-subtitle">Full monthly Google Ads account management from only £399pm. <span class="mobile-only-break">See below.</span></p>
     
+    <!-- Changed background to white/black text in CSS -->
     <div class="calculator-container">
-        <div class="questions-section">
-            <div class="question-group">
-                <label class="question-label">Do you have an existing Google Ads account?</label>
-                <div class="radio-group">
-                    <div class="radio-option">
-    <input type="radio" id="account-yes" name="account" value="yes">
-    <label for="account-yes">Yes</label>
-</div>
-                    <div class="radio-option">
-                        <input type="radio" id="account-no" name="account" value="no">
-                        <label for="account-no">No</label>
+        <!-- Centered title for the calculator -->
+        <h3 class="section-title calculator-title">Fee Calculator</h3>
+        
+        <!-- Revamped fee-calculator-tool -->
+        <div class="fee-calculator-tool">
+            
+            <div class="slider-group-wrapper">
+                
+                <!-- New Flex Container to display Spend Value (Left) and Fee (Right) -->
+                <div class="slider-header-display">
+                    <div>
+                        <!-- Added small text -->
+                        <p class="spend-label">Your ad spend:</p>
+                        <!-- Slider value display -->
+                        <div class="slider-value" id="spend-value">£0pm</div>
+                    </div>
+                    
+                    <!-- Dynamic Fee Display -->
+                    <div class="dynamic-fee-display">
+                        <!-- Updated text -->
+                        <p class="fee-label">Estimated Monthly Fee (inc. VAT):</p>
+                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                            <!-- Management Fee is static up to £10k -->
+                            <p class="fee-amount" id="management-fee">£399pm</p>
+                            <!-- REMOVED: New label for 10% fee tier -->
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="question-group">
-                <label class="question-label">My monthly ad spend is/will be:</label>
+                
                 <div class="slider-container">
-                    <div class="slider-value" id="spend-value">£0</div>
-                    <input type="range" id="spend-slider" min="0" max="50000" step="500" value="0">
+                    <!-- Slider input - progress bar generated via JS/CSS -->
+                    <input type="range" id="spend-slider" min="0" max="10000" step="100" value="0">
                     <div class="slider-labels">
                         <span>£0</span>
-                        <span>£50,000+</span>
+                        <!-- 1) Update slider maximum label -->
+                        <span id="max-spend-label">£10,000+</span>
+                    </div>
+                    <!-- 2) Notification for max spend -->
+                    <div class="max-spend-notification" id="max-spend-notification">
+                        <i class="fas fa-hand-point-up"></i>
+                        <span>For ad spends greater than £10kpm, please contact me for a bespoke quote.</span>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="pricing-table-wrapper">
-        
-            <div class="pricing-table blurred" id="pricingTable">
-                <table>
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Pricing</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Fixed Monthly Fee (inc. VAT)</td>
-                            <td id="management-fee">£399pm</td>
-                        </tr>
-                        <tr id="setup-fee-row">
-                            <td>One-off Setup Fee</td>
-                            <td id="setup-fee">£0</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="pricing-table-overlay" id="pricingOverlay">
-                <p>Please answer the 2 questions to see pricing.</p>
-            </div>
-            
-            <div class="google-ads-credit-message" id="googleCreditMessage" style="display: none;">
-                <i class="fas fa-coins"></i>
-                <span>New to Google Ads? I can help you claim your free Google Ads credit of up to £2,000.</span>
-            </div>
-        </div>
+            <!-- 3) Update text and link in CTA button -->
+            <a href="#testimonials" class="cta-button-glass cta-button-primary cta-calculator-services">See Testimonials <i class="fas fa-arrow-pointer"></i></a>
 
-        <a href="#services" class="cta-button-glass cta-button-primary cta-calculator-services">See Services Included <i class="fas fa-arrow-pointer"></i></a>
+        </div>
     </div>
 
 </div>
     
-    <div class="services-cta-section">
+    <div class="cta-section">
         <a href="#contact" class="services-cta-button">Get in Touch</a>
     </div>
 
@@ -508,7 +497,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
     </div>
     
-    <div class="services-cta-section">
+    <div class="cta-section">
         <a href="#contact" class="services-cta-button">Get in Touch</a>
     </div>
 
@@ -626,7 +615,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
     </div>
 
-    <div class="services-cta-section">
+    <div class="cta-section">
         <a href="#contact" class="services-cta-button">Get in Touch</a>
     </div> <div id="case-studies" class="case-studies-wrapper">
 
@@ -680,7 +669,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </div>
 
                         <div class="scorecard">
-                            <h4>Industry</h4>
+                            <h4>Industry</p>
                             <p>Many</p>
                         </div>
 
@@ -843,7 +832,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
     </div>
     
-    <div class="services-cta-section">
+    <div class="cta-section">
         <a href="#contact" class="services-cta-button">Get in Touch</a>
     </div>    
     <div class="faq-section" id="faq">
@@ -1015,14 +1004,6 @@ Contact me via any of the below methods & I'll get back to you within 24 hours!<
         </div>
         </div>
     
-    <div id="serviceModal" class="modal">
-        <div class="modal-content service-modal-content">
-            <button class="close-modal" id="closeServiceModal">×</button>
-            <div id="serviceModalBody">
-                </div>
-        </div>
-    </div>
-
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-links">
