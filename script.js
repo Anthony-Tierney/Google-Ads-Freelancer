@@ -52,14 +52,13 @@ function toggleCaseStudySubAccordion(button) {
 // Animation on scroll and DOM Ready Logic
 document.addEventListener('DOMContentLoaded', function() {
     
-    // --- 6) Desktop Navigation Highlighting Logic (Intersection Observer) ---
+    // --- START: SIMPLIFIED MENU HIGHLIGHTING LOGIC (Scroll Event) ---
     const sections = document.querySelectorAll(
         '#home, #pricing, #testimonials, #services, #case-studies, #faq, #contact'
     );
     const navLinks = document.querySelectorAll('.main-menu .menu-item');
-    const menuContainer = document.querySelector('.main-menu');
+    const menu = document.querySelector('.main-menu');
     
-    // Function to add the active class to the corresponding menu link
     function activateLink(id) {
         navLinks.forEach(link => {
             link.classList.remove('active-link');
@@ -68,43 +67,45 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // Intersection Observer Callback for section visibility
-    const navObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                // Determine which section is most in view (or the first one visible)
-                const visibleSections = Array.from(sections)
-                    .filter(sec => {
-                        const rect = sec.getBoundingClientRect();
-                        // Check if at least 10% of the section is visible
-                        return rect.top < (window.innerHeight * 0.9) && rect.bottom > (window.innerHeight * 0.1);
-                    })
-                    .sort((a, b) => {
-                        // Sort by distance from top (closer to top is higher priority)
-                        return a.getBoundingClientRect().top - b.getBoundingClientRect().top;
-                    });
 
-                if (visibleSections.length > 0) {
-                    activateLink(visibleSections[0].id);
-                } else if (window.scrollY === 0) {
-                    // Special case for top of page
-                    activateLink('home');
-                }
+    function highlightMenuItem() {
+        // FIX: Change condition to run on all desktop widths (i.e., when menu is horizontal)
+        if (window.innerWidth <= 768) return; 
+
+        const scrollPos = window.scrollY;
+        // The offset is now menu.offsetHeight + 0 for earliest possible activation
+        const offset = menu.offsetHeight + 200; 
+        let activeSectionId = 'home'; // Default to 'home'
+        let found = false;
+
+        // Loop sections in reverse (from bottom to top)
+        for (let i = sections.length - 1; i >= 0; i--) {
+            const section = sections[i];
+            const sectionTop = section.offsetTop;
+            const sectionId = section.getAttribute('id');
+
+            // If the user has scrolled past the top of the section (accounting for the offset)
+            if (scrollPos >= sectionTop - offset) {
+                activeSectionId = sectionId;
+                found = true;
+                break; // Activate this section and stop the loop
             }
-        });
-    }, {
-        root: null,
-        rootMargin: '-50% 0px -49% 0px', // When the section center passes the viewport center
-        threshold: 0 // We use rootMargin to handle the actual centering logic
-    });
+        }
+        
+        // If nothing was found (i.e., scrollPos is near the very top of the page), 
+        // the default 'home' remains active.
+        if (scrollPos < offset && !found) {
+             activeSectionId = 'home';
+        }
+        
+        activateLink(activeSectionId);
+    }
     
-    // Observe all main sections
-    sections.forEach(section => {
-        navObserver.observe(section);
-    });
-
-    // --- End Desktop Navigation Highlighting Logic ---
+    // Initial call and attach to scroll event
+    highlightMenuItem();
+    window.addEventListener('scroll', highlightMenuItem);
+    window.addEventListener('resize', highlightMenuItem); // Re-evaluate on resize
+    // --- END: SIMPLIFIED MENU HIGHLIGHTING LOGIC ---
 
     const testimonialCards = document.querySelectorAll('.testimonial-card, .testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
     const serviceCards = document.querySelectorAll('[class^="service-card-"]');
