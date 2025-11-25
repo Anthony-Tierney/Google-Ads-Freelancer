@@ -484,6 +484,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // --- Service Cards Highlight ---
         const servicesGrid = document.querySelector('.services-grid');
         const mobileServiceCards = document.querySelectorAll('.services-grid > [class^="service-card-"]');
+        // NEW: Get the counter element
+        const mobileCounter = document.getElementById('mobileServiceCounterText'); 
+        const totalCards = mobileServiceCards.length;
 
         if (servicesGrid && mobileServiceCards.length > 0) {
             
@@ -494,7 +497,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             const observerCallback = (entries) => {
-                entries.forEach(entry => {
+                entries.forEach((entry, index) => { // Get the index of the entry here
                     if (entry.isIntersecting) {
                         // First, remove .in-view from all cards
                         mobileServiceCards.forEach(card => {
@@ -502,6 +505,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                         // Then, add .in-view to the one that just came into view
                         entry.target.classList.add('in-view');
+                        
+                        // NEW: Update the counter text
+                        if (mobileCounter) {
+                            // Find the actual index of the intersecting card in the original NodeList
+                            const cardIndex = Array.from(mobileServiceCards).indexOf(entry.target);
+                            mobileCounter.textContent = `${cardIndex + 1} / ${totalCards}`;
+                        }
+                        
                     } else {
                         // This handles removing the class when it scrolls out
                         entry.target.classList.remove('in-view');
