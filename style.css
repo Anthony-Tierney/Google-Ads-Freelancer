@@ -1,5 +1,6 @@
 .page-wrapper {
     width: 100%;
+/* FIXED: We are retaining overflow-x: hidden on the wrapper to stop page content spill, but removing it from body. */
 overflow-x: hidden;
 }
 
@@ -38,7 +39,7 @@ body {
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
     min-height: 100vh;
-    overflow-x: hidden; /* ADD THIS */
+    /* FIX: Removed overflow-x: hidden; from body to allow sticky to work correctly */
     width: 100%;
 }
 
@@ -53,6 +54,14 @@ body {
     padding: 0.25rem 0;
     width: 100%;
     z-index: 1000;
+}
+
+@media (min-width: 993px) {
+    /* 5) Make menu sticky on desktop - position: sticky requires top: 0 to work */
+    .main-menu {
+        position: sticky;
+        top: 0;
+    }
 }
 
 @media (max-width: 992px) {
@@ -97,7 +106,7 @@ body {
     text-decoration: none;
     font-size: 1.25rem;
     font-weight: 500;
-    transition: opacity 0.3s ease;
+    transition: all 0.3s ease; /* Updated transition for item 6 */
     margin-right: 20px;
     padding: 12px 16px;
     border-radius: 8px;
@@ -114,6 +123,17 @@ body {
     opacity: 0.8;
     background: rgba(255, 255, 255, 0.1);
 }
+
+/* 6) Active link style on desktop */
+@media (min-width: 993px) {
+    .main-menu .menu-item.active-link {
+        color: #00ff88;
+        font-weight: 700;
+        /* FIX: REMOVED GLOW EFFECT */
+        text-shadow: none;
+    }
+}
+
 
 .burger-menu-icon {
     display: none;
@@ -134,6 +154,7 @@ body {
     .menu-container {
         justify-content: space-between;
     }
+
     .menu-items {
         display: none;
         flex-direction: column;
@@ -384,18 +405,18 @@ body {
     color: #ffffff;
     text-align: center;
 }
+/* NEW: Title inside calculator container (needs black text) */
+.calculator-title {
+    color: #1a1a1a; 
+    /* 1) Remove bold font-weight for calculator title */
+    font-weight: 500; 
+}
 
 .clients-scroll-track {
     display: flex;
     animation: scroll-left 40s linear infinite;
     gap: 2rem;
     transform: translateX(0%);
-}
-
-@media (min-width: 769px) {
-    .clients-scroll-track:hover {
-        animation-play-state: paused;
-    }
 }
 
 @keyframes scroll-left {
@@ -440,109 +461,178 @@ body {
     opacity: 0.9;
 }
 
+/* UPDATED: Solid white background and dark text for calculator container */
 .calculator-container {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: #ffffff;
+    backdrop-filter: none;
+    border: 1px solid #cccccc;
+    color: #1a1a1a; /* Dark text */
     border-radius: 15px;
-    /* UPDATED padding: T R B L. Increased bottom padding from 5rem to 7rem to create more space for the button. */
-    padding: 2rem 2rem 7rem 2rem;
+    padding: 2rem 2rem 7rem 2rem; 
     display: flex;
-    gap: 3rem;
-    align-items: flex-start;
-    position: relative; /* Added for CTA positioning */
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+    position: relative;
+    /* 4) Reduce width to 600px on desktop */
 }
 
-.questions-section {
-    flex: none;
+/* Renamed from .questions-section */
+.fee-calculator-tool { 
+    flex: 1;
+    width: 100%;
+    max-width: 600px; /* Constrain internal elements */
 }
 
-.question-group {
+/* --- NEW STYLES FOR REVAMPED CALCULATOR --- */
+.slider-group-wrapper {
+    width: 100%;
     margin-bottom: 2rem;
 }
 
-.question-label {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    display: block;
-}
-
-.radio-group {
+.slider-header-display {
     display: flex;
-    gap: 1rem;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1rem;
 }
 
-.radio-option {
-    flex: none;
+.dynamic-fee-display {
+    text-align: right;
 }
 
-.radio-option input[type="radio"] {
-    display: none;
-}
-
-.radio-option label {
-    display: block;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 10px;
-    padding: 1rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
+/* 1) Update to 1rem */
+.spend-label {
+    font-size: 1rem; 
     font-weight: 500;
+    color: #555555;
+    margin-bottom: 0.25rem;
+    text-align: left;
 }
 
-.radio-option input[type="radio"]:checked + label {
-    background: rgba(0, 255, 136, 0.2);
-    border-color: #00ff88;
-    color: #00ff88;
+/* 1) Update to 1rem */
+.fee-label {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #555555; /* Dark color for label */
+    margin-bottom: 0.25rem;
 }
 
-.radio-option label:hover {
-    background: rgba(255, 255, 255, 0.15);
+.fee-amount {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #00ff88; 
+    /* 4) Ensure mobile fee amount is left aligned */
+    text-align: right; 
+}
+
+/* --- Max Spend Notification (2) --- */
+.max-spend-notification {
+    background-color: #fff8e1; /* Light yellow background */
+    border: 1px solid #ffcc80; /* Orange border */
+    color: #333333; /* Dark text */
+    /* FIX: Set initial height/padding/margin to zero to dynamically reserve space */
+    padding: 0 15px;
+    margin-top: 0;
+    max-height: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    opacity: 0; /* Hidden by default */
+    /* FIX: Use all for transition to cover max-height, padding, and opacity */
+    transition: all 0.5s ease;
+}
+
+.max-spend-notification.show-notification {
+    /* FIX: Re-introduce desired padding, margin, and set max-height to show content */
+    opacity: 1;
+    max-height: 100px; /* A value larger than the content height */
+    padding: 10px 15px;
+    margin-top: 10px;
+}
+
+.max-spend-notification i {
+    color: #ff9800; /* Orange icon */
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+/* --- END NEW STYLES --- */
+
+/* Removed .question-group and .question-label */
+.question-label {
+    display: none; /* Removed entirely per request */
 }
 
 .slider-container {
-    margin-top: 1rem;
+    margin-top: 0; /* Adjusted since main label is above */
 }
 
 .slider-value {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #00ff88;
-    margin-bottom: 1rem;
-    text-align: center;
+    color: #00ff88; 
+    margin-bottom: 0;
+    text-align: left; 
 }
 
+/* --- SLIDER PROGRESS BAR STYLES --- */
+/* Base track style */
 input[type="range"] {
     width: 100%;
-    height: 8px;
+    /* 3) Thicker slider */
+    height: 16px; 
     border-radius: 5px;
-    background: rgba(255, 255, 255, 0.2);
+    background: #e0e0e0; /* Light background for un-filled track */
     outline: none;
     -webkit-appearance: none;
+    /* Custom property for progress */
+    --slider-progress: 0%; 
+    /* Gradient applied as background, using the custom property */
+    background: linear-gradient(to right, #00ff88 var(--slider-progress), #e0e0e0 var(--slider-progress));
+}
+
+/* Hide the default progress bar thumb styling for WebKit/Chrome/Safari */
+input[type="range"]::-webkit-slider-runnable-track {
+    background: transparent;
 }
 
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 24px;
-    height: 24px;
+    /* 3) Thicker slider */
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: #00ff88;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
+    transform: scale(1.1); /* Slightly reduced scale from 1.2 to 1.1 for a smoother look with bigger thumb */
+}
+
+/* Firefox support - requires a separate styling approach */
+input[type="range"]::-moz-range-track {
+    /* 3) Thicker slider */
+    height: 16px;
+    background: #e0e0e0;
+}
+
+input[type="range"]::-moz-range-progress {
+    background-color: #00ff88; 
+    /* 3) Thicker slider */
+    height: 16px; 
+    border-radius: 5px;
 }
 
 input[type="range"]::-moz-range-thumb {
-    width: 24px;
-    height: 24px;
+    /* 3) Thicker slider */
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: #00ff88;
     cursor: pointer;
@@ -551,95 +641,58 @@ input[type="range"]::-moz-range-thumb {
 }
 
 input[type="range"]::-moz-range-thumb:hover {
-    transform: scale(1.2);
+    transform: scale(1.1);
 }
+/* --- END SLIDER PROGRESS BAR STYLES --- */
 
+/* 2) Update slider labels size */
 .slider-labels {
     display: flex;
     justify-content: space-between;
     margin-top: 0.5rem;
-    font-size: 0.9rem;
+    font-size: 1.1rem; /* Updated from 0.9rem */
     opacity: 0.8;
+    color: #1a1a1a; /* Dark text for labels */
 }
 
-.pricing-table {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
 
-.pricing-table table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.pricing-table th,
-.pricing-table td {
-    padding: 1.2rem;
-    text-align: left;
-}
-
-.pricing-table th {
-    background: rgba(0, 255, 136, 0.2);
-    font-weight: 600;
-    border-bottom: 2px solid rgba(0, 255, 136, 0.3);
-}
-
-.pricing-table th:last-child {
-    text-align: center;
-}
-
-.pricing-table td {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.pricing-table td:last-child {
-    text-align: center;
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: #00ff88;
-}
-
-.pricing-table tr:last-child td {
-    border-bottom: none;
-}
-
-/* --- NEW: CTA Button for Calculator --- */
+/* --- UPDATED: CTA Button for Calculator - Reverted to Green/Primary Style --- */
 .cta-calculator-services {
-    display: block; /* Mobile default */
-    /* UPDATED: Removed top margin, added auto horizontal margins for centering */
+    display: block;
     margin-top: 0;
     margin-left: auto;
     margin-right: auto;
     text-align: center;
+    
+    /* Reverting to cta-button-primary styling */
+    background: #00ff88;
+    color: #1a1a1a;
+    border: 1px solid #00ff88;
+    
+    /* ADDED properties from style2 to ensure button displays correctly */
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: fit-content;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.cta-calculator-services:hover {
+    /* Reverting to cta-button-primary hover styling */
+    background: #00e078;
+    border-color: #00e078;
+    color: #1a1a1a;
 }
 
 .cta-calculator-services i {
     margin-left: 8px;
-}
-
-/* --- NEW: Google Ads Credit Message --- */
-.google-ads-credit-message {
-    background: rgba(0, 255, 136, 0.15); /* Light green background */
-    border: 1px solid rgba(0, 255, 136, 0.3);
-    color: #ffffff;
-    border-radius: 10px;
-    padding: 1rem 1.5rem;
-    margin: 1.5rem 0 0 0; /* Changed margin */
-    max-width: 100%; /* Changed max-width */
-    width: 100%; /* Added width */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-weight: 500;
-}
-
-.google-ads-credit-message i {
-    color: #FFD700; /* Gold color for coins */
-    font-size: 1.5rem;
-    margin-right: 12px;
 }
 
 
@@ -647,25 +700,24 @@ input[type="range"]::-moz-range-thumb:hover {
     .calculator-container {
         flex-direction: column;
     }
-
-    .google-ads-credit-message {
-        /* On mobile, it's inside a 2rem padding section, so it's fine */
-        max-width: 100%; 
-     }
 }
 
 @media (min-width: 993px) { /* This media query is used for the calculator layout */
+    .calculator-container {
+        /* Update max-width to 660px (600 + 60) on desktop */
+        max-width: 660px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
     .cta-calculator-services {
         position: absolute;
-        /* Sits 2rem from the container bottom. */
-        /* The container has 7rem bottom padding, so this is 5rem above the content. */
         bottom: 2rem; 
         right: 2rem; 
-        width: auto; /* Reset width */
-        margin-top: 0; /* Reset margin */
-        padding: 10px 15px;
-        /* UPDATED: Font size set to 17.6px */
-        font-size: 17.6px;
+        width: auto;
+        margin-top: 0;
+        padding: 14px 28px;
+        font-size: 1.1rem;
     }
     .cta-calculator-services i {
         transform: rotate(-20deg);
@@ -673,6 +725,11 @@ input[type="range"]::-moz-range-thumb:hover {
     }
     .cta-calculator-services:hover i {
         transform: rotate(0deg) scale(1.1);
+    }
+    
+    .fee-amount {
+        /* Override mobile alignment for desktop */
+        text-align: right;
     }
 }
 
@@ -683,28 +740,60 @@ input[type="range"]::-moz-range-thumb:hover {
     }
 
     .calculator-container {
-        /* This overrides the desktop 7rem bottom padding */
         padding: 1.5rem;
-    }
-
-    .pricing-table th,
-    .pricing-table td {
-        padding: 1rem;
-        font-size: 0.9rem;
-    }
-
-    .pricing-table td:last-child {
-        font-size: 1.1rem;
-    }
-
-    /* ADDED: Remove margin-bottom from the last question group on mobile */
-    .questions-section .question-group:last-child {
-        margin-bottom: 0;
     }
 
     /* ADDED: Show mobile-only line break */
     .mobile-only-break {
         display: block;
+    }
+    
+    /* --- FIX: CENTER ALL TEXT IN WRAPPER --- */
+    .slider-group-wrapper {
+        text-align: center; /* Center text within the wrapper */
+    }
+
+    .slider-header-display {
+        flex-direction: column;
+        /* FIX: Align items to center instead of flex-start */
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    
+    .dynamic-fee-display {
+        text-align: center;
+        justify-content: center;  /* ADD THIS LINE */
+    }
+.dynamic-fee-display > div {
+        justify-content: center !important;
+    }
+    .spend-label {
+        text-align: center;
+    }
+    
+    .fee-label {
+        font-size: 0.9rem;
+        text-align: center;
+    }
+    
+    .fee-amount {
+        font-size: 1.3rem;
+        /* FIX: Enforce center alignment on mobile */
+        text-align: center !important;
+    }
+.fee-amount {
+        font-size: 1.5rem;  /* ADD THIS LINE */
+        text-align: center !important;
+    }
+    
+    .slider-value {
+        text-align: center;
+    }
+
+    /* Adjust slider labels for better fit on small screens */
+    .slider-labels {
+        font-size: 0.9rem;
     }
 }
 
@@ -727,6 +816,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .testimonial-card-3 {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(5px);
+    /* *** FIX: ADDED MISSING PADDING AND BORDER-RADIUS *** */
     padding: 1.8rem;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -890,7 +980,8 @@ input[type="range"]::-moz-range-thumb:hover {
     }
 }
 
-.services-cta-section {
+/* RENAMED FROM .services-cta-section */
+.cta-section {
     max-width: 1200px;
     margin: 3rem auto;
     padding: 0 2rem;
@@ -1487,211 +1578,8 @@ margin-top:4px;
     margin: 0 auto 2rem;
 }
 
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(5px);
-    z-index: 2000;
-    overflow-y: auto;
-    padding: 20px 0;
-}
-
-.modal-content {
-    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-    background-size: 400% 400%;
-    animation: gradient 15s ease infinite;
-    max-width: 1000px;
-    width: 90%;
-    margin: 40px auto;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    position: relative;
-    overflow: hidden;
-}
-
-/* NEW: Specific styles for the service modal */
-.service-modal-content {
-    max-width: 600px; /* Smaller width for service cards */
-    background: #23a6d5; /* Simpler background */
-}
-
-#serviceModalBody [class^="service-card-"] {
-    /* Styles for the card *inside* the modal */
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(5px);
-    padding: 1.8rem;
-    border-radius: 0; /* Remove radius inside modal */
-    border: none; /* Remove border inside modal */
-    opacity: 1; /* Ensure it's visible */
-    transform: none; /* Ensure no transform */
-    transition: none;
-    box-shadow: none;
-}
-#serviceModalBody .service-header {
-    /* Ensure header is centered in modal too */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    width: 100%;
-}
-#serviceModalBody .service-title {
-    text-align: center;
-}
-#serviceModalBody .service-description p {
-    /* This is the magic: un-clamp the text */
-    margin-bottom: 0;
-    overflow: visible;
-    display: block;
-    -webkit-box-orient: unset;
-    -webkit-line-clamp: unset;
-}
-#serviceModalBody .read-more-toggle {
-    /* Hide the "Read More" link inside the modal */
-    display: none;
-}
-
-
-.modal-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 20px;
-    padding: 30px 30px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.modal-logo {
-    width: 80px;
-    height: 80px;
-    object-fit: contain;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 10px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    flex-shrink: 0;
-}
-
-.modal-title {
-    flex: 1;
-    min-width: 0;
-}
-
-.modal-title h3 {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin: 0 0 15px 0;
-    color: #ffffff;
-    line-height: 1.2;
-}
-
-.modal-info-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 10px;
-}
-
-.modal-info-box {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    padding: 12px 16px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    flex: 1;
-    min-width: 120px;
-    text-align: center;
-}
-
-.modal-info-box h4 {
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin: 0 0 6px 0;
-    color: #00ff88;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.modal-info-box p {
-    font-size: 0.95rem;
-    margin: 0;
-    color: #ffffff;
-    font-weight: 500;
-}
-
-.close-modal {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 3000;
-}
-
-.close-modal:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: scale(1.1);
-}
-
-.modal-body {
-    padding: 30px;
-}
-
-.modal-summary {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    padding: 25px;
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.modal-summary h4 {
-    font-size: 1.3rem;
-    font-weight: bold;
-    margin: 0 0 15px 0;
-    color: #00ff88;
-}
-
-.modal-summary p {
-    font-size: 1rem;
-    line-height: 1.7;
-    color: #ffffff;
-    margin: 0;
-}
-
-.pricing-modal-content {
-    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-    background-size: 400% 400%;
-    margin: 10% auto;
-    padding: 30px;
-    border-radius: 15px;
-    max-width: 500px;
-    width: 90%;
-    position: relative;
-    animation: gradient 15s ease infinite;
-}
 
 @media (min-width: 769px) {
-    .pricing-modal-content {
-        margin-top: 40px !important;
-    }
-
     /* REMOVED the conflicting .hero-section rule from here */
     .mobile-break { display: none; }
 }
@@ -1710,125 +1598,11 @@ margin-top:4px;
     }
 }
 
-.pricing-section-modal {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(5px);
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.pricing-section-modal h4 {
-    font-size: 1.2rem;
-    margin-bottom: 15px;
-    color: #00ff88;
-}
-
-.pricing-section-modal p {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: #ffffff;
-}
-
-.pricing-none {
-    color: #ffffff;
-    font-weight: bold;
-}
-
 @media (max-width: 768px) {
-    .modal {
-        padding: 10px 0;
-    }
-    .modal-content {
-        width: 95%;
-        margin: 20px auto;
-        border-radius: 15px;
-    }
-    .service-modal-content {
-        padding: 0; /* Remove padding from modal content */
-    }
-    #serviceModalBody [class^="service-card-"] {
-        padding: 1.5rem; /* Add padding to card inside modal */
-    }
-
-    .modal-header {
-        flex-direction: column;
-        text-align: center;
-        padding: 20px;
-        gap: 15px;
-    }
-    .modal-logo {
-        width: 60px;
-        height: 60px;
-        margin: 0 auto;
-    }
-    .modal-title h3 {
-        font-size: 1.5rem;
-        margin-bottom: 10px;
-        text-align: center;
-    }
-    .modal-info-row {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: center;
-    }
-    .modal-info-box {
-        min-width: calc(50% - 8px);
-        text-align: center;
-        padding: 10px 12px;
-        flex: none;
-    }
-    .modal-info-box h4 {
-        font-size: 0.8rem;
-    }
-    .modal-info-box p {
-        font-size: 0.9rem;
-    }
-    .modal-body {
-        padding: 20px;
-    }
-    .close-modal {
-        width: 40px;
-        height: 40px;
-        font-size: 1.3rem;
-        top: 15px;
-        right: 15px;
-    }
-    .pricing-modal-content {
-        margin: 20% auto;
-        padding: 20px;
-    }
-    .pricing-section-modal {
-        padding: 15px;
-    }
     .content-block-4 {
         padding-left: 32px;
         padding-right: 32px;
         padding-bottom: 30px;
-    }
-}
-
-@media (max-width: 480px) {
-    .modal-content {
-        width: 98%;
-        margin: 10px auto;
-    }
-    .modal-header {
-        padding: 15px;
-    }
-    .modal-body {
-        padding: 15px;
-    }
-    .modal-title h3 {
-        font-size: 1.3rem;
-    }
-    .modal-summary {
-        padding: 15px;
-    }
-    .pricing-section-modal {
-        padding: 15px;
     }
 }
 
@@ -1982,6 +1756,12 @@ margin-top:4px;
 }
 
 @media (max-width: 768px) {
+    .section-title {
+        /* Adjusted for the new calculator title */
+        font-size: 1.5rem;
+        text-align: center;
+        white-space: normal;
+    }
     .hero-section {
         margin: 0 auto 30px;
         padding: 0 15px 15px;
@@ -2040,11 +1820,6 @@ margin-top:4px;
     }
     .hero-section h1 {
         font-size: 2.2rem;
-    }
-    .section-title {
-        font-size: 1.5rem;
-        text-align: center;
-        white-space: normal;
     }
     .form-row-2, .name-email-row {
         flex-direction: column;
@@ -2186,7 +1961,7 @@ padding: 1rem 2rem;
     }
     .floating-card-1 {
         top: 10px;
-        /* UPDATED: Mobile 'right' value moved 75px right */
+        /* UPDATED: Small Mobile 'right' value moved 75px right */
         right: -100px; /* -25 - 75 = -100 */
     }
     .floating-card-2 {
@@ -2269,6 +2044,37 @@ padding: 1rem 2rem;
     .floating-card-2 {
         bottom: -40px;
         left: -25px;
+    }
+
+    .contact-info {
+        flex-direction: column;
+        gap: 2.5rem;
+        padding-bottom: 30px; /* Only bottom padding */
+    }
+    .email-tel {
+        font-size: 1.1rem;
+        text-align: center !important;
+        padding-right: 0 !important;
+    }
+    .faq-section {
+        margin-top: 32px;
+        padding: 0 32px; /* MODIFIED: Set 32px L/R padding */
+    }
+
+    .case-studies-wrapper {
+        margin-bottom: 0 !important;
+    }
+    
+    /* This overrides the flex-direction: column rule in the services-grid media query,
+       making the internal content of the service card stack correctly. */
+    .service-card-conversion,
+    .service-card-audit,
+    .service-card-pmax,
+    .service-card-leads,
+    .service-card-search,
+    .service-card-landing {
+        display: flex;
+        flex-direction: column; 
     }
 }
 
@@ -2700,66 +2506,11 @@ padding: 1rem 2rem;
 
 @media (min-width: 993px) {
     .calculator-container {
-        max-width: 920px;  /* Or your desired width */
-        margin-left: auto;   /* This tells it to center horizontally */
-        margin-right: auto;  /* This tells it to center horizontally */
+        /* Update max-width to 660px (600 + 60) on desktop */
+        max-width: 660px;
+        margin-left: auto;
+        margin-right: auto;
     }
-}
-.pricing-table.blurred {
-    filter: blur(5px);
-    opacity: 0.5;
-    pointer-events: none;
-    transition: all 0.3s ease;
-}
-/* --- New Pricing Table Wrapper Styles --- */
-
-.pricing-table-wrapper {
-    position: relative; /* This is the anchor for the overlay */
-    flex: 0 0 400px; /* This was moved from .pricing-table */
-}
-
-@media (max-width: 992px) {
-    .pricing-table-wrapper {
-        flex: 1;        /* This was moved from .pricing-table */
-        width: 100%;    /* This was moved from .pricing-table */
-    }
-}
-
-.pricing-table-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    
-    /* Center the text */
-    display: flex;
-    align-itemss: center;
-    justify-content: center;
-    text-align: center;
-    padding: 1rem;
-    
-    /* Text and background styling */
-    color: white;
-    font-weight: bold;
-    font-size: 1.1rem;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(2px); /* Blurs the overlay's background */
-    border-radius: 12px; /* Matches the table's corners */
-    
-    z-index: 10; /* Ensures it's on top */
-    
-    /* This is the logic to hide/show */
-    opacity: 0; /* Hidden by default */
-    pointer-events: none; /* Can't be clicked when hidden */
-    transition: opacity 0.3s ease;
-}
-
-/* This is the magic rule: */
-/* When .pricing-table has the .blurred class, show its SIBLING .pricing-table-overlay */
-.pricing-table.blurred + .pricing-table-overlay {
-    opacity: 1; /* Show it */
-    pointer-events: auto; /* Make it clickable */
 }
 
 /* ADDED: Class for mobile-only line break */
@@ -2849,6 +2600,16 @@ align-self: stretch;
                     opacity 0.5s ease, transform 0.5s ease; 
         opacity: 0.5; /* <-- ADDED */
         transform: scale(0.9); /* <-- ADDED */
+        
+        /* ADDED: Ensure all cards are clickable */
+        cursor: pointer;
+    }
+    
+    /* ADDED: Hover for non-active cards */
+    .services-grid > [class^="service-card-"]:not(.service-card-active):hover {
+        transform: scale(0.93); /* Slightly larger scale for hover */
+        border-color: rgba(255, 255, 255, 0.5); /* Subtle border change */
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); /* Subtle glow */
     }
 
     
@@ -2887,10 +2648,12 @@ align-self: stretch;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
-        pointer-events: auto;
+        /* UPDATED: Allow button to be clickable */
+        pointer-events: auto; 
         position: absolute;
         top: 0; /* <-- MODIFIED */
         transform: translateY(-50%); /* <-- ADDED */
+        z-index: 11; /* Ensure buttons are always on top */
     }
     .carousel-prev {
         left: -60px; /* <-- ADDED */
