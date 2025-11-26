@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-WJX79WDD');</script>
-<!-- End Google Tag Manager -->
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="The official blog for Anthony Tierney, Google Ads Freelance Specialist. Get the latest tips, strategies, and insights on Google Ads, PPC, and digital marketing.">
     <title>Google Ads Blog - Anthony Tierney</title>
@@ -17,7 +15,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="style.css"> 
+    
+    <link rel="stylesheet" href="/style.css"> 
     
     <script type="application/ld+json">
     {
@@ -39,8 +38,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     
     <style>
         :root {
-            /* --background-color: #1a1a2e; <-- Removed to allow style.css to take priority */
-            --card-background: rgba(22, 22, 41, 0.7); /* Keeping this variable in case it's used elsewhere */
             --primary-accent: #00ff88;
             --text-color: #e0e0e0;
             --heading-color: #ffffff;
@@ -48,19 +45,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
 
         body {
-            /* background-color: var(--background-color); <-- Removed to allow style.css to take priority */
             color: var(--text-color);
-            /* font-family: 'Inter', sans-serif; <-- Removed */
             margin: 0;
-            /* line-height: 1.6; <-- Removed */
         }
-
-        /* ALL MENU STYLES (from .main-menu to .burger-menu-icon) have been removed to allow style.css to take priority */
-
+        
         .blog-header {
             text-align: center;
             padding: 4rem 2rem;
-            /* background: linear-gradient(135deg, #16222A, #3A6073); <-- Removed */
         }
 
         .blog-header h1 {
@@ -78,7 +69,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
         
         .breadcrumbs {
-            /* background-color: rgba(0,0,0,0.2); <-- Removed */
             padding: 0.75rem 5%;
         }
 
@@ -122,7 +112,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             max-width: 1200px;
             margin: 3rem auto;
             padding: 0 2rem;
-            text-align: center; /* Center the coming soon message */
+            text-align: center;
         }
 
         .coming-soon-message {
@@ -134,10 +124,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
 
         .footer {
-            /* background-color: rgba(0,0,0,0.2); <-- Removed */
             padding: 2rem 5%;
             text-align: center;
-            margin-top: 4rem; /* Adjusted margin-top to account for less content */
+            margin-top: 4rem;
             border-top: 1px solid var(--border-color);
         }
         
@@ -171,9 +160,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
         /* Responsive Styles */
         @media (max-width: 768px) {
-            
-            /* All menu responsive styles removed */
-
             .blog-header h1 {
                 font-size: 2.5rem;
             }
@@ -184,23 +170,22 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </style>
 </head>
 <body>
-<!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WJX79WDD"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
 <nav class="main-menu">
     <div class="menu-container">
         <div class="logo-placeholder">
             <a href="https://anthonytierney.co.uk/#home">
-                <img src="images/at-logo.png" alt="Anthony Tierney Logo">
+                <img src="/images/at-logo.png" alt="Anthony Tierney Logo">
             </a>
         </div>
         <div class="menu-items" id="mobileMenuItems">
             <a href="https://anthonytierney.co.uk/#home" class="menu-item">Home</a>
+            <a href="https://anthonytierney.co.uk/#pricing" class="menu-item">Pricing</a>
             <a href="https://anthonytierney.co.uk/#testimonials" class="menu-item">Testimonials</a>
-            <a href="https://anthonytierney.co.uk/#case-studies" class="menu-item">Case Studies</a>
             <a href="https://anthonytierney.co.uk/#services" class="menu-item">Services</a>
-            <a href="https://anthonytierney.co.uk/#faq" class="menu-item">FAQs & Pricing</a>
+            <a href="https://anthonytierney.co.uk/#case-studies" class="menu-item">Case Studies</a>
+            <a href="https://anthonytierney.co.uk/#faq" class="menu-item">FAQs</a>
             <a href="https://anthonytierney.co.uk/#contact" class="menu-item">Contact</a>
         </div>
         <div class="burger-menu-icon" id="burgerIcon">
@@ -230,6 +215,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <footer class="footer">
     <div class="footer-container">
         <div class="footer-links">
+            <a href="https://anthonytierney.co.uk/blog/" class="footer-link">Blog</a>
             <a href="https://anthonytierney.co.uk/privacy-policy" class="footer-link">Privacy Policy</a>
             <a href="https://anthonytierney.co.uk/terms-of-service" class="footer-link">Terms of Service</a>
         </div>
@@ -238,17 +224,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <i class="fab fa-linkedin linkedin-icon-footer"></i>
             </a>
         </div>
-        <p class="copyright">© 2025 Anthony Tierney. All rights reserved.</p>
+        <p>Anthony Tierney Ltd. Companies House No. 16785735. Registered office address: 61 Bridge Street, Kington, United Kingdom, HR5 3DJ</p>
     </div>
 </footer>
 
-<script>
-    // Mobile menu toggle
-    document.getElementById('burgerIcon').addEventListener('click', function() {
-        document.getElementById('mobileMenuItems').classList.toggle('active');
-    });
-</script>
-
+<script src="/script.js"></script>
 </body>
 
 </html>
