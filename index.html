@@ -7,7 +7,7 @@
 
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+j=d.createElement(s),dl=l!='dataLayer'?'&'+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl+'';f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-WJX79WDD');</script>
 
@@ -357,7 +357,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <img loading="lazy" src="images/rllogo_white.png" alt="Logo for Riley Leisure, a client of Anthony Tierney">
                 </div>
                 <div class="client-placeholder">
-                    <img loading="lazy" src="images/lpb-logo_white.png" alt="Logo for LPB, a client of Anthony Tierney">
+                    <img loading="lazy" src="images/ts-logo.webp" alt="Logo for LPB, a client of Anthony Tierney">
                 </div>
                 <div class="client-placeholder">
                     <img loading="lazy" src="images/dc-logo_white.png" alt="Logo for Design Cloud, a client of Anthony Tierney">
@@ -381,7 +381,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <img loading="lazy" src="images/rllogo_white.png" alt="Logo for Riley Leisure, a client of Anthony Tierney">
                 </div>
                 <div class="client-placeholder">
-                    <img loading="lazy" src="images/lpb-logo_white.png" alt="Logo for LPB, a client of Anthony Tierney">
+                    <img loading="lazy" src="images/ts-logo.webp" alt="Logo for LPB, a client of Anthony Tierney">
                 </div>
             </div>
         </div>
@@ -419,7 +419,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </div>
                     <div class="max-spend-notification" id="max-spend-notification">
                         <i class="fas fa-hand-point-up"></i>
-                        <span>For ad spends greater than £10kpm, please contact me for a bespoke quote.</span>
+                        <span>For ad spends greater than £10kpm I charge a lower rate, please contact me for a bespoke quote!</span>
+                    </div>
+                    <div class="min-spend-notification" id="min-spend-notification">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Sorry! I'm not currently taking on any smaller clients. Please select a value of £2,000 or above.</span>
                     </div>
                 </div>
             </div>
@@ -437,58 +441,95 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <div class="testimonials-section" id="testimonials">
         <h2 class="section-title">Client Testimonials</h2>
-        <div class="testimonials-grid">
-            <div class="testimonial-card-2">
-                <div class="testimonial-header">
-                    <img loading="lazy" src="images/stacey-headshot.jpeg" alt="Headshot of Stacey Blair, Head of Marketing at FCT" class="testimonial-author-img">
-                    <div class="star-rating">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
+        
+        <div class="testimonials-carousel-wrapper">
+
+            <div class="testimonials-grid">
+                <div class="testimonial-card-2">
+                    <div class="testimonial-header">
+                        <img loading="lazy" src="images/stacey-headshot.jpeg" alt="Headshot of Stacey Blair, Head of Marketing at FCT" class="testimonial-author-img">
+                        <div class="star-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
                     </div>
+                    <p class="testimonial-text">"In 2021 we were getting roughly 30 leads per month at around £25 per lead. Fast forward to today and we're now achieving <span class="highlight-text">350 - 400 leads</span> per month consistently at an even lower CPA of ~£20!"</p>
+                    <br>
+                    <p class="testimonial-author">Stacey Blair</p>
+                    <p class="testimonial-role">Head of Marketing, FCT</p>
+                    <a href="https://maps.app.goo.gl/kqAptPDABtjCeYXj9" class="testimonial-link" target="_blank" rel="noopener noreferrer">Read the full review on Google</a>
                 </div>
-                <p class="testimonial-text">"In 2021 we were getting roughly 30 leads per month at around £25 per lead. Fast forward to today and we're now achieving <span class="highlight-text">350 - 400 leads</span> per month consistently at an even lower CPA of ~£20!"</p>
-                <br>
-                <p class="testimonial-author">Stacey Blair</p>
-                <p class="testimonial-role">Head of Marketing, FCT</p>
-                <a href="https://maps.app.goo.gl/kqAptPDABtjCeYXj9" class="testimonial-link" target="_blank" rel="noopener noreferrer">Read the full review on Google</a>
-            </div>
-            <div class="testimonial-card-1">
-                <div class="testimonial-header">
-                    <img loading="lazy" src="images/kevin-headshot.jpg" alt="Headshot of Kevin Walsh, CEO of Kanturo" class="testimonial-author-img">
-                    <div class="star-rating">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
+                <div class="testimonial-card-1">
+                    <div class="testimonial-header">
+                        <img loading="lazy" src="images/kevin-headshot.jpg" alt="Headshot of Kevin Walsh, CEO of Kanturo" class="testimonial-author-img">
+                        <div class="star-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
                     </div>
+                    <p class="testimonial-text">"... Anthony was successful during this time in increasing our avg. monthly sales generated via Google Ads by approximately <span class="highlight-percentage">+283%</span> while maintaining a healthy ROAS..."</p>
+                    <br>
+                    <p class="testimonial-author">Kevin Walsh</p>
+                    <p class="testimonial-role">CEO, Kanturo</p>
+                    <a href="https://www.linkedin.com/in/anthony-tierney/details/recommendations/" class="testimonial-link" target="_blank" rel="noopener noreferrer">Read the full review on LinkedIn</a>
                 </div>
-                <p class="testimonial-text">"... Anthony was successful during this time in increasing our avg. monthly sales generated via Google Ads by approximately <span class="highlight-percentage">+283%</span> while maintaining a healthy ROAS..."</p>
-                <br>
-                <p class="testimonial-author">Kevin Walsh</p>
-                <p class="testimonial-role">CEO, Kanturo</p>
-                <a href="https://www.linkedin.com/in/anthony-tierney/details/recommendations/" class="testimonial-link" target="_blank" rel="noopener noreferrer">Read the full review on LinkedIn</a>
-            </div>
-            <div class="testimonial-card-3">
-                <div class="testimonial-header">
-                    <img loading="lazy" src="images/james-headshot.png" alt="Headshot of James Rigby, CEO of Design Cloud" class="testimonial-author-img">
-                    <div class="star-rating">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
+                <div class="testimonial-card-3">
+                    <div class="testimonial-header">
+                        <img loading="lazy" src="images/james-headshot.png" alt="Headshot of James Rigby, CEO of Design Cloud" class="testimonial-author-img">
+                        <div class="star-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
                     </div>
+
+                    <p class="testimonial-text">"Anthony went above & beyond managing our Google Ads - assisting with landing page optimisation, server-side and offline conversion tracking & new CRM analytics. His ability to optimise beyond ads and see the full customer journey <span class="highlight-text">exceeded our expectations</span>."</p>
+
+                    <p class="testimonial-author">James Rigby</p>
+                    <p class="testimonial-role">CEO, Design Cloud</p>
+                    <a href="https://www.linkedin.com/in/anthony-tierney/" class="testimonial-link" target="_blank" rel="noopener noreferrer">Read the full review on LinkedIn</a>
                 </div>
-                <p class="testimonial-text">"Anthony went above & beyond managing our Google Ads - assisting with landing page optimisation, server-side and offline conversion tracking & new CRM analytics. His ability to optimise beyond ads and see the full customer journey <span class="highlight-text">exceeded our expectations</span>."</p>
-                <p class="testimonial-author">James Rigby</p>
-                <p class="testimonial-role">CEO, Design Cloud</p>
-                <a href="https://www.linkedin.com/in/anthony-tierney/" class="testimonial-link" target="_blank" rel="noopener noreferrer">Read the full review on LinkedIn</a>
+                
+                <div class="testimonial-card-4">
+                    <div class="testimonial-header">
+                        <img loading="lazy" src="images/default-headshot.png" alt="Headshot of Christina Darroch, Business Development Manager at LPM" class="testimonial-author-img">
+                        <div class="star-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <p class="testimonial-text">"We’ve been working with Anthony for the past five months, and in that time he's increased the average booking revenue generated via Google Ads for our London-based medical clinic by <span class="highlight-percentage">over 35%</span> - without us spending a penny more on ads. He's..."</p>
+                    <p class="testimonial-author">Christina Darroch</p>
+                    <p class="testimonial-role">Business Development Manager, LPM</p>
+                    <a href="https://maps.app.goo.gl/Yehv869mwvBZqdd18" class="testimonial-link" target="_blank" rel="noopener noreferrer">Read the full review on Google</a>
+                </div>
+                
             </div>
+            
+            <div class="carousel-nav" id="testimonials-nav">
+                <button class="carousel-btn carousel-prev" id="testimonials-prev" aria-label="Previous testimonial">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-btn carousel-next" id="testimonials-next" aria-label="Next testimonial">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            
         </div>
+        
+        <div class="carousel-indicators" id="testimonials-indicators"></div>
+        
     </div>
     
     <div class="cta-section">
@@ -499,7 +540,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <h2 class="section-title">My Google Ads Services</h2>
 
-    <p class="section-subtitle">Whether you're just starting out or already running ads, I provide<br class="desktop-break"> tailored services which facilitate data-driven growth and maximise your return on ad spend. <span class="mobile-only-break">See below.</span></p>
+    <p class="section-subtitle">Whether you're just starting out or already running ads, I provide<br class="desktop-break"> tailored services which facilitate data-driven growth and maximise your return on ad spend.
 
 <div class="mobile-service-counter">
         <span id="mobileServiceCounterText">1 / 6</span>
@@ -615,219 +656,251 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <div class="cta-section">
         <a href="#contact" class="services-cta-button">Get in Touch</a>
-    </div> <div id="case-studies" class="case-studies-wrapper">
+    </div> <div class="case-studies-section" id="case-studies">
 
         <div class="case-studies-section">
             <h2 class="section-title">Case Studies</h2>
 
             <div class="case-studies-grid">
                 <div class="case-study-card-1">
-                    <div class="case-study-header">
-                        <div class="case-study-logo-placeholder">
-                            <img loading="lazy" src="images/nattergal-logo_white.png" alt="Nattergal Logo">
-                        </div>
-                        <div class="case-study-tags-container">
-<div class="case-study-type-tag">B2B</div>
-                            <div class="case-study-service-tag">Lead Generation</div>
+                    <div class="case-study-flipper">
+                        <div class="case-study-front" onclick="flipCaseStudyCard(this)">
+                            <div class="case-study-header">
+                                
+                                <div class="case-study-tags-container">
+                                    <div class="case-study-type-tag">B2B</div>
+                                    <div class="case-study-service-tag">Lead Generation</div>
+                                </div>
+                            </div>
+                            
+                            
+                            <div class="case-study-summary-text">
+                                <p class="line-1">Nattergal</p>
+                                <p class="line-2">88x</p>
+                                <p class="line-3">Non-brand ROAS</p>
+                            </div>
+                            </div>
+                        <div class="case-study-back" onclick="flipCaseStudyCard(this)">
+                            
+                            <div class="scorecard">
+                                <h4>Highlights</h4>
+                                <div class="scorecard-list">
+                              <p><span class="checkmark">&check;</span><span><span class="highlight-text-card">93%</span> of leads classified as high-intent, sales-ready SQLs</span></p>
+<br>
+                               <p><span class="checkmark">&check;</span><span>Up to <span class="highlight-text-card">88×</span> potential ROAS based on Sales Qualified Leads</span></p>
+<br>
+                               <p><span class="checkmark">&check;</span><span>Drastic conversion rate improvement of <span class="highlight-text-card">2.5x</span></span></p>
+<br>
+
+                               <p><span class="checkmark">&check;</span><span>Highest ad impression share of all competitors</span></p>
+                                </div>
+                            </div>
+                            
+                            
                         </div>
                     </div>
-                    <div class="scorecards-container">
-                        <div class="scorecard">
-                            <h4>Client Since</h4>
-                            <p>March 2025</p>
-                        </div>
-                        <div class="scorecard">
-                            <h4>Industry</h4>
-                            <p>Consulting</p>
-                        </div>
-                        <div class="scorecard">
-                            <h4>Highlights</h4>
-                            <p>Consistently generating over £200k worth of Sales Qualified Leads (SQLs) per month from only £2,000 in ad spend - delivering a potential ROAS of 88x+. Conversion rate has improved drastically from 4% to 7%+.</p>
-                        </div>
+                    <div class="flip-button" onclick="flipCaseStudyCard(this)">
+    <i class="fas fa-arrow-circle-right"></i>
                     </div>
-                    <a href="#contact" class="cta-button-glass cta-button-primary" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
                 </div>
 
                 <div class="case-study-card-2">
-                     <div class="case-study-header">
-                        <div class="case-study-logo-placeholder">
-                            <img loading="lazy" src="images/db_logo.png" alt="Digital Blueprint Logo">
-                        </div>
-                        <div class="case-study-tags-container">
-<div class="case-study-type-tag">B2B & B2C</div>
-                            <div class="case-study-service-tag">E-Commerce</div>
+                    <div class="case-study-flipper">
+                        <div class="case-study-front" onclick="flipCaseStudyCard(this)">
+                            <div class="case-study-header">
+                                
+                                <div class="case-study-tags-container">
+                                    <div class="case-study-type-tag">B2B & B2C</div>
+                                    <div class="case-study-service-tag">E-Commerce</div>
+                                </div>
+                            </div>
+
+                            
+                            <div class="case-study-summary-text">
+                                <p class="line-1">Digital Blueprint</p>
+                                <p class="line-2">£4.8m+</p>
+                                <p class="line-3">E-commerce Sales 2025</p>
+                            </div>
+                            </div>
+                        <div class="case-study-back" onclick="flipCaseStudyCard(this)">
+                            
+                            <div class="scorecard">
+                                <h4>Highlights</h4>
+                                <div class="scorecard-list">
+           <p><span class="checkmark">&check;</span><span>Over <span class="highlight-text-card">£4.8m</span> in annual online sales generated exclusively through Google Ads</span></p>
+<br>
+           <p><span class="checkmark">&check;</span><span>Achieved an avg. <span class="highlight-text-card">35%</span> year-on-year increase in e‑commerce sales across 4 brands</span></p>
+<br>
+           <p><span class="checkmark">&check;</span><span><span class="highlight-text-card">24%</span> reduction in wasted ad spend on non-converting search terms</span></p>
+                                </div>
+                            </div>
+                            
+                            
                         </div>
                     </div>
-
-                    <div class="scorecards-container">
-                        <div class="scorecard">
-
-                            <h4>Client Since</h4>
-                            <p>August 2021</p>
-                        </div>
-
-                        <div class="scorecard">
-                            <h4>Industry</p>
-                            <p>Many</p>
-                        </div>
-
-                        <div class="scorecard">
-                            <h4>Highlights</h4>
-                            <p>Supporting one of the UK's top marketing agencies, managing 4 top-spending e-commerce accounts across a diverse range of sectors. Over £4.8m in annual online sales generated solely via Google Ads.</p>
-                        </div>
+                    <div class="flip-button" onclick="flipCaseStudyCard(this)">
+                        <i class="fas fa-chevron-circle-right"></i>
                     </div>
-                    <a href="#contact" class="cta-button-glass cta-button-primary" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
                 </div>
 
                 <div class="case-study-card-3">
-                    <div class="case-study-header">
-                        <div class="case-study-logo-placeholder">
-                            <img loading="lazy" src="images/notchlogo_white.png" alt="Notch Logo">
-                        </div>
-                        <div class="case-study-tags-container">
-<div class="case-study-type-tag">B2B & B2C</div>
-                            <div class="case-study-service-tag">Lead Generation</div>
+                    <div class="case-study-flipper">
+                        <div class="case-study-front" onclick="flipCaseStudyCard(this)">
+                            <div class="case-study-header">
+                                
+                                <div class="case-study-tags-container">
+                                    <div class="case-study-type-tag">B2B & B2C</div>
+                                    <div class="case-study-service-tag">Lead Generation</div>
+                                </div>
+                            </div>
+                            
+                            <div class="case-study-summary-text">
+                                <p class="line-1">Notch</p>
+                                <p class="line-2">77%</p>
+                                <p class="line-3">YoY Conversion Increase</p>
+                            </div>
+                            </div>
+                        <div class="case-study-back" onclick="flipCaseStudyCard(this)">
+                            
+                            <div class="scorecard">
+                                <h4>Highlights</h4>
+                                <div class="scorecard-list">
+                        <p><span class="checkmark">&check;</span><span>A massive <span class="highlight-text-card">77%</span> increase in Google Ads conversions achieved in 2024</span></p>
+<br>
+                        <p><span class="checkmark">&check;</span><span><span class="highlight-text-card">30%</span> decrease in the accounts overall CPA</span></p>
+<br>
+                        <p><span class="checkmark">&check;</span><span>Conversion rate uplift of <span class="highlight-text-card">2.5x</span> since onboarding</span></p>
+                                </div>
+                            </div>
+                            
+                            
                         </div>
                     </div>
-                    <div class="scorecards-container">
-                        <div class="scorecard">
-
-                            <h4>Client Since</h4>
-                            <p>January 2024</p>
-                        </div>
-                        <div class="scorecard">
-
-                            <h4>Industry</h4>
-                            <p>SaaS</p>
-                        </div>
-                        <div class="scorecard">
-                            <h4>Highlights</h4>
-                            <p>A massive 77% increase in Google Ads conversions achieved in 2024. This was achieved alongside a 30% decrease in the accounts overall CPA - all whilst optimised during a disruptive new site launch.</p>
-                        </div>
+                    <div class="flip-button" onclick="flipCaseStudyCard(this)">
+                        <i class="fas fa-chevron-circle-right"></i>
                     </div>
-                    <a href="#contact" class="cta-button-glass cta-button-primary" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
                 </div>
             </div>
         </div>
 
         <div class="case-studies-section-mobile">
             <h2 class="section-title">Case Studies</h2>
-            <div class="case-studies-accordion">
-                 <div class="case-study-item">
-                    <button class="case-study-question" onclick="toggleCaseStudyAccordion(this)">
-                        <div class="case-study-question-content">
-                            <span>Lead Generation</span>
-                        </div>
-                        <i class="fas fa-plus case-study-icon"></i>
-                    </button>
-                    <div class="case-study-answer">
-                        <div class="case-studies-sub-accordion">
-                            <div class="case-study-sub-item">
-                                <button class="case-study-sub-question" onclick="toggleCaseStudySubAccordion(this)">
-                                    <div class="case-study-question-content">
-                                        <img loading="lazy" src="images/nattergal-logo_white.png" alt="Nattergal Logo">
-                                        <span>Nattergal (B2B)</span>
-                                    </div>
-                                    <i class="fas fa-plus case-study-sub-icon"></i>
-                                </button>
-                                <div class="case-study-sub-answer">
-                                    <div class="case-study-tags-container" style="padding-top: 1.5rem;">
-                                        <div class="case-study-service-tag">Lead Generation</div>
-                                    </div>
-									                                    <div class="scorecards-container">
-                                        <div class="scorecard">
-                                            <h4>Client Since</h4>
-                                            <p>March 2025</p>
-                                        </div>
-                                        <div class="scorecard">
-                                            <h4>Industry</h4>
-                                            <p>Consulting</p>
-                                        </div>
-                                        <div class="scorecard">
-                                            <h4>Highlights</h4>
-                                            <p>Consistently generating over £200k worth of Sales Qualified Leads (SQLs) per month from only £2,000 in ad spend - delivering a potential ROAS of 88x+. Conversion rate has improved drastically from 4% to 7%+.</p>
-                                        </div>
-                                    </div>
-                                    <a href="#contact" class="cta-button-glass cta-button-primary" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
+            <div class="mobile-case-study-counter">
+                <span id="mobileCaseStudyCounterText">1 / 3</span>
+            </div>
+            <div class="mobile-case-studies-grid">
+                
+                <div class="case-study-card-1" onclick="handleMobileCaseStudyClick(this)">
+                    <div class="case-study-flipper">
+                        <div class="case-study-front">
+                            <div class="case-study-header">
+                                <div class="case-study-tags-container">
+                                    <div class="case-study-type-tag">B2B</div>
+                                    <div class="case-study-service-tag">Lead Generation</div>
                                 </div>
                             </div>
-                             <div class="case-study-sub-item">
-                                <button class="case-study-sub-question" onclick="toggleCaseStudySubAccordion(this)">
-                                    <div class="case-study-question-content">
-                                        <img loading="lazy" src="images/notchlogo_white.png" alt="Notch Logo">
-                                        <span>Notch (B2B & B2C)</span>
-                                    </div>
-                                    <i class="fas fa-plus case-study-sub-icon"></i>
-                                </button>
-                                <div class="case-study-sub-answer">
-                                    <div class="case-study-tags-container" style="padding-top: 1.5rem;">
-                                        <div class="case-study-service-tag">Lead Generation</div>
-                                    </div>
-									
-                                    <div class="scorecards-container">
-                                        <div class="scorecard">
-                                            <h4>Client Since</h4>
-                                            <p>January 2024</p>
-                                        </div>
-                                        <div class="scorecard">
-                                            <h4>Industry</h4>
-                                            <p>SaaS</p>
-                                        </div>
-                                        <div class="scorecard">
-                                            <h4>Highlights</h4>
-                                            <p>A massive 77% increase in Google Ads conversions achieved in 2024. This was achieved alongside a 30% decrease in the accounts overall CPA - all whilst optimised during a disruptive new site launch.</p>
-                                        </div>
-                                    </div>
-                                    <a href="#contact" class="cta-button-glass cta-button-primary" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
+                            <div class="case-study-summary-text">
+                                <p class="line-1">Nattergal</p>
+                                <p class="line-2">88x</p>
+                                <p class="line-3">Non-brand ROAS</p>
+                            </div>
+                        </div>
+                        <div class="case-study-back">
+                            <div class="scorecard">
+                                <h4>Highlights</h4>
+                                <div class="scorecard-list">
+                                 <p><span class="checkmark">&check;</span><span><span class="highlight-text-card">93%</span> of leads classified as high-intent, sales ready SQLs</span></p>
+<br>
+                                 <p><span class="checkmark">&check;</span><span>Up to <span class="highlight-text-card">88×</span> potential ROAS based on Sales Qualified Leads</span></p>
+<br>
+                                 <p><span class="checkmark">&check;</span><span>Drastic conversion rate improvement of <span class="highlight-text-card">2.5x</span></span></p>
+<br>
+                                 <p><span class="checkmark">&check;</span><span>Highest ad impression share of all competitors</span></p>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    <div class="flip-button">
+                        <i class="fas fa-hand-pointer"></i>
+                    </div>
                 </div>
-                <div class="case-study-item">
-                    <button class="case-study-question" onclick="toggleCaseStudyAccordion(this)">
-                        <div class="case-study-question-content">
-                            <span>E-Commerce</span>
+
+                <div class="case-study-card-2" onclick="handleMobileCaseStudyClick(this)">
+                    <div class="case-study-flipper">
+                        <div class="case-study-front">
+                            <div class="case-study-header">
+                                <div class="case-study-tags-container">
+                                    <div class="case-study-type-tag">B2B & B2C</div>
+                                    <div class="case-study-service-tag">E-Commerce</div>
+                                </div>
+                            </div>
+                            <div class="case-study-summary-text">
+                                <p class="line-1">Digital Blueprint</p>
+                                <p class="line-2">£4.8m+</p>
+                                <p class="line-3">E-commerce Sales 2025</p>
+                            </div>
                         </div>
-                        <i class="fas fa-plus case-study-icon"></i>
-                    </button>
-                    <div class="case-study-answer">
-                        <div class="case-studies-sub-accordion">
-                            <div class="case-study-sub-item">
-                                <button class="case-study-sub-question" onclick="toggleCaseStudySubAccordion(this)">
-                                    <div class="case-study-question-content">
-                                        <img loading="lazy" src="images/db_logo.png" alt="Digital Blueprint Logo">
-                                        <span>Digital Blueprint (B2B & B2C)</span>
-                                    </div>
-                                    <i class="fas fa-plus case-study-sub-icon"></i>
-                                </button>
-                                <div class="case-study-sub-answer">
-                                     <div class="case-study-tags-container" style="padding-top: 1.5rem;">
-                                        <div class="case-study-service-tag">E-Commerce</div>
-                                    </div>
-									
-                                    <div class="scorecards-container">
-                                        <div class="scorecard">
-                                            <h4>Client Since</h4>
-                                            <p>August 2021</p>
-                                        </div>
-                                        <div class="scorecard">
-                                            <h4>Industry</h4>
-                                            <p>Many</p>
-                                        </div>
-                                        <div class="scorecard">
-                                            <h4>Highlights</h4>
-                                            <p>Supporting one of the UK's top marketing agencies, managing 4 top-spending e-commerce accounts across a diverse range of sectors. Over £4.8m in annual online sales generated solely via Google Ads.</p>
-                                        </div>
-                                    </div>
-                                    <a href="#contact" class="cta-button-glass cta-button-primary" style="margin-top: 1.5rem; width: 100%;">Request Full Case Study</a>
+                        <div class="case-study-back">
+                            <div class="scorecard">
+                                <h4>Highlights</h4>
+                                <div class="scorecard-list">
+           <p><span class="checkmark">&check;</span><span>Over <span class="highlight-text-card">£4.8m</span> in annual online sales generated exclusively through Google Ads</span></p>
+<br>
+           <p><span class="checkmark">&check;</span><span>Achieved an avg. <span class="highlight-text-card">35%</span> year-on-year increase in e‑commerce sales across 4 brands</span></p>
+<br>
+           <p><span class="checkmark">&check;</span><span><span class="highlight-text-card">24%</span> reduction in wasted ad spend on non-converting search terms</span></p>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div class="flip-button">
+                        <i class="fas fa-hand-pointer"></i>
+                    </div>
+                </div>
+                
+                <div class="case-study-card-3" onclick="handleMobileCaseStudyClick(this)">
+                    <div class="case-study-flipper">
+                        <div class="case-study-front">
+                            <div class="case-study-header">
+                                <div class="case-study-tags-container">
+                                    <div class="case-study-type-tag">B2B & B2C</div>
+                                    <div class="case-study-service-tag">Lead Generation</div>
+                                </div>
+                            </div>
+                            <div class="case-study-summary-text">
+                                <p class="line-1">Notch</p>
+                                <p class="line-2">77%</p>
+                                <p class="line-3">YoY Conversion Increase</p>
+                            </div>
+                        </div>
+                        <div class="case-study-back">
+                            <div class="scorecard">
+                                <h4>Highlights</h4>
+                                <div class="scorecard-list">
+                  <p><span class="checkmark">&check;</span><span>A massive <span class="highlight-text-card">77%</span> increase in Google Ads conversions achieved in 2024</span></p>
+<br>
+                  <p><span class="checkmark">&check;</span><span><span class="highlight-text-card">30%</span> decrease in the accounts overall CPA</span></p>
+<br>
+                  <p><span class="checkmark">&check;</span><span>Conversion rate uplift of <span class="highlight-text-card">2.5x</span> since onboarding</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flip-button">
+                        <i class="fas fa-hand-pointer"></i>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <div id="caseStudyModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeModal()">×</span>
+                <div id="modalBody">
+                    </div>
+            </div>
+        </div>
+        
     </div>
     
     <div class="cta-section">
@@ -935,7 +1008,7 @@ Depending on your website setup, there may be more access required - but we can 
             </div>
         </div>
     </div>
-    <div id="contact" class="content-block-4">
+    <div class="contact-us-section" id="contact">
         <div class="centered-text">
             <h2 class="section-title">Ready to Scale Your Business<br class="desktop-break"> with Google Ads?</h2>
             <p>Let's discuss how I can help unlock your account's full potential.
@@ -947,7 +1020,7 @@ Contact me via any of the below methods & I'll get back to you within 24 hours!<
         <div class="contact-info">
             <div class="contact-info-left">
                 <div class="email-tel">
-                    <p><i class="fas fa-envelope"></i> Email: <a href="mailto:enquiries@anthonytierney.co.uk" style="text-decoration: underline;">enquiries@anthonytierney.co.uk</a></p>
+                    <p><i class="fas fa-envelope"></i> Email: <a href="/cdn-cgi/l/email-protection#c5a0abb4b0acb7aca0b685a4abb1adaaabbcb1aca0b7aba0bceba6aaebb0ae" style="text-decoration: underline;"><span class="__cf_email__" data-cfemail="05606b74706c776c607645646b716d6a6b7c716c60776b607c2b666a2b706e">[email&#160;protected]</span></a></p>
                     <p><i class="fas fa-phone"></i> Tel: <a href="tel:+447397758392" style="text-decoration: underline;">+447397758392</a></p>
                     <p><i class="fab fa-whatsapp"></i> WhatsApp: <a href="https://wa.me/447397758392" target="_blank" rel="noopener noreferrer" style="text-decoration: underline;">Click here</a></p>
 <br class="mobile-only-break">
@@ -1021,7 +1094,6 @@ Contact me via any of the below methods & I'll get back to you within 24 hours!<
         <i class="fab fa-linkedin linkedin-icon-animated-2"></i>
     </a>
 </div> 
-<script src="script.js"></script>
 
 </body>
 </html>
