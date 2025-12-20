@@ -49,10 +49,344 @@ function toggleCaseStudySubAccordion(button) {
     subItem.classList.toggle('active');
 }
 
+// --- Case Study Card Flip Function (Defined in global scope for onclick) ---
+function flipCaseStudyCard(button) {
+    // Disable flip effect on small screens to use modal instead
+    if (window.innerWidth <= 768) {
+        // If the user clicks the card/front face or the chevron button on mobile, open the modal instead
+        const card = button.closest('[class^="case-study-card-"]');
+        if (card) {
+            handleMobileCaseStudyClick(card);
+        }
+        return; 
+    }
+    
+    // Find the closest ancestor element that is a case study card container
+    const card = button.closest('[class^="case-study-card-"]');
+    if (card) {
+        card.classList.toggle('flipped');
+    }
+}
+// --- END: Case Study Card Flip Function ---
+
+// --- START: MODAL FUNCTIONS (for mobile Case Study Fallback) ---
+function openModal(contentHtml) {
+    const modal = document.getElementById('caseStudyModal');
+    const modalBody = document.getElementById('modalBody');
+    if (modal && modalBody) {
+        modalBody.innerHTML = contentHtml;
+        modal.style.display = 'block';
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById('caseStudyModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Global click handler to close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('caseStudyModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}
+
+function handleMobileCaseStudyClick(cardElement) {
+    // 1. Get the content from the hidden .case-study-back
+    const backContent = cardElement.querySelector('.case-study-back').innerHTML;
+    
+    // 2. Open the modal with that content
+    openModal(backContent);
+}
+// --- END: MODAL FUNCTIONS ---
+
+// Function to handle the desktop services carousel initialization
+function initializeServicesCarousel() {
+    const servicesSection = document.querySelector('.services-section');
+    const servicesGrid = document.querySelector('.services-grid');
+    const serviceCards = document.querySelectorAll('.services-grid > [class^="service-card-"]');
+    
+    // Check if carousel is already initialized (e.g., if elements have wrappers)
+    if (!servicesGrid || servicesGrid.closest('.carousel-container-wrapper') || serviceCards.length === 0) return;
+
+    // 1. Create the NEW main carousel container
+    const carouselContainer = document.createElement('div');
+    carouselContainer.className = 'carousel-container-wrapper';
+
+    // Create and add the counter element
+    const counterElement = document.createElement('div');
+    counterElement.className = 'service-card-counter animate';
+    carouselContainer.appendChild(counterElement); 
+
+    // 2. Wrap the services grid in its existing wrapper
+    const wrapper = document.createElement('div');
+    wrapper.className = 'services-grid-wrapper';
+    
+    // 3. Put the grid wrapper inside the new main container
+    carouselContainer.appendChild(wrapper);
+
+    // 4. Put the grid inside its wrapper
+    servicesGrid.parentNode.insertBefore(carouselContainer, servicesGrid);
+    wrapper.appendChild(servicesGrid); 
+    
+    let currentIndex = 1;
+    const totalSlides = serviceCards.length;
+    
+    serviceCards.forEach((card, index) => {
+        if (index === currentIndex) {
+            card.classList.add('service-card-active');
+        }
+    });
+
+    // Create navigation controls
+    const navContainer = document.createElement('div');
+    navContainer.className = 'carousel-nav';
+    
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'carousel-btn carousel-prev';
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.setAttribute('aria-label', 'Previous services');
+    
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'carousel-btn carousel-next';
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.setAttribute('aria-label', 'Next services');
+    
+    navContainer.appendChild(prevBtn);
+    navContainer.appendChild(nextBtn);
+
+    carouselContainer.insertBefore(navContainer, wrapper);
+    
+    // Create indicators
+    const indicatorsContainer = document.createElement('div');
+    indicatorsContainer.className = 'carousel-indicators';
+    
+    for (let i = 0; i < totalSlides; i++) {
+        const indicator = document.createElement('div');
+        indicator.className = 'carousel-indicator';
+        if (i === 1) indicator.classList.add('active');
+        indicator.setAttribute('data-slide', i);
+        indicator.setAttribute('aria-label', `Go to slide ${i + 1}`);
+        indicatorsContainer.appendChild(indicator);
+    }
+    
+    carouselContainer.parentNode.insertBefore(indicatorsContainer, carouselContainer.nextSibling);
+
+    // New logic to handle clicking on any card
+    serviceCards.forEach((card, index) => {
+        card.classList.remove('animate'); 
+        card.style.transform = '';
+
+        card.addEventListener('click', () => {
+            if (index !== currentIndex) {
+                currentIndex = index;
+                updateCarousel();
+            }
+        });
+    });
+
+    function updateCarousel() {
+        if (serviceCards.length === 0) return;
+
+        // 1. Get dimensions
+        const cardWidth = serviceCards[0].offsetWidth;
+        const wrapperWidth = wrapper.offsetWidth;
+        const gap = 32; 
+
+        // 2. Calculate the total offset to the *start* of the active card
+        const offsetToCard = currentIndex * (cardWidth + gap);
+
+        // 3. Calculate the offset needed to center *a* card
+        const centerOffset = (wrapperWidth / 2) - (cardWidth / 2);
+
+        // 4. The new transform is the centering offset - the offset to the active card
+        const newTransform = centerOffset - offsetToCard;
+
+        servicesGrid.style.transform = `translateX(${newTransform}px)`;
+
+        // Update active classes (This is CRITICAL for scaling/fading)
+        serviceCards.forEach((card, index) => {
+            card.classList.toggle('service-card-active', index === currentIndex);
+        });
+
+        // Update buttons state
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.disabled = currentIndex >= totalSlides - 1; 
+        
+        // Update indicators
+        indicatorsContainer.querySelectorAll('.carousel-indicator').forEach((indicator, index) => {
+    indicator.classList.toggle('active', index === currentIndex);
+        });
+
+        // Update the counter text
+        if (counterElement) {
+            counterElement.textContent = `${currentIndex + 1} / ${totalSlides}`;
+        }
+    }
+    
+    // Navigation handlers
+    prevBtn.addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateCarousel();
+        }
+    });
+    
+    nextBtn.addEventListener('click', () => {
+        if (currentIndex < totalSlides - 1) {
+            currentIndex++;
+            updateCarousel();
+        }
+    });
+    
+    // Indicator handlers
+    document.querySelectorAll('.carousel-indicator').forEach(indicator => {
+        indicator.addEventListener('click', (e) => {
+            currentIndex = parseInt(e.target.getAttribute('data-slide'));
+            updateCarousel();
+        });
+    });
+
+    // Initial update
+    updateCarousel();
+
+    // Store the update function on the grid for external calls (e.g. resize)
+    servicesGrid.updateCarousel = updateCarousel;
+}
+
+// Function to reset the DOM structure after resizing from desktop to mobile
+function cleanupServicesCarousel() {
+    const servicesGrid = document.querySelector('.services-grid');
+    const carouselContainer = servicesGrid ? servicesGrid.closest('.carousel-container-wrapper') : null;
+    const indicatorsContainer = carouselContainer ? carouselContainer.nextElementSibling : null;
+
+    if (carouselContainer && servicesGrid) {
+        // Move the services grid back out of the wrapper and carousel container
+        carouselContainer.parentNode.insertBefore(servicesGrid, carouselContainer);
+        
+        // Remove the carousel container (which holds the wrapper, nav, and counter)
+        carouselContainer.remove();
+        
+        // Remove the indicators
+        if (indicatorsContainer && indicatorsContainer.classList.contains('carousel-indicators')) {
+            indicatorsContainer.remove();
+        }
+
+        // Remove inline styles set by the carousel
+        servicesGrid.style.transform = '';
+        document.querySelectorAll('.services-grid > [class^="service-card-"]').forEach(card => {
+            card.classList.remove('service-card-active');
+            card.style.transform = '';
+            card.style.opacity = '';
+        });
+    }
+}
+
+// --- NEW: Testimonials Carousel Functions (Native Scroll + Indicators) ---
+function initializeTestimonialsCarousel() {
+    const testimonialsGrid = document.querySelector('.testimonials-grid');
+    const prevBtn = document.getElementById('testimonials-prev');
+    const nextBtn = document.getElementById('testimonials-next');
+    const indicatorsContainer = document.getElementById('testimonials-indicators');
+    
+    // Safety check
+    if (!testimonialsGrid || !prevBtn || !nextBtn || !indicatorsContainer) return;
+
+    // 1. Button Logic: Remove existing listeners by cloning
+    const newPrevBtn = prevBtn.cloneNode(true);
+    const newNextBtn = nextBtn.cloneNode(true);
+    prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+    nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+
+    const getScrollAmount = () => {
+        const card = testimonialsGrid.querySelector('[class^="testimonial-card-"]');
+        return (card ? card.offsetWidth : 400) + 32; // Width + gap
+    };
+
+    newNextBtn.addEventListener('click', () => {
+        testimonialsGrid.scrollBy({ left: getScrollAmount(), behavior: 'smooth' });
+    });
+
+    newPrevBtn.addEventListener('click', () => {
+        testimonialsGrid.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' });
+    });
+
+    // 2. Indicators Logic
+    const cards = testimonialsGrid.querySelectorAll('[class^="testimonial-card-"]');
+    indicatorsContainer.innerHTML = ''; // Clear any existing dots
+
+    // Create an observer to detect which card is currently visible
+    const observerOptions = {
+        root: testimonialsGrid,
+        threshold: 0.5 // Trigger when 50% of the card is visible
+    };
+
+    // Clean up old observer if it exists
+    if (testimonialsGrid.testimonialObserver) {
+        testimonialsGrid.testimonialObserver.disconnect();
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // Find which card is visible
+                const index = Array.from(cards).indexOf(entry.target);
+                
+                // Update the active dot
+                const dots = indicatorsContainer.querySelectorAll('.carousel-indicator');
+                dots.forEach(d => d.classList.remove('active'));
+                if (dots[index]) {
+                    dots[index].classList.add('active');
+                }
+            }
+        });
+    }, observerOptions);
+    
+    // Save observer reference to the grid element so we can clean it up later
+    testimonialsGrid.testimonialObserver = observer;
+
+    // Generate the dots
+    cards.forEach((card, index) => {
+        const dot = document.createElement('div');
+        dot.className = 'carousel-indicator';
+        if (index === 0) dot.classList.add('active'); // First one active by default
+
+        // Click event: Scroll to the specific card
+        dot.addEventListener('click', () => {
+            // 'nearest' prevents the whole page jumping; 'start' aligns card to left
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+        });
+
+        indicatorsContainer.appendChild(dot);
+        observer.observe(card); // Start watching this card for scroll updates
+    });
+}
+
+function cleanupTestimonialsCarousel() {
+    // Clear indicators when switching to mobile
+    const indicatorsContainer = document.getElementById('testimonials-indicators');
+    if (indicatorsContainer) {
+        indicatorsContainer.innerHTML = '';
+    }
+
+    // Disconnect the scroll observer
+    const testimonialsGrid = document.querySelector('.testimonials-grid');
+    if (testimonialsGrid && testimonialsGrid.testimonialObserver) {
+        testimonialsGrid.testimonialObserver.disconnect();
+        delete testimonialsGrid.testimonialObserver;
+    }
+}
+// --- END: Testimonials Carousel Functions ---
+
+
 // Animation on scroll and DOM Ready Logic
 document.addEventListener('DOMContentLoaded', function() {
     
     // --- START: SIMPLIFIED MENU HIGHLIGHTING LOGIC (Scroll Event) ---
+    // NOTE: Updated '#contact-section' to '#contact'
     const sections = document.querySelectorAll(
         '#home, #pricing, #testimonials, #services, #case-studies, #faq, #contact'
     );
@@ -69,31 +403,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function highlightMenuItem() {
-        // FIX: Change condition to run on all desktop widths (i.e., when menu is horizontal)
         if (window.innerWidth <= 768) return; 
 
         const scrollPos = window.scrollY;
-        // The offset is now menu.offsetHeight + 0 for earliest possible activation
         const offset = menu.offsetHeight + 200; 
-        let activeSectionId = 'home'; // Default to 'home'
+        let activeSectionId = 'home'; 
         let found = false;
 
-        // Loop sections in reverse (from bottom to top)
         for (let i = sections.length - 1; i >= 0; i--) {
             const section = sections[i];
             const sectionTop = section.offsetTop;
             const sectionId = section.getAttribute('id');
 
-            // If the user has scrolled past the top of the section (accounting for the offset)
             if (scrollPos >= sectionTop - offset) {
                 activeSectionId = sectionId;
                 found = true;
-                break; // Activate this section and stop the loop
+                break; 
             }
         }
         
-        // If nothing was found (i.e., scrollPos is near the very top of the page), 
-        // the default 'home' remains active.
         if (scrollPos < offset && !found) {
              activeSectionId = 'home';
         }
@@ -101,247 +429,60 @@ document.addEventListener('DOMContentLoaded', function() {
         activateLink(activeSectionId);
     }
     
-    // Initial call and attach to scroll event
     highlightMenuItem();
     window.addEventListener('scroll', highlightMenuItem);
-    window.addEventListener('resize', highlightMenuItem); // Re-evaluate on resize
+    window.addEventListener('resize', highlightMenuItem);
     // --- END: SIMPLIFIED MENU HIGHLIGHTING LOGIC ---
 
-    const testimonialCards = document.querySelectorAll('.testimonial-card, .testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
-    const serviceCards = document.querySelectorAll('[class^="service-card-"]');
-    const caseStudyCards = document.querySelectorAll('.case-study-card-1, .case-study-card-2, .case-study-card-3');
+    // NOTE: Intersection Observer for "slide-in" animations has been REMOVED per user request.
+
+
+// Desktop Testimonials Carousel - Initialize on load for desktop (NEW)
+    let isTestimonialsCarouselActive = window.innerWidth > 768;
+    if (isTestimonialsCarouselActive) {
+        initializeTestimonialsCarousel();
+    }
+
+// Desktop Service Cards Carousel - Initialize on load for desktop (existing)
+    let isServicesCarouselActive = window.innerWidth > 768;
+    if (isServicesCarouselActive) {
+        initializeServicesCarousel();
+    }
     
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-                // Animate testimonials
-                if (entry.target.classList.contains('testimonials-section')) {
-                    const cards = entry.target.querySelectorAll('.testimonial-card-1, .testimonial-card-2, .testimonial-card-3');
-                    // Removed the check for screen size since CSS controls mobile transition
-                    cards.forEach((card, index) => {
-                        setTimeout(() => {
-                            card.classList.add('animate');
-                        }, index * 200);
-                    });
-                }
-                // Animate services
-                else if (entry.target.classList.contains('services-section')) {
-                    // Removed the check for screen size since CSS controls mobile transition
-                    const cards = entry.target.querySelectorAll('[class^="service-card-"]');
-                    cards.forEach((card) => {
-                        card.classList.add('animate');
-                    });
-                }
-                // Animate case studies
-                else if (entry.target.classList.contains('case-studies-section')) {
-                    const cards = entry.target.querySelectorAll('.case-study-card-1, .case-study-card-2, .case-study-card-3');
-                    cards.forEach((card, index) => {
-                        setTimeout(() => {
-                            card.classList.add('animate');
-                        }, index * 200);
-                    });
-                }
-                // Only unobserve sections, individual cards are managed by the mobile observer
-                if (entry.target.classList.contains('testimonials-section') || entry.target.classList.contains('services-section') || entry.target.classList.contains('case-studies-section')) {
-                    observer.unobserve(entry.target);
+    // Resize handler to re-initialise/cleanup carousels
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            const nowDesktop = window.innerWidth > 768;
+            
+            // --- Services Carousel Logic (Existing) ---
+            if (nowDesktop && !isServicesCarouselActive) {
+                initializeServicesCarousel();
+                isServicesCarouselActive = true;
+            } else if (!nowDesktop && isServicesCarouselActive) {
+                cleanupServicesCarousel();
+                isServicesCarouselActive = false;
+            } else if (nowDesktop && isServicesCarouselActive) {
+                const servicesGrid = document.querySelector('.services-grid');
+                if (servicesGrid && servicesGrid.updateCarousel) {
+                    servicesGrid.updateCarousel();
                 }
             }
-        });
-    }, { threshold: 0.1 });
+            
+            // --- Testimonials Carousel Logic (NEW) ---
+            if (nowDesktop && !isTestimonialsCarouselActive) {
+                initializeTestimonialsCarousel();
+                isTestimonialsCarouselActive = true;
+            } else if (!nowDesktop && isTestimonialsCarouselActive) {
+                cleanupTestimonialsCarousel();
+                isTestimonialsCarouselActive = false;
+            } 
+        }, 250);
+    });
+    // End Carousel Initialization & Resize Handler
     
-    const testimonialsSection = document.querySelector('.testimonials-section');
-    const servicesSection = document.querySelector('.services-section');
-    const caseStudiesSection = document.querySelector('.case-studies-section');
-    
-    if (testimonialsSection) {
-        observer.observe(testimonialsSection);
-    }
-    if (servicesSection) {
-        observer.observe(servicesSection);
-    }
-    if (caseStudiesSection) {
-        observer.observe(caseStudiesSection);
-    }
 
-// Desktop Service Cards Carousel - Add to script.js inside DOMContentLoaded
-
-
-    
-// Service Cards Carousel (Desktop Only)
-    if (window.innerWidth > 768) {
-        const servicesSection = document.querySelector('.services-section');
-        const servicesGrid = document.querySelector('.services-grid');
-        const serviceCards = document.querySelectorAll('.services-grid > [class^="service-card-"]');
-        
-        if (servicesSection && servicesGrid && serviceCards.length > 0) {
-            
-            // 1. Create the NEW main carousel container
-            const carouselContainer = document.createElement('div');
-            carouselContainer.className = 'carousel-container-wrapper'; // This is our new relative parent
-
-            // --- START: ADDED CODE ---
-            // Create and add the counter element
-            const counterElement = document.createElement('div');
-            counterElement.className = 'service-card-counter';
-            carouselContainer.appendChild(counterElement);
-            // --- END: ADDED CODE ---
-
-            // 2. Wrap the services grid in its existing wrapper
-            const wrapper = document.createElement('div');
-            wrapper.className = 'services-grid-wrapper';
-            
-            // 3. Put the grid wrapper inside the new main container
-            carouselContainer.appendChild(wrapper);
-
-            // 4. Put the grid inside its wrapper
-            // We MUST insert the new container into the DOM *before* appending the grid
-            servicesGrid.parentNode.insertBefore(carouselContainer, servicesGrid);
-            wrapper.appendChild(servicesGrid); // Now we move the grid
-            
-            let currentIndex = 1;
-            const cardsPerView = 1;
-            const totalSlides = serviceCards.length;
-            
-            // Create navigation controls
-            const navContainer = document.createElement('div');
-            navContainer.className = 'carousel-nav';
-            
-            const prevBtn = document.createElement('button');
-            prevBtn.className = 'carousel-btn carousel-prev';
-            prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
-            prevBtn.setAttribute('aria-label', 'Previous services');
-            
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'carousel-btn carousel-next';
-            nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
-            nextBtn.setAttribute('aria-label', 'Next services');
-            
-            navContainer.appendChild(prevBtn);
-            navContainer.appendChild(nextBtn);
-
-            // Insert nav container into the *new* main container, before the wrapper
-            carouselContainer.insertBefore(navContainer, wrapper);
-            
-            // Create indicators
-            const indicatorsContainer = document.createElement('div');
-            indicatorsContainer.className = 'carousel-indicators';
-            
-            for (let i = 0; i < totalSlides; i++) {
-                const indicator = document.createElement('div');
-                indicator.className = 'carousel-indicator';
-                if (i === 1) indicator.classList.add('active');
-                indicator.setAttribute('data-slide', i);
-                indicator.setAttribute('aria-label', `Go to slide ${i + 1}`);
-                indicatorsContainer.appendChild(indicator);
-            }
-            
-            // Insert indicators *after* the new main container
-            carouselContainer.parentNode.insertBefore(indicatorsContainer, carouselContainer.nextSibling);
-
-            // New logic to handle clicking on any card
-            serviceCards.forEach((card, index) => {
-                card.addEventListener('click', () => {
-                    // Only move the carousel if the clicked card is not already the active one
-                    if (index !== currentIndex) {
-                        currentIndex = index;
-                        updateCarousel();
-                    }
-                });
-            });
-
-            // Replace the old updateCarousel function with this one
-            function updateCarousel() {
-                if (serviceCards.length === 0) return;
-
-                // 1. Get dimensions
-                const cardWidth = serviceCards[0].offsetWidth;
-                const wrapperWidth = wrapper.offsetWidth;
-                const gap = 32; // 2rem from your CSS
-
-                // 2. Calculate the total offset to the *start* of the active card
-                // This is (width + gap) * index
-                const offsetToCard = currentIndex * (cardWidth + gap);
-
-                // 3. Calculate the offset needed to center *a* card
-                // This is (wrapper_width / 2) - (card_width / 2)
-                const centerOffset = (wrapperWidth / 2) - (cardWidth / 2);
-
-                // 4. The new transform is the centering offset - the offset to the active card
-                const newTransform = centerOffset - offsetToCard;
-
-                servicesGrid.style.transform = `translateX(${newTransform}px)`;
-
-                // Update active classes
-                serviceCards.forEach((card, index) => {
-                    card.classList.toggle('service-card-active', index === currentIndex);
-                });
-
-                // Update buttons state
-                prevBtn.disabled = currentIndex === 0;
-                nextBtn.disabled = currentIndex >= totalSlides - 1; // Use >=
-                
-                // Update indicators
-                document.querySelectorAll('.carousel-indicator').forEach((indicator, index) => {
-                    indicator.classList.toggle('active', index === currentIndex);
-                });
-
-                // --- START: ADDED CODE ---
-                // Update the counter text
-                if (counterElement) {
-                    counterElement.textContent = `${currentIndex + 1} / ${totalSlides}`;
-                }
-                // --- END: ADDED CODE ---
-            }
-            
-            // Navigation handlers
-            prevBtn.addEventListener('click', () => {
-                if (currentIndex > 0) {
-                    currentIndex--;
-                    updateCarousel();
-                }
-            });
-            
-            nextBtn.addEventListener('click', () => {
-                if (currentIndex < totalSlides - 1) {
-                    currentIndex++;
-                    updateCarousel();
-                }
-            });
-            
-            // Indicator handlers
-            document.querySelectorAll('.carousel-indicator').forEach(indicator => {
-                indicator.addEventListener('click', (e) => {
-                    currentIndex = parseInt(e.target.getAttribute('data-slide'));
-                    updateCarousel();
-                });
-            });
-            
-            // Keyboard navigation
-            servicesSection.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowLeft' && currentIndex > 0) {
-                    currentIndex--;
-                    updateCarousel();
-                } else if (e.key === 'ArrowRight' && currentIndex < totalSlides - 1) {
-                    currentIndex++;
-                    updateCarousel();
-                }
-            });
-            
-            // Handle window resize
-            let resizeTimer;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => {
-                    if (window.innerWidth > 768) {
-                        updateCarousel();
-                    }
-                }, 250);
-            });
-            
-            // Initial update
-            updateCarousel();
-        }
-    }
 
     // Burger Menu functionality
     const burgerIcon = document.getElementById('burgerIcon');
@@ -408,113 +549,105 @@ document.addEventListener('DOMContentLoaded', function() {
     const spendValue = document.getElementById('spend-value');
     const managementFee = document.getElementById('management-fee');
     const maxSpendNotification = document.getElementById('max-spend-notification');
-    // NEW: Element for the static label beneath the slider
     const maxSpendLabel = document.getElementById('max-spend-label');
+    // ADD NEW NOTIFICATION ELEMENT
+    const minSpendNotification = document.getElementById('min-spend-notification');
 
-    // Check if slider elements exist
-    if (slider && spendValue && managementFee && maxSpendNotification && maxSpendLabel) {
+    if (slider && spendValue && managementFee && maxSpendNotification && maxSpendLabel && minSpendNotification) {
         
         function formatCurrency(amount) {
-            // Use Math.round to ensure clean thousands separation when sliding
             return '£' + Math.round(amount).toLocaleString('en-GB');
         }
 
         function calculateFees() {
             const spend = parseInt(slider.value);
             const maxSpend = parseInt(slider.getAttribute('max'));
-            let calculatedFee = 0; // Initialize fee
+            let calculatedFee = 0; 
             
-            // Calculate progress percentage for the green bar
             const progress = (spend / maxSpend) * 100;
             slider.style.setProperty('--slider-progress', `${progress}%`);
             
             // --- New Tiered Fee Logic ---
+            // If spend is 0, fee is 0
             if (spend === 0) {
-                // £0 spend = £0 fee
                 calculatedFee = 0;
-            } else if (spend >= 100 && spend <= 4000) {
-                // £100 to £4,000 spend = £399 fee
+            } 
+            // If spend is between £2,000 and £4,000, fee is £399
+            else if (spend >= 2000 && spend <= 4000) { 
                 calculatedFee = 399;
-            } else if (spend >= 4100 && spend <= 10000) {
-                // £4,100 to £10,000 spend = 10% of the slider value, rounded
+            } 
+            // If spend is over £4,000 up to £10,000, fee is 10% of spend (min £399 is covered by the £4k tier logic above)
+            else if (spend >= 4100 && spend <= 10000) {
                 calculatedFee = Math.round(spend * 0.10);
-            } else if (spend > 0 && spend < 100) {
-                // Spend between £0 and £100 defaults to the £399 tier
+            } 
+            // If spend is between £1 and £1,900, fee is £399, but we show the notification
+            else if (spend > 0 && spend < 2000) { 
                 calculatedFee = 399; 
             }
             // --- End Tiered Fee Logic ---
 
-            // Set fee display
             managementFee.textContent = formatCurrency(calculatedFee) + 'pm';
             
-            // Calculate spend text for the value above the slider
             let spendText = formatCurrency(spend);
-            
-            // Determine the max label text (for the slider-labels area)
             let maxLabelText = formatCurrency(maxSpend);
             
+            // LOGIC FOR MAX SPEND NOTIFICATION (Existing)
             if (spend === maxSpend) {
                 spendText += '+pm';
-                maxLabelText += '+'; // Add plus sign only when max is reached
+                maxLabelText += '+'; 
                 maxSpendNotification.classList.add('show-notification');
             } else {
                 spendText += 'pm';
-                // maxLabelText remains "£10,000" (from formatCurrency(maxSpend))
                 maxSpendNotification.classList.remove('show-notification');
             }
 
-            // Update displays
+            // LOGIC FOR MIN SPEND NOTIFICATION (NEW)
+            if (spend > 0 && spend < 2000) {
+                minSpendNotification.classList.add('show-notification');
+            } else {
+                minSpendNotification.classList.remove('show-notification');
+            }
+
             spendValue.textContent = spendText;
-            maxSpendLabel.textContent = maxLabelText; // Update the static label element
+            maxSpendLabel.textContent = maxLabelText; 
         }
 
-        // --- Event Listener for Slider ---
         slider.addEventListener('input', calculateFees);
-
-        // Initial call to set fees based on default (slider=0)
         calculateFees(); 
     }
     // --- END: PRICING CALCULATOR SCRIPT ---
 
     
     // --- 2. Mobile Scroll Highlight Logic (Intersection Observer) ---
-    
-    // Check if we are on a mobile-sized screen
     if (window.innerWidth <= 768) {
         // --- Service Cards Highlight ---
         const servicesGrid = document.querySelector('.services-grid');
         const mobileServiceCards = document.querySelectorAll('.services-grid > [class^="service-card-"]');
-        // NEW: Get the counter element
         const mobileCounter = document.getElementById('mobileServiceCounterText'); 
         const totalCards = mobileServiceCards.length;
 
         if (servicesGrid && mobileServiceCards.length > 0) {
             
             const observerOptions = {
-                root: servicesGrid, // The scrolling container
+                root: servicesGrid, 
                 rootMargin: '0px',
-                threshold: 0.75 // 75% of the card must be visible
+                threshold: 0.75 
             };
 
             const observerCallback = (entries) => {
-                entries.forEach((entry, index) => { // Get the index of the entry here
+                entries.forEach((entry) => { 
                     if (entry.isIntersecting) {
-                        // First, remove .in-view from all cards
                         mobileServiceCards.forEach(card => {
                             card.classList.remove('in-view');
                         });
-                        // Then, add .in-view to the one that just came into view
                         entry.target.classList.add('in-view');
                         
-                        // NEW: Update the counter text
                         if (mobileCounter) {
-                            // Find the actual index of the intersecting card in the original NodeList
                             const cardIndex = Array.from(mobileServiceCards).indexOf(entry.target);
                             mobileCounter.textContent = `${cardIndex + 1} / ${totalCards}`;
                         }
                         
                     } else {
-                        // This handles removing the class when it scrolls out
                         entry.target.classList.remove('in-view');
                     }
                 });
@@ -527,38 +660,198 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // --- Testimonial Cards Highlight ---
+        // --- Testimonial Cards Highlight (Now uses Intersection Observer for mobile only) ---
         const testimonialsGrid = document.querySelector('.testimonials-grid');
         const mobileTestimonialCards = document.querySelectorAll('.testimonials-grid > [class^="testimonial-card-"]');
         
         if (testimonialsGrid && mobileTestimonialCards.length > 0) {
              const testimonialObserverOptions = {
-                root: testimonialsGrid, // The scrolling container
+                root: testimonialsGrid, 
                 rootMargin: '0px',
-                threshold: 0.75 // 75% of the card must be visible
+                threshold: 0.75 
+            };
+            
+            // Re-use or create the observer if it doesn't exist (to handle resize)
+            if (!window.testimonialMobileObserver) {
+                window.testimonialMobileObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            mobileTestimonialCards.forEach(card => {
+                                card.classList.remove('in-view');
+                            });
+                            entry.target.classList.add('in-view');
+                        } else {
+                            entry.target.classList.remove('in-view');
+                        }
+                    });
+                }, testimonialObserverOptions);
+
+                mobileTestimonialCards.forEach(card => {
+                    window.testimonialMobileObserver.observe(card);
+                });
+            }
+        }
+        
+        // --- NEW: Case Study Cards Highlight (Mobile Scroller) ---
+        const caseStudiesGrid = document.querySelector('.mobile-case-studies-grid');
+        const mobileCaseStudyCards = document.querySelectorAll('.mobile-case-studies-grid > [class^="case-study-card-"]');
+        const mobileCaseStudyCounter = document.getElementById('mobileCaseStudyCounterText');
+        const totalCaseStudyCards = mobileCaseStudyCards.length;
+        
+        if (caseStudiesGrid && mobileCaseStudyCards.length > 0) {
+            
+            const caseStudyObserverOptions = {
+                root: caseStudiesGrid, 
+                rootMargin: '0px',
+                threshold: 0.75 
             };
 
-            const testimonialObserverCallback = (entries) => {
-                entries.forEach(entry => {
+            const caseStudyObserverCallback = (entries) => {
+                entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        // First, remove .in-view from all cards
-                        mobileTestimonialCards.forEach(card => {
+                        mobileCaseStudyCards.forEach(card => {
                             card.classList.remove('in-view');
                         });
-                        // Then, add .in-view to the one that just came into view
                         entry.target.classList.add('in-view');
+                        
+                        if (mobileCaseStudyCounter) {
+                            const cardIndex = Array.from(mobileCaseStudyCards).indexOf(entry.target);
+                            mobileCaseStudyCounter.textContent = `${cardIndex + 1} / ${totalCaseStudyCards}`;
+                        }
+                        
                     } else {
-                        // This handles removing the class when it scrolls out
                         entry.target.classList.remove('in-view');
                     }
                 });
             };
-            
-            const testimonialMobileObserver = new IntersectionObserver(testimonialObserverCallback, testimonialObserverOptions);
 
-            mobileTestimonialCards.forEach(card => {
-                testimonialMobileObserver.observe(card);
+            const caseStudyMobileObserver = new IntersectionObserver(caseStudyObserverCallback, caseStudyObserverOptions);
+
+            mobileCaseStudyCards.forEach(card => {
+                caseStudyMobileObserver.observe(card);
             });
         }
     }
+    
+    // --- START: CONTACT FORM VALIDATION & SUBMISSION ---
+    const contactForm = document.getElementById('contactForm');
+    const submitButton = document.getElementById('submit-button');
+    const formStatus = document.getElementById('form-status');
+    const formSpinner = submitButton ? submitButton.querySelector('.spinner') : null;
+    const buttonText = submitButton ? submitButton.querySelector('.button-text') : null;
+    
+    // Helper function to show/hide error message
+    function setInputError(inputElement, isError) {
+        const errorDisplay = document.getElementById(inputElement.id + '-error');
+        if (isError) {
+            inputElement.classList.add('error');
+            if (errorDisplay) errorDisplay.classList.add('show');
+        } else {
+            inputElement.classList.remove('error');
+            if (errorDisplay) errorDisplay.classList.remove('show');
+        }
+    }
+
+    // Main validation function
+    function validateForm(form) {
+        let isValid = true;
+        
+        // Fields to validate: name, email, message
+        const requiredFields = ['name', 'email', 'message'];
+        
+        requiredFields.forEach(fieldId => {
+            const input = document.getElementById(fieldId);
+            if (!input) return;
+
+            const value = input.value.trim();
+            let fieldValid = true;
+
+            // 1. Check for required empty fields
+            if (value === '') {
+                fieldValid = false;
+            }
+            
+            // 2. Check for email format (if it's the email field)
+            if (input.id === 'email' && value !== '' && !input.checkValidity()) {
+                fieldValid = false;
+            }
+            
+            setInputError(input, !fieldValid);
+            if (!fieldValid) {
+                isValid = false;
+            }
+        });
+        
+        return isValid;
+    }
+
+    if (contactForm) {
+        
+        // Add immediate input handlers to clear errors when user types
+        ['name', 'email', 'message'].forEach(fieldId => {
+            const input = document.getElementById(fieldId);
+            if (input) {
+                input.addEventListener('input', () => {
+                    const value = input.value.trim();
+                    let fieldValid = value !== '';
+                    if (input.id === 'email' && value !== '') {
+                        fieldValid = input.checkValidity(); 
+                    }
+                    setInputError(input, !fieldValid);
+                });
+            }
+        });
+
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            formStatus.style.display = 'none'; 
+            
+            if (!validateForm(this)) {
+                const firstError = document.querySelector('.form-group input.error, .form-group textarea.error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
+
+            // --- Submission Handling (Sending to StaticForms) ---
+            
+            // Show loading state
+            if (formSpinner) formSpinner.style.display = 'inline-block';
+            if (buttonText) buttonText.textContent = 'Sending...';
+            submitButton.disabled = true;
+
+            const formData = new FormData(contactForm);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch(contactForm.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    const redirectTo = contactForm.querySelector('input[name="redirectTo"]').value;
+                    window.location.href = redirectTo;
+                } else {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || 'Form submission failed.');
+                    });
+                }
+            })
+            .catch(error => {
+                formStatus.className = 'show error';
+                formStatus.textContent = 'Error: ' + (error.message || 'There was an issue sending your message. Please try again.');
+            })
+            .finally(() => {
+                if (formSpinner) formSpinner.style.display = 'none';
+                if (buttonText) buttonText.textContent = 'Send Message';
+                submitButton.disabled = false;
+            });
+        });
+    }
+    // --- END: CONTACT FORM VALIDATION & SUBMISSION ---
 });
