@@ -14,14 +14,15 @@
     </url>
 
     <url>
-        <loc>https://anthonytierney.co.uk/privacy-policy</loc>
+        <loc>https://anthonytierney.co.uk/privacy-policy/</loc>
         <changefreq>yearly</changefreq>
         <priority>0.1</priority>
     </url>
     <url>
-        <loc>https://anthonytierney.co.uk/terms-of-service</loc>
+        <loc>https://anthonytierney.co.uk/terms-of-service/</loc>
         <changefreq>yearly</changefreq>
         <priority>0.1</priority>
     </url>
+
 
 </urlset>
