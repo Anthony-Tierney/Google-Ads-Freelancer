@@ -2914,3 +2914,102 @@ input[type=range]::-moz-range-thumb:hover {
 }
 
 /*# sourceMappingURL=style.css.map */
+
+/* ========================================
+   404 ERROR PAGE STYLES
+   ======================================== */
+
+.error-container {
+    text-align: center;
+    padding: 4rem 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.error-code {
+    font-size: 8rem;
+    font-weight: 900;
+    color: #00ff88;
+    line-height: 1;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+}
+
+.error-title {
+    color: #ffffff;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.error-message {
+    color: #e0e0e0;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 3rem;
+}
+
+.error-icon {
+    font-size: 4rem;
+    color: #00ff88;
+    margin-bottom: 2rem;
+    opacity: 0.8;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    color: #e0e0e0;
+    text-decoration: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.error-button:hover {
+    background: rgba(0, 255, 136, 0.1);
+    border-color: #00ff88;
+    transform: translateY(-2px);
+}
+
+.error-button.primary {
+    background: #00ff88;
+    color: #000;
+    border-color: #00ff88;
+}
+
+.error-button.primary:hover {
+    background: rgba(0, 255, 136, 0.9);
+    box-shadow: 0 8px 20px rgba(0, 255, 136, 0.3);
+}
+
+/* 404 Page Responsive Styles */
+@media (max-width: 768px) {
+    .error-code {
+        font-size: 6rem;
+    }
+    .error-title {
+        font-size: 2rem;
+    }
+    .error-message {
+        font-size: 1rem;
+    }
+    .error-actions {
+        flex-direction: column;
+    }
+    .error-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
