@@ -16,7 +16,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
-    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="../css/style.css"> 
     
     <script type="application/ld+json">
     {
@@ -56,7 +56,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         
         .blog-header {
             text-align: center;
-            padding: 4rem 2rem;
+            padding: 4rem 2rem 2rem 2rem;
         }
 
         .blog-header h1 {
@@ -113,10 +113,63 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             font-weight: bold;
         }
 
-        .blog-content {
+        /* Sidebar Layout Container */
+        .blog-layout-wrapper {
             max-width: 1200px;
-            margin: 3rem auto;
-            padding: 0 2rem;
+            margin: 0 auto;
+            display: flex;
+            gap: 3rem;
+            padding: 0 2rem 3rem 2rem;
+        }
+
+        /* Sidebar Styling */
+        .blog-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-nav {
+            position: sticky;
+            top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-item i {
+            width: 24px;
+            font-size: 1.1rem;
+            margin-right: 15px;
+            color: var(--primary-accent);
+        }
+
+        .sidebar-item:hover {
+            background: rgba(0, 255, 136, 0.05);
+            border-color: var(--primary-accent);
+            transform: translateX(5px);
+        }
+
+        .sidebar-item.active {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: var(--primary-accent);
+            font-weight: 700;
+        }
+
+        /* Content Adjustment */
+        .blog-content {
+            flex-grow: 1;
             text-align: center;
         }
 
@@ -124,7 +177,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             font-size: 2.5rem;
             color: var(--heading-color);
             font-weight: 700;
-            margin-top: 5rem;
+            margin-top: 2rem;
             margin-bottom: 5rem;
         }
 
@@ -164,12 +217,36 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
 
         /* Responsive Styles */
+        @media (max-width: 992px) {
+            .blog-layout-wrapper {
+                flex-direction: column;
+                gap: 2rem;
+            }
+            .blog-sidebar {
+                width: 100%;
+            }
+            .sidebar-nav {
+                position: relative;
+                top: 0;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .sidebar-item {
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+        }
+
         @media (max-width: 768px) {
             .blog-header h1 {
                 font-size: 2.5rem;
             }
             .coming-soon-message {
                 font-size: 2rem;
+            }
+            .sidebar-item span {
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -188,9 +265,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <a href="https://anthonytierney.co.uk/#home" class="menu-item">Home</a>
                 <a href="https://anthonytierney.co.uk/#pricing" class="menu-item">Pricing</a>
                 <a href="https://anthonytierney.co.uk/#testimonials" class="menu-item">Testimonials</a>
-<a href="https://anthonytierney.co.uk/#services" class="menu-item">Services</a>
-<a href="https://anthonytierney.co.uk/#case-studies" class="menu-item">Case Studies</a>
-<a href="https://anthonytierney.co.uk/#faq" class="menu-item">FAQs</a>
+                <a href="https://anthonytierney.co.uk/#services" class="menu-item">Services</a>
+                <a href="https://anthonytierney.co.uk/#case-studies" class="menu-item">Case Studies</a>
+                <a href="https://anthonytierney.co.uk/#faq" class="menu-item">FAQs</a>
                 <a href="https://anthonytierney.co.uk/#contact" class="menu-item">Contact</a>
             </div>
             <div class="burger-menu-icon" id="burgerIcon">
@@ -207,14 +284,38 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <li class="active">News</li>
         </ol>
     </div>
+
     <section class="blog-header">
         <h1>News & Updates</h1>
         <p>Stay up to date with the latest Google Ads features, platform updates, and industry news.</p>
     </section>
 
-    <section class="blog-content">
-        <p class="coming-soon-message">Coming Soon...</p>
-    </section>
+    <div class="blog-layout-wrapper">
+        <aside class="blog-sidebar">
+            <nav class="sidebar-nav">
+                <a href="https://anthonytierney.co.uk/blog" class="sidebar-item">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <a href="https://anthonytierney.co.uk/news" class="sidebar-item active">
+                    <i class="fas fa-bolt"></i>
+                    <span>News</span>
+                </a>
+                <a href="https://anthonytierney.co.uk/how-to" class="sidebar-item">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Guides & Tutorials</span>
+                </a>
+                <a href="https://anthonytierney.co.uk/resources-tools" class="sidebar-item">
+                    <i class="fas fa-wrench"></i>
+                    <span>Resources</span>
+                </a>
+            </nav>
+        </aside>
+
+        <section class="blog-content">
+            <p class="coming-soon-message">Coming Soon...</p>
+        </section>
+    </div>
 </main>
 
 <footer class="footer">
@@ -235,5 +336,4 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <script src="../script.js"></script>
 </body>
-
 </html>
