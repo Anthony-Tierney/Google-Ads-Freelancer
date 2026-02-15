@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://anthonytierney.co.uk/sitemap.xml
+
+# Block common script and system files
+Disallow: /cgi-bin/
+Disallow: /script.js
+Disallow: /*.js$
+
+# Block CSS files from crawling (not necessary for SEO)
+Disallow: /css/
+Disallow: /*.css$
