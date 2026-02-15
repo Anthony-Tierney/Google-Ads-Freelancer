@@ -14,6 +14,24 @@
     </url>
 
     <url>
+        <loc>https://anthonytierney.co.uk/news/</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://anthonytierney.co.uk/how-to/</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://anthonytierney.co.uk/resources-tools/</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
         <loc>https://anthonytierney.co.uk/privacy-policy/</loc>
         <changefreq>yearly</changefreq>
         <priority>0.1</priority>
@@ -23,6 +41,5 @@
         <changefreq>yearly</changefreq>
         <priority>0.1</priority>
     </url>
-
 
 </urlset>
