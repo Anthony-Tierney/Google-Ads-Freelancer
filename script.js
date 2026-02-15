@@ -567,24 +567,20 @@ document.addEventListener('DOMContentLoaded', function() {
             const progress = (spend / maxSpend) * 100;
             slider.style.setProperty('--slider-progress', `${progress}%`);
             
-            // --- New Tiered Fee Logic ---
-            // If spend is 0, fee is 0
-            if (spend === 0) {
+            // --- UPDATED FEE LOGIC ---
+            // If spend is less than £2,000, fee is £0
+            if (spend < 2000) {
                 calculatedFee = 0;
             } 
-            // If spend is between £2,000 and £4,000, fee is £399
-            else if (spend >= 2000 && spend <= 4000) { 
-                calculatedFee = 399;
+            // If spend is between £2,000 and £5,000, fee is £499
+            else if (spend >= 2000 && spend <= 5000) { 
+                calculatedFee = 499;
             } 
-            // If spend is over £4,000 up to £10,000, fee is 10% of spend (min £399 is covered by the £4k tier logic above)
-            else if (spend >= 4100 && spend <= 10000) {
+            // If spend is over £5,000 up to £10,000, fee is 10% of spend
+            else if (spend > 5000 && spend <= 10000) {
                 calculatedFee = Math.round(spend * 0.10);
             } 
-            // If spend is between £1 and £1,900, fee is £399, but we show the notification
-            else if (spend > 0 && spend < 2000) { 
-                calculatedFee = 399; 
-            }
-            // --- End Tiered Fee Logic ---
+            // --- End Updated Fee Logic ---
 
             managementFee.textContent = formatCurrency(calculatedFee) + 'pm';
             
@@ -601,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 maxSpendNotification.classList.remove('show-notification');
             }
 
-            // LOGIC FOR MIN SPEND NOTIFICATION (NEW)
+            // LOGIC FOR MIN SPEND NOTIFICATION (Remains for spend < 2000)
             if (spend > 0 && spend < 2000) {
                 minSpendNotification.classList.add('show-notification');
             } else {
