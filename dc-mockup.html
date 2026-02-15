@@ -537,6 +537,21 @@
             font-size: 16px;
             font-weight: 500;
             color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bubble-checkmark {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .bubble-option.selected .bubble-checkmark {
+            opacity: 1;
         }
 
         .bubble-option:hover {
@@ -1442,27 +1457,49 @@
                 </div>
 
                 <div class="step" id="step4">
-                    <h2><strong>Step 4:</strong> Select which graphic design services<br>you are most interested in:<br><br><br></h2>
-                    <div class="bubble-options">
+                    <h2><strong>Step 4:</strong> Select which design services<br>you are most interested in:<br><br><br></h2>
+                    <div class="bubble-options" id="step4BubbleOptions">
+                        <!-- Dynamic options will be inserted here based on step 1 selections -->
                         <div class="bubble-option" data-value="presentations">
+                            <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                            </svg>
                             <span>Presentations & Slides</span>
                         </div>
                         <div class="bubble-option" data-value="infographics">
+                            <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                            </svg>
                             <span>Infographics & Charts</span>
                         </div>
                         <div class="bubble-option" data-value="documents">
+                            <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                            </svg>
                             <span>Documents & Whitepapers</span>
                         </div>
                         <div class="bubble-option" data-value="digital-ads">
+                            <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                            </svg>
                             <span>Digital Ads</span>
                         </div>
                         <div class="bubble-option" data-value="print">
+                            <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                            </svg>
                             <span>Print & Promotional</span>
                         </div>
                         <div class="bubble-option" data-value="website">
+                            <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                            </svg>
                             <span>Website Banners & Assets</span>
                         </div>
                         <div class="bubble-option" data-value="social-media">
+                            <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                            </svg>
                             <span>Social Media Content</span>
                         </div>
                     </div>
@@ -1761,6 +1798,85 @@
             });
         }
 
+        function rebuildStep4Options() {
+            const container = document.getElementById('step4BubbleOptions');
+            container.innerHTML = ''; // Clear existing options
+            
+            // Check if UI/UX, Video, or Graphic Design are selected in step 1
+            const hasUIUX = selections.step1.includes('ui-ux');
+            const hasVideo = selections.step1.includes('video');
+            const hasGraphicDesign = selections.step1.includes('graphic-design');
+            
+            // Add UI/UX option first if selected
+            if (hasUIUX) {
+                const uiuxOption = document.createElement('div');
+                uiuxOption.className = 'bubble-option selected';
+                uiuxOption.dataset.value = 'ui-ux-interest';
+                uiuxOption.innerHTML = `
+                    <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                    </svg>
+                    <span>UI/UX Design</span>
+                `;
+                container.appendChild(uiuxOption);
+                // Auto-select in selections
+                if (!selections.step4.includes('ui-ux-interest')) {
+                    selections.step4.push('ui-ux-interest');
+                }
+            }
+            
+            // Add Video option second if selected (or first if UI/UX not selected)
+            if (hasVideo) {
+                const videoOption = document.createElement('div');
+                videoOption.className = 'bubble-option selected';
+                videoOption.dataset.value = 'video-interest';
+                videoOption.innerHTML = `
+                    <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                    </svg>
+                    <span>Video Editing / Motion Design</span>
+                `;
+                container.appendChild(videoOption);
+                // Auto-select in selections
+                if (!selections.step4.includes('video-interest')) {
+                    selections.step4.push('video-interest');
+                }
+            }
+            
+            // Only add standard graphic design options if Graphic Design is selected in step 1
+            if (hasGraphicDesign) {
+                const standardOptions = [
+                    { value: 'presentations', label: 'Presentations & Slides' },
+                    { value: 'infographics', label: 'Infographics & Charts' },
+                    { value: 'documents', label: 'Documents & Whitepapers' },
+                    { value: 'digital-ads', label: 'Digital Ads' },
+                    { value: 'print', label: 'Print & Promotional' },
+                    { value: 'website', label: 'Website Banners & Assets' },
+                    { value: 'social-media', label: 'Social Media Content' }
+                ];
+                
+                standardOptions.forEach(opt => {
+                    const option = document.createElement('div');
+                    option.className = 'bubble-option';
+                    option.dataset.value = opt.value;
+                    // Check if this option was previously selected
+                    if (selections.step4.includes(opt.value)) {
+                        option.classList.add('selected');
+                    }
+                    option.innerHTML = `
+                        <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                        </svg>
+                        <span>${opt.label}</span>
+                    `;
+                    container.appendChild(option);
+                });
+            }
+            
+            // Re-attach event listeners
+            setupBubbleOptions();
+        }
+
         function nextStep() {
             if (currentStep === 1 && selections.step1.length === 0) {
                 alert('Please select at least one service');
@@ -1775,6 +1891,11 @@
             if (currentStep === 3 && selections.step3 === 0) {
                 alert('Please select at least one designer');
                 return;
+            }
+            
+            // Rebuild step 4 options when entering step 4
+            if (currentStep === 3) {
+                rebuildStep4Options();
             }
 
             if (currentStep === 5 && !selections.step5) {
@@ -1856,6 +1977,11 @@
             document.getElementById(`step${currentStep}`).classList.remove('active');
             currentStep--;
             document.getElementById(`step${currentStep}`).classList.add('active');
+            
+            // Rebuild step 4 if going back to it
+            if (currentStep === 4) {
+                rebuildStep4Options();
+            }
             
             updateProgressBar();
             updatePrice(); // Recalculate price when going back
@@ -2095,7 +2221,7 @@
         setupOptions('step1');
         setupOptions('step2'); // Agency/In-House/Other
         setupTileOptions(); // Handles step2 and step3 (team size)
-        setupBubbleOptions(); // Step 4 bubble options
+        rebuildStep4Options(); // Build step 4 options initially
         updateProgressBar();
 
         function openVideoModal() {
