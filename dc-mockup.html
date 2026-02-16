@@ -1244,8 +1244,51 @@
                 padding: 0 20px;
             }
 
+            /* Burger menu for mobile */
             .nav-links {
-                gap: 20px;
+                position: fixed;
+                top: 0;
+                right: -100%;
+                height: 100vh;
+                width: 250px;
+                background: rgba(10, 10, 10, 0.98);
+                flex-direction: column;
+                padding: 80px 20px 20px;
+                transition: right 0.3s ease;
+                z-index: 1001;
+                border-left: 1px solid #2a2a2a;
+            }
+
+            .nav-links.active {
+                right: 0;
+            }
+
+            /* Burger menu icon */
+            .burger-menu {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                cursor: pointer;
+                z-index: 1002;
+            }
+
+            .burger-menu span {
+                width: 25px;
+                height: 3px;
+                background: #fff;
+                transition: all 0.3s ease;
+            }
+
+            .burger-menu.active span:nth-child(1) {
+                transform: rotate(45deg) translate(8px, 8px);
+            }
+
+            .burger-menu.active span:nth-child(2) {
+                opacity: 0;
+            }
+
+            .burger-menu.active span:nth-child(3) {
+                transform: rotate(-45deg) translate(7px, -7px);
             }
 
             .hero {
@@ -1262,10 +1305,37 @@
 
             .calculator-container {
                 padding: 24px;
+                order: 2;
             }
 
+            /* Move progress stepper to top above price display */
+            .progress-stepper {
+                order: -1;
+                margin-bottom: 20px;
+            }
+
+            .price-display {
+                order: 0;
+                position: static !important;
+                margin-bottom: 20px;
+            }
+
+            /* Mobile H2 styles */
             h2 {
-                font-size: 24px;
+                font-size: 16px !important;
+                margin-bottom: 20px !important;
+            }
+
+            #step1 h2 {
+                margin-bottom: 20px !important;
+            }
+
+            #step2 h2 {
+                margin-bottom: 20px !important;
+            }
+
+            #step5 h2 {
+                margin-bottom: 20px !important;
             }
 
             .option-label {
@@ -1282,6 +1352,68 @@
 
             .summary-sentence {
                 font-size: 18px;
+            }
+
+            /* Mobile-responsive pricing page */
+            .result-container {
+                padding: 0 10px;
+            }
+
+            .price-estimate {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .price-container {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .plan-label {
+                font-size: 14px;
+            }
+
+            .price-value {
+                font-size: 32px;
+            }
+
+            .price-per-month {
+                font-size: 16px;
+            }
+
+            .summary-sentence {
+                font-size: 16px;
+            }
+
+            /* Ensure bubble options wrap properly */
+            .bubble-options {
+                gap: 8px;
+            }
+
+            .bubble-option {
+                font-size: 14px;
+                padding: 10px 16px;
+            }
+
+            .service-group-options {
+                gap: 8px;
+            }
+
+            /* Tile options responsive */
+            .tile-options {
+                grid-template-columns: 1fr !important;
+                gap: 12px;
+            }
+
+            /* Stacked options responsive */
+            .stacked-options {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Number selector responsive */
+            .number-selector-container {
+                flex-direction: column;
+                gap: 12px;
             }
         }
         /* YouTube Modal */
@@ -1335,6 +1467,11 @@
             transform: none;
             box-shadow: none;
         }
+
+        /* Hide burger menu on desktop */
+        .burger-menu {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -1346,11 +1483,16 @@
                 </svg>
                 Design Cloud
             </div>
-            <ul class="nav-links">
-                <li><a href="#services">Services</a></li>
-                <li><a href="#work">Work</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#pricing" class="nav-cta">Get Started</a></li>
+            <div class="burger-menu" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#services" onclick="closeMobileMenu()">Services</a></li>
+                <li><a href="#work" onclick="closeMobileMenu()">Work</a></li>
+                <li><a href="#about" onclick="closeMobileMenu()">About</a></li>
+                <li><a href="#pricing" class="nav-cta" onclick="closeMobileMenu()">Get Started</a></li>
             </ul>
         </div>
     </nav>
@@ -2340,6 +2482,20 @@
             if (event && event.target !== document.getElementById('videoModal') && !event.target.classList.contains('video-modal-close')) return;
             document.getElementById('videoModal').classList.remove('active');
             document.getElementById('videoIframe').src = '';
+        }
+
+        function toggleMobileMenu() {
+            const navLinks = document.getElementById('navLinks');
+            const burger = document.querySelector('.burger-menu');
+            navLinks.classList.toggle('active');
+            burger.classList.toggle('active');
+        }
+
+        function closeMobileMenu() {
+            const navLinks = document.getElementById('navLinks');
+            const burger = document.querySelector('.burger-menu');
+            navLinks.classList.remove('active');
+            burger.classList.remove('active');
         }
     </script>
     <div class="video-modal-overlay" id="videoModal" onclick="closeVideoModal(event)">
