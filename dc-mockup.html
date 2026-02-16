@@ -554,6 +554,67 @@
             opacity: 1;
         }
 
+        /* Service group containers */
+        .service-group {
+            margin-bottom: 20px;
+        }
+
+        .service-group-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #999;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .service-group-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        /* Color coding for different service types */
+        .service-group.graphic-design .bubble-option {
+            border-color: #4a90e2;
+        }
+
+        .service-group.graphic-design .bubble-option:hover {
+            border-color: rgb(53, 99, 252);
+        }
+
+        .service-group.graphic-design .bubble-option.selected {
+            border-color: rgb(53, 99, 252);
+        }
+
+        .service-group.uiux .bubble-option {
+            border-color: #27ff97;
+        }
+
+        .service-group.uiux .bubble-option:hover {
+            border-color: #27ff97;
+        }
+
+        .service-group.uiux .bubble-option.selected {
+            border-color: #27ff97;
+            background: rgba(39, 255, 151, 0.15);
+            color: #27ff97;
+        }
+
+        .service-group.video .bubble-option {
+            border-color: #ff69b4;
+        }
+
+        .service-group.video .bubble-option:hover {
+            border-color: #ff69b4;
+        }
+
+        .service-group.video .bubble-option.selected {
+            border-color: #ff69b4;
+            background: rgba(255, 105, 180, 0.15);
+            color: #ff69b4;
+        }
+
         .bubble-option:hover {
             border-color: rgb(53, 99, 252);
             background: rgba(53, 99, 252, 0.1);
@@ -1807,44 +1868,14 @@
             const hasVideo = selections.step1.includes('video');
             const hasGraphicDesign = selections.step1.includes('graphic-design');
             
-            // Add UI/UX option first if selected
-            if (hasUIUX) {
-                const uiuxOption = document.createElement('div');
-                uiuxOption.className = 'bubble-option selected';
-                uiuxOption.dataset.value = 'ui-ux-interest';
-                uiuxOption.innerHTML = `
-                    <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
-                    </svg>
-                    <span>UI/UX Design</span>
-                `;
-                container.appendChild(uiuxOption);
-                // Auto-select in selections
-                if (!selections.step4.includes('ui-ux-interest')) {
-                    selections.step4.push('ui-ux-interest');
-                }
-            }
-            
-            // Add Video option second if selected (or first if UI/UX not selected)
-            if (hasVideo) {
-                const videoOption = document.createElement('div');
-                videoOption.className = 'bubble-option selected';
-                videoOption.dataset.value = 'video-interest';
-                videoOption.innerHTML = `
-                    <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
-                    </svg>
-                    <span>Video Editing / Motion Design</span>
-                `;
-                container.appendChild(videoOption);
-                // Auto-select in selections
-                if (!selections.step4.includes('video-interest')) {
-                    selections.step4.push('video-interest');
-                }
-            }
-            
-            // Only add standard graphic design options if Graphic Design is selected in step 1
+            // Add Graphic Design group FIRST if selected
             if (hasGraphicDesign) {
+                const graphicGroup = document.createElement('div');
+                graphicGroup.className = 'service-group graphic-design';
+                graphicGroup.innerHTML = '<div class="service-group-title">Graphic Design Services</div><div class="service-group-options"></div>';
+                container.appendChild(graphicGroup);
+                
+                const graphicContainer = graphicGroup.querySelector('.service-group-options');
                 const standardOptions = [
                     { value: 'presentations', label: 'Presentations & Slides' },
                     { value: 'infographics', label: 'Infographics & Charts' },
@@ -1869,7 +1900,83 @@
                         </svg>
                         <span>${opt.label}</span>
                     `;
-                    container.appendChild(option);
+                    graphicContainer.appendChild(option);
+                });
+            }
+            
+            // Add UI/UX group if selected
+            if (hasUIUX) {
+                const uiuxGroup = document.createElement('div');
+                uiuxGroup.className = 'service-group uiux';
+                uiuxGroup.innerHTML = '<div class="service-group-title">UI/UX Design Services</div><div class="service-group-options"></div>';
+                container.appendChild(uiuxGroup);
+                
+                const uiuxContainer = uiuxGroup.querySelector('.service-group-options');
+                // Reordered: Landing pages, Mobile Apps, E-commerce, Website Apps, Membership
+                const uiuxOptions = [
+                    { value: 'landing-pages', label: 'Landing pages & website sections' },
+                    { value: 'mobile-apps', label: 'Mobile Apps' },
+                    { value: 'ecommerce', label: 'E-commerce websites' },
+                    { value: 'website-apps', label: 'Website Apps' },
+                    { value: 'membership', label: 'Membership/Booking websites' }
+                ];
+                
+                uiuxOptions.forEach(opt => {
+                    const option = document.createElement('div');
+                    option.className = 'bubble-option';
+                    option.dataset.value = opt.value;
+                    // Check if this option was previously selected
+                    if (selections.step4.includes(opt.value)) {
+                        option.classList.add('selected');
+                    }
+                    option.innerHTML = `
+                        <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                        </svg>
+                        <span>${opt.label}</span>
+                    `;
+                    uiuxContainer.appendChild(option);
+                });
+            }
+            
+            // Add Video group if selected
+            if (hasVideo) {
+                const videoGroup = document.createElement('div');
+                videoGroup.className = 'service-group video';
+                videoGroup.innerHTML = '<div class="service-group-title">Video Editing / Motion Design Services</div><div class="service-group-options"></div>';
+                container.appendChild(videoGroup);
+                
+                const videoContainer = videoGroup.querySelector('.service-group-options');
+                const videoOptions = [
+                    { value: 'video-editing', label: 'Video Editing / Motion Design' },
+                    { value: 'animated-infographics', label: 'Animated infographics & charts' },
+                    { value: 'long-form', label: 'Long-form editing for podcasts, showreels etc.' },
+                    { value: 'product-demos', label: 'Product demo videos' }
+                ];
+                
+                videoOptions.forEach(opt => {
+                    const option = document.createElement('div');
+                    option.className = 'bubble-option';
+                    option.dataset.value = opt.value;
+                    
+                    // Pre-select "Video Editing / Motion Design" option by default
+                    if (opt.value === 'video-editing') {
+                        option.classList.add('selected');
+                        if (!selections.step4.includes(opt.value)) {
+                            selections.step4.push(opt.value);
+                        }
+                    } else if (selections.step4.includes(opt.value)) {
+                        // Check if other options were previously selected
+                        option.classList.add('selected');
+                    }
+                    
+                    option.innerHTML = `
+                        <svg class="bubble-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12" stroke="#27ff97" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                        </svg>
+                        <span>${opt.label}</span>
+                    `;
+                    videoContainer.appendChild(option);
                 });
             }
             
