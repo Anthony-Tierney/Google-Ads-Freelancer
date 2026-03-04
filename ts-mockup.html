@@ -25,13 +25,26 @@
         }
         .step-dot.active { background: #000; width: 24px; }
 
-        .right-bg { position: relative; background-color: #0f172a; }
-        .right-bg-img {
-            position: absolute; inset: 0;
-            background-image: url('https://images.unsplash.com/photo-1497907392684-e724aae1b42b?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+        .right-bg { position: relative; }
+        .right-bg-img { display: none; }
+
+        /* Full-width hero background image spanning both left and right panels */
+        .hero-section {
+            position: relative;
+            background-image: url('images/ties.webp');
             background-size: cover;
-            background-position: right center;
-            opacity: 0.55;
+            background-position: center;
+        }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.82);
+            z-index: 0;
+        }
+        .hero-section > * {
+            position: relative;
+            z-index: 1;
         }
 
         /* Hide default browser number spinner */
@@ -92,7 +105,7 @@
     </nav>
 
     <!-- Hero sized so ~70px of the logos section peeks below on desktop -->
-    <section class="flex flex-col lg:flex-row w-full overflow-hidden lg:h-[calc(100vh-67px-70px)] relative">
+    <section class="hero-section flex flex-col lg:flex-row w-full overflow-hidden lg:h-[calc(100vh-67px-70px)] relative">
 
         <!-- Centred arrow — appears between left copy and right form when Get a Quote is clicked -->
         <span id="hero-cta-arrow" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:2.5rem;color:#f97316;display:none;pointer-events:none;z-index:30;">&#10140;</span>
@@ -112,9 +125,9 @@
             </p>
             <!-- Bullet list: clear separation from description -->
             <ul class="mt-5 space-y-3 text-base text-slate-700 font-medium max-w-md">
-                <li class="flex items-start gap-3"><span class="font-bold" style="color:#f97316;">✓</span> Free professional design service.</li>
-                <li class="flex items-start gap-3"><span class="font-bold" style="color:#f97316;">✓</span> All styles &amp; materials catered for.</li>
-                <li class="flex items-start gap-3"><span class="font-bold" style="color:#f97316;">✓</span> Fast turnaround.</li>
+                <li class="flex items-start gap-3"><span class="font-bold" style="color:#f97316;">✓</span> Free custom mock-ups provided in just 24-48 hours.</li>
+                <li class="flex items-start gap-3"><span class="font-bold" style="color:#f97316;">✓</span> Highest quality fabrics and finishes.</li>
+                <li class="flex items-start gap-3"><span class="font-bold" style="color:#f97316;">✓</span> Fast production turnaround.</li>
             </ul>
             <!-- CTA buttons: generous gap from the list above -->
             <div class="mt-8 flex items-center gap-3 flex-wrap">
@@ -202,7 +215,7 @@
 
                         <div class="flex flex-col">
                             <div class="flex items-center justify-between gap-4">
-                                <label class="form-question-label" style="margin-bottom:0;">Do you require a logo or emblem?</label>
+                                <label class="form-question-label" style="margin-bottom:0;">Do you require logo or emblem embroidery?</label>
                                 <div class="flex gap-2 flex-shrink-0">
                                     <button type="button" id="form-q3-logo-yes" onclick="setLogoChoice(true)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">Yes</button>
                                     <button type="button" id="form-q3-logo-no" onclick="setLogoChoice(false)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">No</button>
@@ -211,7 +224,7 @@
                         </div>
 
                         <div id="form-q3-logo-upload" class="hidden flex-col">
-                            <label class="form-question-label">Optional - Upload your logos or emblem image files for a free digital mock-up:</label>
+                            <label class="form-question-label">Optional - Upload your logo or emblem image file for a free digital mock-up:</label>
                             <input
                                 type="file"
                                 accept="image/*,.pdf,.ai,.eps,.svg"
@@ -237,23 +250,29 @@
                     <div class="space-y-2.5">
                         <div class="flex flex-col">
                             <label id="form-step2-email-label" class="form-question-label">Email my free quote to:</label>
-                            <input type="email" placeholder="jane@company.com" class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm text-slate-900">
+                            <input type="email" placeholder="jane@company.com" required class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm text-slate-900">
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div class="flex flex-col">
                                 <label class="form-question-label">First Name</label>
-                                <input type="text" placeholder="Jane" class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm text-slate-900">
+                                <input type="text" placeholder="Jane" required class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm text-slate-900">
                             </div>
                             <div class="flex flex-col">
                                 <label class="form-question-label">Last Name</label>
-                                <input type="text" placeholder="Doe" class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm text-slate-900">
+                                <input type="text" placeholder="Doe" required class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm text-slate-900">
                             </div>
                         </div>
 
-                        <div class="flex flex-col">
-                            <label class="form-question-label">Message (optional):</label>
-                            <textarea placeholder="Tell us about your requirements, colours, logo details, or any questions..." rows="3" class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm resize-none text-slate-900"></textarea>
+                        <div class="flex gap-3 items-stretch">
+                            <div class="flex flex-col" style="width:40%;">
+                                <label class="form-question-label">Telephone No:</label>
+                                <input type="tel" placeholder="e.g. 024 7666 7440" required class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm text-slate-900">
+                            </div>
+                            <div class="flex flex-col" style="width:60%;">
+                                <label class="form-question-label">Message (optional):</label>
+                                <textarea placeholder="Tell us about your requirements, colours, logo details, or any questions..." class="flex-1 bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm resize-none text-slate-900" style="min-height:80px;overflow:hidden;"></textarea>
+                            </div>
                         </div>
                     </div>
 
@@ -292,7 +311,7 @@
                     <img src="images/ts-client-4.png" alt="Client 4" class="h-8 object-contain">
                 </div>
                 <div class="flex justify-center">
-                    <img src="images/ts-client-5.jpg" alt="Client 5" class="h-8 object-contain">
+                    <img src="images/ts-client-5.png" alt="Client 5" class="h-8 object-contain">
                 </div>
                 <div class="flex justify-center">
                     <img src="images/ts-client-6.png" alt="Client 6" class="h-8 object-contain">
@@ -302,6 +321,14 @@
     </section>
 
     <script>
+        // Auto-expand message textarea to avoid scrollbar
+        document.addEventListener('input', function(e) {
+            if (e.target.tagName === 'TEXTAREA') {
+                e.target.style.height = 'auto';
+                e.target.style.height = e.target.scrollHeight + 'px';
+            }
+        });
+
         function stepQty(delta) {
             const input = document.getElementById('form-q2-quantity');
             const current = parseInt(input.value, 10);
