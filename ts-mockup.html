@@ -35,6 +35,13 @@
             background-size: cover;
             background-position: center;
         }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.82);
+            z-index: 0;
+        }
         .hero-section > * {
             position: relative;
             z-index: 1;
@@ -76,7 +83,7 @@
 </head>
 <body class="bg-white text-slate-900">
 
-    <nav class="flex items-center justify-between px-6 lg:px-[152px] py-5 border-b border-slate-100">
+    <nav class="flex items-center justify-between px-6 lg:px-[152px] border-b border-slate-100" style="padding-top:15px;padding-bottom:15px;">
         <div class="flex items-center gap-3">
             <img src="images/ts-logo-black.webp" alt="Ties Supplier Logo" class="h-10 w-auto">
             <div class="flex flex-col items-center">
@@ -98,13 +105,13 @@
     </nav>
 
     <!-- Hero sized so ~70px of the logos section peeks below on desktop -->
-    <section class="hero-section flex flex-col lg:flex-row w-full overflow-hidden lg:h-[calc(100vh-67px-70px)] relative">
+    <section class="hero-section flex flex-col lg:flex-row w-full overflow-hidden lg:h-[calc(100vh-67px-100px)] relative">
 
         <!-- Centred arrow — appears between left copy and right form when Get a Quote is clicked -->
         <span id="hero-cta-arrow" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:2.5rem;color:#f97316;display:none;pointer-events:none;z-index:30;">&#10140;</span>
 
         <!-- Left: copy -->
-        <div class="lg:w-1/2 flex flex-col justify-center py-5 custom-pad-left lg:pr-12">
+        <div class="lg:w-1/2 flex flex-col justify-center custom-pad-left lg:pr-12" style="padding-top:1.25rem;padding-bottom:0;">
             <h1 class="text-3xl xl:text-5xl font-extrabold leading-tight tracking-tight text-slate-900">
                 Premium Custom Ties For Your Organisation.
             </h1>
@@ -157,7 +164,7 @@
         </div>
 
         <!-- Right: photo background panel + form -->
-        <div class="lg:w-1/2 relative right-bg flex items-center justify-center p-6 lg:p-10 overflow-hidden min-h-[500px] lg:min-h-0">
+        <div class="lg:w-1/2 relative right-bg flex items-center justify-center overflow-hidden min-h-[500px] lg:min-h-0" style="padding:1.5rem 2.5rem 0 2.5rem;">
             <div class="right-bg-img"></div>
 
             <!-- Form card -->
@@ -287,7 +294,7 @@
     </section>
 
     <!-- Logos section — partially peeking above the fold -->
-    <section class="bg-white py-10 border-t border-slate-100">
+    <section class="bg-white pb-10 border-t border-slate-100" style="padding-top:15px;">
         <div class="container mx-auto px-6">
             <h2 class="text-center text-2xl font-bold text-slate-700 mb-8">Trusted by 1,200+ UK Organisations</h2>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center opacity-40">
@@ -407,5 +414,3 @@
 
 </body>
 </html>
-
-
