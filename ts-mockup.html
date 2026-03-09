@@ -15,7 +15,7 @@
             .custom-pad-left { padding-left: 1.5rem; padding-right: 1.5rem; }
         }
 
-        .form-step-1-fields.hidden-step, .form-step-2-fields.hidden-step, .form-step-3-fields.hidden-step { display: none; }
+        .form-step-1-fields.hidden-step, .form-step-3-fields.hidden-step { display: none; }
 
         .step-dot {
             width: 8px; height: 8px;
@@ -166,7 +166,7 @@
                 <!-- Form title bar -->
                 <div class="bg-black px-5 pt-4 pb-3 relative">
                     <h3 class="text-xl font-extrabold text-center w-full text-white">Free Online Quote</h3>
-                    <span id="form-step-counter" class="text-sm font-bold text-slate-400 absolute right-5 top-1/2 -translate-y-1/2">Step 1/3</span>
+                    <span id="form-step-counter" class="text-sm font-bold text-slate-400 absolute right-5 top-1/2 -translate-y-1/2">Step 1/2</span>
                 </div>
 
                 <!-- Form body -->
@@ -212,7 +212,7 @@
                     </div>
 
                     <div class="flex justify-center mt-4">
-                        <button onclick="goToStep2()" type="button" class="font-extrabold px-8 py-3.5 rounded-xl transition-all shadow-md text-base" style="background-color:#000;color:#f97316;">
+                        <button onclick="goToStep3()" type="button" class="font-extrabold px-8 py-3.5 rounded-xl transition-all shadow-md text-base" style="background-color:#000;color:#f97316;">
                             Next &rarr;
                         </button>
                     </div>
@@ -221,103 +221,7 @@
                     </p>
                 </div>
 
-                <!-- STEP 2 -->
-                <div class="form-step-2-fields hidden-step mt-3" id="form-step-2">
-                    <div class="space-y-3">
 
-                        <!-- Q1: Replicating an existing tie? -->
-                        <div class="flex flex-col">
-                            <div class="flex items-center justify-between gap-4">
-                                <label class="form-question-label" style="margin-bottom:0;">Are you looking to replicate an existing tie?</label>
-                                <div class="flex gap-2 flex-shrink-0">
-                                    <button type="button" id="form-s2-q1-replicate-yes" onclick="setReplicateChoice(true)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">Yes</button>
-                                    <button type="button" id="form-s2-q1-replicate-no" onclick="setReplicateChoice(false)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">No</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Shown only when user selects Yes to Q1 -->
-                        <div id="form-s2-template-question" class="hidden space-y-3">
-                            <div class="flex items-center justify-between gap-4">
-                                <label class="form-question-label" style="margin-bottom:0;">Do you have a photo or design template we can replicate?</label>
-                                <div class="flex gap-2 flex-shrink-0">
-                                    <button type="button" id="form-s2-q2-template-yes" onclick="setTemplateChoice(true)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">Yes</button>
-                                    <button type="button" id="form-s2-q2-template-no" onclick="setTemplateChoice(false)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">No</button>
-                                </div>
-                            </div>
-                            <!-- File upload — shown when user selects Yes to template question -->
-                            <div id="form-s2-template-upload" class="hidden flex-col">
-                                <label class="form-question-label">Upload any photos or design templates for your existing ties you have here</label>
-                                <input
-                                    type="file"
-                                    accept="image/*,.pdf,.ai,.eps,.svg"
-                                    class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm text-slate-900 w-full file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white cursor-pointer"
-                                    onchange="validateFileSize(this)"
-                                >
-                                <p class="text-[10px] text-slate-900 mt-0.5">Max file size: 50MB.</p>
-                            </div>
-                        </div>
-
-                        <!-- Shown only when user selects No to Q1 -->
-                        <div id="form-s2-design-questions" class="hidden space-y-3">
-
-                            <!-- Colours required -->
-                            <div class="flex flex-col">
-                                <div class="flex items-center justify-between gap-4">
-                                    <label class="form-question-label" style="margin-bottom:0;">Colours required</label>
-                                    <select id="form-s2-q2-colour-type" class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm text-slate-900 flex-shrink-0" style="width:180px;">
-                                        <option value="" disabled selected>Select...</option>
-                                        <option>Solid colour (1 colour)</option>
-                                        <option>Multi-colour (&gt;1 colour)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Specify colour(s) -->
-                            <div class="flex flex-col">
-                                <div class="flex items-center justify-between gap-4">
-                                    <label class="form-question-label" style="margin-bottom:0;">Specify colour(s)</label>
-                                    <input type="text" id="form-s2-q3-colours" placeholder="e.g. Navy blue, gold" class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm text-slate-900 flex-shrink-0" style="width:180px;">
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <!-- Q4: Embroidery — hidden when user has a template -->
-                        <div id="form-s2-embroidery-question" class="flex flex-col">
-                            <div class="flex items-center justify-between gap-4">
-                                <label class="form-question-label" style="margin-bottom:0;">Do you require any embroidery? (emblem, logo, crest, text etc.)</label>
-                                <div class="flex gap-2 flex-shrink-0">
-                                    <button type="button" id="form-q3-logo-yes" onclick="setLogoChoice(true)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">Yes</button>
-                                    <button type="button" id="form-q3-logo-no" onclick="setLogoChoice(false)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">No</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="form-q3-logo-upload" class="hidden flex-col">
-                            <label class="form-question-label">Optional - Upload your logo or emblem image file for a free digital mock-up</label>
-                            <input
-                                type="file"
-                                accept="image/*,.pdf,.ai,.eps,.svg"
-                                class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm text-slate-900 w-full file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white cursor-pointer"
-                                onchange="validateFileSize(this)"
-                            >
-                            <p class="text-[10px] text-slate-900 mt-0.5">Max file size: 50MB.</p>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-2 mt-4">
-                        <button onclick="goToStep1()" type="button" class="flex-none font-bold py-3.5 px-4 rounded-xl border-2 border-slate-300 text-slate-900 hover:border-slate-600 transition-all text-sm">
-                            &larr; Back
-                        </button>
-                        <button onclick="goToStep3()" type="button" class="flex-1 font-extrabold py-3.5 rounded-xl transition-all shadow-md text-base" style="background-color:#000;color:#f97316;">
-                            Next &rarr;
-                        </button>
-                    </div>
-                    <p class="text-[10px] text-slate-900 text-center uppercase tracking-widest mt-2">
-                        Guaranteed response within 24 business hours.
-                    </p>
-                </div>
 
                 <!-- STEP 3 -->
                 <div class="form-step-3-fields hidden-step mt-3" id="form-step-3">
@@ -351,7 +255,7 @@
                     </div>
 
                     <div class="flex gap-2 mt-3">
-                        <button onclick="goToStep2()" type="button" class="flex-none font-bold py-3.5 px-4 rounded-xl border-2 border-slate-300 text-slate-900 hover:border-slate-600 transition-all text-sm">
+                        <button onclick="goToStep1()" type="button" class="flex-none font-bold py-3.5 px-4 rounded-xl border-2 border-slate-300 text-slate-900 hover:border-slate-600 transition-all text-sm">
                             &larr; Back
                         </button>
                         <button type="submit" class="flex-1 font-extrabold py-3.5 rounded-xl transition-all shadow-md text-base" style="background-color:#000;color:#f97316;">
@@ -386,7 +290,7 @@
                     <img src="images/ts-client-4.png" alt="Client 4" class="h-8 object-contain">
                 </div>
                 <div class="flex justify-center">
-                    <img src="images/ts-client-5.png" alt="Client 5" class="h-8 object-contain">
+                    <img src="images/ts-client-5.jpg" alt="Client 5" class="h-8 object-contain">
                 </div>
                 <div class="flex justify-center">
                     <img src="images/ts-client-6.png" alt="Client 6" class="h-8 object-contain">
@@ -394,6 +298,170 @@
             </div>
         </div>
     </section>
+
+    <!-- Our Process Section -->
+    <section class="bg-white py-16 px-6 lg:px-[152px] border-t border-slate-100">
+        <h2 class="text-3xl font-extrabold tracking-tight uppercase text-slate-900 mb-12 text-center">Our Process</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+
+            <!-- Step 1: Contact Us -->
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <p class="text-xs font-extrabold uppercase tracking-widest mb-0.5" style="color:#f97316;">Step 1</p>
+                        <h3 class="text-base font-extrabold uppercase tracking-wide text-slate-900">Contact Us</h3>
+                    </div>
+                    <div class="ml-auto flex-shrink-0">
+                        <!-- Phone icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:2rem;height:2rem;color:#f97316;">
+                            <path fill-rule="evenodd" d="M1.5 4.5a3 3 0 013-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 01-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 006.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 011.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 01-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-600 leading-relaxed">Call us on 024 7666 7440 or fill out our contact form to speak to us about your ideas. Alternatively, you can email us at <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2655474a435566524f4355555356564a4f435408454908534d">[email&#160;protected]</a> with your requirements.</p>
+            </div>
+
+            <!-- Step 2: Idea -->
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <p class="text-xs font-extrabold uppercase tracking-widest mb-0.5" style="color:#f97316;">Step 2</p>
+                        <h3 class="text-base font-extrabold uppercase tracking-wide text-slate-900">Idea</h3>
+                    </div>
+                    <div class="ml-auto flex-shrink-0">
+                        <!-- Lightbulb icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:2rem;height:2rem;color:#f97316;">
+                            <path d="M12 2a7 7 0 00-4.899 11.941c.654.678 1.046 1.566 1.046 2.494V17a1 1 0 001 1h5.706a1 1 0 001-1v-.565c0-.928.392-1.816 1.046-2.494A7 7 0 0012 2z"/>
+                            <path d="M9.854 18.5h4.292a.5.5 0 010 1H9.854a.5.5 0 010-1zM10.354 20.5h3.292a.5.5 0 010 1h-3.292a.5.5 0 010-1z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-600 leading-relaxed">Send us your logo, artwork, samples, photographs or hand drawn sketch, and we can start the process! We are happy to create a design using your brief, if you do not already have any.</p>
+            </div>
+
+            <!-- Step 3: Free Design -->
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <p class="text-xs font-extrabold uppercase tracking-widest mb-0.5" style="color:#f97316;">Step 3</p>
+                        <h3 class="text-base font-extrabold uppercase tracking-wide text-slate-900">Free Design</h3>
+                    </div>
+                    <div class="ml-auto flex-shrink-0">
+                        <!-- Pencil icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:2rem;height:2rem;color:#f97316;">
+                            <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z"/>
+                            <path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-600 leading-relaxed">Our team will then work with you to produce a FREE design, whether that be a replica of an existing design, or a new custom design from scratch. We will tailor the design to your needs.</p>
+            </div>
+
+            <!-- Step 4: Order -->
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <p class="text-xs font-extrabold uppercase tracking-widest mb-0.5" style="color:#f97316;">Step 4</p>
+                        <h3 class="text-base font-extrabold uppercase tracking-wide text-slate-900">Order</h3>
+                    </div>
+                    <div class="ml-auto flex-shrink-0">
+                        <!-- Truck icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:2.2rem;height:2.2rem;color:#f97316;">
+                            <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25zM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875H3.75a3 3 0 106 0h1.5a.75.75 0 00.75-.75V15z"/>
+                            <path d="M8.25 19.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zM15.75 6.75a.75.75 0 00-.75.75v11.25c0 .087.015.17.042.248a3 3 0 015.958.464c.853-.175 1.522-.935 1.464-1.883a18.659 18.659 0 00-3.732-10.104 1.837 1.837 0 00-1.47-.725H15.75zM19.5 19.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-600 leading-relaxed">Once you approve your design, our factory will then manufacture a Pre-Production sample. Once you sign off the Pre-Production sample, we will then proceed with the full order and deliver to your desired address.</p>
+            </div>
+
+        </div>
+
+        <!-- Connector line (desktop only) -->
+        <div class="hidden lg:flex items-center justify-between mt-10 px-4">
+            <div class="flex-1 h-px bg-slate-200"></div>
+            <div class="mx-3 w-2 h-2 rounded-full flex-shrink-0" style="background:#f97316;"></div>
+            <div class="flex-1 h-px bg-slate-200"></div>
+            <div class="mx-3 w-2 h-2 rounded-full flex-shrink-0" style="background:#f97316;"></div>
+            <div class="flex-1 h-px bg-slate-200"></div>
+            <div class="mx-3 w-2 h-2 rounded-full flex-shrink-0" style="background:#f97316;"></div>
+            <div class="flex-1 h-px bg-slate-200"></div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white pt-12 pb-6 px-6 lg:px-[152px]">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+
+            <!-- Brand -->
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center gap-3">
+                    <img src="images/ts-logo-black.webp" alt="Ties Supplier Logo" class="h-9 w-auto brightness-0 invert">
+                    <div class="flex flex-col">
+                        <span class="font-extrabold tracking-tighter text-xl uppercase text-white">Ties Supplier</span>
+                        <span class="text-[10px] font-semibold text-slate-400 tracking-widest uppercase">Est. 2020</span>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-400 leading-relaxed max-w-xs">UK's leading bulk tie specialist. We design, manufacture &amp; supply high-quality bespoke ties for sports clubs, schools, corporate brands and more.</p>
+                <div class="flex gap-1 mt-1">
+                    <span style="color:#f59e0b;font-size:1rem;">★</span>
+                    <span style="color:#f59e0b;font-size:1rem;">★</span>
+                    <span style="color:#f59e0b;font-size:1rem;">★</span>
+                    <span style="color:#f59e0b;font-size:1rem;">★</span>
+                    <span style="color:#f59e0b;font-size:1rem;">★</span>
+                    <span class="text-xs text-slate-400 ml-1 self-center">Rated 5★ by 1,200+ organisations</span>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="flex flex-col gap-3">
+                <h4 class="text-sm font-extrabold uppercase tracking-widest text-white mb-1">Quick Links</h4>
+                <a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Products</a>
+                <a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Clients &amp; Testimonials</a>
+                <a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Our Process</a>
+                <a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Get a Free Quote</a>
+                <a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">FAQs</a>
+            </div>
+
+            <!-- Contact -->
+            <div class="flex flex-col gap-3">
+                <h4 class="text-sm font-extrabold uppercase tracking-widest text-white mb-1">Get In Touch</h4>
+                <a href="tel:02476667440" class="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:1rem;height:1rem;color:#f97316;flex-shrink:0;">
+                        <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 013.5 2h1.148a1.5 1.5 0 011.465 1.175l.716 3.223a1.5 1.5 0 01-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 006.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 011.767-1.052l3.223.716A1.5 1.5 0 0118 15.352V16.5a1.5 1.5 0 01-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 012.43 8.326 13.019 13.019 0 012 5V3.5z" clip-rule="evenodd"/>
+                    </svg>
+                    024 7666 7440
+                </a>
+                <a href="mailto:sales@i4cpublicity.co.uk" class="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:1rem;height:1rem;color:#f97316;flex-shrink:0;">
+                        <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z"/>
+                        <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z"/>
+                    </svg>
+                    sales@i4cpublicity.co.uk
+                </a>
+                <div class="flex items-start gap-2 text-sm text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:1rem;height:1rem;color:#f97316;flex-shrink:0;margin-top:2px;">
+                        <path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.452-.24.765-.433.63-.384 1.48-.966 2.328-1.739C15.555 15.026 18 12.461 18 9A8 8 0 002 9c0 3.461 2.444 6.026 4.293 7.612a19.106 19.106 0 002.328 1.738 11.53 11.53 0 00.765.434 5.727 5.727 0 00.281.14l.018.008.006.002zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"/>
+                    </svg>
+                    Coventry, United Kingdom
+                </div>
+                <a href="#" onclick="document.getElementById('hero-quote-form').scrollIntoView({behavior:'smooth', block:'center'}); return false;" class="mt-2 inline-block font-extrabold px-6 py-3 rounded-xl text-sm transition-all shadow-md text-center" style="background-color:#f97316;color:#000;">
+                    Get a Free Quote
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Bottom bar -->
+        <div class="border-t border-slate-700 pt-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <p>&copy; 2026 i4c Publicity. All rights reserved.</p>
+            <div class="flex gap-5">
+                <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition-colors">Terms &amp; Conditions</a>
+                <a href="#" class="hover:text-white transition-colors">Sitemap</a>
+            </div>
+        </div>
+    </footer>
 
     <script>
         // Auto-expand message textarea to avoid scrollbar
@@ -432,70 +500,6 @@
             }
         }
 
-        function setReplicateChoice(isReplicate) {
-            const yesBtn = document.getElementById('form-s2-q1-replicate-yes');
-            const noBtn = document.getElementById('form-s2-q1-replicate-no');
-            const templateQuestion = document.getElementById('form-s2-template-question');
-            const designQuestions = document.getElementById('form-s2-design-questions');
-
-            yesBtn.style.borderColor = isReplicate ? '#f97316' : '';
-            yesBtn.style.backgroundColor = isReplicate ? '#fff7ed' : '';
-            noBtn.style.borderColor = !isReplicate ? '#f97316' : '';
-            noBtn.style.backgroundColor = !isReplicate ? '#fff7ed' : '';
-
-            if (isReplicate) {
-                templateQuestion.classList.remove('hidden');
-                designQuestions.classList.add('hidden');
-            } else {
-                templateQuestion.classList.add('hidden');
-                designQuestions.classList.remove('hidden');
-            }
-        }
-
-        function setTemplateChoice(hasTemplate) {
-            const yesBtn = document.getElementById('form-s2-q2-template-yes');
-            const noBtn = document.getElementById('form-s2-q2-template-no');
-            const templateUpload = document.getElementById('form-s2-template-upload');
-            const designQuestions = document.getElementById('form-s2-design-questions');
-            const embroideryQuestion = document.getElementById('form-s2-embroidery-question');
-
-            yesBtn.style.borderColor = hasTemplate ? '#f97316' : '';
-            yesBtn.style.backgroundColor = hasTemplate ? '#fff7ed' : '';
-            noBtn.style.borderColor = !hasTemplate ? '#f97316' : '';
-            noBtn.style.backgroundColor = !hasTemplate ? '#fff7ed' : '';
-
-            if (hasTemplate) {
-                templateUpload.classList.remove('hidden');
-                templateUpload.classList.add('flex');
-                designQuestions.classList.add('hidden');
-                embroideryQuestion.classList.add('hidden');
-            } else {
-                templateUpload.classList.add('hidden');
-                templateUpload.classList.remove('flex');
-                designQuestions.classList.remove('hidden');
-                embroideryQuestion.classList.remove('hidden');
-            }
-        }
-
-        function setLogoChoice(wantsLogo) {
-            const yesBtn = document.getElementById('form-q3-logo-yes');
-            const noBtn = document.getElementById('form-q3-logo-no');
-            const uploadField = document.getElementById('form-q3-logo-upload');
-            const emailLabel = document.getElementById('form-step2-email-label');
-            yesBtn.style.borderColor = wantsLogo ? '#f97316' : '';
-            yesBtn.style.backgroundColor = wantsLogo ? '#fff7ed' : '';
-            noBtn.style.borderColor = !wantsLogo ? '#f97316' : '';
-            noBtn.style.backgroundColor = !wantsLogo ? '#fff7ed' : '';
-            if (wantsLogo) {
-                uploadField.classList.remove('hidden');
-                uploadField.classList.add('flex');
-                emailLabel.textContent = 'Email my free quote & digital mock-up to';
-            } else {
-                uploadField.classList.add('hidden');
-                uploadField.classList.remove('flex');
-                emailLabel.textContent = 'Email my free quote to';
-            }
-        }
 
         function validateFileSize(input) {
             const maxSize = 50 * 1024 * 1024;
@@ -505,41 +509,30 @@
             }
         }
 
-        function goToStep2() {
+        function goToStep3() {
             const orgType = document.getElementById('form-q1-organisation-type');
             const qty = document.getElementById('form-q2-quantity');
 
-            // If coming from step 1, validate first
-            if (!document.getElementById('form-step-1').classList.contains('hidden-step')) {
-                if (!orgType.value) {
-                    orgType.style.borderColor = '#f97316';
-                    orgType.focus();
-                    setTimeout(() => orgType.style.borderColor = '', 1500);
-                    return;
-                }
-                if (!qty.value || parseInt(qty.value) < 50) {
-                    qty.reportValidity();
-                    return;
-                }
+            if (!orgType.value) {
+                orgType.style.borderColor = '#f97316';
+                orgType.focus();
+                setTimeout(() => orgType.style.borderColor = '', 1500);
+                return;
+            }
+            if (!qty.value || parseInt(qty.value) < 50) {
+                qty.reportValidity();
+                return;
             }
 
             document.getElementById('form-step-1').classList.add('hidden-step');
-            document.getElementById('form-step-3').classList.add('hidden-step');
-            document.getElementById('form-step-2').classList.remove('hidden-step');
-            document.getElementById('form-step-counter').textContent = 'Step 2/3';
-        }
-
-        function goToStep3() {
-            document.getElementById('form-step-2').classList.add('hidden-step');
             document.getElementById('form-step-3').classList.remove('hidden-step');
-            document.getElementById('form-step-counter').textContent = 'Step 3/3';
+            document.getElementById('form-step-counter').textContent = 'Step 2/2';
         }
 
         function goToStep1() {
-            document.getElementById('form-step-2').classList.add('hidden-step');
             document.getElementById('form-step-3').classList.add('hidden-step');
             document.getElementById('form-step-1').classList.remove('hidden-step');
-            document.getElementById('form-step-counter').textContent = 'Step 1/3';
+            document.getElementById('form-step-counter').textContent = 'Step 1/2';
         }
     </script>
 
