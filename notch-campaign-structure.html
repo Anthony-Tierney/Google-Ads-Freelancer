@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Ads Structure: Notch</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #1a3a5f 0%, #2a5298 100%);
+            color: #3c4043;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 98%;
+            max-width: 1750px;
+            padding: 40px 10px;
+        }
+        .comparison-view {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .after h2 { color: #1e8e3e; border-bottom: 4px solid #1e8e3e; display: inline-block; padding-bottom: 5px; }
+
+        /* ── Top row: account + budget side by side ── */
+        .top-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 0;
+        }
+
+        /* ── Shared node styles ── */
+        .node {
+            padding: 14px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .account  { background: #202124; color: white; font-weight: bold; border: 2px solid #000; min-width: 200px; }
+        .budget   { background: #fef7e0; color: #7d5c00; font-weight: bold; border: 2px dashed #f9ab00; min-width: 140px; }
+        .budget .budget-amount { font-size: 1.1rem; font-weight: 800; margin-top: 4px; color: #e37400; }
+        .search   { background: #e8f0fe; border: 2px solid #4285f4; color: #1967d2; font-weight: bold; position: relative; }
+        .pmax     { background: #e6f4ea; border: 2px solid #1e8e3e; color: #137333; font-weight: bold; position: relative; }
+        .flag     { position: absolute; top: 6px; right: 8px; font-size: 0.9rem; line-height: 1; }
+
+        /* ── Connector lines ── */
+        .line-v   { width: 2px; background: #dadce0; margin: 0 auto; flex-shrink: 0; }
+        .line-h   { height: 2px; background: #dadce0; }
+
+        .campaigns-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            align-items: flex-start;
+        }
+        /* Outer wrapper for number + budget + campaign card */
+        .campaign-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 280px;
+            flex-shrink: 0;
+        }
+        /* Top bar: number bubble left, budget badge right */
+        .campaign-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 2px;
+            min-height: 24px;
+        }
+        .campaign-number {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #5f6368;
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .campaign-budget {
+            background: #fef7e0;
+            color: #7d5c00;
+            border: 2px dashed #f9ab00;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .campaign-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* ── Ad group level ── */
+        .adgroup-tree {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding-left: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        /* Vertical spine running down the left side */
+        .adgroup-tree::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 12px;
+            width: 2px;
+            background: #dadce0;
+        }
+        .adgroup-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+            position: relative;
+            padding-left: 20px;
+            box-sizing: border-box;
+            margin-top: 8px;
+        }
+        /* Horizontal tick from spine to each card — aligns with table header */
+        .adgroup-unit::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 16px;
+            width: 20px;
+            height: 2px;
+            background: #dadce0;
+        }
+
+        /* ── Ad Group Table ── */
+        .ad-group-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #bdc1c6;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            font-size: 0.75rem;
+        }
+        .ad-group-table th {
+            background: #e8f0fe;
+            color: #1967d2;
+            font-weight: 700;
+            padding: 7px 10px;
+            text-align: center;
+            border-bottom: 1px solid #bdc1c6;
+            white-space: nowrap;
+        }
+        .ad-group-table td {
+            background: #ffffff;
+            color: #5f6368;
+            padding: 0;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        /* ── Accordion ── */
+        .accordion-toggle {
+            width: 100%;
+            background: #f8f9fa;
+            border: none;
+            padding: 6px 10px;
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #5f6368;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.15s;
+            box-sizing: border-box;
+        }
+        .accordion-toggle:hover { background: #e8f0fe; color: #1967d2; }
+        .accordion-toggle .chevron { font-size: 0.6rem; transition: transform 0.2s; display: inline-block; }
+        .accordion-toggle.open .chevron { transform: rotate(180deg); }
+        .accordion-body {
+            display: none;
+            padding: 8px 10px;
+            line-height: 1.7;
+            border-top: 1px solid #e8eaed;
+            font-size: 0.72rem;
+        }
+        .accordion-body.open { display: block; }
+
+        /* ── Asset Group Table (PMAX) ── */
+        .asset-group-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #81c995;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            font-size: 0.75rem;
+        }
+        .asset-group-table th {
+            background: #c6f0d4;
+            color: #137333;
+            font-weight: 700;
+            padding: 7px 10px;
+            text-align: center;
+            border-bottom: 1px solid #81c995;
+            white-space: nowrap;
+        }
+        .asset-group-table td {
+            background: #f0faf3;
+            color: #137333;
+            font-weight: 400;
+            padding: 8px 10px;
+            text-align: center;
+            font-size: 0.72rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+  <section class="comparison-view after">
+
+    <!-- ══ LEVEL 0: Account + Budget ══ -->
+    <div class="top-row">
+      <div class="node account">Account: Notch</div>
+      <div class="node budget">
+        Monthly Budget
+        <div class="budget-amount">£3,000</div>
+      </div>
+    </div>
+
+    <!-- connector from account down -->
+    <div class="line-v" style="height:30px; width:2px;"></div>
+    <!-- horizontal bar spanning all 4 campaigns -->
+    <div class="line-h" style="width:80%; margin:0 auto;"></div>
+
+    <!-- ══ LEVEL 1: Campaigns ══ -->
+    <div class="campaigns-row">
+
+      <!-- ── Campaign 1: Notch Brand ── -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">1</div>
+          <div class="campaign-budget">£50</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box;">Search: Notch Brand<span class="flag">🇺🇸/🇬🇧</span></div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Notch Brand</th></tr></thead>
+                <tbody><tr><td>
+                  <button class="accordion-toggle" onclick="toggleAccordion(this)">Keywords <span class="chevron">▼</span></button>
+                  <div class="accordion-body">
+                    • notch software<br>• notch<br>• notch video<br>• notch one<br>• notch download
+                  </div>
+                </td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Campaign 2: By Purpose ── -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">2</div>
+          <div class="campaign-budget">£500</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box;">Search: By Purpose<span class="flag">🇺🇸</span></div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Live Events</th></tr></thead>
+                <tbody><tr><td>
+                  <button class="accordion-toggle" onclick="toggleAccordion(this)">Keywords <span class="chevron">▼</span></button>
+                  <div class="accordion-body">
+                    • live visuals software<br>• immersive live visuals software<br>• particle system software for live visuals<br>• visuals for live events<br>• realtime tool for live events<br>• motion graphics for live events<br>• live performance graphics tool
+                  </div>
+                </td></tr></tbody>
+              </table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Stage</th></tr></thead>
+                <tbody><tr><td>
+                  <button class="accordion-toggle" onclick="toggleAccordion(this)">Keywords <span class="chevron">▼</span></button>
+                  <div class="accordion-body">
+                    • stage visuals software<br>• software for stage visuals<br>• LED stage graphics software
+                  </div>
+                </td></tr></tbody>
+              </table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Concerts</th></tr></thead>
+                <tbody><tr><td>
+                  <button class="accordion-toggle" onclick="toggleAccordion(this)">Keywords <span class="chevron">▼</span></button>
+                  <div class="accordion-body">• concert visuals software</div>
+                </td></tr></tbody>
+              </table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Club</th></tr></thead>
+                <tbody><tr><td>
+                  <button class="accordion-toggle" onclick="toggleAccordion(this)">Keywords <span class="chevron">▼</span></button>
+                  <div class="accordion-body">• club visuals software</div>
+                </td></tr></tbody>
+              </table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Visual Performance</th></tr></thead>
+                <tbody><tr><td>
+                  <button class="accordion-toggle" onclick="toggleAccordion(this)">Keywords <span class="chevron">▼</span></button>
+                  <div class="accordion-body">• software for visual performance</div>
+                </td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Campaign 3: By Product Feature ── -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">3</div>
+          <div class="campaign-budget">£500</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box;">Search: By Product Feature<span class="flag">🇺🇸</span></div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Projection Mapping</th></tr></thead>
+                <tbody><tr><td>
+                  <button class="accordion-toggle" onclick="toggleAccordion(this)">Keywords <span class="chevron">▼</span></button>
+                  <div class="accordion-body">
+                    • projection mapping software<br>• projection mapping real time tool
+                  </div>
+                </td></tr></tbody>
+              </table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Real-Time Visuals</th></tr></thead>
+                <tbody><tr><td>
+                  <button class="accordion-toggle" onclick="toggleAccordion(this)">Keywords <span class="chevron">▼</span></button>
+                  <div class="accordion-body">
+                    • real-time visuals software<br>• realtime visual creation<br>• real fast real time
+                  </div>
+                </td></tr></tbody>
+              </table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Audio-Reactive</th></tr></thead>
+                <tbody><tr><td>
+                  <button class="accordion-toggle" onclick="toggleAccordion(this)">Keywords <span class="chevron">▼</span></button>
+                  <div class="accordion-body">• audio-reactive visuals software</div>
+                </td></tr></tbody>
+              </table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Motion Graphics</th></tr></thead>
+                <tbody><tr><td>
+                  <button class="accordion-toggle" onclick="toggleAccordion(this)">Keywords <span class="chevron">▼</span></button>
+                  <div class="accordion-body">• scaling motion graphics software</div>
+                </td></tr></tbody>
+              </table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Node-Based</th></tr></thead>
+                <tbody><tr><td>
+                  <button class="accordion-toggle" onclick="toggleAccordion(this)">Keywords <span class="chevron">▼</span></button>
+                  <div class="accordion-body">• node based software</div>
+                </td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Campaign 4: PMAX ── -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">4</div>
+          <div class="campaign-budget">£500</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node pmax" style="width:100%; box-sizing:border-box;">PMAX<span class="flag">🇺🇸</span></div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="asset-group-table">
+                <thead><tr><th>By Purpose</th></tr></thead>
+                <tbody><tr><td>Asset Group</td></tr></tbody>
+              </table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="asset-group-table">
+                <thead><tr><th>By Product Feature</th></tr></thead>
+                <tbody><tr><td>Asset Group</td></tr></tbody>
+              </table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="asset-group-table">
+                <thead><tr><th>Remarketing</th></tr></thead>
+                <tbody><tr><td>Asset Group</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Campaign 5: Existing Campaigns ── -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">5</div>
+          <div class="campaign-budget">£1,500</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box;">Search: Existing Campaigns<span class="flag">🇺🇸</span></div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Animation</th></tr></thead>
+              </table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Motion Graphics / VJ</th></tr></thead>
+              </table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table">
+                <thead><tr><th>Competitors</th></tr></thead>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end campaigns-row -->
+  </section>
+</div>
+
+<script>
+    function toggleAccordion(btn) {
+        const body = btn.nextElementSibling;
+        const isOpen = body.classList.contains('open');
+        body.classList.toggle('open', !isOpen);
+        btn.classList.toggle('open', !isOpen);
+    }
+</script>
+</body>
+</html>
