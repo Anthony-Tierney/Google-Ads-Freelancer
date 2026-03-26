@@ -15,7 +15,7 @@
             .custom-pad-left { padding-left: 1.5rem; padding-right: 1.5rem; }
         }
 
-        .form-step-1-fields.hidden-step, .form-step-3-fields.hidden-step { display: none; }
+        .form-step-1-fields.hidden-step, .form-step-2-fields.hidden-step, .form-step-3-fields.hidden-step { display: none; }
 
         .step-dot {
             width: 8px; height: 8px;
@@ -72,23 +72,41 @@
         .form-glow-active {
             animation: formGlowPulse 1s ease-out 3;
         }
+
+        /* Sticky navigation styles */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            opacity: 1;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            background-color: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body class="bg-white text-slate-900">
 
     <nav class="flex items-center justify-between px-6 lg:px-[152px] border-b border-slate-100" style="padding-top:15px;padding-bottom:15px;">
-        <div class="flex items-center gap-3">
+        <a href="https://www.tiessupplier.co.uk" class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
             <img src="images/ts-logo-black.webp" alt="Ties Supplier Logo" class="h-10 w-auto">
             <div class="flex flex-col items-center">
                 <span class="font-extrabold tracking-tighter text-2xl uppercase text-slate-900">Ties Supplier</span>
-                <span class="text-[10px] font-semibold text-slate-400 tracking-widest uppercase">Est. 2000</span>
+                <span class="text-[10px] font-semibold text-slate-400 tracking-widest uppercase">Est. 2020</span>
             </div>
-        </div>
+        </a>
         <div class="hidden md:flex items-center gap-8 text-sm font-semibold uppercase tracking-wider text-slate-600">
-            <a href="#" class="hover:text-indigo-900 transition-colors">Products</a>
             <a href="#" class="hover:text-indigo-900 transition-colors">Clients</a>
+            <a href="#" class="hover:text-indigo-900 transition-colors">Products</a>
             <a href="#" class="hover:text-indigo-900 transition-colors">Testimonials</a>
-            <a href="tel:02476667440" class="bg-slate-900 text-white px-5 py-2 rounded-full hover:bg-indigo-900 transition-all">024 7666 7440</a>
+            <a href="#" class="hover:text-indigo-900 transition-colors">FAQs</a>
+            <a href="#" class="hover:text-indigo-900 transition-colors">About</a>
+            <a href="#" class="hover:text-indigo-900 transition-colors">Contact</a>
         </div>
         <div class="md:hidden">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
@@ -114,13 +132,12 @@
             </p>
             <!-- Description: more breathing room below the subheading -->
             <p class="mt-5 text-slate-600 text-base max-w-md">
-                With over 25 years of experience, we design, manufacture &amp; supply high-quality bespoke ties for UK sports clubs, schools, corporate brands and more.
+                We design, manufacture &amp; supply high-quality bespoke ties for UK sports clubs, schools, corporate brands and more.
             </p>
             <!-- Bullet list: clear separation from description -->
             <ul class="mt-5 space-y-3 text-base text-slate-700 font-medium max-w-md">
-                <li class="flex items-start gap-3"><span class="font-bold" style="color:#f97316;">✓</span> Discount bulk-buy pricing with price match guarantee.</li>
                 <li class="flex items-start gap-3"><span class="font-bold" style="color:#f97316;">✓</span> Free custom mock-ups provided in just 24-48 hours.</li>
-                <li class="flex items-start gap-3"><span class="font-bold" style="color:#f97316;">✓</span> Highest quality fabrics and finishes only.</li>
+                <li class="flex items-start gap-3"><span class="font-bold" style="color:#f97316;">✓</span> Highest quality fabrics and finishes.</li>
                 <li class="flex items-start gap-3"><span class="font-bold" style="color:#f97316;">✓</span> Fast production turnaround.</li>
             </ul>
             <!-- CTA buttons: generous gap from the list above -->
@@ -131,7 +148,6 @@
                 <a href="tel:02476667440" class="font-extrabold px-8 py-4 rounded-xl text-base border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white transition-all">
                     Call Us
                 </a>
-                <p class="text-xs text-slate-500 font-medium" style="margin-top:0.25rem;">Mon – Fri, 9am – 5pm</p>
                 <div class="flex flex-col items-start">
                     <div class="flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" style="width:1.4rem;height:0.7rem;border-radius:2px;display:inline-block;">
@@ -153,7 +169,7 @@
                             <span style="color:#f59e0b;font-size:1.1rem;">★</span>
                         </div>
                     </div>
-                    <p class="text-xs text-slate-500 font-medium mt-0.5">Over 50,000+ ties manufactured &amp; supplied since 2020.</p>
+                    <p class="text-xs text-slate-500 font-medium mt-0.5">Over 50,000+ ties manufactured and supplied.</p>
                 </div>
             </div>
         </div>
@@ -168,7 +184,7 @@
                 <!-- Form title bar -->
                 <div class="bg-black px-5 pt-4 pb-3 relative">
                     <h3 class="text-xl font-extrabold text-center w-full text-white">Free Online Quote</h3>
-                    <span id="form-step-counter" class="text-sm font-bold text-slate-400 absolute right-5 top-1/2 -translate-y-1/2">Step 1/2</span>
+                    <span id="form-step-counter" class="text-sm font-bold text-slate-400 absolute right-5 top-1/2 -translate-y-1/2">Step 1/3</span>
                 </div>
 
                 <!-- Form body -->
@@ -214,7 +230,7 @@
                     </div>
 
                     <div class="flex justify-center mt-4">
-                        <button onclick="goToStep3()" type="button" class="font-extrabold px-8 py-3.5 rounded-xl transition-all shadow-md text-base" style="background-color:#000;color:#f97316;">
+                        <button onclick="goToStep2()" type="button" class="font-extrabold px-8 py-3.5 rounded-xl transition-all shadow-md text-base" style="background-color:#000;color:#f97316;">
                             Next &rarr;
                         </button>
                     </div>
@@ -223,7 +239,103 @@
                     </p>
                 </div>
 
+                <!-- STEP 2 -->
+                <div class="form-step-2-fields hidden-step mt-3" id="form-step-2">
+                    <div class="space-y-3">
 
+                        <!-- Q1: Replicating an existing tie? -->
+                        <div class="flex flex-col">
+                            <div class="flex items-center justify-between gap-4">
+                                <label class="form-question-label" style="margin-bottom:0;">Are you looking to replicate an existing tie?</label>
+                                <div class="flex gap-2 flex-shrink-0">
+                                    <button type="button" id="form-s2-q1-replicate-yes" onclick="setReplicateChoice(true)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">Yes</button>
+                                    <button type="button" id="form-s2-q1-replicate-no" onclick="setReplicateChoice(false)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">No</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Shown only when user selects Yes to Q1 -->
+                        <div id="form-s2-template-question" class="hidden space-y-3">
+                            <div class="flex items-center justify-between gap-4">
+                                <label class="form-question-label" style="margin-bottom:0;">Do you have a photo or design template we can replicate?</label>
+                                <div class="flex gap-2 flex-shrink-0">
+                                    <button type="button" id="form-s2-q2-template-yes" onclick="setTemplateChoice(true)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">Yes</button>
+                                    <button type="button" id="form-s2-q2-template-no" onclick="setTemplateChoice(false)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">No</button>
+                                </div>
+                            </div>
+                            <!-- File upload — shown when user selects Yes to template question -->
+                            <div id="form-s2-template-upload" class="hidden flex-col">
+                                <label class="form-question-label">Upload any photos or design templates for your existing ties you have here</label>
+                                <input
+                                    type="file"
+                                    accept="image/*,.pdf,.ai,.eps,.svg"
+                                    class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm text-slate-900 w-full file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white cursor-pointer"
+                                    onchange="validateFileSize(this)"
+                                >
+                                <p class="text-[10px] text-slate-900 mt-0.5">Max file size: 50MB.</p>
+                            </div>
+                        </div>
+
+                        <!-- Shown only when user selects No to Q1 -->
+                        <div id="form-s2-design-questions" class="hidden space-y-3">
+
+                            <!-- Colours required -->
+                            <div class="flex flex-col">
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="form-question-label" style="margin-bottom:0;">Colours required</label>
+                                    <select id="form-s2-q2-colour-type" class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm text-slate-900 flex-shrink-0" style="width:180px;">
+                                        <option value="" disabled selected>Select...</option>
+                                        <option>Solid colour (1 colour)</option>
+                                        <option>Multi-colour (&gt;1 colour)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Specify colour(s) -->
+                            <div class="flex flex-col">
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="form-question-label" style="margin-bottom:0;">Specify colour(s)</label>
+                                    <input type="text" id="form-s2-q3-colours" placeholder="e.g. Navy blue, gold" class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl outline-none transition-all text-sm text-slate-900 flex-shrink-0" style="width:180px;">
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Q4: Embroidery — hidden when user has a template -->
+                        <div id="form-s2-embroidery-question" class="flex flex-col">
+                            <div class="flex items-center justify-between gap-4">
+                                <label class="form-question-label" style="margin-bottom:0;">Do you require any embroidery? (emblem, logo, crest, text etc.)</label>
+                                <div class="flex gap-2 flex-shrink-0">
+                                    <button type="button" id="form-q3-logo-yes" onclick="setLogoChoice(true)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">Yes</button>
+                                    <button type="button" id="form-q3-logo-no" onclick="setLogoChoice(false)" class="px-4 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-900 transition-all hover:border-slate-400">No</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="form-q3-logo-upload" class="hidden flex-col">
+                            <label class="form-question-label">Optional - Upload your logo or emblem image file for a free digital mock-up</label>
+                            <input
+                                type="file"
+                                accept="image/*,.pdf,.ai,.eps,.svg"
+                                class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm text-slate-900 w-full file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white cursor-pointer"
+                                onchange="validateFileSize(this)"
+                            >
+                            <p class="text-[10px] text-slate-900 mt-0.5">Max file size: 50MB.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 mt-4">
+                        <button onclick="goToStep1()" type="button" class="flex-none font-bold py-3.5 px-4 rounded-xl border-2 border-slate-300 text-slate-900 hover:border-slate-600 transition-all text-sm">
+                            &larr; Back
+                        </button>
+                        <button onclick="goToStep3()" type="button" class="flex-1 font-extrabold py-3.5 rounded-xl transition-all shadow-md text-base" style="background-color:#000;color:#f97316;">
+                            Next &rarr;
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-900 text-center uppercase tracking-widest mt-2">
+                        Guaranteed response within 24 business hours.
+                    </p>
+                </div>
 
                 <!-- STEP 3 -->
                 <div class="form-step-3-fields hidden-step mt-3" id="form-step-3">
@@ -257,7 +369,7 @@
                     </div>
 
                     <div class="flex gap-2 mt-3">
-                        <button onclick="goToStep1()" type="button" class="flex-none font-bold py-3.5 px-4 rounded-xl border-2 border-slate-300 text-slate-900 hover:border-slate-600 transition-all text-sm">
+                        <button onclick="goToStep2()" type="button" class="flex-none font-bold py-3.5 px-4 rounded-xl border-2 border-slate-300 text-slate-900 hover:border-slate-600 transition-all text-sm">
                             &larr; Back
                         </button>
                         <button type="submit" class="flex-1 font-extrabold py-3.5 rounded-xl transition-all shadow-md text-base" style="background-color:#000;color:#f97316;">
@@ -277,7 +389,7 @@
     <!-- Logos section — partially peeking above the fold -->
     <section class="bg-white pb-10 border-t border-slate-100" style="padding-top:15px;">
         <div class="container mx-auto px-6">
-            <h2 class="text-3xl font-extrabold tracking-tight uppercase text-slate-900 mb-8 text-center">Trusted by 1,200+ UK Organisations</h2>
+            <h2 class="text-center text-2xl font-bold text-slate-700 mb-8">Trusted by 1,200+ UK Organisations</h2>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center opacity-40">
                 <div class="flex justify-center">
                     <img src="images/ts-client-1.png" alt="Client 1" class="h-8 object-contain">
@@ -320,7 +432,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-sm text-slate-600 leading-relaxed">Call us on 024 7666 7440 or fill out our contact form to speak to us about your ideas. Alternatively, you can email us at <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2655474a435566524f4355555356564a4f435408454908534d">[email&#160;protected]</a> with your requirements.</p>
+                <p class="text-sm text-slate-600 leading-relaxed">Complete our online enquiry form or call us on <a href="tel:02476667440" class="text-slate-900 font-semibold hover:underline">024 7666 7440</a> to speak to us about your ideas. Alternatively, you can email us at <a href="/cdn-cgi/l/email-protection#026a676e6e6d42766b6771717772726e6b67702c616d2c7769" class="text-slate-900 font-semibold hover:underline"><span class="__cf_email__" data-cfemail="4a222f2626250a3e232f39393f3a3a26232f38642925643f21">[email&#160;protected]</span></a> with your requirements.</p>
             </div>
 
             <!-- Step 2: Idea -->
@@ -391,8 +503,6 @@
         </div>
     </section>
 
-    </section>
-
     <!-- Our Products Section -->
     <section class="bg-slate-50 py-16 px-6 lg:px-[152px] border-t border-slate-100">
         <h2 class="text-3xl font-extrabold tracking-tight uppercase text-slate-900 mb-12 text-center">Our Products</h2>
@@ -431,7 +541,7 @@
                         </div>
                         <div class="p-5 flex flex-col gap-1">
                             <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">Scarves</h3>
-                            <p class="text-sm text-slate-500 leading-relaxed">Branded scarves for sports clubs, schools and corporate organisations.</p>
+                            <p class="text-sm text-slate-500 leading-relaxed">Available in various square or rectangle sizes that are dye printed -- ideal to complement your existing tie range.</p>
                         </div>
                     </div>
 
@@ -442,41 +552,170 @@
                         </div>
                         <div class="p-5 flex flex-col gap-1">
                             <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">Badges</h3>
-                            <p class="text-sm text-slate-500 leading-relaxed">Custom woven, embroidered or metal badges for any organisation.</p>
+                            <p class="text-sm text-slate-500 leading-relaxed">Custom made lapel badges, embroidered badges and grill badges.</p>
                         </div>
                     </div>
 
                     <!-- Card: Medals, Shields & Plaques -->
                     <div class="flex-shrink-0 w-[calc(25%-18px)] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
                         <div class="h-48 bg-slate-200 flex items-center justify-center overflow-hidden">
-                            <img src="images/products/medals.webp" alt="Medals, Shields & Plaques" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center gap-2\'><svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'currentColor\' style=\'width:3rem;height:3rem;color:#f97316;\'><path fill-rule=\'evenodd\' d=\'M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 00-.584.859 6.753 6.753 0 006.138 5.6 6.73 6.73 0 002.743 1.346A6.707 6.707 0 019.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 000 4.5h9.75a2.25 2.25 0 000-4.5h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 01-1.112-3.173 6.73 6.73 0 002.743-1.347 6.753 6.753 0 006.139-5.6.75.75 0 00-.585-.858 47.077 47.077 0 00-3.07-.543V2.62a.75.75 0 00-.658-.744 49.798 49.798 0 00-6.093-.377.75.75 0 00-.657.744zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 013.16 5.337a45.6 45.6 0 012.006-.343v.256zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 01-2.863 3.207 6.72 6.72 0 00.857-3.294z\' clip-rule=\'evenodd\'/></svg></div>'">
+                            <img src="images/products/medals.webp" alt="Medals" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center gap-2\'><svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'currentColor\' style=\'width:3rem;height:3rem;color:#f97316;\'><path d=\'M6.33 9c.34-1.083.55-2.255.55-3.447 0-.564-.035-1.12-.104-1.668-.34 1.583-.55 2.764-.55 3.447 0 .564.035 1.12.104 1.668zM7.5 2.25a.75.75 0 01.75-.75h.25c.841 0 1.648.116 2.425.338.503.106.995.28 1.457.52-.48.408-.927.843-1.333 1.296-1.142-1.073-2.468-1.88-3.85-2.404zM12 3c1.967 0 3.776.412 5.44 1.139.564.27 1.116.618 1.632 1.043.783.78 1.469 1.693 2.05 2.734-.338.51-.687 1.01-1.043 1.5a15.087 15.087 0 00-2.02-2.196c-.878 1.071-2.05 2.016-3.496 2.73.284.428.555.882.803 1.359.756-1.087 1.364-2.351 1.733-3.734.04-.19.072-.386.096-.586 2.38 1.032 4.454 2.72 5.904 4.864.375.665.7 1.371.964 2.105 1.089-2.003 1.71-4.312 1.71-6.8 0-3.537-1.172-6.812-3.15-9.455h-.268zM8.25 14.25c0-1.232.227-2.411.635-3.5.44.934.958 1.836 1.54 2.688C9.177 13.846 8.66 14.036 8.25 14.25z\'/></svg></div>'">
                         </div>
                         <div class="p-5 flex flex-col gap-1">
                             <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">Medals, Shields &amp; Plaques</h3>
-                            <p class="text-sm text-slate-500 leading-relaxed">Bespoke awards and trophies for sporting events, schools and corporate use.</p>
+                            <p class="text-sm text-slate-500 leading-relaxed">Bespoke medals, shields, plaques and trophies ideal for achievement and sports recognition.</p>
                         </div>
                     </div>
 
                     <!-- Card: Lanyards -->
                     <div class="flex-shrink-0 w-[calc(25%-18px)] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
                         <div class="h-48 bg-slate-200 flex items-center justify-center overflow-hidden">
-                            <img src="images/products/lanyards.webp" alt="Lanyards" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center gap-2\'><svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'currentColor\' style=\'width:3rem;height:3rem;color:#f97316;\'><path d=\'M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625z\'/><path d=\'M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z\'/></svg></div>'">
+                            <img src="images/products/lanyards.webp" alt="Lanyards" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center gap-2\'><svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'currentColor\' style=\'width:3rem;height:3rem;color:#f97316;\'><path d=\'M11.25 4.5H6.75a2.25 2.25 0 00-2.25 2.25v10.5a2.25 2.25 0 002.25 2.25h4.5m0-15h6.75a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-4.5m0-15v15m0-15l3-3m-3 3l-3-3\'/></svg></div>'">
                         </div>
                         <div class="p-5 flex flex-col gap-1">
                             <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">Lanyards</h3>
-                            <p class="text-sm text-slate-500 leading-relaxed">Fully branded lanyards with printed or woven logos for any occasion.</p>
+                            <p class="text-sm text-slate-500 leading-relaxed">Fully customisable lanyards in woven, dye printed and embroidered options with branded attachments.</p>
                         </div>
                     </div>
 
-                </div><!-- end track -->
-            </div><!-- end overflow-hidden -->
+                </div>
+            </div>
 
-            <!-- Prev / Next buttons -->
-            <button id="carousel-prev" onclick="carouselMove(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 w-10 h-10 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center hover:bg-slate-50 transition-all z-10" aria-label="Previous">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:1.1rem;height:1.1rem;"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd"/></svg>
+            <!-- Carousel controls -->
+            <button id="carousel-prev" onclick="carouselMove(-1)" class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-16 bg-slate-900 text-white w-12 h-12 rounded-full flex items-center justify-center transition-opacity hover:bg-slate-800">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:1.5rem;height:1.5rem;">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
             </button>
-            <button id="carousel-next" onclick="carouselMove(1)" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 w-10 h-10 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center hover:bg-slate-50 transition-all z-10" aria-label="Next">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:1.1rem;height:1.1rem;"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg>
+            <button id="carousel-next" onclick="carouselMove(1)" class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-16 bg-slate-900 text-white w-12 h-12 rounded-full flex items-center justify-center transition-opacity hover:bg-slate-800">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:1.5rem;height:1.5rem;">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- Our Ties Section -->
+    <section class="bg-slate-50 py-16 px-6 lg:px-[152px] border-t border-slate-100">
+        <h2 class="text-3xl font-extrabold tracking-tight uppercase text-slate-900 mb-12 text-center">Our Ties</h2>
+
+        <!-- Carousel wrapper -->
+        <div class="relative">
+            <div id="ties-carousel" class="overflow-hidden">
+                <div id="ties-carousel-track" class="flex gap-6 transition-transform duration-500 ease-in-out">
+
+                    <!-- Card: Corporate Ties -->
+                    <div class="flex-shrink-0 w-[calc(25%-18px)] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                        <div class="h-48 bg-slate-200 flex items-center justify-center overflow-hidden">
+                            <div class="w-full h-full flex flex-col items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:3rem;height:3rem;color:#f97316;"><path d="M12 2.25c.966 0 1.75.784 1.75 1.75v.75h3a.75.75 0 010 1.5H7.25a.75.75 0 010-1.5H10.25V4A1.75 1.75 0 0112 2.25zM7 8.25a.75.75 0 01.728.568L9.75 17.25h4.5l2.022-8.432A.75.75 0 0117 8.25H7z"/></svg></div>
+                        </div>
+                        <div class="p-5 flex flex-col gap-1">
+                            <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">Corporate Ties</h3>
+                            <p class="text-sm text-slate-500 leading-relaxed">Professional branded ties for corporate events and daily business wear.</p>
+                        </div>
+                    </div>
+
+                    <!-- Card: Club Ties -->
+                    <div class="flex-shrink-0 w-[calc(25%-18px)] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                        <div class="h-48 bg-slate-200 flex items-center justify-center overflow-hidden">
+                            <div class="w-full h-full flex flex-col items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:3rem;height:3rem;color:#f97316;"><path d="M12 2.25c.966 0 1.75.784 1.75 1.75v.75h3a.75.75 0 010 1.5H7.25a.75.75 0 010-1.5H10.25V4A1.75 1.75 0 0112 2.25zM7 8.25a.75.75 0 01.728.568L9.75 17.25h4.5l2.022-8.432A.75.75 0 0117 8.25H7z"/></svg></div>
+                        </div>
+                        <div class="p-5 flex flex-col gap-1">
+                            <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">Club Ties</h3>
+                            <p class="text-sm text-slate-500 leading-relaxed">Distinctive ties representing sports clubs, social clubs and recreational organisations.</p>
+                        </div>
+                    </div>
+
+                    <!-- Card: Promotional Ties -->
+                    <div class="flex-shrink-0 w-[calc(25%-18px)] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                        <div class="h-48 bg-slate-200 flex items-center justify-center overflow-hidden">
+                            <div class="w-full h-full flex flex-col items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:3rem;height:3rem;color:#f97316;"><path d="M12 2.25c.966 0 1.75.784 1.75 1.75v.75h3a.75.75 0 010 1.5H7.25a.75.75 0 010-1.5H10.25V4A1.75 1.75 0 0112 2.25zM7 8.25a.75.75 0 01.728.568L9.75 17.25h4.5l2.022-8.432A.75.75 0 0117 8.25H7z"/></svg></div>
+                        </div>
+                        <div class="p-5 flex flex-col gap-1">
+                            <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">Promotional Ties</h3>
+                            <p class="text-sm text-slate-500 leading-relaxed">Custom promotional ties featuring your brand logo and messaging.</p>
+                        </div>
+                    </div>
+
+                    <!-- Card: University Ties -->
+                    <div class="flex-shrink-0 w-[calc(25%-18px)] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                        <div class="h-48 bg-slate-200 flex items-center justify-center overflow-hidden">
+                            <div class="w-full h-full flex flex-col items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:3rem;height:3rem;color:#f97316;"><path d="M12 2.25c.966 0 1.75.784 1.75 1.75v.75h3a.75.75 0 010 1.5H7.25a.75.75 0 010-1.5H10.25V4A1.75 1.75 0 0112 2.25zM7 8.25a.75.75 0 01.728.568L9.75 17.25h4.5l2.022-8.432A.75.75 0 0117 8.25H7z"/></svg></div>
+                        </div>
+                        <div class="p-5 flex flex-col gap-1">
+                            <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">University Ties</h3>
+                            <p class="text-sm text-slate-500 leading-relaxed">Official university and college ties featuring institutional colours and insignia.</p>
+                        </div>
+                    </div>
+
+                    <!-- Card: Regimental Ties -->
+                    <div class="flex-shrink-0 w-[calc(25%-18px)] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                        <div class="h-48 bg-slate-200 flex items-center justify-center overflow-hidden">
+                            <div class="w-full h-full flex flex-col items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:3rem;height:3rem;color:#f97316;"><path d="M12 2.25c.966 0 1.75.784 1.75 1.75v.75h3a.75.75 0 010 1.5H7.25a.75.75 0 010-1.5H10.25V4A1.75 1.75 0 0112 2.25zM7 8.25a.75.75 0 01.728.568L9.75 17.25h4.5l2.022-8.432A.75.75 0 0117 8.25H7z"/></svg></div>
+                        </div>
+                        <div class="p-5 flex flex-col gap-1">
+                            <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">Regimental Ties</h3>
+                            <p class="text-sm text-slate-500 leading-relaxed">Authentic regimental and military ties with proper heraldry and tradition.</p>
+                        </div>
+                    </div>
+
+                    <!-- Card: School Ties -->
+                    <div class="flex-shrink-0 w-[calc(25%-18px)] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                        <div class="h-48 bg-slate-200 flex items-center justify-center overflow-hidden">
+                            <div class="w-full h-full flex flex-col items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:3rem;height:3rem;color:#f97316;"><path d="M12 2.25c.966 0 1.75.784 1.75 1.75v.75h3a.75.75 0 010 1.5H7.25a.75.75 0 010-1.5H10.25V4A1.75 1.75 0 0112 2.25zM7 8.25a.75.75 0 01.728.568L9.75 17.25h4.5l2.022-8.432A.75.75 0 0117 8.25H7z"/></svg></div>
+                        </div>
+                        <div class="p-5 flex flex-col gap-1">
+                            <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">School Ties</h3>
+                            <p class="text-sm text-slate-500 leading-relaxed">Classic school ties in traditional patterns and institutional colours.</p>
+                        </div>
+                    </div>
+
+                    <!-- Card: Custom Bow Ties -->
+                    <div class="flex-shrink-0 w-[calc(25%-18px)] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                        <div class="h-48 bg-slate-200 flex items-center justify-center overflow-hidden">
+                            <div class="w-full h-full flex flex-col items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:3rem;height:3rem;color:#f97316;"><path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z"/></svg></div>
+                        </div>
+                        <div class="p-5 flex flex-col gap-1">
+                            <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">Custom Bow Ties</h3>
+                            <p class="text-sm text-slate-500 leading-relaxed">Stylish custom bow ties in self-tie or clip-on options with full personalisation.</p>
+                        </div>
+                    </div>
+
+                    <!-- Card: Custom Clip-on Ties -->
+                    <div class="flex-shrink-0 w-[calc(25%-18px)] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                        <div class="h-48 bg-slate-200 flex items-center justify-center overflow-hidden">
+                            <div class="w-full h-full flex flex-col items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:3rem;height:3rem;color:#f97316;"><path d="M12 2.25c.966 0 1.75.784 1.75 1.75v.75h3a.75.75 0 010 1.5H7.25a.75.75 0 010-1.5H10.25V4A1.75 1.75 0 0112 2.25zM7 8.25a.75.75 0 01.728.568L9.75 17.25h4.5l2.022-8.432A.75.75 0 0117 8.25H7z"/></svg></div>
+                        </div>
+                        <div class="p-5 flex flex-col gap-1">
+                            <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">Custom Clip-on Ties</h3>
+                            <p class="text-sm text-slate-500 leading-relaxed">Convenient clip-on ties perfect for schools, hospitality and safety-critical environments.</p>
+                        </div>
+                    </div>
+
+                    <!-- Card: Association Ties -->
+                    <div class="flex-shrink-0 w-[calc(25%-18px)] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                        <div class="h-48 bg-slate-200 flex items-center justify-center overflow-hidden">
+                            <div class="w-full h-full flex flex-col items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:3rem;height:3rem;color:#f97316;"><path d="M12 2.25c.966 0 1.75.784 1.75 1.75v.75h3a.75.75 0 010 1.5H7.25a.75.75 0 010-1.5H10.25V4A1.75 1.75 0 0112 2.25zM7 8.25a.75.75 0 01.728.568L9.75 17.25h4.5l2.022-8.432A.75.75 0 0117 8.25H7z"/></svg></div>
+                        </div>
+                        <div class="p-5 flex flex-col gap-1">
+                            <h3 class="font-extrabold text-base uppercase tracking-wide text-slate-900">Association Ties</h3>
+                            <p class="text-sm text-slate-500 leading-relaxed">Official ties for charitable, professional and trade associations with custom branding.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Carousel controls -->
+            <button id="ties-carousel-prev" onclick="tiesCarouselMove(-1)" class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-16 bg-slate-900 text-white w-12 h-12 rounded-full flex items-center justify-center transition-opacity hover:bg-slate-800">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:1.5rem;height:1.5rem;">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+            <button id="ties-carousel-next" onclick="tiesCarouselMove(1)" class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-16 bg-slate-900 text-white w-12 h-12 rounded-full flex items-center justify-center transition-opacity hover:bg-slate-800">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:1.5rem;height:1.5rem;">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
             </button>
         </div>
     </section>
@@ -544,7 +783,7 @@
                     <img src="images/ts-logo-black.webp" alt="Ties Supplier Logo" class="h-9 w-auto brightness-0 invert">
                     <div class="flex flex-col">
                         <span class="font-extrabold tracking-tighter text-xl uppercase text-white">Ties Supplier</span>
-                        <span class="text-[10px] font-semibold text-slate-400 tracking-widest uppercase">Est. 2000</span>
+                        <span class="text-[10px] font-semibold text-slate-400 tracking-widest uppercase">Est. 2020</span>
                     </div>
                 </div>
                 <p class="text-sm text-slate-400 leading-relaxed max-w-xs">UK's leading bulk tie specialist. We design, manufacture &amp; supply high-quality bespoke ties for sports clubs, schools, corporate brands and more.</p>
@@ -577,12 +816,12 @@
                     </svg>
                     024 7666 7440
                 </a>
-                <a href="/cdn-cgi/l/email-protection#f48795989187b49dc097848196989d979d808dda979bda819f" class="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+                <a href="/cdn-cgi/l/email-protection#fa929f969695ba8e939f89898f8a8a96939f88d49995d48f91" class="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:1rem;height:1rem;color:#f97316;flex-shrink:0;">
                         <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z"/>
                         <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z"/>
                     </svg>
-                    <span class="__cf_email__" data-cfemail="1e6d7f727b6d5e772a7d6e6b7c72777d776a67307d71306b75">[email&#160;protected]</span>
+                    <span class="__cf_email__" data-cfemail="b2dad7dededdf2c6dbd7c1c1c7c2c2dedbd7c09cd1dd9cc7d9">[email&#160;protected]</span>
                 </a>
                 <div class="flex items-start gap-2 text-sm text-slate-400">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:1rem;height:1rem;color:#f97316;flex-shrink:0;margin-top:2px;">
@@ -599,7 +838,7 @@
 
         <!-- Bottom bar -->
         <div class="border-t border-slate-700 pt-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-            <p>&copy; 2026 i4c Publicity. All rights reserved.</p>
+            <p>&copy; 2026 Ties Supplier. All rights reserved.</p>
             <div class="flex gap-5">
                 <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
                 <a href="#" class="hover:text-white transition-colors">Terms &amp; Conditions</a>
@@ -609,6 +848,67 @@
     </footer>
 
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // Product carousel
+        let carouselIndex = 0;
+        const carouselVisible = 4;
+        const carouselTotal = 6;
+
+        function carouselMove(dir) {
+            const maxIndex = carouselTotal - carouselVisible;
+            carouselIndex = Math.max(0, Math.min(carouselIndex + dir, maxIndex));
+            const track = document.getElementById('carousel-track');
+            const cardWidth = track.children[0].offsetWidth + 24;
+            track.style.transform = 'translateX(-' + (carouselIndex * cardWidth) + 'px)';
+            document.getElementById('carousel-prev').style.opacity = carouselIndex === 0 ? '0.4' : '1';
+            document.getElementById('carousel-next').style.opacity = carouselIndex >= maxIndex ? '0.4' : '1';
+        }
+
+        // Our Ties carousel
+        let tiesCarouselIndex = 0;
+        const tiesCarouselVisible = 4;
+        const tiesCarouselTotal = 9;
+
+        function tiesCarouselMove(dir) {
+            const maxIndex = tiesCarouselTotal - tiesCarouselVisible;
+            tiesCarouselIndex = Math.max(0, Math.min(tiesCarouselIndex + dir, maxIndex));
+            const track = document.getElementById('ties-carousel-track');
+            const cardWidth = track.children[0].offsetWidth + 24;
+            track.style.transform = 'translateX(-' + (tiesCarouselIndex * cardWidth) + 'px)';
+            document.getElementById('ties-carousel-prev').style.opacity = tiesCarouselIndex === 0 ? '0.4' : '1';
+            document.getElementById('ties-carousel-next').style.opacity = tiesCarouselIndex >= maxIndex ? '0.4' : '1';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => { 
+            carouselMove(0);
+            tiesCarouselMove(0);
+        });
+
+        // FAQ accordion
+        function toggleFaq(btn) {
+            const answer = btn.nextElementSibling;
+            const icon = btn.querySelector('.faq-icon');
+            const isOpen = !answer.classList.contains('hidden');
+            document.querySelectorAll('.faq-answer').forEach(a => a.classList.add('hidden'));
+            document.querySelectorAll('.faq-icon').forEach(i => i.style.transform = '');
+            if (!isOpen) {
+                answer.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+    </script>
+
+    <script>
+        // Sticky nav scroll detection
+        const nav = document.querySelector('nav');
+        
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 0) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
         // Auto-expand message textarea to avoid scrollbar
         document.addEventListener('input', function(e) {
             if (e.target.tagName === 'TEXTAREA') {
@@ -645,6 +945,70 @@
             }
         }
 
+        function setReplicateChoice(isReplicate) {
+            const yesBtn = document.getElementById('form-s2-q1-replicate-yes');
+            const noBtn = document.getElementById('form-s2-q1-replicate-no');
+            const templateQuestion = document.getElementById('form-s2-template-question');
+            const designQuestions = document.getElementById('form-s2-design-questions');
+
+            yesBtn.style.borderColor = isReplicate ? '#f97316' : '';
+            yesBtn.style.backgroundColor = isReplicate ? '#fff7ed' : '';
+            noBtn.style.borderColor = !isReplicate ? '#f97316' : '';
+            noBtn.style.backgroundColor = !isReplicate ? '#fff7ed' : '';
+
+            if (isReplicate) {
+                templateQuestion.classList.remove('hidden');
+                designQuestions.classList.add('hidden');
+            } else {
+                templateQuestion.classList.add('hidden');
+                designQuestions.classList.remove('hidden');
+            }
+        }
+
+        function setTemplateChoice(hasTemplate) {
+            const yesBtn = document.getElementById('form-s2-q2-template-yes');
+            const noBtn = document.getElementById('form-s2-q2-template-no');
+            const templateUpload = document.getElementById('form-s2-template-upload');
+            const designQuestions = document.getElementById('form-s2-design-questions');
+            const embroideryQuestion = document.getElementById('form-s2-embroidery-question');
+
+            yesBtn.style.borderColor = hasTemplate ? '#f97316' : '';
+            yesBtn.style.backgroundColor = hasTemplate ? '#fff7ed' : '';
+            noBtn.style.borderColor = !hasTemplate ? '#f97316' : '';
+            noBtn.style.backgroundColor = !hasTemplate ? '#fff7ed' : '';
+
+            if (hasTemplate) {
+                templateUpload.classList.remove('hidden');
+                templateUpload.classList.add('flex');
+                designQuestions.classList.add('hidden');
+                embroideryQuestion.classList.add('hidden');
+            } else {
+                templateUpload.classList.add('hidden');
+                templateUpload.classList.remove('flex');
+                designQuestions.classList.remove('hidden');
+                embroideryQuestion.classList.remove('hidden');
+            }
+        }
+
+        function setLogoChoice(wantsLogo) {
+            const yesBtn = document.getElementById('form-q3-logo-yes');
+            const noBtn = document.getElementById('form-q3-logo-no');
+            const uploadField = document.getElementById('form-q3-logo-upload');
+            const emailLabel = document.getElementById('form-step2-email-label');
+            yesBtn.style.borderColor = wantsLogo ? '#f97316' : '';
+            yesBtn.style.backgroundColor = wantsLogo ? '#fff7ed' : '';
+            noBtn.style.borderColor = !wantsLogo ? '#f97316' : '';
+            noBtn.style.backgroundColor = !wantsLogo ? '#fff7ed' : '';
+            if (wantsLogo) {
+                uploadField.classList.remove('hidden');
+                uploadField.classList.add('flex');
+                emailLabel.textContent = 'Email my free quote & digital mock-up to';
+            } else {
+                uploadField.classList.add('hidden');
+                uploadField.classList.remove('flex');
+                emailLabel.textContent = 'Email my free quote to';
+            }
+        }
 
         function validateFileSize(input) {
             const maxSize = 50 * 1024 * 1024;
@@ -654,61 +1018,42 @@
             }
         }
 
-        function goToStep3() {
+        function goToStep2() {
             const orgType = document.getElementById('form-q1-organisation-type');
             const qty = document.getElementById('form-q2-quantity');
 
-            if (!orgType.value) {
-                orgType.style.borderColor = '#f97316';
-                orgType.focus();
-                setTimeout(() => orgType.style.borderColor = '', 1500);
-                return;
-            }
-            if (!qty.value || parseInt(qty.value) < 50) {
-                qty.reportValidity();
-                return;
+            // If coming from step 1, validate first
+            if (!document.getElementById('form-step-1').classList.contains('hidden-step')) {
+                if (!orgType.value) {
+                    orgType.style.borderColor = '#f97316';
+                    orgType.focus();
+                    setTimeout(() => orgType.style.borderColor = '', 1500);
+                    return;
+                }
+                if (!qty.value || parseInt(qty.value) < 50) {
+                    qty.reportValidity();
+                    return;
+                }
             }
 
             document.getElementById('form-step-1').classList.add('hidden-step');
+            document.getElementById('form-step-3').classList.add('hidden-step');
+            document.getElementById('form-step-2').classList.remove('hidden-step');
+            document.getElementById('form-step-counter').textContent = 'Step 2/3';
+        }
+
+        function goToStep3() {
+            document.getElementById('form-step-2').classList.add('hidden-step');
             document.getElementById('form-step-3').classList.remove('hidden-step');
-            document.getElementById('form-step-counter').textContent = 'Step 2/2';
+            document.getElementById('form-step-counter').textContent = 'Step 3/3';
         }
 
         function goToStep1() {
+            document.getElementById('form-step-2').classList.add('hidden-step');
             document.getElementById('form-step-3').classList.add('hidden-step');
             document.getElementById('form-step-1').classList.remove('hidden-step');
-            document.getElementById('form-step-counter').textContent = 'Step 1/2';
+            document.getElementById('form-step-counter').textContent = 'Step 1/3';
         }
-
-        // Product carousel
-        let carouselIndex = 0;
-        const carouselVisible = 4;
-        const carouselTotal = 6;
-
-        function carouselMove(dir) {
-            const maxIndex = carouselTotal - carouselVisible;
-            carouselIndex = Math.max(0, Math.min(carouselIndex + dir, maxIndex));
-            const track = document.getElementById('carousel-track');
-            const cardWidth = track.children[0].offsetWidth + 24;
-            track.style.transform = 'translateX(-' + (carouselIndex * cardWidth) + 'px)';
-            document.getElementById('carousel-prev').style.opacity = carouselIndex === 0 ? '0.4' : '1';
-            document.getElementById('carousel-next').style.opacity = carouselIndex >= maxIndex ? '0.4' : '1';
-        }
-        window.addEventListener('DOMContentLoaded', () => { carouselMove(0); });
-
-        // FAQ accordion
-        function toggleFaq(btn) {
-            const answer = btn.nextElementSibling;
-            const icon = btn.querySelector('.faq-icon');
-            const isOpen = !answer.classList.contains('hidden');
-            document.querySelectorAll('.faq-answer').forEach(a => a.classList.add('hidden'));
-            document.querySelectorAll('.faq-icon').forEach(i => i.style.transform = '');
-            if (!isOpen) {
-                answer.classList.remove('hidden');
-                icon.style.transform = 'rotate(180deg)';
-            }
-        }
-
     </script>
 </body>
 </html>
