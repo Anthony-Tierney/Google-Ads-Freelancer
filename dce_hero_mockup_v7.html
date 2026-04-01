@@ -1,0 +1,168 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@700;800&display=swap');
+  .dce-wrap * { box-sizing: border-box; margin: 0; padding: 0; }
+  .dce-wrap { font-family: 'Barlow', sans-serif; background: #fff; }
+
+  .dce-nav {
+    display: flex; align-items: center;
+    background: #fff; border-bottom: 1px solid #e5e5e5;
+    padding: 0 20px; height: 56px;
+  }
+  .dce-logo { display: flex; align-items: center; gap: 9px; margin-right: 24px; flex-shrink: 0; }
+  .dce-logo-mark {
+    width: 42px; height: 42px; background: #CC2230; border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    font-size: 17px; color: #fff; letter-spacing: -1px;
+  }
+  .dce-logo-text { display: flex; flex-direction: column; line-height: 1; }
+  .dce-logo-text span:first-child { font-size: 11.5px; font-weight: 700; color: #1a1a1a; }
+  .dce-logo-text span:last-child { font-size: 8px; font-weight: 600; color: #CC2230; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+  .dce-nav-links { display: flex; align-items: center; flex: 1; }
+  .dce-nav-item {
+    padding: 0 11px; height: 56px; display: flex; align-items: center;
+    font-size: 16.5px; font-weight: 500; color: #222; cursor: pointer;
+    border-bottom: 3px solid transparent; white-space: nowrap;
+  }
+  .dce-nav-item:hover { color: #CC2230; border-bottom-color: #CC2230; }
+  .dce-nav-item .ch { margin-left: 3px; font-size: 9px; color: #999; }
+  .dce-nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+  .dce-search-btn { background: none; border: none; cursor: pointer; padding: 4px; color: #444; }
+  .dce-contact-btn {
+    background: #CC2230; color: #fff; border: none; padding: 8px 16px;
+    font-family: 'Barlow', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; border-radius: 4px; white-space: nowrap;
+  }
+
+  .dce-hero { display: grid; grid-template-columns: 1fr 1fr; height: 556px; }
+
+  .dce-hero-left {
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 48px;
+  }
+  .dce-left-inner { width: 100%; max-width: 440px; }
+
+  .dce-hero-tag {
+    display: inline-block; font-size: 14px; font-weight: 700; color: #CC2230;
+    letter-spacing: 1.8px; text-transform: uppercase;
+    border-left: 3px solid #CC2230; padding-left: 8px; margin-bottom: 14px;
+  }
+  .dce-hero-h1 {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 50px; font-weight: 800;
+    line-height: 1.0; color: #111; margin-bottom: 12px; letter-spacing: -0.5px;
+  }
+  .dce-hero-body { font-size: 15px; color: #555; line-height: 1.65; margin-bottom: 20px; }
+
+  .dce-checklist { list-style: none; margin-bottom: 26px; display: flex; flex-direction: column; gap: 10px; }
+  .dce-checklist li { font-size: 15px; color: #222; font-weight: 500; display: flex; align-items: flex-start; gap: 8px; }
+  .dce-check { color: #CC2230; font-weight: 800; font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+  .dce-hero-btns { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .dce-btn-primary {
+    flex: 1; background: #CC2230; color: #fff; border: 2px solid #CC2230;
+    padding: 12px 0; font-family: 'Barlow', sans-serif;
+    font-size: 15px; font-weight: 700; cursor: pointer; border-radius: 4px; text-align: center;
+  }
+  .dce-btn-secondary {
+    flex: 1; background: transparent; color: #111; border: 2px solid #ccc;
+    padding: 12px 0; font-family: 'Barlow', sans-serif;
+    font-size: 15px; font-weight: 600; cursor: pointer; border-radius: 4px; text-align: center; white-space: nowrap;
+  }
+
+  .dce-divider { height: 1px; background: #eee; margin-bottom: 16px; }
+  .dce-trust { display: flex; align-items: center; gap: 12px; }
+  .dce-stars { color: #f0a500; font-size: 13px; letter-spacing: 1px; }
+  .dce-trust-text { font-size: 15px; color: #666; margin-top: 2px; }
+
+  .dce-hero-right { position: relative; overflow: hidden; }
+  .dce-hero-right img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+  .dce-hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to right, rgba(255,255,255,0.22) 0%, transparent 30%);
+  }
+  .dce-hero-badge {
+    position: absolute; bottom: 20px; left: 20px;
+    background: #CC2230; color: #fff; padding: 10px 16px;
+    border-radius: 4px; font-size: 14px; font-weight: 700; letter-spacing: 0.2px;
+  }
+  .dce-img-credit {
+    position: absolute; bottom: 6px; right: 10px;
+    font-size: 10px; color: rgba(255,255,255,0.45);
+  }
+</style>
+
+<div class="dce-wrap">
+  <nav class="dce-nav">
+    <div class="dce-logo">
+      <div class="dce-logo-mark">DCE</div>
+      <div class="dce-logo-text">
+        <span>Dust Control Environmental</span>
+        <span>Industrial Extraction Systems</span>
+      </div>
+    </div>
+    <div class="dce-nav-links">
+      <div class="dce-nav-item">Products <span class="ch">▾</span></div>
+      <div class="dce-nav-item">Installation</div>
+      <div class="dce-nav-item">LEV Testing <span class="ch">▾</span></div>
+      <div class="dce-nav-item">Spares &amp; Service <span class="ch">▾</span></div>
+      <div class="dce-nav-item">Sectors <span class="ch">▾</span></div>
+      <div class="dce-nav-item">About <span class="ch">▾</span></div>
+      <div class="dce-nav-item">Resources <span class="ch">▾</span></div>
+    </div>
+    <div class="dce-nav-right">
+      <button class="dce-search-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="dce-contact-btn">Contact Us</button>
+    </div>
+  </nav>
+
+  <section class="dce-hero">
+    <div class="dce-hero-left">
+      <div class="dce-left-inner">
+        <p class="dce-hero-tag">UK's Leading Dust Extraction Specialist</p>
+        <h1 class="dce-hero-h1">Workshop Dust<br>Extractors.</h1>
+        <p class="dce-hero-body">We design, supply and install high-performing dust extraction systems for woodworking, metal fabrication, industrial workshops and more.</p>
+        <ul class="dce-checklist">
+          <li><span class="dce-check">✓</span> Free site survey and bespoke system design included.</li>
+          <li><span class="dce-check">✓</span> Fully COSHH &amp; HSE compliant.</li>
+          <li><span class="dce-check">✓</span> Expert installation and ongoing maintenance &amp; testing packages.</li>
+        </ul>
+        <div class="dce-hero-btns">
+          <button class="dce-btn-primary">Get a Free Quote</button>
+          <button class="dce-btn-secondary">⬇ Download Brochure</button>
+        </div>
+        <div class="dce-divider"></div>
+        <div class="dce-trust">
+          <svg width="28" height="19" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;border-radius:2px;">
+            <rect width="60" height="40" fill="#012169"/>
+            <line x1="0" y1="0" x2="60" y2="40" stroke="#fff" stroke-width="8"/>
+            <line x1="60" y1="0" x2="0" y2="40" stroke="#fff" stroke-width="8"/>
+            <line x1="0" y1="0" x2="60" y2="40" stroke="#C8102E" stroke-width="5"/>
+            <line x1="60" y1="0" x2="0" y2="40" stroke="#C8102E" stroke-width="5"/>
+            <rect x="24" y="0" width="12" height="40" fill="#fff"/>
+            <rect x="0" y="14" width="60" height="12" fill="#fff"/>
+            <rect x="26" y="0" width="8" height="40" fill="#C8102E"/>
+            <rect x="0" y="16" width="60" height="8" fill="#C8102E"/>
+          </svg>
+          <div>
+            <div class="dce-stars">★★★★★</div>
+            <div class="dce-trust-text">Over 1,000+ extraction units installed since 2010.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dce-hero-right">
+      <img
+        src="https://images.pexels.com/photos/28513061/pexels-photo-28513061.jpeg?auto=compress&cs=tinysrgb&w=1200&fit=crop&h=556"
+        alt="Carpenter working in a busy workshop"
+      />
+      <div class="dce-hero-overlay"></div>
+      <div class="dce-hero-badge">15+ Years of Excellence</div>
+      <div class="dce-img-credit">Photo: Alax Matias / Pexels</div>
+    </div>
+  </section>
+</div>
