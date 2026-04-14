@@ -2,42 +2,42 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
     <url>
-        <loc>https://anthonytierney.co.uk/</loc>
+        <loc>https://anthonytierney.co.uk</loc>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
     </url>
     
     <url>
-        <loc>https://anthonytierney.co.uk/blog/</loc>
+        <loc>https://anthonytierney.co.uk/blog</loc>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
 
     <url>
-        <loc>https://anthonytierney.co.uk/news/</loc>
+        <loc>https://anthonytierney.co.uk/news</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
 
     <url>
-        <loc>https://anthonytierney.co.uk/how-to/</loc>
+        <loc>https://anthonytierney.co.uk/how-to</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
 
     <url>
-        <loc>https://anthonytierney.co.uk/resources-tools/</loc>
+        <loc>https://anthonytierney.co.uk/resources-tools</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
 
     <url>
-        <loc>https://anthonytierney.co.uk/privacy-policy/</loc>
+        <loc>https://anthonytierney.co.uk/privacy-policy</loc>
         <changefreq>yearly</changefreq>
         <priority>0.1</priority>
     </url>
     <url>
-        <loc>https://anthonytierney.co.uk/terms-of-service/</loc>
+        <loc>https://anthonytierney.co.uk/terms-of-service</loc>
         <changefreq>yearly</changefreq>
         <priority>0.1</priority>
     </url>
