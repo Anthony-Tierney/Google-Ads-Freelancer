@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Ads Structure: Flourish</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #1a3a5f 0%, #2a5298 100%);
+            color: #3c4043;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 98%;
+            max-width: 2400px;
+            padding: 40px 10px;
+        }
+        .comparison-view {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .top-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 0;
+        }
+        .node {
+            padding: 14px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .account  { background: #202124; color: white; font-weight: bold; border: 2px solid #000; min-width: 200px; }
+        .budget   { background: #fef7e0; color: #7d5c00; font-weight: bold; border: 2px dashed #f9ab00; min-width: 140px; }
+        .budget .budget-amount { font-size: 1.1rem; font-weight: 800; margin-top: 4px; color: #e37400; }
+        .search   { background: #e8f0fe; border: 2px solid #4285f4; color: #1967d2; font-weight: bold; position: relative; }
+        .search .prefix {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            opacity: 0.75;
+            margin-bottom: 3px;
+            letter-spacing: 0.03em;
+        }
+        .search .name {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+        .line-v   { width: 2px; background: #dadce0; margin: 0 auto; flex-shrink: 0; }
+        .line-h   { height: 2px; background: #dadce0; }
+        .campaigns-row {
+            display: flex;
+            justify-content: flex-start;
+            gap: 12px;
+            width: 100%;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .campaign-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 200px;
+            flex-shrink: 0;
+        }
+        .campaign-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 2px;
+            min-height: 24px;
+        }
+        .campaign-number {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #5f6368;
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .campaign-budget {
+            background: #fef7e0;
+            color: #7d5c00;
+            border: 2px dashed #f9ab00;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .campaign-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .adgroup-tree {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding-left: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .adgroup-tree::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 12px;
+            width: 2px;
+            background: #dadce0;
+        }
+        .adgroup-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+            position: relative;
+            padding-left: 20px;
+            box-sizing: border-box;
+            margin-top: 8px;
+        }
+        .adgroup-unit::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 16px;
+            width: 20px;
+            height: 2px;
+            background: #dadce0;
+        }
+        .ad-group-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #bdc1c6;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            font-size: 0.75rem;
+        }
+        .ad-group-table th {
+            background: #e8f0fe;
+            color: #1967d2;
+            font-weight: 700;
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+  <section class="comparison-view after">
+
+    <div class="top-row">
+      <div class="node account">Account: Flourish</div>
+      <div class="node budget">
+        Monthly Budget
+        <div class="budget-amount">£3,500</div>
+      </div>
+    </div>
+
+    <div class="line-v" style="height:30px; width:2px;"></div>
+    <div class="line-h" style="width:95%; margin:0 auto;"></div>
+
+    <div class="campaigns-row">
+
+      <!-- Campaign 1: Search: Brand -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">1</div>
+          <div class="campaign-budget">£600</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box;">
+            <span class="prefix">Search:</span>
+            <span class="name">Brand</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th>Click Learning</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th>Grey Matter</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th>Flourish</th></tr></thead></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 2: Search: Attachment & Trauma -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">2</div>
+          <div class="campaign-budget">£TBD</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box; background: #d4edda; border-color: #28a745; color: #155724;">
+            <span class="prefix">Search:</span>
+            <span class="name">Attachment &amp; Trauma</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Trauma Informed Training/Courses</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Trauma Awareness</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Attachment &amp; Trauma</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Trauma Informed Practice Training</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Trauma Training for Schools &amp; Teachers</th></tr></thead></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 3: Search: ESBA -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">3</div>
+          <div class="campaign-budget">£TBD</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box; background: #d4edda; border-color: #28a745; color: #155724;">
+            <span class="prefix">Search:</span>
+            <span class="name">ESBA</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">ESBA (All)</th></tr></thead></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 4: Search: Children's Services -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">4</div>
+          <div class="campaign-budget">£TBD</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box; background: #fbcfe8; border-color: #ec407a; color: #880e4f;">
+            <span class="prefix">Search:</span>
+            <span class="name">Children's Services</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fbcfe8; color: #880e4f;">Residential Childcare</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fbcfe8; color: #880e4f;">Children's Services (general)</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fbcfe8; color: #880e4f;">Foster Carers</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fbcfe8; color: #880e4f;">Adoption</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fbcfe8; color: #880e4f;">Social Workers</th></tr></thead></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 5: Search: Adult Social Care -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">5</div>
+          <div class="campaign-budget">£TBD</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box; background: #fed7aa; border-color: #fb923c; color: #7c2d12;">
+            <span class="prefix">Search:</span>
+            <span class="name">Adult Social Care</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Health &amp; Social Care</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Social Care</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Carers (general)</th></tr></thead></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 6: Search: Leadership Training -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">6</div>
+          <div class="campaign-budget">£TBD</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box; background: #fed7aa; border-color: #fb923c; color: #7c2d12;">
+            <span class="prefix">Search:</span>
+            <span class="name">Leadership Training</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Leadership Training - Adult Social Care</th></tr></thead></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 7: Search: Care Certificate Course -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">7</div>
+          <div class="campaign-budget">£TBD</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box; background: #fed7aa; border-color: #fb923c; color: #7c2d12;">
+            <span class="prefix">Search:</span>
+            <span class="name">Care Certificate Course</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Care Certificate</th></tr></thead></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 8: Search: Competitor Brand Names -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">8</div>
+          <div class="campaign-budget">£TBD</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box;">
+            <span class="prefix">Search:</span>
+            <span class="name">Competitor Brand Names</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th>Care Skills Academy</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th>Caredemy</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th>Flexebee</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th>Florence</th></tr></thead></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th>Social Care TV</th></tr></thead></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+</body>
+</html>
