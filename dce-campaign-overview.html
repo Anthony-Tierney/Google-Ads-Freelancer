@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Ads Structure: DCE</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #1a3a5f 0%, #2a5298 100%);
+            color: #3c4043;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            padding: 40px 20px;
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+        .comparison-view {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .left-section {
+            flex: 0 0 auto;
+        }
+        .right-section {
+            flex: 1 1 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .outcome-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+        }
+        .outcome-table th {
+            background: #4285f4;
+            color: white;
+            font-weight: 700;
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #dadce0;
+            font-size: 14px;
+        }
+        .outcome-table td {
+            padding: 12px;
+            border: 1px solid #dadce0;
+            color: #3c4043;
+            font-size: 14px;
+        }
+        .outcome-table tbody tr:nth-child(odd) {
+            background: #f8f9fa;
+        }
+        .outcome-table tbody tr:hover {
+            background: #e8f0fe;
+        }
+        .top-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 0;
+        }
+        .node {
+            padding: 14px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .account  { background: #202124; color: white; font-weight: bold; border: 2px solid #000; min-width: 200px; }
+        .budget   { background: #fef7e0; color: #7d5c00; font-weight: bold; border: 2px dashed #f9ab00; min-width: 140px; }
+        .budget .budget-amount { font-size: 1.1rem; font-weight: 800; margin-top: 4px; color: #e37400; }
+        .search   { background: #e8f0fe; border: 2px solid #4285f4; color: #1967d2; font-weight: bold; position: relative; }
+        .search .prefix {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            opacity: 0.75;
+            margin-bottom: 3px;
+            letter-spacing: 0.03em;
+        }
+        .search .name {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+        .line-v   { width: 2px; background: #dadce0; margin: 0 auto; flex-shrink: 0; }
+        .line-h   { height: 2px; background: #dadce0; }
+        .campaigns-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .campaign-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 200px;
+            flex-shrink: 0;
+        }
+        .campaign-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 2px;
+            min-height: 24px;
+        }
+        .campaign-number {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #5f6368;
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .campaign-budget {
+            background: #fef7e0;
+            color: #7d5c00;
+            border: 2px dashed #f9ab00;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .campaign-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .adgroup-tree {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding-left: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .adgroup-tree::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 12px;
+            width: 2px;
+            background: #dadce0;
+        }
+        .adgroup-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+            position: relative;
+            padding-left: 20px;
+            box-sizing: border-box;
+            margin-top: 8px;
+        }
+        .adgroup-unit::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 16px;
+            width: 20px;
+            height: 2px;
+            background: #dadce0;
+        }
+        .ad-group-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #bdc1c6;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            font-size: 0.75rem;
+        }
+        .ad-group-table th {
+            background: #e8f0fe;
+            color: #1967d2;
+            font-weight: 700;
+            padding: 10px;
+            text-align: center;
+        }
+        .ad-group-table tbody td {
+            background: #f8f9fa;
+            color: #3c4043;
+            font-weight: 600;
+            padding: 8px;
+            text-align: center;
+            border-top: 1px solid #dadce0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+  <div class="left-section">
+    <section class="comparison-view after">
+
+      <div class="top-row">
+        <div class="node account">Account: DCE</div>
+        <div class="node budget">
+          Monthly Budget
+          <div class="budget-amount">£1,200</div>
+        </div>
+      </div>
+
+      <div class="line-v" style="height:30px; width:2px;"></div>
+      <div class="line-h" style="width:95%; margin:0 auto;"></div>
+
+      <div class="campaigns-row">
+
+      <!-- Campaign 1: DCE Keywords -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">1</div>
+          <div class="campaign-budget">£420</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box;">
+            <span class="prefix">Search:</span>
+            <span class="name">Brand Keywords</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th>Ad Group</th></tr></thead><tbody><tr><td>DCE</td></tr></tbody></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th>Ad Group</th></tr></thead><tbody><tr><td>Dust Control Environmental</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 2: Dust Extraction / Collection -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">2</div>
+          <div class="campaign-budget">£400</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box; background: #d4edda; border-color: #28a745; color: #155724;">
+            <span class="prefix">Search:</span>
+            <span class="name">Dust Extraction / Collection</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Ad Group</th></tr></thead><tbody><tr><td>Dust Extraction for Workshops</td></tr></tbody></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Ad Group</th></tr></thead><tbody><tr><td>Dust Collection (general)</td></tr></tbody></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Ad Group</th></tr></thead><tbody><tr><td>Dust Extraction (general)</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 3: LEV -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">3</div>
+          <div class="campaign-budget">£400</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box; background: #fed7aa; border-color: #fb923c; color: #7c2d12;">
+            <span class="prefix">Search:</span>
+            <span class="name">LEV</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Ad Group</th></tr></thead><tbody><tr><td>LEV Testing &amp; Servicing</td></tr></tbody></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Ad Group</th></tr></thead><tbody><tr><td>LEV Inspections</td></tr></tbody></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Ad Group</th></tr></thead><tbody><tr><td>LEV Suppliers</td></tr></tbody></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Ad Group</th></tr></thead><tbody><tr><td>LEV Surveys</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    </section>
+  </div>
+
+  <div class="right-section">
+    <h1 style="margin-top: 0; color: #202124; font-size: 1.5rem; margin-bottom: 20px;">May 2026 - Scheduled Changes</h1>
+    <table class="outcome-table">
+      <thead>
+        <tr>
+          <th>Campaign</th>
+          <th>Changes</th>
+          <th>Target Outcome</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Brand Keywords</td>
+          <td>Users in this campaign are <span style="font-weight: bold; color: #1b5e20;">2.24x</span> more likely to convert mon-fri vs at the weekend. We will reduce the Ad Schedule for this campaign from 7 days to mon - fri only.</td>
+          <td><span style="font-weight: bold; color: #1b5e20;">£194</span> of budget freed up to increase spend on the other non-brand campaigns.</td>
+        </tr>
+        <tr>
+          <td>Dust Extraction / Collection</td>
+          <td>Removal of Sunday from Ad Schedule to make campaign mon - sat only.</td>
+          <td>Small saving of <span style="font-weight: bold; color: #1b5e20;">£25pm</span> which will be reallocated to better converting days.</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Exclusion of some small, non-converting geographic locations.</td>
+          <td><span style="font-weight: bold; color: #1b5e20;">£100</span> freed to reallocate to better performing geographic locations.</td>
+        </tr>
+        <tr>
+          <td>LEV</td>
+          <td>Users on computers found to be <span style="font-weight: bold; color: #1b5e20;">2.69x</span> more likely to convert Vs users arriving via this campaign on mobile therefore we will adjust the targeting settings for this campaign exclusively for users on desktop devices.</td>
+          <td>~<span style="font-weight: bold; color: #1b5e20;">£100pm</span> saved on mobile users which can be re-allocated to users on desktop devices in the Midlands.</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Users in the Midlands region <span style="font-weight: bold; color: #1b5e20;">3.96x</span> more likely to convert than users in the Yorkshire region for LEV-related keywords. Location targeting going forward will focus exclusively on the Midlands region.</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>
