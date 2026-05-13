@@ -19,7 +19,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&'+l:'';j.async=true;j.src=
     
     <style>
         .thank-you-container {
-            min-height: calc(100vh - 300px);
+            min-height: calc(100vh - 400px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -34,7 +34,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&'+l:'';j.async=true;j.src=
 
         .thank-you-icon {
             font-size: 5rem;
-            color: #4CAF50;
+            color: #00ff88;
             margin-bottom: 30px;
             animation: scaleIn 0.6s ease-out;
         }
@@ -42,38 +42,53 @@ j=d.createElement(s),dl=l!='dataLayer'?'&'+l:'';j.async=true;j.src=
         .thank-you-content h1 {
             font-size: 2.5rem;
             margin-bottom: 20px;
-            color: #333;
+            color: #ffffff;
             font-weight: 600;
         }
 
         .thank-you-content p {
             font-size: 1.1rem;
             line-height: 1.8;
-            color: #666;
+            color: #ffffff;
             margin-bottom: 15px;
+            opacity: 0.95;
         }
 
         .thank-you-subtext {
             font-size: 0.95rem;
-            color: #999;
+            color: #ffffff;
             margin-top: 30px;
             font-style: italic;
+            opacity: 0.85;
+        }
+
+        .thank-you-subtext a {
+            color: #00ff88;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .thank-you-subtext a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
         }
 
         .back-home-btn {
             display: inline-block;
             margin-top: 40px;
-            padding: 12px 30px;
-            background-color: #007BFF;
-            color: white;
+            padding: 14px 28px;
+            background: #00ff88;
+            color: #1a1a1a;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 10px;
             font-weight: 600;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
+            font-size: 1rem;
         }
 
         .back-home-btn:hover {
-            background-color: #0056b3;
+            background: #00e078;
+            transform: translateY(-2px);
         }
 
         @keyframes fadeInUp {
@@ -100,7 +115,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&'+l:'';j.async=true;j.src=
 
         @media (max-width: 768px) {
             .thank-you-container {
-                min-height: calc(100vh - 250px);
+                min-height: calc(100vh - 300px);
                 padding: 60px 20px;
             }
 
@@ -110,6 +125,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&'+l:'';j.async=true;j.src=
 
             .thank-you-icon {
                 font-size: 4rem;
+            }
+
+            .menu-items {
+                display: none;
+            }
+            
+            .burger-menu-icon {
+                display: block;
             }
         }
     </style>
@@ -121,23 +144,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
 <div class="page-wrapper">
-    <!-- Header Section -->
-    <header class="header">
-        <nav class="navbar">
-            <div class="nav-container">
-                <a href="https://anthonytierney.co.uk" class="logo">
-                    <span class="logo-text">Anthony Tierney</span>
-                </a>
-                <ul class="nav-menu">
-                    <li><a href="https://anthonytierney.co.uk#services" class="nav-link">Services</a></li>
-                    <li><a href="https://anthonytierney.co.uk#case-studies" class="nav-link">Case Studies</a></li>
-                    <li><a href="https://anthonytierney.co.uk#testimonials" class="nav-link">Testimonials</a></li>
-                    <li><a href="https://anthonytierney.co.uk#faq" class="nav-link">FAQ</a></li>
-                    <li><a href="https://anthonytierney.co.uk#contact" class="nav-link">Contact</a></li>
-                </ul>
+    <!-- Main Menu Section -->
+    <div class="main-menu">
+        <div class="menu-container">
+            <div class="logo-placeholder">
+                <img src="images/favicon.png" alt="Anthony Tierney">
             </div>
-        </nav>
-    </header>
+            <div class="menu-items">
+                <a href="https://anthonytierney.co.uk" class="menu-item">Home</a>
+                <a href="https://anthonytierney.co.uk#services" class="menu-item">Services</a>
+                <a href="https://anthonytierney.co.uk#case-studies" class="menu-item">Case Studies</a>
+                <a href="https://anthonytierney.co.uk#testimonials" class="menu-item">Testimonials</a>
+                <a href="https://anthonytierney.co.uk#faq" class="menu-item">FAQ</a>
+                <a href="https://anthonytierney.co.uk#contact" class="menu-item">Contact</a>
+            </div>
+        </div>
+    </div>
 
     <!-- Thank You Section -->
     <div class="thank-you-container">
