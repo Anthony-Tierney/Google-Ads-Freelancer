@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Ads Structure: Glasgow Mobile Tyres</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #1a3a5f 0%, #2a5298 100%);
+            color: #3c4043;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 98%;
+            max-width: 2400px;
+            padding: 40px 10px;
+        }
+        .comparison-view {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .top-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 0;
+        }
+        .node {
+            padding: 14px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .account  { background: #202124; color: white; font-weight: bold; border: 2px solid #000; min-width: 200px; }
+        .budget   { background: #fef7e0; color: #7d5c00; font-weight: bold; border: 2px dashed #f9ab00; min-width: 140px; }
+        .budget .budget-amount { font-size: 1.1rem; font-weight: 800; margin-top: 4px; color: #e37400; }
+        .search   { background: #e8f0fe; border: 2px solid #4285f4; color: #1967d2; font-weight: bold; position: relative; }
+        .search .prefix {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            opacity: 0.75;
+            margin-bottom: 3px;
+            letter-spacing: 0.03em;
+        }
+        .search .name {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+        .line-v   { width: 2px; background: #dadce0; margin: 0 auto; flex-shrink: 0; }
+        .line-h   { height: 2px; background: #dadce0; }
+        .campaigns-info-wrapper {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .campaigns-row {
+            display: flex;
+            justify-content: flex-start;
+            gap: 12px;
+            flex: 1;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .side-info-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+        .campaign-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            /* Increased from 950px to 1050px to fit 3 Ad Groups per row */
+            max-width: 1050px; 
+            flex-shrink: 0;
+        }
+        .campaign-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 2px;
+            min-height: 24px;
+        }
+        .campaign-number {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #5f6368;
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .campaign-budget {
+            background: #fef7e0;
+            color: #7d5c00;
+            border: 2px dashed #f9ab00;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .campaign-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .ad-group-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #bdc1c6;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            font-size: 0.75rem;
+        }
+        .ad-group-table th {
+            background: #e8f0fe;
+            color: #1967d2;
+            font-weight: 700;
+            padding: 10px;
+            text-align: center;
+        }
+        .ad-schedule {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 30px;
+            max-width: 240px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .ad-schedule-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #856404;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .ad-schedule-time {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #ff6b00;
+            text-align: center;
+        }
+        .ad-group-header {
+            background: #e8f0fe;
+            color: #1967d2;
+            font-weight: 700;
+            padding: 10px;
+            text-align: center;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: all 0.3s ease;
+            font-size: 0.75rem;
+        }
+        .ad-group-header:hover {
+            background: #d0e1f9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .ad-group-name {
+            flex: 1;
+            text-align: center;
+            font-size: 0.75rem;
+        }
+        .toggle-icon {
+            font-size: 0.6rem;
+            margin-left: 4px;
+            transition: transform 0.3s ease;
+        }
+        .ad-group-header.expanded .toggle-icon {
+            transform: rotate(180deg);
+        }
+        .keywords-list {
+            background: #f8f9fa;
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            border-radius: 0;
+            padding: 8px;
+            margin-top: 0;
+            font-size: 0.7rem;
+        }
+        .keyword {
+            padding: 6px 8px;
+            background: #ffffff;
+            border-left: 3px solid #4285f4;
+            margin-bottom: 4px;
+            border-radius: 2px;
+            color: #3c4043;
+        }
+        .keyword:last-child {
+            margin-bottom: 0;
+        }
+        .ad-group-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #5f6368;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 6px 0;
+            text-align: center;
+            border-bottom: 1px solid #dadce0;
+            margin-bottom: 4px;
+        }
+        .ad-group-container {
+            border: 1px solid #bdc1c6;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            min-width: 320px;
+            width: 100%;
+        }
+        .adgroup-tree {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: flex-start;
+            padding-top: 20px;
+        }
+        .adgroup-unit {
+            flex: 0 0 calc(33.333% - 8px);
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .ad-group-number-wrapper {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 4px;
+            min-height: 24px;
+        }
+        .ad-group-number {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #5f6368;
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .ad-group-header-row {
+            background: #e8f0fe;
+            color: #1967d2;
+            font-weight: 700;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.75rem;
+            border-bottom: 1px solid #bdc1c6;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        .ad-group-header-row.tyre-repair {
+            background: #d4edda;
+            color: #155724;
+            border-bottom-color: #28a745;
+        }
+        .ad-group-container.tyre-repair {
+            border-color: #28a745;
+        }
+        .ad-group-header.tyre-repair {
+            background: #d4edda;
+            color: #155724;
+            border-bottom-color: #28a745;
+        }
+        .keywords-list.tyre-repair {
+            background: #f1f8f4;
+            border-top-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+  <section class="comparison-view after">
+
+    <div class="top-row">
+      <div class="node account">Account: Glasgow Mobile Tyres</div>
+      <div class="node budget">
+        Monthly Budget
+        <div class="budget-amount">£1,500</div>
+      </div>
+    </div>
+
+    <div class="line-v" style="height:30px; width:2px;"></div>
+    <div class="line-h" style="width:95%; margin:0 auto;"></div>
+
+    <div class="campaigns-info-wrapper">
+      <div class="campaigns-row">
+
+      <div style="display: flex; gap: 20px; align-items: flex-start;">
+        <div style="font-weight: 700; font-size: 0.85rem; color: #3c4043; writing-mode: vertical-rl; text-orientation: mixed; padding-top: 30px;">Campaign</div>
+        <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">1</div>
+          <div class="campaign-budget">£1,500pm</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box;">
+            <span class="prefix">Search:</span>
+            <span class="name">Mobile Tyre Fitting &amp; Repair</span>
+          </div>
+          <div class="adgroup-tree" style="position: relative;">
+            <div style="position: absolute; left: -50px; top: 60px; font-weight: 700; font-size: 0.85rem; color: #3c4043; writing-mode: vertical-rl; text-orientation: mixed; white-space: nowrap;">Ad Groups</div>
+            
+            <div class="adgroup-unit">
+              <div class="ad-group-number-wrapper">
+                <div class="ad-group-number">1</div>
+              </div>
+              <div class="ad-group-container">
+                <div class="ad-group-header-row">Tyre Fitting (general)</div>
+                <div class="ad-group-header" onclick="toggleKeywords(this)">
+                  <span class="ad-group-name">Keywords</span>
+                  <span class="toggle-icon">▼</span>
+                </div>
+                <div class="keywords-list" style="display:none;">
+                  <div class="keyword">"tyre fitting"</div>
+                  <div class="keyword">"tyre fitting near me"</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="adgroup-unit">
+              <div class="ad-group-number-wrapper">
+                <div class="ad-group-number">2</div>
+              </div>
+              <div class="ad-group-container">
+                <div class="ad-group-header-row">Mobile Tyre Fitting</div>
+                <div class="ad-group-header" onclick="toggleKeywords(this)">
+                  <span class="ad-group-name">Keywords</span>
+                  <span class="toggle-icon">▼</span>
+                </div>
+                <div class="keywords-list" style="display:none;">
+                  <div class="keyword">"mobile tyre fitting"</div>
+                  <div class="keyword">"mobile tyre fitters"</div>
+                  <div class="keyword">"mobile tyre fitter"</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="adgroup-unit">
+              <div class="ad-group-number-wrapper">
+                <div class="ad-group-number">3</div>
+              </div>
+              <div class="ad-group-container">
+                <div class="ad-group-header-row">Mobile Tyres (general)</div>
+                <div class="ad-group-header" onclick="toggleKeywords(this)">
+                  <span class="ad-group-name">Keywords</span>
+                  <span class="toggle-icon">▼</span>
+                </div>
+                <div class="keywords-list" style="display:none;">
+                  <div class="keyword">"mobile tyres"</div>
+                  <div class="keyword">"mobile tyre service"</div>
+                  <div class="keyword">"mobile tyre glasgow"</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="adgroup-unit">
+              <div class="ad-group-number-wrapper">
+                <div class="ad-group-number">4</div>
+              </div>
+              <div class="ad-group-container">
+                <div class="ad-group-header-row">Glasgow Mobile Tyres</div>
+                <div class="ad-group-header" onclick="toggleKeywords(this)">
+                  <span class="ad-group-name">Keywords</span>
+                  <span class="toggle-icon">▼</span>
+                </div>
+                <div class="keywords-list" style="display:none;">
+                  <div class="keyword">"glasgow mobile tyres"</div>
+                  <div class="keyword">"glasgow tyres"</div>
+                  <div class="keyword">"mobile tyres glasgow"</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="adgroup-unit">
+              <div class="ad-group-number-wrapper">
+                <div class="ad-group-number">5</div>
+              </div>
+              <div class="ad-group-container tyre-repair">
+                <div class="ad-group-header-row tyre-repair">Tyre Repair - Mobile</div>
+                <div class="ad-group-header tyre-repair" onclick="toggleKeywords(this)">
+                  <span class="ad-group-name">Keywords</span>
+                  <span class="toggle-icon">▼</span>
+                </div>
+                <div class="keywords-list tyre-repair" style="display:none;">
+                  <div class="keyword">"mobile tyre repair"</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="adgroup-unit">
+              <div class="ad-group-number-wrapper">
+                <div class="ad-group-number">6</div>
+              </div>
+              <div class="ad-group-container tyre-repair">
+                <div class="ad-group-header-row tyre-repair">Tyre Repair</div>
+                <div class="ad-group-header tyre-repair" onclick="toggleKeywords(this)">
+                  <span class="ad-group-name">Keywords</span>
+                  <span class="toggle-icon">▼</span>
+                </div>
+                <div class="keywords-list tyre-repair" style="display:none;">
+                  <div class="keyword">"tyre repair near me"</div>
+                  <div class="keyword">"tyre repair glasgow"</div>
+                  <div class="keyword">"flat tyre repair near me"</div>
+                  <div class="keyword">"emergency tyre repair glasgow"</div>
+                  <div class="keyword">"tyre repair"</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="adgroup-unit">
+              <div class="ad-group-number-wrapper">
+                <div class="ad-group-number">7</div>
+              </div>
+              <div class="ad-group-container tyre-repair">
+                <div class="ad-group-header-row tyre-repair">Tyre Repair - 24hr</div>
+                <div class="ad-group-header tyre-repair" onclick="toggleKeywords(this)">
+                  <span class="ad-group-name">Keywords</span>
+                  <span class="toggle-icon">▼</span>
+                </div>
+                <div class="keywords-list tyre-repair" style="display:none;">
+                  <div class="keyword">"24 hour tyre repair"</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="adgroup-unit">
+              <div class="ad-group-number-wrapper">
+                <div class="ad-group-number">8</div>
+              </div>
+              <div class="ad-group-container tyre-repair">
+                <div class="ad-group-header-row tyre-repair">Tyre Repair - Emergency</div>
+                <div class="ad-group-header tyre-repair" onclick="toggleKeywords(this)">
+                  <span class="ad-group-name">Keywords</span>
+                  <span class="toggle-icon">▼</span>
+                </div>
+                <div class="keywords-list tyre-repair" style="display:none;">
+                  <div class="keyword">"emergency tyre repair"</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="adgroup-unit">
+              <div class="ad-group-number-wrapper">
+                <div class="ad-group-number">9</div>
+              </div>
+              <div class="ad-group-container">
+                <div class="ad-group-header-row">Puncture Repair</div>
+                <div class="ad-group-header" onclick="toggleKeywords(this)">
+                  <span class="ad-group-name">Keywords</span>
+                  <span class="toggle-icon">▼</span>
+                </div>
+                <div class="keywords-list" style="display:none;">
+                  <div class="keyword">"puncture repair"</div>
+                  <div class="keyword">"mobile puncture repair"</div>
+                  <div class="keyword">[puncture repair near me]</div>
+                  <div class="keyword">[puncture repair glasgow]</div>
+                  <div class="keyword">"tyre puncture"</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="adgroup-unit">
+              <div class="ad-group-number-wrapper">
+                <div class="ad-group-number">10</div>
+              </div>
+              <div class="ad-group-container">
+                <div class="ad-group-header-row">Tyre Replacement (general)</div>
+                <div class="ad-group-header" onclick="toggleKeywords(this)">
+                  <span class="ad-group-name">Keywords</span>
+                  <span class="toggle-icon">▼</span>
+                </div>
+                <div class="keywords-list" style="display:none;">
+                  <div class="keyword">"tyre replacement"</div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+      </div>
+
+    </div>
+
+    <div class="side-info-container">
+      <div class="ad-schedule">
+        <div class="ad-schedule-title">Ad Schedule</div>
+        <div class="ad-schedule-time">07:00 - 22:00</div>
+      </div>
+
+      <div class="ad-schedule">
+        <div class="ad-schedule-title">Target Location</div>
+        <div class="ad-schedule-time">To be determined</div>
+      </div>
+    </div>
+    </div>
+  </section>
+</div>
+
+<script>
+function toggleKeywords(headerElement) {
+    const keywordsList = headerElement.nextElementSibling;
+    headerElement.classList.toggle('expanded');
+    
+    if (keywordsList.style.display === 'none') {
+        keywordsList.style.display = 'block';
+    } else {
+        keywordsList.style.display = 'none';
+    }
+}
+</script>
+
+</body>
+</html>
