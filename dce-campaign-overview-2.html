@@ -429,7 +429,7 @@
         <div class="node account">Account: DCE</div>
         <div class="node budget">
           Monthly Budget
-          <div class="budget-amount">£1,200</div>
+          <div class="budget-amount">£2,000</div>
         </div>
       </div>
 
@@ -443,7 +443,7 @@
         <div class="line-v" style="height:30px;"></div>
         <div class="campaign-header">
           <div class="campaign-number">1</div>
-          <div class="campaign-budget">£420</div>
+          <div class="campaign-budget">£500</div>
         </div>
         <div class="campaign-unit">
           <div class="node search" style="width:100%; box-sizing:border-box;">
@@ -466,7 +466,7 @@
         <div class="line-v" style="height:30px;"></div>
         <div class="campaign-header">
           <div class="campaign-number">2</div>
-          <div class="campaign-budget">£400</div>
+          <div class="campaign-budget">£750</div>
         </div>
         <div class="campaign-unit">
           <div class="node search" style="width:100%; box-sizing:border-box; background: #d4edda; border-color: #28a745; color: #155724;">
@@ -492,7 +492,7 @@
         <div class="line-v" style="height:30px;"></div>
         <div class="campaign-header">
           <div class="campaign-number">3</div>
-          <div class="campaign-budget">£400</div>
+          <div class="campaign-budget">£750</div>
         </div>
         <div class="campaign-unit">
           <div class="node search" style="width:100%; box-sizing:border-box; background: #fed7aa; border-color: #fb923c; color: #7c2d12;">
@@ -526,6 +526,7 @@
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-results" onclick="switchTab('results')">Conversions</button>
       <button class="tab-btn" id="tab-cpc" onclick="switchTab('cpc')">Cost per Contact</button>
+      <button class="tab-btn" id="tab-adspend" onclick="switchTab('adspend')">Ad Spending</button>
       <button class="tab-btn" id="tab-summaries" onclick="switchTab('summaries')">Monthly Summaries</button>
     </div>
 
@@ -554,6 +555,14 @@
       </div>
     </div>
 
+    <!-- Ad Spending Panel -->
+    <div id="panel-adspend" class="tab-panel" style="display:none;">
+      <h2 class="panel-title">Ad Spending by Month</h2>
+      <div class="chart-wrap">
+        <canvas id="adSpendChart"></canvas>
+      </div>
+    </div>
+
     <!-- Monthly Summaries Panel -->
     <div id="panel-summaries" class="tab-panel" style="display:none;">
 
@@ -569,7 +578,7 @@
         </div>
         <hr class="faq-divider" id="divider-jun2026">
         <div class="faq-body collapsed" id="body-jun2026">
-          <table class="placeholder-table">
+          <table class="outcome-table">
             <thead>
               <tr>
                 <th>Campaign</th>
@@ -580,7 +589,28 @@
             </thead>
             <tbody>
               <tr>
-                <td colspan="4">No changes scheduled yet — check back soon.</td>
+                <td>Account</td>
+                <td>Further increase budget</td>
+                <td>£2,000pm spend goal</td>
+                <td class="actioned-cell"></td>
+              </tr>
+              <tr>
+                <td>Dust Extraction / Collection</td>
+                <td>Create a new Ad Group specifically for 'dust and fume extractors'</td>
+                <td>Drive traffic through an unexplored keyword</td>
+                <td class="actioned-cell"></td>
+              </tr>
+              <tr>
+                <td>Website</td>
+                <td>Introduce product comparison table</td>
+                <td>Help users decide which DCE product is right for their unique circumstance</td>
+                <td class="actioned-cell"></td>
+              </tr>
+              <tr>
+                <td>Website</td>
+                <td>Simplify products drop-down menu</td>
+                <td>Help users navigate faster to appropriate categories</td>
+                <td class="actioned-cell"></td>
               </tr>
             </tbody>
           </table>
@@ -655,11 +685,13 @@
   /* ── Tab switching ── */
   function switchTab(tab) {
     document.getElementById('panel-results').style.display   = tab === 'results'   ? 'block' : 'none';
-    document.getElementById('panel-cpc').style.display       = tab === 'cpc'        ? 'block' : 'none';
+    document.getElementById('panel-cpc').style.display       = tab === 'cpc'       ? 'block' : 'none';
+    document.getElementById('panel-adspend').style.display   = tab === 'adspend'   ? 'block' : 'none';
     document.getElementById('panel-summaries').style.display = tab === 'summaries' ? 'block' : 'none';
-    document.getElementById('tab-results').classList.toggle('active',    tab === 'results');
-    document.getElementById('tab-cpc').classList.toggle('active',        tab === 'cpc');
-    document.getElementById('tab-summaries').classList.toggle('active',  tab === 'summaries');
+    document.getElementById('tab-results').classList.toggle('active',   tab === 'results');
+    document.getElementById('tab-cpc').classList.toggle('active',       tab === 'cpc');
+    document.getElementById('tab-adspend').classList.toggle('active',   tab === 'adspend');
+    document.getElementById('tab-summaries').classList.toggle('active', tab === 'summaries');
   }
 
   /* ── FAQ toggle ── */
@@ -921,6 +953,64 @@
       : '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels';
     cpcChart.update();
   }
+
+  /* ── Ad Spending line chart ── */
+  var adSpendMonthly = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38];
+
+  var adSpendCtx = document.getElementById('adSpendChart').getContext('2d');
+  new Chart(adSpendCtx, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Ad Spend',
+        data: adSpendMonthly,
+        borderColor: '#f9ab00',
+        backgroundColor: 'rgba(249,171,0,0.08)',
+        pointBackgroundColor: adSpendMonthly.map(function(v) { return v === 0 ? 'rgba(0,0,0,0)' : '#f9ab00'; }),
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: adSpendMonthly.map(function(v) { return v === 0 ? 0 : 5; }),
+        pointHoverRadius: 7,
+        borderWidth: 2.5,
+        tension: 0.35,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        datalabels: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(item) {
+              return item.parsed.y === 0 ? ' No data' : ' Ad Spend: £' + item.parsed.y.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 11 }, color: '#5f6368' }
+        },
+        y: {
+          min: 0,
+          max: 1600,
+          grid: { color: '#f0f0f0' },
+          ticks: {
+            stepSize: 200,
+            font: { size: 11 },
+            color: '#5f6368',
+            callback: function(val) { return '£' + val.toLocaleString('en-GB'); }
+          },
+          title: { display: true, text: 'Ad Spend (£)', color: '#5f6368', font: { size: 12 } }
+        }
+      }
+    }
+  });
 </script>
 </body>
 </html>
