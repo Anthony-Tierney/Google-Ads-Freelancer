@@ -411,6 +411,217 @@
         .legend-item.dimmed {
             opacity: 0.35;
         }
+
+        /* Globe icon button and map modal */
+        .globe-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #4285f4;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: background 0.2s, box-shadow 0.2s;
+            font-size: 20px;
+            z-index: 100;
+        }
+        .globe-button:hover {
+            background: #1967d2;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        #panel-results {
+            position: relative;
+        }
+        .map-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        .map-modal.show {
+            display: flex;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .map-modal-content {
+            background-color: #fff;
+            margin: auto;
+            padding: 0;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            width: 95%;
+            height: 90%;
+            max-width: 1400px;
+            max-height: 800px;
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .map-modal-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #dadce0;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            flex-shrink: 0;
+            gap: 24px;
+        }
+        .map-modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: #202124;
+            flex: 1;
+            text-align: center;
+        }
+        .map-close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #5f6368;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        .map-close-btn:hover {
+            background: #f0f0f0;
+        }
+        .map-modal-body {
+            display: flex;
+            flex: 1;
+            gap: 0;
+            overflow: hidden;
+        }
+.toggle-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #dadce0;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: #5f6368;
+            transition: all 0.2s;
+        }
+        .toggle-btn:hover {
+            border-color: #4285f4;
+            color: #4285f4;
+        }
+        .toggle-btn.active {
+            background: #4285f4;
+            color: white;
+            border-color: #4285f4;
+        }
+        .map-table-panel {
+            flex: 0 0 320px;
+            border-right: 1px solid #dadce0;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+        }
+        .map-table-header {
+            padding: 12px 16px;
+            background: #e8f0fe;
+            border-bottom: 1px solid #dadce0;
+            flex-shrink: 0;
+        }
+        .map-table-header h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #1967d2;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .map-table-wrapper {
+            overflow-y: auto;
+            flex: 1;
+        }
+        .conversion-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .conversion-table thead {
+            position: sticky;
+            top: 0;
+            background: #e8f0fe;
+            z-index: 10;
+        }
+        .conversion-table th {
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 700;
+            color: #1967d2;
+            border-bottom: 1px solid #dadce0;
+        }
+        .conversion-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e8e8e8;
+            color: #3c4043;
+        }
+        .conversion-table tbody tr:hover {
+            background: #f0f0f0;
+        }
+        .conversion-table .city-cell {
+            font-weight: 500;
+        }
+        .conversion-table .conversions-cell {
+            text-align: right;
+            font-weight: 600;
+            color: #1967d2;
+        }
+        #conversionMap {
+            flex: 1;
+        }
+        .leaflet-container {
+            background: #f5f5f5;
+        }
+        .map-legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            font-size: 12px;
+            z-index: 400;
+        }
+        .legend-item-map {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
         .legend-swatch {
             width: 13px;
             height: 13px;
@@ -438,7 +649,6 @@
 
       <div class="campaigns-row">
 
-      <!-- Campaign 1: DCE Keywords -->
       <div class="campaign-wrapper">
         <div class="line-v" style="height:30px;"></div>
         <div class="campaign-header">
@@ -461,7 +671,6 @@
         </div>
       </div>
 
-      <!-- Campaign 2: Dust Extraction / Collection -->
       <div class="campaign-wrapper">
         <div class="line-v" style="height:30px;"></div>
         <div class="campaign-header">
@@ -487,7 +696,6 @@
         </div>
       </div>
 
-      <!-- Campaign 3: LEV -->
       <div class="campaign-wrapper">
         <div class="line-v" style="height:30px;"></div>
         <div class="campaign-header">
@@ -522,7 +730,6 @@
 
   <div class="right-section">
 
-    <!-- Tab Navigation -->
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-results" onclick="switchTab('results')">Conversions</button>
       <button class="tab-btn" id="tab-cpc" onclick="switchTab('cpc')">Cost per Contact</button>
@@ -530,16 +737,25 @@
       <button class="tab-btn" id="tab-summaries" onclick="switchTab('summaries')">Monthly Summaries</button>
     </div>
 
-    <!-- Results Panel -->
     <div id="panel-results" class="tab-panel">
       <h2 class="panel-title">Conversions by Month</h2>
       <div class="chart-wrap">
         <canvas id="conversionsChart"></canvas>
       </div>
       <div class="chart-legend" id="chartLegend"></div>
+      <button class="globe-button" onclick="openMapModal()" title="View conversion hotspots on map">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M12 22a10 10 0 0 1-10-10" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M2 12h20" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M12 2c-2.21 0-4 4.48-4 10s1.79 10 4 10" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M12 2c2.21 0 4 4.48 4 10s-1.79 10-4 10" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </button>
+
     </div>
 
-    <!-- Cost per Contact Panel -->
     <div id="panel-cpc" class="tab-panel" style="display:none;">
       <div class="chart-header">
         <h2 class="panel-title">Cost per Contact by Month</h2>
@@ -555,7 +771,6 @@
       </div>
     </div>
 
-    <!-- Ad Spending Panel -->
     <div id="panel-adspend" class="tab-panel" style="display:none;">
       <h2 class="panel-title">Ad Spending by Month</h2>
       <div class="chart-wrap">
@@ -563,10 +778,8 @@
       </div>
     </div>
 
-    <!-- Monthly Summaries Panel -->
     <div id="panel-summaries" class="tab-panel" style="display:none;">
 
-      <!-- June 2026 Section -->
       <div class="faq-section">
         <div class="faq-toggle" onclick="toggleFaq('jun2026')">
           <h1>June 2026 - Scheduled Changes</h1>
@@ -617,7 +830,6 @@
         </div>
       </div>
 
-      <!-- May 2026 Section -->
       <div class="faq-section">
         <div class="faq-toggle" onclick="toggleFaq('may2026')">
           <h1>May 2026 - Scheduled Changes</h1>
@@ -674,10 +886,11 @@
         </div>
       </div>
 
-    </div><!-- end panel-summaries -->
-
-  </div>
+    </div></div>
 </div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -953,6 +1166,369 @@
       : '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels';
     cpcChart.update();
   }
+  // ========== MAP FUNCTIONALITY ==========
+  
+  const cityCoordinates = {
+    'London': {lat: 51.5074, lng: -0.1278},
+    'Wakefield': {lat: 53.6832, lng: -1.4969},
+    'Birmingham': {lat: 52.5086, lng: -1.8754},
+    'Manchester': {lat: 53.4808, lng: -2.2426},
+    'Leeds': {lat: 53.8008, lng: -1.5491},
+    'Darnall': {lat: 53.3700, lng: -1.3700},
+    'Leicester': {lat: 52.6369, lng: -1.1398},
+    'Chipping Norton': {lat: 51.9819, lng: -1.5475},
+    'Ossett': {lat: 53.6614, lng: -1.5862},
+    'Widnes': {lat: 53.3667, lng: -2.7273},
+    'Tamworth': {lat: 52.6386, lng: -1.6947},
+    'Penistone': {lat: 53.5044, lng: -1.5931},
+    'Barnsley': {lat: 53.5502, lng: -1.4778},
+    'Lancaster': {lat: 54.0459, lng: -2.8007},
+    'Bradford': {lat: 53.7954, lng: -1.7592},
+    'Macclesfield': {lat: 53.2596, lng: -2.1291},
+    'Scunthorpe': {lat: 53.5848, lng: -0.6455},
+    'Belper': {lat: 53.0217, lng: -1.4633},
+    'Portsmouth': {lat: 50.7959, lng: -1.0872},
+    'Rochdale': {lat: 53.6089, lng: -2.1564},
+    'Worksop': {lat: 53.3036, lng: -1.1219},
+    'Ulverston': {lat: 54.1639, lng: -3.1153},
+    'Halifax': {lat: 53.7200, lng: -1.8562},
+    'Selby': {lat: 53.8033, lng: -1.1658},
+    'Kingston upon Hull': {lat: 53.7447, lng: -0.3367},
+    'Sheffield': {lat: 53.3811, lng: -1.4701},
+    'Nottingham': {lat: 52.9548, lng: -1.1581},
+    'Liverpool': {lat: 53.4084, lng: -2.9916},
+    'Stoke-on-Trent': {lat: 53.0264, lng: -2.1793},
+    'Warrington': {lat: 53.3878, lng: -2.5961},
+    'Reading': {lat: 51.4545, lng: -0.9757},
+    'Ipswich': {lat: 52.0534, lng: 1.1446},
+    'Lowestoft': {lat: 52.4791, lng: 1.7489},
+    'Harlow': {lat: 51.7603, lng: 0.1034},
+    'Hove': {lat: 50.8597, lng: -0.1723},
+    'Bath': {lat: 51.3788, lng: -2.3613},
+    'Worcester': {lat: 52.1896, lng: -2.2262},
+    'Salford': {lat: 53.4761, lng: -2.2881},
+    'Colchester': {lat: 51.8947, lng: 0.9024},
+    'Dagenham': {lat: 51.5424, lng: 0.1767},
+    'Sunderland': {lat: 54.9045, lng: -1.3857},
+    'Linthwaite': {lat: 53.6500, lng: -1.8500},
+    'Lofthouse': {lat: 53.6800, lng: -1.5800},
+    'Staveley': {lat: 53.2200, lng: -1.3800},
+    'Ashford': {lat: 51.1454, lng: 0.8752},
+    'Mansfield': {lat: 53.1451, lng: -1.1977},
+    'Brighouse': {lat: 53.7000, lng: -1.8000},
+    'Wellingborough': {lat: 52.2979, lng: -0.6956},
+    'Stockport': {lat: 53.4062, lng: -2.1616},
+    'Bridgwater': {lat: 51.1289, lng: -2.9844},
+    'Shepshed': {lat: 52.7476, lng: -1.3055},
+    'Batley': {lat: 53.6460, lng: -1.6540},
+    'Middlesbrough': {lat: 54.5773, lng: -1.2390},
+    'Cleckheaton': {lat: 53.6600, lng: -1.7800},
+    'Warwick': {lat: 52.2787, lng: -1.5845},
+    'Dukinfield': {lat: 53.5067, lng: -2.1367},
+    'Ormskirk': {lat: 53.5757, lng: -2.7164},
+    'Kidsgrove': {lat: 53.0835, lng: -2.1500},
+    'Royston': {lat: 52.0439, lng: -0.0152},
+    'Sudbury': {lat: 52.0443, lng: 0.7270},
+    'Speke': {lat: 53.3656, lng: -2.9167},
+    'Gedling': {lat: 52.9700, lng: -1.1300},
+    'The Royal Town of Sutton Coldfield': {lat: 52.5642, lng: -1.8254},
+    'West Bromwich': {lat: 52.5092, lng: -2.0082},
+    'Bicester': {lat: 51.8957, lng: -1.1580},
+    'Fakenham': {lat: 52.8310, lng: 0.8330},
+    'Stanningley': {lat: 53.8100, lng: -1.7200},
+    'Sherburn in Elmet': {lat: 53.8000, lng: -1.3300},
+    'Ashton-on-Ribble': {lat: 53.7500, lng: -2.7000},
+    'Ellesmere Port': {lat: 53.2651, lng: -2.8117},
+    'Stourbridge': {lat: 52.3973, lng: -2.1558},
+    'Alfreton': {lat: 53.0450, lng: -1.3800},
+    'Long Eaton': {lat: 52.8900, lng: -1.3300},
+    'Aylesford': {lat: 51.2800, lng: 0.4000},
+    'Newcastle-under-Lyme': {lat: 53.0110, lng: -2.2150},
+    'Barrow upon Soar': {lat: 52.7300, lng: -1.1700},
+    'Cramlington': {lat: 55.0600, lng: -1.4700},
+    'Redditch': {lat: 52.3050, lng: -1.9450},
+    'Birchwood': {lat: 53.3400, lng: -2.3700},
+    'Cannock': {lat: 52.6900, lng: -1.9800},
+    'Witham Saint Hughs': {lat: 52.9500, lng: -0.6000}
+  };
+  
+  const conversionLocations = [
+    {city: 'London', conversions: 19.56},
+    {city: 'Wakefield', conversions: 10.0},
+    {city: 'Birmingham', conversions: 8.0},
+    {city: 'Manchester', conversions: 6.0},
+    {city: 'Leeds', conversions: 3.0},
+    {city: 'Darnall', conversions: 3.0},
+    {city: 'Leicester', conversions: 3.0},
+    {city: 'Chipping Norton', conversions: 3.0},
+    {city: 'Ossett', conversions: 2.0},
+    {city: 'Widnes', conversions: 2.0},
+    {city: 'Tamworth', conversions: 2.0},
+    {city: 'Penistone', conversions: 2.0},
+    {city: 'Barnsley', conversions: 2.0},
+    {city: 'Witham Saint Hughs', conversions: 2.0},
+    {city: 'Lancaster', conversions: 2.0},
+    {city: 'Bradford', conversions: 2.0},
+    {city: 'Macclesfield', conversions: 2.0},
+    {city: 'Scunthorpe', conversions: 1.0},
+    {city: 'Belper', conversions: 1.0},
+    {city: 'Portsmouth', conversions: 1.0},
+    {city: 'Rochdale', conversions: 1.0},
+    {city: 'Worksop', conversions: 1.0},
+    {city: 'Ulverston', conversions: 1.0},
+    {city: 'Halifax', conversions: 1.0},
+    {city: 'Selby', conversions: 1.0},
+    {city: 'Kingston upon Hull', conversions: 1.0},
+    {city: 'Linthwaite', conversions: 1.0},
+    {city: 'Lofthouse', conversions: 1.0},
+    {city: 'Staveley', conversions: 1.0},
+    {city: 'Ashford', conversions: 1.0},
+    {city: 'Mansfield', conversions: 1.0},
+    {city: 'Brighouse', conversions: 1.0},
+    {city: 'Wellingborough', conversions: 1.0},
+    {city: 'Worcester', conversions: 1.0},
+    {city: 'Sunderland', conversions: 1.0},
+    {city: 'Stockport', conversions: 1.0},
+    {city: 'Bridgwater', conversions: 1.0},
+    {city: 'Shepshed', conversions: 1.0},
+    {city: 'Batley', conversions: 1.0},
+    {city: 'Middlesbrough', conversions: 1.0},
+    {city: 'Colchester', conversions: 1.0},
+    {city: 'Cleckheaton', conversions: 1.0},
+    {city: 'Warwick', conversions: 1.0},
+    {city: 'Dukinfield', conversions: 1.0},
+    {city: 'Ormskirk', conversions: 1.0},
+    {city: 'Sheffield', conversions: 1.0},
+    {city: 'Kidsgrove', conversions: 1.0},
+    {city: 'Warrington', conversions: 1.0},
+    {city: 'Harlow', conversions: 1.0},
+    {city: 'Liverpool', conversions: 1.0},
+    {city: 'Royston', conversions: 1.0},
+    {city: 'Dagenham', conversions: 1.0},
+    {city: 'Sudbury', conversions: 1.0},
+    {city: 'Speke', conversions: 1.0},
+    {city: 'Gedling', conversions: 1.0},
+    {city: 'Salford', conversions: 1.0},
+    {city: 'The Royal Town of Sutton Coldfield', conversions: 1.0},
+    {city: 'West Bromwich', conversions: 1.0},
+    {city: 'Bicester', conversions: 1.0},
+    {city: 'Bath', conversions: 1.0},
+    {city: 'Fakenham', conversions: 1.0},
+    {city: 'Stanningley', conversions: 1.0},
+    {city: 'Ipswich', conversions: 1.0},
+    {city: 'Lowestoft', conversions: 1.0},
+    {city: 'Sherburn in Elmet', conversions: 1.0},
+    {city: 'Ashton-on-Ribble', conversions: 1.0},
+    {city: 'Ellesmere Port', conversions: 1.0},
+    {city: 'Stourbridge', conversions: 1.0},
+    {city: 'Alfreton', conversions: 1.0},
+    {city: 'Nottingham', conversions: 1.0},
+    {city: 'Hove', conversions: 1.0},
+    {city: 'Cannock', conversions: 1.0},
+    {city: 'Long Eaton', conversions: 1.0},
+    {city: 'Aylesford', conversions: 1.0},
+    {city: 'Newcastle-under-Lyme', conversions: 1.0},
+    {city: 'Barrow upon Soar', conversions: 1.0},
+    {city: 'Stoke-on-Trent', conversions: 1.0},
+    {city: 'Cramlington', conversions: 1.0},
+    {city: 'Redditch', conversions: 1.0},
+    {city: 'Birchwood', conversions: 1.0},
+    {city: 'Reading', conversions: 0.98}
+  ];
+  
+  const regions = {
+    'London': {coords: [[51.7, -0.5], [51.4, -0.5], [51.4, 0.1], [51.7, 0.1]], color: '#EA4335', cities: ['London']},
+    'South East': {coords: [[51.5, -0.5], [51.0, -0.5], [51.0, 1.5], [51.5, 1.5]], color: '#FBBC04', cities: ['Portsmouth', 'Reading', 'Harlow', 'Colchester', 'Dagenham', 'Aylesford', 'Hove', 'Ipswich', 'Bicester']},
+    'South West': {coords: [[51.5, -3.5], [50.5, -3.5], [50.5, -2.0], [51.5, -2.0]], color: '#34A853', cities: ['Bath', 'Bridgwater']},
+    'East Midlands': {coords: [[53.5, -1.5], [52.0, -1.5], [52.0, 0.5], [53.5, 0.5]], color: '#4285F4', cities: ['Nottingham', 'Leicester', 'Mansfield', 'Belper', 'Alfreton', 'Long Eaton', 'Ashford', 'Wellingborough']},
+    'East of England': {coords: [[53.0, 0.5], [52.0, 0.5], [52.0, 1.8], [53.0, 1.8]], color: '#9C27B0', cities: ['Lowestoft', 'Fakenham', 'Sudbury']},
+    'West Midlands': {coords: [[53.0, -2.5], [52.0, -2.5], [52.0, -1.5], [53.0, -1.5]], color: '#FF6D00', cities: ['Birmingham', 'Coventry', 'Stoke-on-Trent', 'Tamworth', 'Cannock', 'Redditch', 'Worcester', 'West Bromwich', 'Warwick', 'The Royal Town of Sutton Coldfield', 'Stourbridge', 'Newcastle-under-Lyme']},
+    'North West': {coords: [[54.5, -3.5], [53.0, -3.5], [53.0, -2.0], [54.5, -2.0]], color: '#00BCD4', cities: ['Manchester', 'Liverpool', 'Lancaster', 'Warrington', 'Stockport', 'Salford', 'Macclesfield', 'Ellesmere Port', 'Ormskirk', 'Speke', 'Birchwood']},
+    'Yorkshire': {coords: [[54.5, -2.0], [53.0, -2.0], [53.0, -1.0], [54.5, -1.0]], color: '#E91E63', cities: ['Leeds', 'Sheffield', 'Bradford', 'Wakefield', 'Halifax', 'Darnall', 'Ossett', 'Penistone', 'Barnsley', 'Ulverston', 'Linthwaite', 'Lofthouse', 'Staveley', 'Selby', 'Brighouse', 'Batley', 'Cleckheaton', 'Dukinfield', 'Kidsgrove', 'Sherburn in Elmet', 'Stanningley', 'Worksop', 'Scunthorpe', 'Rochdale']},
+    'North East': {coords: [[55.5, -2.5], [54.0, -2.5], [54.0, -0.5], [55.5, -0.5]], color: '#00796B', cities: ['Sunderland', 'Middlesbrough', 'Cramlington']}
+  };
+  
+  function calculateRegionTotals() {
+    const totals = {};
+    Object.keys(regions).forEach(r => totals[r] = 0);
+    conversionLocations.forEach(loc => {
+      Object.keys(regions).forEach(r => {
+        if (regions[r].cities.includes(loc.city)) {
+          totals[r] += loc.conversions;
+        }
+      });
+    });
+    return totals;
+  }
+  
+  const regionTotals = calculateRegionTotals();
+  let conversionMap = null;
+  let currentMapView = 'city';
+  
+  function populateConversionTable() {
+    const tbody = document.getElementById('conversionTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    if (currentMapView === 'regional') {
+      const sorted = Object.keys(regionTotals)
+        .map(r => ({name: r, conversions: regionTotals[r]}))
+        .sort((a, b) => b.conversions - a.conversions);
+      sorted.forEach(item => {
+        const row = tbody.insertRow();
+        row.innerHTML = '<td class="city-cell">' + item.name + '</td><td class="conversions-cell">' + Math.round(item.conversions) + '</td>';
+      });
+    } else {
+      const sorted = [...conversionLocations].sort((a, b) => b.conversions - a.conversions);
+      sorted.forEach(loc => {
+        const row = tbody.insertRow();
+        row.innerHTML = '<td class="city-cell">' + loc.city + '</td><td class="conversions-cell">' + Math.round(loc.conversions) + '</td>';
+      });
+    }
+  }
+  
+  function openMapModal() {
+    const modal = document.getElementById('mapModal');
+    if (modal) {
+      modal.classList.add('show');
+      populateConversionTable();
+      setTimeout(() => initializeMap(), 300);
+    }
+  }
+  
+  function closeMapModal() {
+    const modal = document.getElementById('mapModal');
+    if (modal) modal.classList.remove('show');
+    if (conversionMap) {
+      conversionMap.remove();
+      conversionMap = null;
+    }
+  }
+  
+  function switchMapView(newView) {
+    currentMapView = newView;
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    if (conversionMap) {
+      conversionMap.remove();
+      conversionMap = null;
+    }
+    initializeMap();
+    populateConversionTable();
+  }
+  
+  function initializeMap() {
+    if (conversionMap) return;
+    const mapEl = document.getElementById('conversionMap');
+    if (!mapEl) return;
+    
+    conversionMap = L.map(mapEl).setView([52.5, -1.5], 6);
+    
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      maxZoom: 19,
+      subdomains: 'abcd'
+    }).addTo(conversionMap);
+    
+    if (currentMapView === 'regional') {
+      const regionColors = {
+        'London': '#EA4335',
+        'South East': '#FBBC04',
+        'South West': '#34A853',
+        'East Midlands': '#4285F4',
+        'East of England': '#9C27B0',
+        'West Midlands': '#FF6D00',
+        'North West': '#00BCD4',
+        'Yorkshire': '#E91E63',
+        'North East': '#00796B'
+      };
+      
+      // Fetch accurate region boundaries
+      fetch('https://raw.githubusercontent.com/martinjc/UK-GeoJSON/master/json/eng/eer.json')
+        .then(response => response.json())
+        .then(data => {
+          L.geoJSON(data, {
+            style: (feature) => {
+              // The dataset uses "Yorkshire and The Humber", so we map it to your custom "Yorkshire" key
+              let regionName = feature.properties.EER13NM;
+              if (regionName === 'Yorkshire and The Humber') regionName = 'Yorkshire';
+
+              return {
+                fillColor: regionColors[regionName] || '#cccccc',
+                weight: 2,
+                opacity: 0.9,
+                color: '#333',
+                fillOpacity: 0.45
+              };
+            },
+            onEachFeature: (feature, layer) => {
+              let regionName = feature.properties.EER13NM;
+              if (regionName === 'Yorkshire and The Humber') regionName = 'Yorkshire';
+
+              const total = Math.round(regionTotals[regionName] || 0);
+              layer.bindPopup(regionName + '<br/>Conversions: ' + total);
+              
+              // Calculate center of the polygon for your labels
+              const bounds = layer.getBounds();
+              const center = bounds.getCenter();
+              
+              L.marker(center, {
+                icon: L.divIcon({
+                  className: 'region-label',
+                  html: '<div style="font-weight: bold; font-size: 18px; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px; text-align: center;">' + total + '</div>',
+                  iconSize: [60, 40]
+                })
+              }).addTo(conversionMap);
+            }
+          }).addTo(conversionMap);
+        })
+        .catch(error => console.error("Error loading regional boundaries:", error));
+
+    } else {
+      // City view - bubbles
+      const conversions = conversionLocations.map(l => l.conversions);
+      const minConv = Math.min(...conversions);
+      const maxConv = Math.max(...conversions);
+      
+      conversionLocations.forEach(loc => {
+        const coords = cityCoordinates[loc.city];
+        if (coords) {
+          const ratio = (loc.conversions - minConv) / (maxConv - minConv);
+          const color = ratio > 0.7 ? '#ea4335' : ratio > 0.4 ? '#f9ab00' : '#4285f4';
+          const radius = 8 + (loc.conversions / maxConv) * 20;
+          
+          L.circleMarker([coords.lat, coords.lng], {
+            radius: radius,
+            fillColor: color,
+            color: '#fff',
+            weight: 2,
+            opacity: 0.8,
+            fillOpacity: 0.7
+          }).bindPopup(loc.city + '<br/>Conversions: ' + Math.round(loc.conversions)).addTo(conversionMap);
+        }
+      });
+    }
+    
+    const legend = L.control({position: 'bottomright'});
+    legend.onAdd = () => {
+      const div = L.DomUtil.create('div', 'map-legend');
+      div.innerHTML = '<strong>Conversion Density</strong><br/><div class="legend-item-map"><div class="legend-color" style="background:#ea4335;"></div>High</div><div class="legend-item-map"><div class="legend-color" style="background:#f9ab00;"></div>Medium</div><div class="legend-item-map"><div class="legend-color" style="background:#4285f4;"></div>Low</div>';
+      return div;
+    };
+    legend.addTo(conversionMap);
+    
+    setTimeout(() => { if (conversionMap) conversionMap.invalidateSize(); }, 300);
+  }
+  
+    document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('mapModal');
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeMapModal();
+      });
+    }
+  });
+
 
   /* ── Ad Spending line chart ── */
   var adSpendMonthly = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38];
@@ -1012,5 +1588,39 @@
     }
   });
 </script>
+
+<div id="mapModal" class="map-modal">
+  <div class="map-modal-content">
+    <div class="map-modal-header">
+      <h2>Conversion Hotspots - England</h2>
+      <div style="display: flex; gap: 8px; margin-left: auto;">
+        <button class="toggle-btn active" onclick="switchMapView('city')">City View</button>
+        <button class="toggle-btn" onclick="switchMapView('regional')">Regional View</button>
+      </div>
+      <button class="map-close-btn" onclick="closeMapModal()">&times;</button>
+    </div>
+    <div class="map-modal-body">
+      <div class="map-table-panel">
+        <div class="map-table-header">
+          <h3>Conversions by City</h3>
+        </div>
+        <div class="map-table-wrapper">
+          <table class="conversion-table">
+            <thead>
+              <tr>
+                <th>City</th>
+                <th>Conversions</th>
+              </tr>
+            </thead>
+            <tbody id="conversionTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="conversionMap"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
