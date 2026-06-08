@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Ads Structure: DCE</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #1a3a5f 0%, #2a5298 100%);
+            color: #3c4043;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            padding: 40px 20px;
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+        .comparison-view {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .left-section {
+            flex: 0 0 auto;
+        }
+        .right-section {
+            flex: 1 1 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .outcome-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+        }
+        .outcome-table th {
+            background: #4285f4;
+            color: white;
+            font-weight: 700;
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #dadce0;
+            font-size: 14px;
+        }
+        .outcome-table td {
+            padding: 12px;
+            border: 1px solid #dadce0;
+            color: #3c4043;
+            font-size: 14px;
+        }
+        .outcome-table tbody tr:nth-child(odd) {
+            background: #f8f9fa;
+        }
+        .outcome-table tbody tr:hover {
+            background: #e8f0fe;
+        }
+        .top-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 0;
+        }
+        .node {
+            padding: 14px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .account  { background: #202124; color: white; font-weight: bold; border: 2px solid #000; min-width: 200px; }
+        .budget   { background: #fef7e0; color: #7d5c00; font-weight: bold; border: 2px dashed #f9ab00; min-width: 140px; }
+        .budget .budget-amount { font-size: 1.1rem; font-weight: 800; margin-top: 4px; color: #e37400; }
+        .search   { background: #e8f0fe; border: 2px solid #4285f4; color: #1967d2; font-weight: bold; position: relative; }
+        .search .prefix {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            opacity: 0.75;
+            margin-bottom: 3px;
+            letter-spacing: 0.03em;
+        }
+        .search .name {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+        .line-v   { width: 2px; background: #dadce0; margin: 0 auto; flex-shrink: 0; }
+        .line-h   { height: 2px; background: #dadce0; }
+        .campaigns-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .campaign-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 200px;
+            flex-shrink: 0;
+        }
+        .campaign-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 2px;
+            min-height: 24px;
+        }
+        .campaign-number {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #5f6368;
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .campaign-budget {
+            background: #fef7e0;
+            color: #7d5c00;
+            border: 2px dashed #f9ab00;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .campaign-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .adgroup-tree {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding-left: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .adgroup-tree::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 12px;
+            width: 2px;
+            background: #dadce0;
+        }
+        .adgroup-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+            position: relative;
+            padding-left: 20px;
+            box-sizing: border-box;
+            margin-top: 8px;
+        }
+        .adgroup-unit::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 16px;
+            width: 20px;
+            height: 2px;
+            background: #dadce0;
+        }
+        .ad-group-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #bdc1c6;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            font-size: 0.75rem;
+        }
+        .ad-group-table th {
+            background: #e8f0fe;
+            color: #1967d2;
+            font-weight: 700;
+            padding: 10px;
+            text-align: center;
+        }
+        .ad-group-table tbody td {
+            background: #f8f9fa;
+            color: #3c4043;
+            font-weight: 600;
+            padding: 8px;
+            text-align: center;
+            border-top: 1px solid #dadce0;
+        }
+
+        /* FAQ / collapsible section styles */
+        .faq-section {
+            margin-bottom: 28px;
+        }
+        .faq-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            padding: 0;
+            margin-bottom: 0;
+        }
+        .faq-toggle h1 {
+            margin: 0;
+            color: #202124;
+            font-size: 1.5rem;
+        }
+        .faq-chevron {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e8f0fe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.25s ease, background 0.2s;
+            flex-shrink: 0;
+            border: none;
+            cursor: pointer;
+        }
+        .faq-chevron svg {
+            transition: transform 0.25s ease;
+        }
+        .faq-toggle:hover .faq-chevron {
+            background: #d2e3fc;
+        }
+        .faq-body {
+            overflow: hidden;
+            transition: max-height 0.35s ease, opacity 0.3s ease, margin-top 0.3s ease;
+            max-height: 2000px;
+            opacity: 1;
+            margin-top: 16px;
+        }
+        .faq-body.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+        }
+        .faq-chevron.collapsed svg {
+            transform: rotate(-90deg);
+        }
+        .faq-divider {
+            border: none;
+            border-top: 1px solid #dadce0;
+            margin: 16px 0 0 0;
+        }
+        .faq-divider.collapsed {
+            margin: 12px 0 0 0;
+        }
+
+        /* Actioned column */
+        .actioned-cell {
+            text-align: center;
+            font-size: 18px;
+            color: #1b5e20;
+        }
+
+        /* June 2026 placeholder table */
+        .placeholder-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+        }
+        .placeholder-table th {
+            background: #4285f4;
+            color: white;
+            font-weight: 700;
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #dadce0;
+            font-size: 14px;
+        }
+        .placeholder-table td {
+            padding: 20px 12px;
+            border: 1px solid #dadce0;
+            color: #9aa0a6;
+            font-size: 14px;
+            font-style: italic;
+            text-align: center;
+        }
+
+        /* Tab navigation */
+        .tab-nav {
+            display: flex;
+            gap: 0;
+            margin-bottom: 28px;
+            border-bottom: 2px solid #dadce0;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 22px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #5f6368;
+            cursor: pointer;
+            position: relative;
+            bottom: -2px;
+            border-bottom: 2px solid transparent;
+            transition: color 0.18s, border-color 0.18s;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            letter-spacing: 0.01em;
+        }
+        .tab-btn:hover {
+            color: #1967d2;
+        }
+        .tab-btn.active {
+            color: #1967d2;
+            border-bottom: 2px solid #4285f4;
+        }
+
+        /* Chart panel header row */
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .chart-header .panel-title {
+            margin-bottom: 0;
+        }
+        .data-label-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 2px solid #dadce0;
+            background: #fff;
+            color: #5f6368;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            transition: background 0.18s, color 0.18s, border-color 0.18s;
+            white-space: nowrap;
+        }
+        .data-label-toggle.active {
+            background: #e8f0fe;
+            color: #1967d2;
+            border-color: #4285f4;
+        }
+        .data-label-toggle:hover {
+            border-color: #4285f4;
+            color: #1967d2;
+        }
+
+        /* Chart panel */
+        .panel-title {
+            margin: 0 0 16px 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #202124;
+        }
+        .chart-wrap {
+            position: relative;
+            height: 340px;
+            width: 100%;
+        }
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 18px;
+            justify-content: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.83rem;
+            color: #3c4043;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            transition: opacity 0.18s, border-color 0.18s;
+            user-select: none;
+        }
+        .legend-item:hover {
+            border-color: #dadce0;
+        }
+        .legend-item.dimmed {
+            opacity: 0.35;
+        }
+        .legend-swatch {
+            width: 13px;
+            height: 13px;
+            border-radius: 3px;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+  <div class="left-section">
+    <section class="comparison-view after">
+
+      <div class="top-row">
+        <div class="node account">Account: DCE</div>
+        <div class="node budget">
+          Monthly Budget
+          <div class="budget-amount">£1,200</div>
+        </div>
+      </div>
+
+      <div class="line-v" style="height:30px; width:2px;"></div>
+      <div class="line-h" style="width:95%; margin:0 auto;"></div>
+
+      <div class="campaigns-row">
+
+      <!-- Campaign 1: DCE Keywords -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">1</div>
+          <div class="campaign-budget">£420</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box;">
+            <span class="prefix">Search:</span>
+            <span class="name">DCE Searches</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th>Ad Group</th></tr></thead><tbody><tr><td>DCE</td></tr></tbody></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th>Ad Group</th></tr></thead><tbody><tr><td>Dust Control Environmental</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 2: Dust Extraction / Collection -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">2</div>
+          <div class="campaign-budget">£400</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box; background: #d4edda; border-color: #28a745; color: #155724;">
+            <span class="prefix">Search:</span>
+            <span class="name">Dust Extraction / Collection</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Ad Group</th></tr></thead><tbody><tr><td>Dust Extraction for Workshops</td></tr></tbody></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Ad Group</th></tr></thead><tbody><tr><td>Dust Collection (general)</td></tr></tbody></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Ad Group</th></tr></thead><tbody><tr><td>Dust Extraction (general)</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 3: LEV -->
+      <div class="campaign-wrapper">
+        <div class="line-v" style="height:30px;"></div>
+        <div class="campaign-header">
+          <div class="campaign-number">3</div>
+          <div class="campaign-budget">£400</div>
+        </div>
+        <div class="campaign-unit">
+          <div class="node search" style="width:100%; box-sizing:border-box; background: #fed7aa; border-color: #fb923c; color: #7c2d12;">
+            <span class="prefix">Search:</span>
+            <span class="name">LEV</span>
+          </div>
+          <div class="adgroup-tree">
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Ad Group</th></tr></thead><tbody><tr><td>LEV Testing &amp; Servicing</td></tr></tbody></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Ad Group</th></tr></thead><tbody><tr><td>LEV Inspections</td></tr></tbody></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Ad Group</th></tr></thead><tbody><tr><td>LEV Suppliers</td></tr></tbody></table>
+            </div>
+            <div class="adgroup-unit">
+              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Ad Group</th></tr></thead><tbody><tr><td>LEV Surveys</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    </section>
+  </div>
+
+  <div class="right-section">
+
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <button class="tab-btn active" id="tab-results" onclick="switchTab('results')">Conversions</button>
+      <button class="tab-btn" id="tab-cpc" onclick="switchTab('cpc')">Cost per Contact</button>
+      <button class="tab-btn" id="tab-summaries" onclick="switchTab('summaries')">Monthly Summaries</button>
+    </div>
+
+    <!-- Results Panel -->
+    <div id="panel-results" class="tab-panel">
+      <h2 class="panel-title">Conversions by Month</h2>
+      <div class="chart-wrap">
+        <canvas id="conversionsChart"></canvas>
+      </div>
+      <div class="chart-legend" id="chartLegend"></div>
+    </div>
+
+    <!-- Cost per Contact Panel -->
+    <div id="panel-cpc" class="tab-panel" style="display:none;">
+      <div class="chart-header">
+        <h2 class="panel-title">Cost per Contact by Month</h2>
+        <button class="data-label-toggle active" id="cpcLabelToggle" onclick="toggleCpcLabels()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+            <path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Show Data Labels
+        </button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="cpcChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Monthly Summaries Panel -->
+    <div id="panel-summaries" class="tab-panel" style="display:none;">
+
+      <!-- June 2026 Section -->
+      <div class="faq-section">
+        <div class="faq-toggle" onclick="toggleFaq('jun2026')">
+          <h1>June 2026 - Scheduled Changes</h1>
+          <div class="faq-chevron collapsed" id="chevron-jun2026">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 6L8 10L12 6" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <hr class="faq-divider" id="divider-jun2026">
+        <div class="faq-body collapsed" id="body-jun2026">
+          <table class="placeholder-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Changes</th>
+                <th>Target Outcome</th>
+                <th>Actioned</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="4">No changes scheduled yet — check back soon.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- May 2026 Section -->
+      <div class="faq-section">
+        <div class="faq-toggle" onclick="toggleFaq('may2026')">
+          <h1>May 2026 - Scheduled Changes</h1>
+          <div class="faq-chevron collapsed" id="chevron-may2026">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 6L8 10L12 6" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <hr class="faq-divider" id="divider-may2026">
+        <div class="faq-body collapsed" id="body-may2026">
+          <table class="outcome-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Changes</th>
+                <th>Target Outcome</th>
+                <th>Actioned</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>DCE Searches</td>
+                <td>Users in this campaign are <span style="font-weight: bold; color: #1b5e20;">2.24x</span> more likely to convert mon-fri vs at the weekend. We will reduce the Ad Schedule for this campaign from 7 days to mon - fri only.</td>
+                <td><span style="font-weight: bold; color: #1b5e20;">£194</span> of budget freed up to increase spend on the other non-brand campaigns.</td>
+                <td class="actioned-cell">&#10003;</td>
+              </tr>
+              <tr>
+                <td>Dust Extraction / Collection</td>
+                <td>Removal of Sunday from Ad Schedule to make campaign mon - sat only.</td>
+                <td>Small saving of <span style="font-weight: bold; color: #1b5e20;">£25pm</span> which will be reallocated to better converting days.</td>
+                <td class="actioned-cell">&#10003;</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>Exclusion of some small, non-converting geographic locations.</td>
+                <td><span style="font-weight: bold; color: #1b5e20;">£100</span> freed to reallocate to better performing geographic locations.</td>
+                <td class="actioned-cell">&#10003;</td>
+              </tr>
+              <tr>
+                <td>LEV</td>
+                <td>Users on computers found to be <span style="font-weight: bold; color: #1b5e20;">2.69x</span> more likely to convert Vs users arriving via this campaign on mobile therefore we will adjust the targeting settings for this campaign exclusively for users on desktop devices.</td>
+                <td>~<span style="font-weight: bold; color: #1b5e20;">£100pm</span> saved on mobile users which can be re-allocated to users on desktop devices in the Midlands.</td>
+                <td class="actioned-cell">&#10003;</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>Users in the Midlands region <span style="font-weight: bold; color: #1b5e20;">3.96x</span> more likely to convert than users in the Yorkshire region for LEV-related keywords. Location targeting going forward will focus exclusively on the Midlands region.</td>
+                <td></td>
+                <td class="actioned-cell">&#10003;</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- end panel-summaries -->
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>
+  /* ── Tab switching ── */
+  function switchTab(tab) {
+    document.getElementById('panel-results').style.display   = tab === 'results'   ? 'block' : 'none';
+    document.getElementById('panel-cpc').style.display       = tab === 'cpc'        ? 'block' : 'none';
+    document.getElementById('panel-summaries').style.display = tab === 'summaries' ? 'block' : 'none';
+    document.getElementById('tab-results').classList.toggle('active',    tab === 'results');
+    document.getElementById('tab-cpc').classList.toggle('active',        tab === 'cpc');
+    document.getElementById('tab-summaries').classList.toggle('active',  tab === 'summaries');
+  }
+
+  /* ── FAQ toggle ── */
+  function toggleFaq(id) {
+    var body    = document.getElementById('body-'    + id);
+    var chevron = document.getElementById('chevron-' + id);
+    var divider = document.getElementById('divider-' + id);
+    var isCollapsed = body.classList.contains('collapsed');
+    body.classList.toggle('collapsed', !isCollapsed);
+    chevron.classList.toggle('collapsed', !isCollapsed);
+    divider.classList.toggle('collapsed', !isCollapsed);
+  }
+
+  /* ── Stacked bar chart ── */
+  var months = [
+    'Jan 25','Feb 25','Mar 25','Apr 25','May 25','Jun 25',
+    'Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25',
+    'Jan 26','Feb 26','Mar 26','Apr 26','May 26'
+  ];
+
+  var campaigns = [
+    {
+      label: 'Non-Paid Form Submissions',
+      color: '#4285f4',
+      data: [10,5,6,5,9,6,8,4,4,9,4,9,8,4,10,8,4]
+    },
+    {
+      label: 'Paid Form Submissions',
+      color: '#34a853',
+      data: [0,5,0,1,1,5,5,7,5,5,5,3,5,5,5,3,4]
+    },
+    {
+      label: 'Paid Phone Calls',
+      color: '#fb923c',
+      data: [0,0,0,0,0,0,0,0,0,0,2,2,4,7,8,12,9]
+    },
+    {
+      label: 'Paid Email Enquiries',
+      color: '#ea4335',
+      data: [0,0,0,0,0,0,0,0,0,0,0,2,2,4,2,5,8]
+    },
+    {
+      label: 'Brochure Downloads',
+      color: '#9c27b0',
+      data: [5,1,8,12,12,7,14,2,3,12,11,10,9,13,14,14,11]
+    }
+  ];
+
+  var spendData = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38];
+
+  var ctx = document.getElementById('conversionsChart').getContext('2d');
+  var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: campaigns.map(function(c) {
+        return {
+          label: c.label,
+          data: c.data,
+          backgroundColor: c.color,
+          borderRadius: 3,
+          borderSkipped: false,
+          yAxisID: 'y'
+        };
+      }).concat([{
+        label: 'Ad Spend',
+        data: spendData,
+        type: 'line',
+        borderColor: '#f9ab00',
+        backgroundColor: 'rgba(249,171,0,0.12)',
+        pointBackgroundColor: '#f9ab00',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2.5,
+        tension: 0.35,
+        fill: false,
+        yAxisID: 'ySpend',
+        order: -1
+      }])
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          mode: 'index',
+          callbacks: {
+            label: function(item) {
+              if (item.dataset.label === 'Ad Spend') {
+                return ' Ad Spend: £' + item.parsed.y.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+              }
+              return ' ' + item.dataset.label + ': ' + item.parsed.y;
+            },
+            footer: function(items) {
+              var total = items.reduce(function(s, i) {
+                return i.dataset.label === 'Ad Spend' ? s : s + i.parsed.y;
+              }, 0);
+              return 'Total Conversions: ' + total;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          grid: { display: false },
+          ticks: { font: { size: 11 }, color: '#5f6368' }
+        },
+        y: {
+          stacked: true,
+          min: 0,
+          max: 50,
+          position: 'left',
+          grid: { color: '#f0f0f0' },
+          ticks: { stepSize: 10, font: { size: 11 }, color: '#5f6368' },
+          title: { display: true, text: 'Conversions', color: '#5f6368', font: { size: 12 } }
+        },
+        ySpend: {
+          type: 'linear',
+          position: 'right',
+          min: 0,
+          max: 1800,
+          grid: { drawOnChartArea: false },
+          ticks: {
+            stepSize: 300,
+            font: { size: 11 },
+            color: '#5f6368',
+            callback: function(val) { return '£' + val.toLocaleString('en-GB'); }
+          },
+          title: { display: true, text: 'Ad Spend (£)', color: '#5f6368', font: { size: 12 } }
+        }
+      }
+    }
+  });
+
+  /* Build interactive custom legend — bars + spend line */
+  var legendEl = document.getElementById('chartLegend');
+
+  /* Bar series */
+  campaigns.forEach(function(c, i) {
+    var item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = '<span class="legend-swatch" style="background:' + c.color + '"></span>' + c.label;
+    item.addEventListener('click', function() {
+      var meta = myChart.getDatasetMeta(i);
+      meta.hidden = !meta.hidden;
+      item.classList.toggle('dimmed', meta.hidden);
+      myChart.update();
+    });
+    legendEl.appendChild(item);
+  });
+
+  /* Ad Spend line */
+  var spendIndex = campaigns.length;
+  var spendItem = document.createElement('div');
+  spendItem.className = 'legend-item';
+  spendItem.innerHTML = '<span class="legend-swatch" style="background:#f9ab00; height:3px; width:18px; border-radius:2px;"></span>Ad Spend';
+  spendItem.addEventListener('click', function() {
+    var meta = myChart.getDatasetMeta(spendIndex);
+    meta.hidden = !meta.hidden;
+    spendItem.classList.toggle('dimmed', meta.hidden);
+    myChart.update();
+  });
+  legendEl.appendChild(spendItem);
+
+  /* ── Cost per Contact line chart ── */
+  var cpcData = [0,54.93,73.38,47.72,73.11,80.52,55.23,103.78,115.76,45.52,58.87,61.10,53.83,39.80,40.80,32.77,42.29];
+
+  /* Register datalabels plugin for this chart only */
+  var cpcCtx = document.getElementById('cpcChart').getContext('2d');
+  var cpcLabelsVisible = true;
+
+  var cpcChart = new Chart(cpcCtx, {
+    type: 'line',
+    plugins: [ChartDataLabels],
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Cost per Contact',
+        data: cpcData,
+        borderColor: '#4285f4',
+        backgroundColor: 'rgba(66,133,244,0.08)',
+        pointBackgroundColor: cpcData.map(function(v) {
+          if (v === 0)  return 'rgba(0,0,0,0)';
+          if (v >= 100) return '#ea4335';
+          if (v >= 70)  return '#fb923c';
+          if (v >= 50)  return '#f9ab00';
+          return '#34a853';
+        }),
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: cpcData.map(function(v) { return v === 0 ? 0 : 5; }),
+        pointHoverRadius: 7,
+        borderWidth: 2.5,
+        tension: 0.35,
+        fill: true,
+        datalabels: {
+          display: function(ctx) { return cpcLabelsVisible && ctx.dataset.data[ctx.dataIndex] !== 0; },
+          align: 'top',
+          anchor: 'end',
+          offset: 4,
+          font: { size: 10, weight: '700', family: "'Segoe UI', Arial, sans-serif" },
+          color: function(ctx) {
+            var v = ctx.dataset.data[ctx.dataIndex];
+            if (v >= 100) return '#ea4335';
+            if (v >= 70)  return '#fb923c';
+            if (v >= 50)  return '#f9ab00';
+            return '#34a853';
+          },
+          formatter: function(v) { return '£' + v.toFixed(2); }
+        }
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 28 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(item) {
+              return item.parsed.y === 0 ? ' No data' : ' Cost per Contact: £' + item.parsed.y.toFixed(2);
+            }
+          }
+        },
+        datalabels: {}
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 11 }, color: '#5f6368' }
+        },
+        y: {
+          min: 0,
+          max: 120,
+          grid: { color: '#f0f0f0' },
+          ticks: {
+            stepSize: 20,
+            font: { size: 11 },
+            color: '#5f6368',
+            callback: function(val) { return '£' + val; }
+          },
+          title: { display: true, text: 'Cost per Contact (£)', color: '#5f6368', font: { size: 12 } }
+        }
+      }
+    }
+  });
+
+  function toggleCpcLabels() {
+    cpcLabelsVisible = !cpcLabelsVisible;
+    var btn = document.getElementById('cpcLabelToggle');
+    btn.classList.toggle('active', cpcLabelsVisible);
+    btn.innerHTML = cpcLabelsVisible
+      ? '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels'
+      : '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels';
+    cpcChart.update();
+  }
+</script>
+</body>
+</html>
