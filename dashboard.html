@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Campaign Reporting</title>
+<style>
+  :root {
+    --ink: #0f172a;
+    --muted: #64748b;
+    --faint: #94a3b8;
+    --line: #e2e8f0;
+    --line-soft: #eef2f6;
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --accent: #4338ca;
+    --accent-soft: #eef2ff;
+    --ok-bg: #ecfdf5; --ok-fg: #047857; --ok-rg: #a7f3d0;
+    --warn-bg: #fffbeb; --warn-fg: #b45309; --warn-rg: #fde68a;
+    --off-bg: #f1f5f9; --off-fg: #64748b; --off-rg: #e2e8f0;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.05);
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .tabnum { font-variant-numeric: tabular-nums; }
+
+  /* top bar */
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 22px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+  .wordmark { display: flex; align-items: baseline; gap: 9px; }
+  .wordmark .mark {
+    font-weight: 650; letter-spacing: -.02em; font-size: 15px;
+  }
+  .wordmark .mark b { color: var(--accent); }
+  .wordmark .sub { color: var(--faint); font-size: 12.5px; }
+  .topbar .right { margin-left: auto; color: var(--muted); font-size: 13px; }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 22px; }
+
+  /* signed-out card */
+  .gate {
+    max-width: 420px; margin: 12vh auto 0; text-align: center;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 36px 32px; box-shadow: var(--shadow);
+  }
+  .gate h1 { font-size: 19px; letter-spacing: -.01em; margin: 0 0 8px; }
+  .gate p { color: var(--muted); margin: 0 0 22px; }
+  .btn-google {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--accent); color: #fff; text-decoration: none;
+    font-weight: 560; padding: 11px 18px; border-radius: 9px;
+    transition: background .15s ease;
+  }
+  .btn-google:hover { background: #3730a3; }
+  .btn-google svg { width: 17px; height: 17px; }
+
+  /* control bar */
+  .controls {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .field-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); display: block; margin-bottom: 4px; }
+  select#accountSelect {
+    font: inherit; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 9px;
+    padding: 8px 32px 8px 12px; min-width: 280px; cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2364748b' stroke-width='1.5'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; background-size: 15px;
+  }
+  select#accountSelect:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .range-pill {
+    align-self: flex-end; font-size: 12.5px; color: var(--muted);
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 12px;
+  }
+  .grow { flex: 1; }
+  .toolset { display: flex; align-items: flex-end; gap: 8px; margin-left: auto; }
+
+  .search { position: relative; }
+  .search input {
+    font: inherit; border: 1px solid var(--line); border-radius: 9px;
+    padding: 8px 12px 8px 32px; width: 200px; background: var(--panel);
+  }
+  .search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; stroke: var(--faint); }
+
+  .menu { position: relative; }
+  .menu-btn {
+    font: inherit; display: inline-flex; align-items: center; gap: 7px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 9px;
+    padding: 8px 12px; cursor: pointer; color: var(--ink); font-weight: 520;
+  }
+  .menu-btn:hover { background: #fbfcfe; }
+  .menu-btn .count { background: var(--off-bg); color: var(--muted); border-radius: 999px; padding: 0 7px; font-size: 12px; }
+  .pop {
+    position: absolute; right: 0; top: calc(100% + 6px); z-index: 30;
+    width: 264px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: var(--shadow); padding: 6px;
+    max-height: 360px; overflow: auto;
+  }
+  .pop[hidden] { display: none; }
+  .pop-row {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 8px 9px; border: 0; background: none; font: inherit; color: var(--ink);
+    text-align: left; border-radius: 7px; cursor: pointer;
+  }
+  .pop-row:hover { background: #f8fafc; }
+  .pop-row.locked { color: var(--faint); cursor: default; }
+  .pop-row.locked:hover { background: none; }
+  .check {
+    width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--line);
+    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  }
+  .check.on { background: var(--accent); border-color: var(--accent); }
+  .check svg { width: 11px; height: 11px; stroke: #fff; stroke-width: 2.5; }
+  .pop-row .active-dot { margin-left: auto; color: var(--accent); }
+  .pop-div { height: 1px; background: var(--line-soft); margin: 5px 2px; }
+  .pop-add { color: var(--ink); font-weight: 520; }
+  .pop-add svg { width: 15px; height: 15px; stroke: var(--muted); }
+  .name-row { display: flex; gap: 6px; padding: 6px 4px; }
+  .name-row input { flex: 1; font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; }
+  .name-row input:focus { outline: none; border-color: var(--accent); }
+  .name-row button { font: inherit; font-weight: 560; border: 0; background: var(--accent); color: #fff; border-radius: 7px; padding: 0 12px; cursor: pointer; }
+
+  /* table */
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    position: sticky; top: 0; background: #fbfcfe; z-index: 2;
+    font-weight: 560; color: var(--muted); font-size: 12.5px;
+    padding: 10px 12px; white-space: nowrap; cursor: pointer; user-select: none;
+    border-bottom: 1px solid var(--line);
+  }
+  thead th:hover { color: var(--ink); }
+  th.num, td.num { text-align: right; }
+  th.txt, td.txt { text-align: left; }
+  th .sortable { display: inline-flex; align-items: center; gap: 4px; }
+  th.num .sortable { flex-direction: row-reverse; }
+  th .arr { color: var(--accent); font-size: 11px; }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+  tbody tr:hover td { background: #f8faff; }
+  td.name { font-weight: 540; }
+  .sticky-col { position: sticky; left: 0; background: var(--panel); z-index: 1; }
+  thead th.sticky-col { z-index: 3; background: #fbfcfe; }
+  tbody tr:hover td.sticky-col { background: #f8faff; }
+  .pill { display: inline-flex; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 540; border: 1px solid; }
+  .pill.enabled { background: var(--ok-bg); color: var(--ok-fg); border-color: var(--ok-rg); }
+  .pill.paused { background: var(--warn-bg); color: var(--warn-fg); border-color: var(--warn-rg); }
+  .pill.removed, .pill.other { background: var(--off-bg); color: var(--off-fg); border-color: var(--off-rg); }
+  tfoot td { padding: 11px 12px; font-weight: 600; background: #fbfcfe; border-top: 1px solid var(--line); }
+  tfoot td.sticky-col { background: #fbfcfe; }
+
+  .state { padding: 56px 24px; text-align: center; color: var(--muted); }
+  .state .big { color: var(--ink); font-weight: 560; margin-bottom: 4px; }
+  .spinner { width: 22px; height: 22px; border: 2.5px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 14px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .foot-note { color: var(--faint); font-size: 12px; margin-top: 10px; }
+
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } * { transition: none !important; } }
+  @media (max-width: 640px) {
+    main { padding: 14px; }
+    select#accountSelect { min-width: 0; width: 100%; }
+    .search input { width: 140px; }
+  }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wordmark">
+      <span class="mark">Campaign<b>·</b>Reporting</span>
+      <span class="sub">Google Ads</span>
+    </div>
+    <div class="right" id="userArea"></div>
+  </header>
+
+  <main>
+    <!-- signed out -->
+    <section id="signedOut" hidden>
+      <div class="gate">
+        <h1>Connect a Google Ads account</h1>
+        <p>Sign in with your Google account to pull campaign performance for the accounts you manage.</p>
+        <a class="btn-google" href="/api/auth">
+          <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 11v2.8h4.6c-.2 1.2-1.5 3.6-4.6 3.6-2.8 0-5-2.3-5-5.1s2.2-5.1 5-5.1c1.6 0 2.6.7 3.2 1.2l2.2-2.1C17.9 4.9 15.2 4 12 4 6.9 4 2.8 8.1 2.8 13.2S6.9 22.4 12 22.4c5.9 0 9.8-4.1 9.8-9.9 0-.7-.1-1.2-.2-1.7H12z"/></svg>
+          Sign in with Google
+        </a>
+      </div>
+    </section>
+
+    <!-- signed in -->
+    <section id="signedIn" hidden>
+      <div class="controls">
+        <div>
+          <label class="field-label" for="accountSelect">Account</label>
+          <select id="accountSelect"></select>
+        </div>
+        <div class="range-pill">Last 30 days</div>
+        <div class="toolset">
+          <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+            <input id="filter" type="text" placeholder="Filter campaigns" aria-label="Filter campaigns" />
+          </div>
+          <div class="menu">
+            <button class="menu-btn" id="viewsBtn" aria-haspopup="true">
+              <span id="viewsLabel">Views</span>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+            </button>
+            <div class="pop" id="viewsPop" hidden></div>
+          </div>
+          <div class="menu">
+            <button class="menu-btn" id="colsBtn" aria-haspopup="true">
+              Columns <span class="count" id="colsCount">0</span>
+            </button>
+            <div class="pop" id="colsPop" hidden></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div id="loading" class="state" hidden><div class="spinner"></div>Loading campaigns…</div>
+        <div id="prompt" class="state"><div class="big">Choose an account</div>Select an account above to load its campaigns.</div>
+        <div id="error" class="state" hidden></div>
+        <div id="empty" class="state" hidden><div class="big">No active campaigns</div>Nothing ran in the last 30 days for this account.</div>
+        <div class="scroll"><table id="table" hidden><thead id="thead"></thead><tbody id="tbody"></tbody><tfoot id="tfoot"></tfoot></table></div>
+      </div>
+      <div class="foot-note">Click a column header to sort. Views are saved in this browser.</div>
+    </section>
+  </main>
+
+<script>
+const CURRENCY = "GBP", LOCALE = "en-GB";
+const VIEWS_KEY = "campaign_reporting_views_v1";
+
+const COLUMNS = [
+  { key: "name",        label: "Campaign",      type: "text",    align: "txt", locked: true },
+  { key: "status",      label: "Status",        type: "status",  align: "txt" },
+  { key: "channelType", label: "Type",          type: "channel", align: "txt" },
+  { key: "budget",      label: "Daily budget",  type: "currency",align: "num" },
+  { key: "impressions", label: "Impr.",         type: "int",     align: "num" },
+  { key: "clicks",      label: "Clicks",        type: "int",     align: "num" },
+  { key: "ctr",         label: "CTR",           type: "percent", align: "num" },
+  { key: "avgCpc",      label: "Avg. CPC",      type: "currency",align: "num" },
+  { key: "cost",        label: "Cost",          type: "currency",align: "num" },
+  { key: "conversions", label: "Conv.",         type: "decimal", align: "num" },
+  { key: "convRate",    label: "Conv. rate",    type: "percent", align: "num" },
+  { key: "cpa",         label: "Cost / conv.",  type: "currency",align: "num" },
+  { key: "convValue",   label: "Conv. value",   type: "currency",align: "num" },
+  { key: "roas",        label: "ROAS",          type: "roas",    align: "num" },
+];
+
+const SEED_VIEWS = [
+  { id: "all",     name: "Performance overview", columns: COLUMNS.map(c => c.key) },
+  { id: "cost",    name: "Cost & efficiency",    columns: ["name","status","cost","conversions","cpa","convRate","roas"] },
+  { id: "traffic", name: "Traffic",              columns: ["name","impressions","clicks","ctr","avgCpc","cost"] },
+];
+
+const state = {
+  campaigns: [],
+  visible: new Set(SEED_VIEWS[0].columns),
+  sort: { key: "cost", dir: "desc" },
+  query: "",
+  views: loadViews(),
+  activeView: "all",
+};
+
+// ---------- formatting ----------
+const fmtCurrency = n => new Intl.NumberFormat(LOCALE, { style:"currency", currency:CURRENCY, maximumFractionDigits:2 }).format(n || 0);
+const fmtInt = n => new Intl.NumberFormat(LOCALE).format(Math.round(n || 0));
+const fmtDec = n => new Intl.NumberFormat(LOCALE, { maximumFractionDigits:1 }).format(n || 0);
+const fmtPct = n => ((n || 0) * 100).toFixed(2) + "%";
+const fmtRoas = n => (n || 0).toFixed(2) + "\u00d7";
+const titleCase = s => (s || "").toLowerCase().replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+function formatCell(type, v) {
+  switch (type) {
+    case "currency": return fmtCurrency(v);
+    case "int": return fmtInt(v);
+    case "decimal": return fmtDec(v);
+    case "percent": return fmtPct(v);
+    case "roas": return fmtRoas(v);
+    case "channel": return titleCase(v);
+    default: return v == null ? "" : String(v);
+  }
+}
+
+function withMetrics(c) {
+  const imp = +c.impressions || 0, clk = +c.clicks || 0, cost = +c.cost || 0,
+        conv = +c.conversions || 0, val = +c.convValue || 0;
+  return { ...c,
+    impressions: imp, clicks: clk, cost, conversions: conv, convValue: val,
+    budget: +c.budget || 0,
+    ctr: imp ? clk / imp : 0,
+    avgCpc: clk ? cost / clk : 0,
+    convRate: clk ? conv / clk : 0,
+    cpa: conv ? cost / conv : 0,
+    roas: cost ? val / cost : 0,
+  };
+}
+
+// ---------- saved views (localStorage) ----------
+function loadViews() {
+  try {
+    const custom = JSON.parse(localStorage.getItem(VIEWS_KEY) || "[]");
+    return [...SEED_VIEWS, ...custom];
+  } catch { return [...SEED_VIEWS]; }
+}
+function saveCustomViews() {
+  const custom = state.views.filter(v => !SEED_VIEWS.some(s => s.id === v.id));
+  try { localStorage.setItem(VIEWS_KEY, JSON.stringify(custom)); } catch {}
+}
+
+// ---------- boot ----------
+init();
+async function init() {
+  try {
+    const res = await fetch("/api/accounts", { credentials: "same-origin" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error || !data.accounts) { showSignedOut(); return; }
+    showApp(data.accounts);
+  } catch {
+    showSignedOut();
+  }
+}
+
+function showSignedOut() {
+  document.getElementById("signedOut").hidden = false;
+  document.getElementById("signedIn").hidden = true;
+}
+
+function showApp(accounts) {
+  document.getElementById("signedIn").hidden = false;
+  document.getElementById("userArea").textContent = accounts.length + " accounts available";
+
+  const sel = document.getElementById("accountSelect");
+  sel.innerHTML = '<option value="">Select an account…</option>' +
+    accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name || a.formatted)} · ${a.formatted}</option>`).join("");
+  sel.addEventListener("change", () => { if (sel.value) loadCampaigns(sel.value); });
+
+  document.getElementById("filter").addEventListener("input", e => { state.query = e.target.value; renderTable(); });
+  wireMenus();
+  syncColsCount();
+}
+
+async function loadCampaigns(customerId) {
+  setView({ loading: true });
+  try {
+    const res = await fetch("/api/campaigns?customerId=" + encodeURIComponent(customerId), { credentials: "same-origin" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) {
+      setView({ error: data.error || ("Request failed (" + res.status + ")") });
+      return;
+    }
+    state.campaigns = (data.campaigns || []).map(withMetrics);
+    if (state.campaigns.length === 0) { setView({ empty: true }); return; }
+    setView({ table: true });
+    renderTable();
+  } catch (e) {
+    setView({ error: "Couldn't reach the server. Check your connection and try again." });
+  }
+}
+
+function setView({ loading, error, empty, table }) {
+  document.getElementById("prompt").hidden = true;
+  document.getElementById("loading").hidden = !loading;
+  document.getElementById("empty").hidden = !empty;
+  const errEl = document.getElementById("error");
+  errEl.hidden = !error;
+  if (error) errEl.innerHTML = '<div class="big">Couldn\'t load campaigns</div>' + escapeHtml(error);
+  document.getElementById("table").hidden = !table;
+}
+
+// ---------- table ----------
+function shownColumns() { return COLUMNS.filter(c => state.visible.has(c.key)); }
+
+function sortedRows() {
+  const q = state.query.toLowerCase();
+  const rows = state.campaigns.filter(c => (c.name || "").toLowerCase().includes(q));
+  const { key, dir } = state.sort;
+  const sign = dir === "asc" ? 1 : -1;
+  return rows.sort((a, b) => {
+    const av = a[key], bv = b[key];
+    if (typeof av === "string") return av.localeCompare(bv) * sign;
+    return ((av || 0) - (bv || 0)) * sign;
+  });
+}
+
+function totals(rows) {
+  const t = rows.reduce((acc, r) => {
+    acc.impressions += r.impressions; acc.clicks += r.clicks; acc.cost += r.cost;
+    acc.conversions += r.conversions; acc.convValue += r.convValue; acc.budget += r.budget;
+    return acc;
+  }, { impressions:0, clicks:0, cost:0, conversions:0, convValue:0, budget:0 });
+  return withMetrics(t);
+}
+
+function renderTable() {
+  const cols = shownColumns();
+  const rows = sortedRows();
+  const tot = totals(rows);
+  const arrow = key => state.sort.key === key ? `<span class="arr">${state.sort.dir === "desc" ? "\u25be" : "\u25b4"}</span>` : "";
+
+  document.getElementById("thead").innerHTML = "<tr>" + cols.map(c =>
+    `<th class="${c.align} ${c.key==='name'?'sticky-col':''}" data-key="${c.key}"><span class="sortable">${c.label}${arrow(c.key)}</span></th>`
+  ).join("") + "</tr>";
+
+  document.getElementById("tbody").innerHTML = rows.map(r => "<tr>" + cols.map(c => {
+    if (c.key === "name") return `<td class="txt name sticky-col">${escapeHtml(r.name)}</td>`;
+    if (c.type === "status") {
+      const s = (r.status || "").toLowerCase();
+      const cls = ["enabled","paused","removed"].includes(s) ? s : "other";
+      return `<td class="txt"><span class="pill ${cls}">${titleCase(r.status)}</span></td>`;
+    }
+    const cls = c.align === "num" ? "num tabnum" : "txt";
+    return `<td class="${cls}">${formatCell(c.type, r[c.key])}</td>`;
+  }).join("") + "</tr>").join("");
+
+  document.getElementById("tfoot").innerHTML = "<tr>" + cols.map((c, i) => {
+    if (i === 0) return `<td class="txt sticky-col">Total · ${rows.length}</td>`;
+    if (c.type === "text" || c.type === "status" || c.type === "channel") return `<td></td>`;
+    return `<td class="num tabnum">${formatCell(c.type, tot[c.key])}</td>`;
+  }).join("") + "</tr>";
+
+  document.querySelectorAll("#thead th").forEach(th =>
+    th.addEventListener("click", () => setSort(th.dataset.key)));
+}
+
+function setSort(key) {
+  const s = state.sort;
+  state.sort = s.key === key ? { key, dir: s.dir === "desc" ? "asc" : "desc" } : { key, dir: "desc" };
+  renderTable();
+}
+
+// ---------- menus (columns + views) ----------
+function wireMenus() {
+  const colsBtn = document.getElementById("colsBtn"), colsPop = document.getElementById("colsPop");
+  const viewsBtn = document.getElementById("viewsBtn"), viewsPop = document.getElementById("viewsPop");
+
+  colsBtn.addEventListener("click", e => { e.stopPropagation(); viewsPop.hidden = true; renderColsPop(); colsPop.hidden = !colsPop.hidden; });
+  viewsBtn.addEventListener("click", e => { e.stopPropagation(); colsPop.hidden = true; renderViewsPop(); viewsPop.hidden = !viewsPop.hidden; });
+  document.addEventListener("click", () => { colsPop.hidden = true; viewsPop.hidden = true; });
+  colsPop.addEventListener("click", e => e.stopPropagation());
+  viewsPop.addEventListener("click", e => e.stopPropagation());
+}
+
+function renderColsPop() {
+  const pop = document.getElementById("colsPop");
+  pop.innerHTML = COLUMNS.map(c => {
+    const on = state.visible.has(c.key);
+    return `<button class="pop-row ${c.locked?'locked':''}" data-key="${c.key}" ${c.locked?'disabled':''}>
+      <span class="check ${on?'on':''}">${on?'<svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5"/></svg>':''}</span>
+      ${c.label}${c.locked?'<span class="active-dot" style="margin-left:auto;font-size:11px;color:var(--faint)">pinned</span>':''}
+    </button>`;
+  }).join("");
+  pop.querySelectorAll(".pop-row:not(.locked)").forEach(row =>
+    row.addEventListener("click", () => {
+      const k = row.dataset.key;
+      state.visible.has(k) ? state.visible.delete(k) : state.visible.add(k);
+      state.activeView = null;
+      syncColsCount(); renderColsPop(); renderViewsLabel(); renderTable();
+    }));
+}
+
+function renderViewsPop() {
+  const pop = document.getElementById("viewsPop");
+  const list = state.views.map(v =>
+    `<button class="pop-row" data-view="${v.id}">
+      <span${state.activeView===v.id?' style="color:var(--accent);font-weight:560"':''}>${escapeHtml(v.name)}</span>
+      ${state.activeView===v.id?'<span class="active-dot">\u2713</span>':''}
+    </button>`).join("");
+  pop.innerHTML = list + `<div class="pop-div"></div>
+    <button class="pop-row pop-add" id="addViewBtn">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><path d="M8 3v10M3 8h10"/></svg>Save current columns as view
+    </button>`;
+  pop.querySelectorAll("[data-view]").forEach(b =>
+    b.addEventListener("click", () => applyView(b.dataset.view)));
+  document.getElementById("addViewBtn").addEventListener("click", showNameInput);
+}
+
+function showNameInput() {
+  const pop = document.getElementById("viewsPop");
+  const row = document.createElement("div");
+  row.className = "name-row";
+  row.innerHTML = `<input type="text" placeholder="View name" maxlength="40" /><button>Save</button>`;
+  pop.replaceChild(row, document.getElementById("addViewBtn"));
+  const input = row.querySelector("input"); input.focus();
+  const save = () => {
+    const name = input.value.trim(); if (!name) return;
+    const id = "v_" + Date.now();
+    state.views.push({ id, name, columns: shownColumns().map(c => c.key) });
+    state.activeView = id; saveCustomViews();
+    renderViewsLabel(); renderViewsPop();
+  };
+  row.querySelector("button").addEventListener("click", save);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") save(); });
+}
+
+function applyView(id) {
+  const v = state.views.find(x => x.id === id); if (!v) return;
+  state.visible = new Set(v.columns);
+  state.activeView = id;
+  document.getElementById("viewsPop").hidden = true;
+  syncColsCount(); renderViewsLabel(); renderTable();
+}
+
+function renderViewsLabel() {
+  const v = state.views.find(x => x.id === state.activeView);
+  document.getElementById("viewsLabel").textContent = v ? v.name : "Custom view";
+}
+function syncColsCount() { document.getElementById("colsCount").textContent = state.visible.size; }
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, m =>
+    ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+}
+</script>
+</body>
+</html>
