@@ -1,6 +1,5 @@
-// GET /api/campaigns?customerId=1234567890
-// Returns last-30-days campaign metrics for the chosen account, shaped to match
-// the CampaignTable frontend (it derives CTR, CPC, conv. rate, CPA, ROAS itself).
+// GET /api/campaigns?customerId=1234567890&dateRange=LAST_30_DAYS
+// Returns campaign metrics for the chosen account and date range.
 
 import {
   getRefreshToken,
@@ -17,7 +16,9 @@ export async function onRequestGet(context) {
 
   const customerId = new URL(request.url).searchParams.get("customerId");
   if (!customerId) return json({ error: "Missing customerId" }, 400);
-  const cleanId = customerId.replace(/-/g, ""); // strip hyphens if present
+  const cleanId = customerId.replace(/-/g, "");
+
+  const dateRange = new URL(request.url).searchParams.get("dateRange") || "LAST_30_DAYS";
 
   const accessToken = await getAccessToken(env, refreshToken);
 
@@ -33,8 +34,8 @@ export async function onRequestGet(context) {
       metrics.conversions,
       metrics.conversions_value
     FROM campaign
-    WHERE segments.date DURING LAST_30_DAYS
-    ORDER BY metrics.cost_micros DESC`;
+    WHERE segments.date DURING ${dateRange}
+    ORDER BY metrics.clicks DESC`;
 
   const result = await adsRequest(
     env,
@@ -43,8 +44,6 @@ export async function onRequestGet(context) {
     { query }
   );
 
-  // The REST response uses camelCase field names. Micros are millionths, so
-  // divide cost/budget by 1,000,000 to get currency units.
   const campaigns = (result.results || []).map((r, i) => ({
     id: String(i),
     name: r.campaign?.name,
