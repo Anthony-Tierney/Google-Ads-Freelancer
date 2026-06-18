@@ -35,7 +35,6 @@
   }
   .tabnum { font-variant-numeric: tabular-nums; }
 
-  /* top bar */
   .topbar {
     display: flex; align-items: center; gap: 12px;
     padding: 14px 22px;
@@ -43,16 +42,13 @@
     border-bottom: 1px solid var(--line);
   }
   .wordmark { display: flex; align-items: baseline; gap: 9px; }
-  .wordmark .mark {
-    font-weight: 650; letter-spacing: -.02em; font-size: 15px;
-  }
+  .wordmark .mark { font-weight: 650; letter-spacing: -.02em; font-size: 15px; }
   .wordmark .mark b { color: var(--accent); }
   .wordmark .sub { color: var(--faint); font-size: 12.5px; }
   .topbar .right { margin-left: auto; color: var(--muted); font-size: 13px; }
 
   main { max-width: 1180px; margin: 0 auto; padding: 22px; }
 
-  /* signed-out card */
   .gate {
     max-width: 420px; margin: 12vh auto 0; text-align: center;
     background: var(--panel); border: 1px solid var(--line);
@@ -69,66 +65,26 @@
   .btn-google:hover { background: #3730a3; }
   .btn-google svg { width: 17px; height: 17px; }
 
-  /* control bar */
   .controls-row { margin-bottom: 12px; }
   .controls-row.account { margin-bottom: 16px; }
   .field-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); display: block; margin-bottom: 4px; }
-  select#accountSelect {
+  
+  select {
     font: inherit; color: var(--ink); background: var(--panel);
     border: 1px solid var(--line); border-radius: 9px;
-    padding: 8px 32px 8px 12px; min-width: 280px; cursor: pointer;
+    padding: 8px 32px 8px 12px; cursor: pointer;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2364748b' stroke-width='1.5'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 10px center; background-size: 15px;
   }
-  select#accountSelect:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
   .controls-row {
     display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;
   }
 
-  .date-range { position: relative; }
-  .range-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); display: block; margin-bottom: 4px; }
-  .range-pill {
-    font-size: 12.5px; color: var(--muted);
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 6px; cursor: pointer;
-  }
-  .range-pill:hover { background: #fbfcfe; }
-  .quick-range { display: flex; gap: 6px; flex-wrap: wrap; }
-  .quick-btn {
-    font: inherit; font-size: 12px; padding: 6px 11px; border: 1px solid var(--line);
-    border-radius: 7px; background: var(--panel); color: var(--ink); cursor: pointer;
-    transition: all .15s ease;
-  }
-  .quick-btn:hover { background: #fbfcfe; border-color: var(--accent); }
-  .quick-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-  .modal {
-    position: fixed; inset: 0; background: rgba(15,23,42,.5); display: none; align-items: center; justify-content: center; z-index: 100;
-  }
-  .modal[open] { display: flex; }
-  .modal-content {
-    background: var(--panel); border-radius: 12px; padding: 24px; max-width: 380px; box-shadow: var(--shadow);
-  }
-  .modal h3 { margin: 0 0 16px; font-size: 16px; }
-  .modal-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-  .modal-dates input { font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
-  .modal-dates input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .modal-buttons { display: flex; gap: 8px; justify-content: flex-end; }
-  .modal-buttons button { font: inherit; padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
-  .modal-buttons button.apply { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 560; }
-
   .grow { flex: 1; }
   .toolset { display: flex; align-items: flex-end; gap: 8px; margin-left: auto; }
-
-  .search { position: relative; }
-  .search input {
-    font: inherit; border: 1px solid var(--line); border-radius: 9px;
-    padding: 8px 12px 8px 32px; width: 200px; background: var(--panel);
-  }
-  .search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; stroke: var(--faint); }
 
   .menu { position: relative; }
   .menu-btn {
@@ -138,13 +94,30 @@
   }
   .menu-btn:hover { background: #fbfcfe; }
   .menu-btn .count { background: var(--off-bg); color: var(--muted); border-radius: 999px; padding: 0 7px; font-size: 12px; }
+  .filter-btn svg { width: 16px; height: 16px; }
+
   .pop {
     position: absolute; right: 0; top: calc(100% + 6px); z-index: 30;
-    width: 264px; background: var(--panel); border: 1px solid var(--line);
-    border-radius: 12px; box-shadow: var(--shadow); padding: 6px;
-    max-height: 360px; overflow: auto;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: var(--shadow); overflow: auto;
   }
   .pop[hidden] { display: none; }
+
+  .filter-menu { width: 280px; padding: 12px; }
+  .filter-section { margin-bottom: 12px; }
+  .filter-section:last-child { margin-bottom: 0; }
+  .filter-title { font-size: 12px; font-weight: 560; color: var(--ink); margin-bottom: 8px; display: block; }
+  .filter-input { font: inherit; width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; }
+  .filter-input:focus { outline: none; border-color: var(--accent); }
+  .status-checks { display: flex; flex-direction: column; gap: 6px; }
+  .check-row { display: flex; align-items: center; gap: 8px; }
+  .check-row input { width: 16px; height: 16px; cursor: pointer; }
+  .check-row label { cursor: pointer; font-size: 13px; }
+  .filter-buttons { display: flex; gap: 6px; margin-top: 10px; border-top: 1px solid var(--line-soft); padding-top: 10px; }
+  .filter-buttons button { flex: 1; font: inherit; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-size: 12px; }
+  .filter-buttons button.apply { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 560; }
+
+  .col-pop { width: 264px; padding: 6px; max-height: 360px; }
   .pop-row {
     display: flex; align-items: center; gap: 10px; width: 100%;
     padding: 8px 9px; border: 0; background: none; font: inherit; color: var(--ink);
@@ -172,7 +145,6 @@
   .page-size { display: flex; align-items: center; gap: 6px; }
   .page-size select { font: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; background: var(--panel); cursor: pointer; }
 
-  /* table */
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   .scroll { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; }
@@ -211,10 +183,7 @@
   @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } * { transition: none !important; } }
   @media (max-width: 640px) {
     main { padding: 14px; }
-    select#accountSelect { min-width: 0; width: 100%; }
-    .search input { width: 140px; }
-    .quick-range { gap: 4px; }
-    .quick-btn { font-size: 11px; padding: 5px 9px; }
+    select { min-width: 0; width: 100%; }
   }
 </style>
 </head>
@@ -228,7 +197,6 @@
   </header>
 
   <main>
-    <!-- signed out -->
     <section id="signedOut" hidden>
       <div class="gate">
         <h1>Connect a Google Ads account</h1>
@@ -240,9 +208,7 @@
       </div>
     </section>
 
-    <!-- signed in -->
     <section id="signedIn" hidden>
-      <!-- Account selector row -->
       <div class="controls-row account">
         <div>
           <label class="field-label" for="accountSelect">Account</label>
@@ -250,49 +216,85 @@
         </div>
       </div>
 
-      <!-- Other controls row -->
       <div class="controls-row">
-        <div class="date-range">
-          <span class="range-label">Date range</span>
-          <div class="quick-range" id="quickRange"></div>
-          <div id="customDateModal" class="modal">
-            <div class="modal-content">
-              <h3>Custom date range</h3>
-              <div class="modal-dates">
-                <div>
-                  <label class="field-label">From</label>
-                  <input type="date" id="customFrom" />
-                </div>
-                <div>
-                  <label class="field-label">To</label>
-                  <input type="date" id="customTo" />
-                </div>
-              </div>
-              <div class="modal-buttons">
-                <button onclick="closeCustomDateModal()">Cancel</button>
-                <button class="apply" onclick="applyCustomDate()">Apply</button>
-              </div>
-            </div>
-          </div>
+        <div>
+          <label class="field-label" for="dateSelect">Date range</label>
+          <select id="dateSelect" onchange="onDateRangeChange()">
+            <option value="yesterday">Yesterday</option>
+            <option value="7days">Last 7 Days</option>
+            <option value="14days">Last 14 Days</option>
+            <option value="30days" selected>Last 30 Days</option>
+            <option value="thisMonth">This Month</option>
+            <option value="lastMonth">Last Month</option>
+            <option value="custom">Custom...</option>
+          </select>
         </div>
         <div class="grow"></div>
         <div class="toolset">
-          <div class="search">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-            <input id="filter" type="text" placeholder="Filter campaigns" aria-label="Filter campaigns" />
+          <div class="menu">
+            <button class="menu-btn filter-btn" id="filterBtn" aria-haspopup="true" title="Filter">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <div class="pop filter-menu" id="filterMenu" hidden>
+              <div class="filter-section">
+                <label class="filter-title">Campaign name</label>
+                <input type="text" class="filter-input" id="filterName" placeholder="Search..." />
+              </div>
+              <div class="filter-section">
+                <label class="filter-title">Status</label>
+                <div class="status-checks">
+                  <div class="check-row">
+                    <input type="checkbox" id="statusEnabled" checked />
+                    <label for="statusEnabled">Enabled</label>
+                  </div>
+                  <div class="check-row">
+                    <input type="checkbox" id="statusPaused" />
+                    <label for="statusPaused">Paused</label>
+                  </div>
+                  <div class="check-row">
+                    <input type="checkbox" id="statusRemoved" />
+                    <label for="statusRemoved">Removed</label>
+                  </div>
+                </div>
+              </div>
+              <div class="filter-buttons">
+                <button onclick="applyFilters()">Apply</button>
+                <button onclick="resetFilters()">Reset</button>
+              </div>
+            </div>
           </div>
           <div class="menu">
             <button class="menu-btn" id="viewsBtn" aria-haspopup="true">
               <span id="viewsLabel">Views</span>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
             </button>
-            <div class="pop" id="viewsPop" hidden></div>
+            <div class="pop col-pop" id="viewsPop" hidden></div>
           </div>
           <div class="menu">
             <button class="menu-btn" id="colsBtn" aria-haspopup="true">
               Columns <span class="count" id="colsCount">0</span>
             </button>
-            <div class="pop" id="colsPop" hidden></div>
+            <div class="pop col-pop" id="colsPop" hidden></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="customDateModal" hidden style="position: fixed; inset: 0; background: rgba(15,23,42,.5); display: flex; align-items: center; justify-content: center; z-index: 100;">
+        <div style="background: var(--panel); border-radius: 12px; padding: 24px; max-width: 380px; box-shadow: var(--shadow);">
+          <h3 style="margin: 0 0 16px; font-size: 16px;">Custom date range</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+            <div>
+              <label class="field-label">From</label>
+              <input type="date" id="customFrom" style="font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%;" />
+            </div>
+            <div>
+              <label class="field-label">To</label>
+              <input type="date" id="customTo" style="font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%;" />
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button onclick="closeCustomDateModal()" style="font: inherit; padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); cursor: pointer;">Cancel</button>
+            <button onclick="applyCustomDate()" style="font: inherit; padding: 8px 14px; border-radius: 7px; border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; font-weight: 560;">Apply</button>
           </div>
         </div>
       </div>
@@ -301,7 +303,7 @@
         <div id="loading" class="state" hidden><div class="spinner"></div>Loading campaigns…</div>
         <div id="prompt" class="state"><div class="big">Choose an account</div>Select an account above to load its campaigns.</div>
         <div id="error" class="state" hidden></div>
-        <div id="empty" class="state" hidden><div class="big">No campaigns</div>No campaigns found for this date range.</div>
+        <div id="empty" class="state" hidden><div class="big">No campaigns</div>No campaigns found.</div>
         <div class="scroll"><table id="table" hidden><thead id="thead"></thead><tbody id="tbody"></tbody><tfoot id="tfoot"></tfoot></table></div>
       </div>
 
@@ -341,28 +343,23 @@ const COLUMNS = [
   { key: "cpa",         label: "Cost / conv.",  type: "currency",align: "num" },
   { key: "convValue",   label: "Conv. value",   type: "currency",align: "num" },
   { key: "roas",        label: "ROAS",          type: "roas",    align: "num" },
+  { key: "searchImpShare", label: "Search Impr. Share", type: "percent", align: "num" },
+  { key: "topImpShare", label: "Top Impr. Share", type: "percent", align: "num" },
+  { key: "absTopImpShare", label: "Abs. Top Impr. Share", type: "percent", align: "num" },
+  { key: "searchClickShare", label: "Click Share", type: "percent", align: "num" },
 ];
 
 const SEED_VIEWS = [
   { id: "all",     name: "Performance overview", columns: COLUMNS.map(c => c.key) },
-  { id: "cost",    name: "Cost & efficiency",    columns: ["name","status","cost","conversions","cpa","convRate","roas"] },
-  { id: "traffic", name: "Traffic",              columns: ["name","impressions","clicks","ctr","avgCpc","cost"] },
-];
-
-const QUICK_RANGES = [
-  { label: "Yesterday", days: 1 },
-  { label: "Last 7 Days", days: 7 },
-  { label: "Last 14 Days", days: 14 },
-  { label: "Last 30 Days", days: 30 },
-  { label: "This Month", type: "thisMonth" },
-  { label: "Last Month", type: "lastMonth" },
+  { id: "comp",    name: "Competitive", columns: ["name","status","searchImpShare","topImpShare","absTopImpShare","searchClickShare"] },
 ];
 
 const state = {
   campaigns: [],
   visible: new Set(SEED_VIEWS[0].columns),
   sort: { key: "clicks", dir: "desc" },
-  query: "",
+  filterName: "",
+  filterStatus: new Set(["ENABLED"]),
   views: loadViews(),
   activeView: "all",
   dateRange: { label: "Last 30 Days", days: 30 },
@@ -370,7 +367,6 @@ const state = {
   currentPage: 1,
 };
 
-// ---------- formatting ----------
 const fmtCurrency = n => new Intl.NumberFormat(LOCALE, { style:"currency", currency:CURRENCY, maximumFractionDigits:2 }).format(n || 0);
 const fmtInt = n => new Intl.NumberFormat(LOCALE).format(Math.round(n || 0));
 const fmtDec = n => new Intl.NumberFormat(LOCALE, { maximumFractionDigits:1 }).format(n || 0);
@@ -401,26 +397,27 @@ function withMetrics(c) {
     convRate: clk ? conv / clk : 0,
     cpa: conv ? cost / conv : 0,
     roas: cost ? val / cost : 0,
+    searchImpShare: +c.searchImpShare || 0,
+    topImpShare: +c.topImpShare || 0,
+    absTopImpShare: +c.absTopImpShare || 0,
+    searchClickShare: +c.searchClickShare || 0,
   };
 }
 
-// ---------- date range helpers ----------
 function getDateRange() {
   const r = state.dateRange;
   if (r.type === "thisMonth") {
     const now = new Date();
     const first = new Date(now.getFullYear(), now.getMonth(), 1);
-    return `${formatDateForGAQL(first)} DURING ${formatDateForGAQL(now)}`;
+    return formatDateForGAQL(first) + " DURING " + formatDateForGAQL(now);
   }
   if (r.type === "lastMonth") {
     const now = new Date();
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
-    return `${formatDateForGAQL(lastMonth)} DURING ${formatDateForGAQL(lastDay)}`;
+    return formatDateForGAQL(lastMonth) + " DURING " + formatDateForGAQL(lastDay);
   }
-  if (r.from && r.to) {
-    return `${r.from} DURING ${r.to}`;
-  }
+  if (r.from && r.to) return r.from + " DURING " + r.to;
   if (r.days === 1) return "YESTERDAY";
   if (r.days === 7) return "LAST_7_DAYS";
   if (r.days === 14) return "LAST_14_DAYS";
@@ -428,24 +425,78 @@ function getDateRange() {
 }
 
 function formatDateForGAQL(d) {
-  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), 
-        day = String(d.getDate()).padStart(2, "0");
-  return `${y}${m}${day}`;
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
+  return y + m + day;
 }
 
-// ---------- saved views (localStorage) ----------
+function onDateRangeChange() {
+  const val = document.getElementById("dateSelect").value;
+  const map = {
+    "yesterday": { label: "Yesterday", days: 1 },
+    "7days": { label: "Last 7 Days", days: 7 },
+    "14days": { label: "Last 14 Days", days: 14 },
+    "30days": { label: "Last 30 Days", days: 30 },
+    "thisMonth": { label: "This Month", type: "thisMonth" },
+    "lastMonth": { label: "Last Month", type: "lastMonth" },
+  };
+  if (val === "custom") {
+    document.getElementById("customDateModal").hidden = false;
+  } else {
+    state.dateRange = map[val];
+    state.currentPage = 1;
+    const sel = document.getElementById("accountSelect");
+    if (sel.value) loadCampaigns(sel.value);
+  }
+}
+
+function closeCustomDateModal() {
+  document.getElementById("customDateModal").hidden = true;
+  document.getElementById("dateSelect").value = "30days";
+}
+
+function applyCustomDate() {
+  const from = document.getElementById("customFrom").value;
+  const to = document.getElementById("customTo").value;
+  if (!from || !to) { alert("Please select both dates"); return; }
+  state.dateRange = { label: from + " to " + to, from, to };
+  state.currentPage = 1;
+  closeCustomDateModal();
+  const sel = document.getElementById("accountSelect");
+  if (sel.value) loadCampaigns(sel.value);
+}
+
+function applyFilters() {
+  state.filterName = document.getElementById("filterName").value;
+  state.filterStatus = new Set([
+    document.getElementById("statusEnabled").checked ? "ENABLED" : null,
+    document.getElementById("statusPaused").checked ? "PAUSED" : null,
+    document.getElementById("statusRemoved").checked ? "REMOVED" : null,
+  ].filter(x => x));
+  state.currentPage = 1;
+  document.getElementById("filterMenu").hidden = true;
+  renderTable();
+}
+
+function resetFilters() {
+  document.getElementById("filterName").value = "";
+  document.getElementById("statusEnabled").checked = true;
+  document.getElementById("statusPaused").checked = false;
+  document.getElementById("statusRemoved").checked = false;
+  applyFilters();
+}
+
 function loadViews() {
   try {
     const custom = JSON.parse(localStorage.getItem(VIEWS_KEY) || "[]");
-    return [...SEED_VIEWS, ...custom];
-  } catch { return [...SEED_VIEWS]; }
+    return SEED_VIEWS.concat(custom);
+  } catch { return SEED_VIEWS; }
 }
+
 function saveCustomViews() {
   const custom = state.views.filter(v => !SEED_VIEWS.some(s => s.id === v.id));
   try { localStorage.setItem(VIEWS_KEY, JSON.stringify(custom)); } catch {}
 }
 
-// ---------- boot ----------
 init();
 async function init() {
   try {
@@ -469,101 +520,72 @@ function showApp(accounts) {
 
   const sel = document.getElementById("accountSelect");
   sel.innerHTML = '<option value="">Select an account…</option>' +
-    accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name || a.formatted)} · ${a.formatted}</option>`).join("");
+    accounts.map(a => '<option value="' + a.id + '">' + escapeHtml(a.name || a.formatted) + ' · ' + a.formatted + '</option>').join("");
   sel.addEventListener("change", () => { if (sel.value) { state.currentPage = 1; loadCampaigns(sel.value); } });
 
-  document.getElementById("filter").addEventListener("input", e => { state.query = e.target.value; state.currentPage = 1; renderTable(); });
   document.getElementById("pageSize").addEventListener("change", e => { state.pageSize = parseInt(e.target.value); state.currentPage = 1; renderTable(); });
+  document.getElementById("filterBtn").addEventListener("click", e => { e.stopPropagation(); document.getElementById("colsPop").hidden = true; document.getElementById("viewsPop").hidden = true; document.getElementById("filterMenu").hidden = !document.getElementById("filterMenu").hidden; });
+  document.addEventListener("click", () => { document.getElementById("filterMenu").hidden = true; document.getElementById("colsPop").hidden = true; document.getElementById("viewsPop").hidden = true; });
+  document.getElementById("filterMenu").addEventListener("click", e => e.stopPropagation());
 
-  renderQuickRange();
   wireMenus();
   syncColsCount();
 }
 
-function renderQuickRange() {
-  const html = QUICK_RANGES.map(r => {
-    const isActive = state.dateRange.label === r.label;
-    return `<button class="quick-btn ${isActive ? 'active' : ''}" onclick="selectQuickRange('${r.label}', ${r.days || null}, '${r.type || null}')">${r.label}</button>`;
-  }).join("") + `<button class="quick-btn" onclick="openCustomDateModal()">Custom</button>`;
-  document.getElementById("quickRange").innerHTML = html;
-}
-
-function selectQuickRange(label, days, type) {
-  state.dateRange = { label, days: days ? parseInt(days) : null, type: type || null };
-  state.currentPage = 1;
-  renderQuickRange();
-  const sel = document.getElementById("accountSelect");
-  if (sel.value) loadCampaigns(sel.value);
-}
-
-function openCustomDateModal() {
-  document.getElementById("customDateModal").setAttribute("open", "");
-}
-
-function closeCustomDateModal() {
-  document.getElementById("customDateModal").removeAttribute("open");
-}
-
-function applyCustomDate() {
-  const from = document.getElementById("customFrom").value;
-  const to = document.getElementById("customTo").value;
-  if (!from || !to) { alert("Please select both dates"); return; }
-  state.dateRange = { label: `${from} to ${to}`, from, to };
-  state.currentPage = 1;
-  closeCustomDateModal();
-  renderQuickRange();
-  const sel = document.getElementById("accountSelect");
-  if (sel.value) loadCampaigns(sel.value);
-}
-
 async function loadCampaigns(customerId) {
-  setView({ loading: true });
+  document.getElementById("loading").hidden = false;
+  document.getElementById("prompt").hidden = true;
+  document.getElementById("error").hidden = true;
+  document.getElementById("empty").hidden = true;
+  document.getElementById("table").hidden = true;
+  document.getElementById("pagination").hidden = true;
+
   try {
     const res = await fetch("/api/campaigns?customerId=" + encodeURIComponent(customerId) + "&dateRange=" + encodeURIComponent(getDateRange()), { credentials: "same-origin" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.error) {
-      setView({ error: data.error || ("Request failed (" + res.status + ")") });
+      document.getElementById("loading").hidden = true;
+      document.getElementById("error").hidden = false;
+      document.getElementById("error").innerHTML = '<div class="big">Couldn\'t load campaigns</div>' + escapeHtml(data.error || ("Request failed (" + res.status + ")"));
       return;
     }
     state.campaigns = (data.campaigns || []).map(withMetrics);
-    if (state.campaigns.length === 0) { setView({ empty: true }); return; }
-    setView({ table: true });
+    if (state.campaigns.length === 0) {
+      document.getElementById("loading").hidden = true;
+      document.getElementById("empty").hidden = false;
+      return;
+    }
+    document.getElementById("loading").hidden = true;
+    document.getElementById("table").hidden = false;
+    document.getElementById("pagination").hidden = false;
     renderTable();
   } catch (e) {
-    setView({ error: "Couldn't reach the server. Check your connection and try again." });
+    document.getElementById("loading").hidden = true;
+    document.getElementById("error").hidden = false;
   }
 }
 
-function setView({ loading, error, empty, table }) {
-  document.getElementById("prompt").hidden = true;
-  document.getElementById("loading").hidden = !loading;
-  document.getElementById("empty").hidden = !empty;
-  const errEl = document.getElementById("error");
-  errEl.hidden = !error;
-  if (error) errEl.innerHTML = '<div class="big">Couldn\'t load campaigns</div>' + escapeHtml(error);
-  document.getElementById("table").hidden = !table;
-  document.getElementById("pagination").hidden = !table;
-}
-
-// ---------- table ----------
 function shownColumns() { return COLUMNS.filter(c => state.visible.has(c.key)); }
 
-function sortedRows() {
-  const q = state.query.toLowerCase();
-  const rows = state.campaigns.filter(c => (c.name || "").toLowerCase().includes(q));
-  const { key, dir } = state.sort;
-  const sign = dir === "asc" ? 1 : -1;
-  return rows.sort((a, b) => {
+function sortedAndFiltered() {
+  const nameQ = state.filterName.toLowerCase();
+  return state.campaigns.filter(c => {
+    const nameMatch = (c.name || "").toLowerCase().includes(nameQ);
+    const statusMatch = state.filterStatus.has(c.status);
+    return nameMatch && statusMatch;
+  }).sort((a, b) => {
+    const { key, dir } = state.sort;
     const av = a[key], bv = b[key];
+    const sign = dir === "asc" ? 1 : -1;
     if (typeof av === "string") return av.localeCompare(bv) * sign;
     return ((av || 0) - (bv || 0)) * sign;
   });
 }
 
 function paginatedRows() {
-  const sorted = sortedRows();
+  const filtered = sortedAndFiltered();
   const start = (state.currentPage - 1) * state.pageSize;
-  return sorted.slice(start, start + state.pageSize);
+  return filtered.slice(start, start + state.pageSize);
 }
 
 function totals(rows) {
@@ -577,34 +599,34 @@ function totals(rows) {
 
 function renderTable() {
   const cols = shownColumns();
-  const sorted = sortedRows();
+  const filtered = sortedAndFiltered();
   const pageRows = paginatedRows();
   const tot = totals(pageRows);
-  const arrow = key => state.sort.key === key ? `<span class="arr">${state.sort.dir === "desc" ? "\u25be" : "\u25b4"}</span>` : "";
+  const arrow = key => state.sort.key === key ? '<span class="arr">' + (state.sort.dir === "desc" ? "\u25be" : "\u25b4") + '</span>' : "";
 
   document.getElementById("thead").innerHTML = "<tr>" + cols.map(c =>
-    `<th class="${c.align} ${c.key==='name'?'sticky-col':''}" data-key="${c.key}"><span class="sortable">${c.label}${arrow(c.key)}</span></th>`
+    '<th class="' + c.align + (c.key==='name'?' sticky-col':'') + '" data-key="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + '</span></th>'
   ).join("") + "</tr>";
 
   document.getElementById("tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
-    if (c.key === "name") return `<td class="txt name sticky-col">${escapeHtml(r.name)}</td>`;
+    if (c.key === "name") return '<td class="txt name sticky-col">' + escapeHtml(r.name) + '</td>';
     if (c.type === "status") {
       const s = (r.status || "").toLowerCase();
       const cls = ["enabled","paused","removed"].includes(s) ? s : "other";
-      return `<td class="txt"><span class="pill ${cls}">${titleCase(r.status)}</span></td>`;
+      return '<td class="txt"><span class="pill ' + cls + '">' + titleCase(r.status) + '</span></td>';
     }
     const cls = c.align === "num" ? "num tabnum" : "txt";
-    return `<td class="${cls}">${formatCell(c.type, r[c.key])}</td>`;
+    return '<td class="' + cls + '">' + formatCell(c.type, r[c.key]) + '</td>';
   }).join("") + "</tr>").join("");
 
   document.getElementById("tfoot").innerHTML = "<tr>" + cols.map((c, i) => {
-    if (i === 0) return `<td class="txt sticky-col">Total · ${pageRows.length}</td>`;
-    if (c.type === "text" || c.type === "status" || c.type === "channel") return `<td></td>`;
-    return `<td class="num tabnum">${formatCell(c.type, tot[c.key])}</td>`;
+    if (i === 0) return '<td class="txt sticky-col">Total · ' + pageRows.length + '</td>';
+    if (c.type === "text" || c.type === "status" || c.type === "channel") return '<td></td>';
+    return '<td class="num tabnum">' + formatCell(c.type, tot[c.key]) + '</td>';
   }).join("") + "</tr>";
 
-  const totalPages = Math.ceil(sorted.length / state.pageSize);
-  document.getElementById("pageInfo").innerHTML = `Page ${state.currentPage} of ${totalPages}`;
+  const totalPages = Math.ceil(filtered.length / state.pageSize);
+  document.getElementById("pageInfo").innerHTML = "Page " + state.currentPage + " of " + totalPages;
 
   document.querySelectorAll("#thead th").forEach(th =>
     th.addEventListener("click", () => setSort(th.dataset.key)));
@@ -617,14 +639,12 @@ function setSort(key) {
   renderTable();
 }
 
-// ---------- menus (columns + views) ----------
 function wireMenus() {
   const colsBtn = document.getElementById("colsBtn"), colsPop = document.getElementById("colsPop");
   const viewsBtn = document.getElementById("viewsBtn"), viewsPop = document.getElementById("viewsPop");
 
-  colsBtn.addEventListener("click", e => { e.stopPropagation(); viewsPop.hidden = true; renderColsPop(); colsPop.hidden = !colsPop.hidden; });
-  viewsBtn.addEventListener("click", e => { e.stopPropagation(); colsPop.hidden = true; renderViewsPop(); viewsPop.hidden = !viewsPop.hidden; });
-  document.addEventListener("click", () => { colsPop.hidden = true; viewsPop.hidden = true; });
+  colsBtn.addEventListener("click", e => { e.stopPropagation(); viewsPop.hidden = true; document.getElementById("filterMenu").hidden = true; renderColsPop(); colsPop.hidden = !colsPop.hidden; });
+  viewsBtn.addEventListener("click", e => { e.stopPropagation(); colsPop.hidden = true; document.getElementById("filterMenu").hidden = true; renderViewsPop(); viewsPop.hidden = !viewsPop.hidden; });
   colsPop.addEventListener("click", e => e.stopPropagation());
   viewsPop.addEventListener("click", e => e.stopPropagation());
 }
@@ -633,10 +653,7 @@ function renderColsPop() {
   const pop = document.getElementById("colsPop");
   pop.innerHTML = COLUMNS.map(c => {
     const on = state.visible.has(c.key);
-    return `<button class="pop-row ${c.locked?'locked':''}" data-key="${c.key}" ${c.locked?'disabled':''}>
-      <span class="check ${on?'on':''}">${on?'<svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5"/></svg>':''}</span>
-      ${c.label}${c.locked?'<span class="active-dot" style="margin-left:auto;font-size:11px;color:var(--faint)">pinned</span>':''}
-    </button>`;
+    return '<button class="pop-row ' + (c.locked?'locked':'') + '" data-key="' + c.key + '" ' + (c.locked?'disabled':'') + '><span class="check ' + (on?'on':'') + '">' + (on?'<svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5"/></svg>':'') + '</span>' + c.label + (c.locked?'<span class="active-dot" style="margin-left:auto;font-size:11px;color:var(--faint)">pinned</span>':'') + '</button>';
   }).join("");
   pop.querySelectorAll(".pop-row:not(.locked)").forEach(row =>
     row.addEventListener("click", () => {
@@ -650,14 +667,8 @@ function renderColsPop() {
 function renderViewsPop() {
   const pop = document.getElementById("viewsPop");
   const list = state.views.map(v =>
-    `<button class="pop-row" data-view="${v.id}">
-      <span${state.activeView===v.id?' style="color:var(--accent);font-weight:560"':''}>${escapeHtml(v.name)}</span>
-      ${state.activeView===v.id?'<span class="active-dot">\u2713</span>':''}
-    </button>`).join("");
-  pop.innerHTML = list + `<div class="pop-div"></div>
-    <button class="pop-row pop-add" id="addViewBtn">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><path d="M8 3v10M3 8h10"/></svg>Save current columns as view
-    </button>`;
+    '<button class="pop-row" data-view="' + v.id + '"><span' + (state.activeView===v.id?' style="color:var(--accent);font-weight:560"':'') + '>' + escapeHtml(v.name) + '</span>' + (state.activeView===v.id?'<span class="active-dot">\u2713</span>':'') + '</button>').join("");
+  pop.innerHTML = list + '<div class="pop-div"></div><button class="pop-row pop-add" id="addViewBtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><path d="M8 3v10M3 8h10"/></svg>Save current columns as view</button>';
   pop.querySelectorAll("[data-view]").forEach(b =>
     b.addEventListener("click", () => applyView(b.dataset.view)));
   document.getElementById("addViewBtn").addEventListener("click", showNameInput);
@@ -667,7 +678,7 @@ function showNameInput() {
   const pop = document.getElementById("viewsPop");
   const row = document.createElement("div");
   row.className = "name-row";
-  row.innerHTML = `<input type="text" placeholder="View name" maxlength="40" /><button>Save</button>`;
+  row.innerHTML = '<input type="text" placeholder="View name" maxlength="40" /><button>Save</button>';
   pop.replaceChild(row, document.getElementById("addViewBtn"));
   const input = row.querySelector("input"); input.focus();
   const save = () => {
@@ -693,11 +704,11 @@ function renderViewsLabel() {
   const v = state.views.find(x => x.id === state.activeView);
   document.getElementById("viewsLabel").textContent = v ? v.name : "Custom view";
 }
+
 function syncColsCount() { document.getElementById("colsCount").textContent = state.visible.size; }
 
 function escapeHtml(s) {
-  return String(s == null ? "" : s).replace(/[&<>"']/g, m =>
-    ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+  return String(s == null ? "" : s).replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 }
 </script>
 </body>
