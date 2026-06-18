@@ -70,10 +70,8 @@
   .btn-google svg { width: 17px; height: 17px; }
 
   /* control bar */
-  .controls {
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
+  .controls-row { margin-bottom: 12px; }
+  .controls-row.account { margin-bottom: 16px; }
   .field-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); display: block; margin-bottom: 4px; }
   select#accountSelect {
     font: inherit; color: var(--ink); background: var(--panel);
@@ -84,11 +82,43 @@
     background-repeat: no-repeat; background-position: right 10px center; background-size: 15px;
   }
   select#accountSelect:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .range-pill {
-    align-self: flex-end; font-size: 12.5px; color: var(--muted);
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 8px; padding: 8px 12px;
+
+  .controls-row {
+    display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;
   }
+
+  .date-range { position: relative; }
+  .range-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); display: block; margin-bottom: 4px; }
+  .range-pill {
+    font-size: 12.5px; color: var(--muted);
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 6px; cursor: pointer;
+  }
+  .range-pill:hover { background: #fbfcfe; }
+  .quick-range { display: flex; gap: 6px; flex-wrap: wrap; }
+  .quick-btn {
+    font: inherit; font-size: 12px; padding: 6px 11px; border: 1px solid var(--line);
+    border-radius: 7px; background: var(--panel); color: var(--ink); cursor: pointer;
+    transition: all .15s ease;
+  }
+  .quick-btn:hover { background: #fbfcfe; border-color: var(--accent); }
+  .quick-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .modal {
+    position: fixed; inset: 0; background: rgba(15,23,42,.5); display: none; align-items: center; justify-content: center; z-index: 100;
+  }
+  .modal[open] { display: flex; }
+  .modal-content {
+    background: var(--panel); border-radius: 12px; padding: 24px; max-width: 380px; box-shadow: var(--shadow);
+  }
+  .modal h3 { margin: 0 0 16px; font-size: 16px; }
+  .modal-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .modal-dates input { font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .modal-dates input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .modal-buttons { display: flex; gap: 8px; justify-content: flex-end; }
+  .modal-buttons button { font: inherit; padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
+  .modal-buttons button.apply { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 560; }
+
   .grow { flex: 1; }
   .toolset { display: flex; align-items: flex-end; gap: 8px; margin-left: auto; }
 
@@ -138,6 +168,10 @@
   .name-row input:focus { outline: none; border-color: var(--accent); }
   .name-row button { font: inherit; font-weight: 560; border: 0; background: var(--accent); color: #fff; border-radius: 7px; padding: 0 12px; cursor: pointer; }
 
+  .pagination { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--muted); }
+  .page-size { display: flex; align-items: center; gap: 6px; }
+  .page-size select { font: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; background: var(--panel); cursor: pointer; }
+
   /* table */
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   .scroll { overflow-x: auto; }
@@ -179,6 +213,8 @@
     main { padding: 14px; }
     select#accountSelect { min-width: 0; width: 100%; }
     .search input { width: 140px; }
+    .quick-range { gap: 4px; }
+    .quick-btn { font-size: 11px; padding: 5px 9px; }
   }
 </style>
 </head>
@@ -206,12 +242,40 @@
 
     <!-- signed in -->
     <section id="signedIn" hidden>
-      <div class="controls">
+      <!-- Account selector row -->
+      <div class="controls-row account">
         <div>
           <label class="field-label" for="accountSelect">Account</label>
           <select id="accountSelect"></select>
         </div>
-        <div class="range-pill">Last 30 days</div>
+      </div>
+
+      <!-- Other controls row -->
+      <div class="controls-row">
+        <div class="date-range">
+          <span class="range-label">Date range</span>
+          <div class="quick-range" id="quickRange"></div>
+          <div id="customDateModal" class="modal">
+            <div class="modal-content">
+              <h3>Custom date range</h3>
+              <div class="modal-dates">
+                <div>
+                  <label class="field-label">From</label>
+                  <input type="date" id="customFrom" />
+                </div>
+                <div>
+                  <label class="field-label">To</label>
+                  <input type="date" id="customTo" />
+                </div>
+              </div>
+              <div class="modal-buttons">
+                <button onclick="closeCustomDateModal()">Cancel</button>
+                <button class="apply" onclick="applyCustomDate()">Apply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grow"></div>
         <div class="toolset">
           <div class="search">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
@@ -237,10 +301,24 @@
         <div id="loading" class="state" hidden><div class="spinner"></div>Loading campaigns…</div>
         <div id="prompt" class="state"><div class="big">Choose an account</div>Select an account above to load its campaigns.</div>
         <div id="error" class="state" hidden></div>
-        <div id="empty" class="state" hidden><div class="big">No active campaigns</div>Nothing ran in the last 30 days for this account.</div>
+        <div id="empty" class="state" hidden><div class="big">No campaigns</div>No campaigns found for this date range.</div>
         <div class="scroll"><table id="table" hidden><thead id="thead"></thead><tbody id="tbody"></tbody><tfoot id="tfoot"></tfoot></table></div>
       </div>
-      <div class="foot-note">Click a column header to sort. Views are saved in this browser.</div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+        <div class="foot-note">Click a column header to sort. Views are saved in this browser.</div>
+        <div class="pagination" id="pagination" hidden>
+          <div class="page-size">
+            Show <select id="pageSize">
+              <option value="10">10</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="500">500</option>
+            </select> per page
+          </div>
+          <span id="pageInfo"></span>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -271,13 +349,25 @@ const SEED_VIEWS = [
   { id: "traffic", name: "Traffic",              columns: ["name","impressions","clicks","ctr","avgCpc","cost"] },
 ];
 
+const QUICK_RANGES = [
+  { label: "Yesterday", days: 1 },
+  { label: "Last 7 Days", days: 7 },
+  { label: "Last 14 Days", days: 14 },
+  { label: "Last 30 Days", days: 30 },
+  { label: "This Month", type: "thisMonth" },
+  { label: "Last Month", type: "lastMonth" },
+];
+
 const state = {
   campaigns: [],
   visible: new Set(SEED_VIEWS[0].columns),
-  sort: { key: "cost", dir: "desc" },
+  sort: { key: "clicks", dir: "desc" },
   query: "",
   views: loadViews(),
   activeView: "all",
+  dateRange: { label: "Last 30 Days", days: 30 },
+  pageSize: 10,
+  currentPage: 1,
 };
 
 // ---------- formatting ----------
@@ -312,6 +402,35 @@ function withMetrics(c) {
     cpa: conv ? cost / conv : 0,
     roas: cost ? val / cost : 0,
   };
+}
+
+// ---------- date range helpers ----------
+function getDateRange() {
+  const r = state.dateRange;
+  if (r.type === "thisMonth") {
+    const now = new Date();
+    const first = new Date(now.getFullYear(), now.getMonth(), 1);
+    return `${formatDateForGAQL(first)} DURING ${formatDateForGAQL(now)}`;
+  }
+  if (r.type === "lastMonth") {
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
+    return `${formatDateForGAQL(lastMonth)} DURING ${formatDateForGAQL(lastDay)}`;
+  }
+  if (r.from && r.to) {
+    return `${r.from} DURING ${r.to}`;
+  }
+  if (r.days === 1) return "YESTERDAY";
+  if (r.days === 7) return "LAST_7_DAYS";
+  if (r.days === 14) return "LAST_14_DAYS";
+  return "LAST_30_DAYS";
+}
+
+function formatDateForGAQL(d) {
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), 
+        day = String(d.getDate()).padStart(2, "0");
+  return `${y}${m}${day}`;
 }
 
 // ---------- saved views (localStorage) ----------
@@ -351,17 +470,56 @@ function showApp(accounts) {
   const sel = document.getElementById("accountSelect");
   sel.innerHTML = '<option value="">Select an account…</option>' +
     accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name || a.formatted)} · ${a.formatted}</option>`).join("");
-  sel.addEventListener("change", () => { if (sel.value) loadCampaigns(sel.value); });
+  sel.addEventListener("change", () => { if (sel.value) { state.currentPage = 1; loadCampaigns(sel.value); } });
 
-  document.getElementById("filter").addEventListener("input", e => { state.query = e.target.value; renderTable(); });
+  document.getElementById("filter").addEventListener("input", e => { state.query = e.target.value; state.currentPage = 1; renderTable(); });
+  document.getElementById("pageSize").addEventListener("change", e => { state.pageSize = parseInt(e.target.value); state.currentPage = 1; renderTable(); });
+
+  renderQuickRange();
   wireMenus();
   syncColsCount();
+}
+
+function renderQuickRange() {
+  const html = QUICK_RANGES.map(r => {
+    const isActive = state.dateRange.label === r.label;
+    return `<button class="quick-btn ${isActive ? 'active' : ''}" onclick="selectQuickRange('${r.label}', ${r.days || null}, '${r.type || null}')">${r.label}</button>`;
+  }).join("") + `<button class="quick-btn" onclick="openCustomDateModal()">Custom</button>`;
+  document.getElementById("quickRange").innerHTML = html;
+}
+
+function selectQuickRange(label, days, type) {
+  state.dateRange = { label, days: days ? parseInt(days) : null, type: type || null };
+  state.currentPage = 1;
+  renderQuickRange();
+  const sel = document.getElementById("accountSelect");
+  if (sel.value) loadCampaigns(sel.value);
+}
+
+function openCustomDateModal() {
+  document.getElementById("customDateModal").setAttribute("open", "");
+}
+
+function closeCustomDateModal() {
+  document.getElementById("customDateModal").removeAttribute("open");
+}
+
+function applyCustomDate() {
+  const from = document.getElementById("customFrom").value;
+  const to = document.getElementById("customTo").value;
+  if (!from || !to) { alert("Please select both dates"); return; }
+  state.dateRange = { label: `${from} to ${to}`, from, to };
+  state.currentPage = 1;
+  closeCustomDateModal();
+  renderQuickRange();
+  const sel = document.getElementById("accountSelect");
+  if (sel.value) loadCampaigns(sel.value);
 }
 
 async function loadCampaigns(customerId) {
   setView({ loading: true });
   try {
-    const res = await fetch("/api/campaigns?customerId=" + encodeURIComponent(customerId), { credentials: "same-origin" });
+    const res = await fetch("/api/campaigns?customerId=" + encodeURIComponent(customerId) + "&dateRange=" + encodeURIComponent(getDateRange()), { credentials: "same-origin" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.error) {
       setView({ error: data.error || ("Request failed (" + res.status + ")") });
@@ -384,6 +542,7 @@ function setView({ loading, error, empty, table }) {
   errEl.hidden = !error;
   if (error) errEl.innerHTML = '<div class="big">Couldn\'t load campaigns</div>' + escapeHtml(error);
   document.getElementById("table").hidden = !table;
+  document.getElementById("pagination").hidden = !table;
 }
 
 // ---------- table ----------
@@ -401,6 +560,12 @@ function sortedRows() {
   });
 }
 
+function paginatedRows() {
+  const sorted = sortedRows();
+  const start = (state.currentPage - 1) * state.pageSize;
+  return sorted.slice(start, start + state.pageSize);
+}
+
 function totals(rows) {
   const t = rows.reduce((acc, r) => {
     acc.impressions += r.impressions; acc.clicks += r.clicks; acc.cost += r.cost;
@@ -412,15 +577,16 @@ function totals(rows) {
 
 function renderTable() {
   const cols = shownColumns();
-  const rows = sortedRows();
-  const tot = totals(rows);
+  const sorted = sortedRows();
+  const pageRows = paginatedRows();
+  const tot = totals(pageRows);
   const arrow = key => state.sort.key === key ? `<span class="arr">${state.sort.dir === "desc" ? "\u25be" : "\u25b4"}</span>` : "";
 
   document.getElementById("thead").innerHTML = "<tr>" + cols.map(c =>
     `<th class="${c.align} ${c.key==='name'?'sticky-col':''}" data-key="${c.key}"><span class="sortable">${c.label}${arrow(c.key)}</span></th>`
   ).join("") + "</tr>";
 
-  document.getElementById("tbody").innerHTML = rows.map(r => "<tr>" + cols.map(c => {
+  document.getElementById("tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
     if (c.key === "name") return `<td class="txt name sticky-col">${escapeHtml(r.name)}</td>`;
     if (c.type === "status") {
       const s = (r.status || "").toLowerCase();
@@ -432,10 +598,13 @@ function renderTable() {
   }).join("") + "</tr>").join("");
 
   document.getElementById("tfoot").innerHTML = "<tr>" + cols.map((c, i) => {
-    if (i === 0) return `<td class="txt sticky-col">Total · ${rows.length}</td>`;
+    if (i === 0) return `<td class="txt sticky-col">Total · ${pageRows.length}</td>`;
     if (c.type === "text" || c.type === "status" || c.type === "channel") return `<td></td>`;
     return `<td class="num tabnum">${formatCell(c.type, tot[c.key])}</td>`;
   }).join("") + "</tr>";
+
+  const totalPages = Math.ceil(sorted.length / state.pageSize);
+  document.getElementById("pageInfo").innerHTML = `Page ${state.currentPage} of ${totalPages}`;
 
   document.querySelectorAll("#thead th").forEach(th =>
     th.addEventListener("click", () => setSort(th.dataset.key)));
@@ -444,6 +613,7 @@ function renderTable() {
 function setSort(key) {
   const s = state.sort;
   state.sort = s.key === key ? { key, dir: s.dir === "desc" ? "asc" : "desc" } : { key, dir: "desc" };
+  state.currentPage = 1;
   renderTable();
 }
 
