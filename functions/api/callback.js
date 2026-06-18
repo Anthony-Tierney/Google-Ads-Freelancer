@@ -43,7 +43,7 @@ export async function onRequestGet(context) {
   return new Response(null, {
     status: 302,
     headers: {
-      Location: "/",
+      Location: "/dashboard.html",
       "Set-Cookie": `session=${sessionId}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${ttl}`,
     },
   });
