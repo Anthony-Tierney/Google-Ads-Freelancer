@@ -32,7 +32,11 @@ export async function onRequestGet(context) {
       metrics.clicks,
       metrics.cost_micros,
       metrics.conversions,
-      metrics.conversions_value
+      metrics.conversions_value,
+      metrics.search_impression_share,
+      metrics.search_top_impression_share,
+      metrics.search_absolute_top_impression_share,
+      metrics.search_click_share
     FROM campaign
     WHERE segments.date DURING ${dateRange}
     ORDER BY metrics.clicks DESC`;
@@ -55,6 +59,10 @@ export async function onRequestGet(context) {
     cost: Number(r.metrics?.costMicros || 0) / 1e6,
     conversions: Number(r.metrics?.conversions || 0),
     convValue: Number(r.metrics?.conversionsValue || 0),
+    searchImpShare: Number(r.metrics?.searchImpressionShare || 0),
+    topImpShare: Number(r.metrics?.searchTopImpressionShare || 0),
+    absTopImpShare: Number(r.metrics?.searchAbsoluteTopImpressionShare || 0),
+    searchClickShare: Number(r.metrics?.searchClickShare || 0),
   }));
 
   return json({ campaigns });
