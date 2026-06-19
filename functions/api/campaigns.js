@@ -36,13 +36,21 @@ export async function onRequestGet(context) {
       campaign_budget.amount_micros,
       metrics.impressions,
       metrics.clicks,
+      metrics.interactions,
       metrics.cost_micros,
       metrics.conversions,
       metrics.conversions_value,
+      metrics.all_conversions,
+      metrics.view_through_conversions,
+      metrics.invalid_clicks,
+      metrics.invalid_click_rate,
       metrics.search_impression_share,
       metrics.search_top_impression_share,
       metrics.search_absolute_top_impression_share,
-      metrics.search_click_share
+      metrics.search_click_share,
+      metrics.search_budget_lost_impression_share,
+      metrics.active_view_impressions,
+      metrics.active_view_ctr
     FROM campaign
     WHERE ${whereClause}
     ORDER BY metrics.clicks DESC`;
@@ -62,13 +70,21 @@ export async function onRequestGet(context) {
     budget: Number(r.campaignBudget?.amountMicros || 0) / 1e6,
     impressions: Number(r.metrics?.impressions || 0),
     clicks: Number(r.metrics?.clicks || 0),
+    interactions: Number(r.metrics?.interactions || 0),
     cost: Number(r.metrics?.costMicros || 0) / 1e6,
     conversions: Number(r.metrics?.conversions || 0),
     convValue: Number(r.metrics?.conversionsValue || 0),
+    allConversions: Number(r.metrics?.allConversions || 0),
+    viewThroughConversions: Number(r.metrics?.viewThroughConversions || 0),
+    invalidClicks: Number(r.metrics?.invalidClicks || 0),
+    invalidClickRate: Number(r.metrics?.invalidClickRate || 0),
     searchImpShare: Number(r.metrics?.searchImpressionShare || 0),
     topImpShare: Number(r.metrics?.searchTopImpressionShare || 0),
     absTopImpShare: Number(r.metrics?.searchAbsoluteTopImpressionShare || 0),
     searchClickShare: Number(r.metrics?.searchClickShare || 0),
+    searchBudgetLostImpShare: Number(r.metrics?.searchBudgetLostImpressionShare || 0),
+    activeViewImpressions: Number(r.metrics?.activeViewImpressions || 0),
+    activeViewCtr: Number(r.metrics?.activeViewCtr || 0),
   }));
 
   return json({ campaigns });
