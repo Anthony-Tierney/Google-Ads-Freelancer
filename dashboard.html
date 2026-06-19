@@ -131,6 +131,7 @@
     position: relative;
   }
   .filters-btn:hover { background: #fbfcfe; }
+  .filters-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 560; }
   .filters-btn .count { background: var(--accent); color: #fff; border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
   .filters-btn svg { width: 16px; height: 16px; }
 
@@ -218,6 +219,10 @@
   tbody td:last-child { border-right: none; }
   tbody tr:hover td { background: var(--line-soft); }
   td.name { font-weight: 540; }
+  .delta { display: block; font-size: 11px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .delta.up { color: #16a34a; }
+  .delta.down { color: #dc2626; }
+  .delta.flat { color: var(--faint); }
   .sticky-col { position: sticky; left: 0; background: var(--panel); z-index: 1; }
   thead th.sticky-col { z-index: 3; }
   tbody tr:hover td.sticky-col { background: var(--line-soft); }
@@ -337,6 +342,20 @@
                 <option value="custom">Custom...</option>
               </select>
             </div>
+            <div>
+              <label class="field-label">&nbsp;</label>
+              <button class="filters-btn" id="compareBtn" title="Compare to previous period">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6 4 4 6-6M14 7h6v6"/></svg>
+                Compare
+              </button>
+            </div>
+            <div>
+              <label class="field-label">&nbsp;</label>
+              <button class="filters-btn" id="exportBtn" title="Export current view to CSV">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+                Export
+              </button>
+            </div>
             <div class="grow"></div>
             <div class="toolset">
               <div class="filters">
@@ -346,18 +365,18 @@
                 </button>
                 <div class="pop filters-menu" id="filtersMenu" hidden>
                   <div class="filter-group-header" onclick="toggleFilterGroup('group-name', event)">
-                    <span class="toggle">−</span>Campaign Name
+                    <span class="toggle">+</span>Campaign Name
                   </div>
-                  <div class="filter-group-items" id="group-name">
+                  <div class="filter-group-items" id="group-name" hidden>
                     <div class="filter-section">
                       <input type="text" class="filter-input" id="filterName" placeholder="Search..." />
                     </div>
                   </div>
 
                   <div class="filter-group-header" onclick="toggleFilterGroup('group-type', event)">
-                    <span class="toggle">−</span>Campaign Type
+                    <span class="toggle">+</span>Campaign Type
                   </div>
-                  <div class="filter-group-items" id="group-type">
+                  <div class="filter-group-items" id="group-type" hidden>
                     <div class="filter-section">
                       <div class="status-checks">
                         <div class="check-row"><input type="checkbox" id="typeSearch" value="SEARCH" /><label for="typeSearch">Search</label></div>
@@ -372,9 +391,9 @@
                   </div>
 
                   <div class="filter-group-header" onclick="toggleFilterGroup('group-impr', event)">
-                    <span class="toggle">−</span>Impressions
+                    <span class="toggle">+</span>Impressions
                   </div>
-                  <div class="filter-group-items" id="group-impr">
+                  <div class="filter-group-items" id="group-impr" hidden>
                     <div class="filter-section">
                       <div style="display: grid; grid-template-columns: 80px 1fr; gap: 8px;">
                         <select id="filterImpOp" style="font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px; background: var(--panel); color: var(--ink);">
@@ -391,9 +410,9 @@
                   </div>
 
                   <div class="filter-group-header" onclick="toggleFilterGroup('group-cost', event)">
-                    <span class="toggle">−</span>Cost
+                    <span class="toggle">+</span>Cost
                   </div>
-                  <div class="filter-group-items" id="group-cost">
+                  <div class="filter-group-items" id="group-cost" hidden>
                     <div class="filter-section">
                       <div style="display: grid; grid-template-columns: 80px 1fr; gap: 8px;">
                         <select id="filterCostOp" style="font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px; background: var(--panel); color: var(--ink);">
@@ -410,9 +429,9 @@
                   </div>
 
                   <div class="filter-group-header" onclick="toggleFilterGroup('group-status', event)">
-                    <span class="toggle">−</span>Status
+                    <span class="toggle">+</span>Status
                   </div>
-                  <div class="filter-group-items" id="group-status">
+                  <div class="filter-group-items" id="group-status" hidden>
                     <div class="filter-section">
                       <div class="status-checks">
                         <div class="check-row">
@@ -432,8 +451,8 @@
                   </div>
 
                   <div class="filter-buttons">
-                    <button onclick="applyFilters()">Apply</button>
                     <button onclick="resetFilters()">Reset</button>
+                    <button class="apply" onclick="applyFilters()">Apply</button>
                   </div>
                 </div>
               </div>
@@ -531,6 +550,15 @@
 const CURRENCY = "GBP", LOCALE = "en-GB";
 const VIEWS_KEY = "campaign_reporting_views_v1";
 const DARK_MODE_KEY = "dashboardDarkMode";
+const FILTERS_KEY = "campaign_reporting_filters_v1";
+const TYPE_CHECKBOXES = [
+  ["typeSearch", "SEARCH"], ["typeDisplay", "DISPLAY"], ["typeShopping", "SHOPPING"],
+  ["typePmax", "PERFORMANCE_MAX"], ["typeVideo", "VIDEO"], ["typeApp", "APP"], ["typeSmart", "SMART"],
+];
+// Metrics where a decrease is an improvement (for compare colouring)
+const LOWER_IS_BETTER = new Set(["cpa", "cost_per_conversion", "avgCpc", "invalidClicks", "invalidClickRate", "searchBudgetLostImpShare"]);
+// Metrics treated as neutral (no good/bad direction)
+const NEUTRAL_METRICS = new Set(["cost", "budget"]);
 
 const COLUMNS = [
   { key: "name",        label: "Campaign",      type: "text",    align: "txt", locked: true, group: "Settings" },
@@ -593,8 +621,9 @@ const state = {
   calendarToDate: new Date(),
   lastAccount: localStorage.getItem("lastSelectedAccount") || "",
   columnWidths: {},
-  openFilterGroups: new Set(["group-name", "group-status"]),
+  openFilterGroups: new Set(),
   openColGroups: new Set(["col_group_0"]),
+  compareEnabled: false,
 };
 
 const fmtCurrency = n => new Intl.NumberFormat(LOCALE, { style:"currency", currency:CURRENCY, maximumFractionDigits:2 }).format(n || 0);
@@ -666,6 +695,41 @@ function getDateRange() {
 function formatDateForGAQL(d) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
   return y + m + day;
+}
+
+function parseGAQLDate(s) {
+  // s is "YYYYMMDD"
+  return new Date(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8));
+}
+
+// Returns { start: Date, end: Date } for the currently selected range
+function getCurrentPeriodDates() {
+  const r = state.dateRange;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+
+  if (r.type === "thisMonth") {
+    return { start: new Date(today.getFullYear(), today.getMonth(), 1), end: today };
+  }
+  if (r.type === "lastMonth") {
+    return { start: new Date(today.getFullYear(), today.getMonth() - 1, 1), end: new Date(today.getFullYear(), today.getMonth(), 0) };
+  }
+  if (r.from && r.to) {
+    return { start: parseGAQLDate(r.from), end: parseGAQLDate(r.to) };
+  }
+  const days = r.days || 30;
+  if (days === 1) return { start: yesterday, end: yesterday };
+  const start = new Date(yesterday); start.setDate(yesterday.getDate() - (days - 1));
+  return { start, end: yesterday };
+}
+
+// GAQL where-clause for the period immediately preceding the current one (same length)
+function getPreviousDateRange() {
+  const { start, end } = getCurrentPeriodDates();
+  const dayCount = Math.round((end - start) / 86400000) + 1;
+  const prevEnd = new Date(start); prevEnd.setDate(start.getDate() - 1);
+  const prevStart = new Date(prevEnd); prevStart.setDate(prevEnd.getDate() - (dayCount - 1));
+  return "segments.date >= '" + formatDateForGAQL(prevStart) + "' AND segments.date <= '" + formatDateForGAQL(prevEnd) + "'";
 }
 
 function onDateRangeChange() {
@@ -825,8 +889,55 @@ function applyFilters() {
   ].filter(x => x));
   state.currentPage = 1;
   document.getElementById("filtersMenu").hidden = true;
+  saveFilters();
   updateFilterCount();
   renderTable();
+}
+
+function saveFilters() {
+  try {
+    localStorage.setItem(FILTERS_KEY, JSON.stringify({
+      filterName: state.filterName,
+      filterChannelType: [...state.filterChannelType],
+      filterImpOp: state.filterImpOp,
+      filterImpValue: state.filterImpValue,
+      filterCostOp: state.filterCostOp,
+      filterCostValue: state.filterCostValue,
+      filterStatus: [...state.filterStatus],
+      compareEnabled: state.compareEnabled,
+    }));
+  } catch {}
+}
+
+function loadFilters() {
+  try {
+    const d = JSON.parse(localStorage.getItem(FILTERS_KEY) || "null");
+    if (!d) return;
+    state.filterName = d.filterName || "";
+    state.filterChannelType = new Set(d.filterChannelType || []);
+    state.filterImpOp = d.filterImpOp || ">=";
+    state.filterImpValue = d.filterImpValue || 0;
+    state.filterCostOp = d.filterCostOp || ">=";
+    state.filterCostValue = d.filterCostValue || 0;
+    state.filterStatus = new Set(d.filterStatus || ["ENABLED"]);
+    state.compareEnabled = !!d.compareEnabled;
+  } catch {}
+}
+
+function syncFilterDOM() {
+  document.getElementById("filterName").value = state.filterName;
+  TYPE_CHECKBOXES.forEach(([id, val]) => {
+    document.getElementById(id).checked = state.filterChannelType.has(val);
+  });
+  document.getElementById("filterImpOp").value = state.filterImpOp;
+  document.getElementById("filterImpValue").value = state.filterImpValue || "";
+  document.getElementById("filterCostOp").value = state.filterCostOp;
+  document.getElementById("filterCostValue").value = state.filterCostValue || "";
+  document.getElementById("statusEnabled").checked = state.filterStatus.has("ENABLED");
+  document.getElementById("statusPaused").checked = state.filterStatus.has("PAUSED");
+  document.getElementById("statusRemoved").checked = state.filterStatus.has("REMOVED");
+  const cmp = document.getElementById("compareBtn");
+  if (cmp) cmp.classList.toggle("active", state.compareEnabled);
 }
 
 function resetFilters() {
@@ -909,6 +1020,9 @@ function showApp(accounts) {
   document.getElementById("signedIn").hidden = false;
   document.getElementById("userArea").textContent = accounts.length + " accounts available";
 
+  loadFilters();
+  syncFilterDOM();
+
   const sel = document.getElementById("accountSelect");
   sel.innerHTML = '<option value="">Select an account…</option>' +
     accounts.map(a => '<option value="' + a.id + '">' + escapeHtml(a.name || a.formatted) + ' · ' + a.formatted + '</option>').join("");
@@ -931,6 +1045,15 @@ function showApp(accounts) {
   document.getElementById("filtersBtn").addEventListener("click", e => { e.stopPropagation(); document.getElementById("colsPop").hidden = true; document.getElementById("viewsPop").hidden = true; document.getElementById("filtersMenu").hidden = !document.getElementById("filtersMenu").hidden; });
   document.addEventListener("click", () => { document.getElementById("filtersMenu").hidden = true; document.getElementById("colsPop").hidden = true; document.getElementById("viewsPop").hidden = true; });
   document.getElementById("filtersMenu").addEventListener("click", e => e.stopPropagation());
+
+  document.getElementById("compareBtn").addEventListener("click", () => {
+    state.compareEnabled = !state.compareEnabled;
+    document.getElementById("compareBtn").classList.toggle("active", state.compareEnabled);
+    saveFilters();
+    const a = document.getElementById("accountSelect");
+    if (a.value) loadCampaigns(a.value);
+  });
+  document.getElementById("exportBtn").addEventListener("click", exportCSV);
 
   wireMenus();
   syncColsCount();
@@ -960,6 +1083,20 @@ async function loadCampaigns(customerId) {
       document.getElementById("empty").hidden = false;
       return;
     }
+
+    // Period-over-period comparison: fetch the previous equivalent period and match by name
+    if (state.compareEnabled) {
+      try {
+        const res2 = await fetch("/api/campaigns?customerId=" + encodeURIComponent(customerId) + "&dateRange=" + encodeURIComponent(getPreviousDateRange()), { credentials: "same-origin" });
+        const prevData = await res2.json().catch(() => ({}));
+        const prevByName = {};
+        (prevData.campaigns || []).map(withMetrics).forEach(c => { prevByName[c.name] = c; });
+        state.campaigns.forEach(c => { c._prev = prevByName[c.name] || null; });
+      } catch { state.campaigns.forEach(c => { c._prev = null; }); }
+    } else {
+      state.campaigns.forEach(c => { c._prev = null; });
+    }
+
     document.getElementById("loading").hidden = true;
     document.getElementById("table").hidden = false;
     document.getElementById("pagination").hidden = false;
@@ -1026,34 +1163,58 @@ function totals(rows) {
   return withMetrics(t);
 }
 
+function deltaHtml(key, cur, prev) {
+  if (prev == null || prev === 0) {
+    return cur ? '<span class="delta flat">new</span>' : '';
+  }
+  const pct = ((cur - prev) / Math.abs(prev)) * 100;
+  if (!isFinite(pct)) return '';
+  const rounded = Math.round(pct * 10) / 10;
+  if (rounded === 0) return '<span class="delta flat">0.0%</span>';
+  const increased = rounded > 0;
+  let cls;
+  if (NEUTRAL_METRICS.has(key)) cls = 'flat';
+  else cls = (LOWER_IS_BETTER.has(key) ? !increased : increased) ? 'up' : 'down';
+  return '<span class="delta ' + cls + '">' + (increased ? '\u25b2' : '\u25bc') + ' ' + Math.abs(rounded).toFixed(1) + '%</span>';
+}
+
 function renderTable() {
   const cols = shownColumns();
   const filtered = sortedAndFiltered();
   const pageRows = paginatedRows();
   const tot = totals(pageRows);
+  const totPrev = state.compareEnabled ? totals(pageRows.map(r => r._prev).filter(Boolean)) : {};
   const arrow = key => state.sort.key === key ? '<span class="arr">' + (state.sort.dir === "desc" ? "\u25be" : "\u25b4") + '</span>' : "";
 
   document.getElementById("thead").innerHTML = "<tr>" + cols.map((c, i) => {
     const w = state.columnWidths[c.key];
     const width = w ? 'style="width:' + w + 'px;min-width:' + w + 'px;max-width:' + w + 'px"' : '';
-    return '<th class="' + c.align + (c.key==='name'?' sticky-col':'') + '" data-key="' + c.key + '" ' + width + ' data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + '</span></th>';
+    return '<th class="' + c.align + '" data-key="' + c.key + '" ' + width + ' data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + '</span></th>';
   }).join("") + "</tr>";
 
   document.getElementById("tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
-    if (c.key === "name") return '<td class="txt name sticky-col">' + escapeHtml(r.name) + '</td>';
+    if (c.key === "name") return '<td class="txt name">' + escapeHtml(r.name) + '</td>';
     if (c.type === "status") {
       const s = (r.status || "").toLowerCase();
       const cls = ["enabled","paused","removed"].includes(s) ? s : "other";
       return '<td class="txt"><span class="pill ' + cls + '">' + titleCase(r.status) + '</span></td>';
     }
     const cls = c.align === "num" ? "num tabnum" : "txt";
-    return '<td class="' + cls + '">' + formatCell(c.type, r[c.key]) + '</td>';
+    let delta = "";
+    if (state.compareEnabled && c.align === "num" && r._prev) {
+      delta = deltaHtml(c.key, r[c.key], r._prev[c.key]);
+    }
+    return '<td class="' + cls + '">' + formatCell(c.type, r[c.key]) + delta + '</td>';
   }).join("") + "</tr>").join("");
 
   document.getElementById("tfoot").innerHTML = "<tr>" + cols.map((c, i) => {
-    if (i === 0) return '<td class="txt sticky-col">Total · ' + pageRows.length + '</td>';
+    if (i === 0) return '<td class="txt">Total · ' + pageRows.length + '</td>';
     if (c.type === "text" || c.type === "status" || c.type === "channel") return '<td></td>';
-    return '<td class="num tabnum">' + formatCell(c.type, tot[c.key]) + '</td>';
+    let delta = "";
+    if (state.compareEnabled) {
+      delta = deltaHtml(c.key, tot[c.key], totPrev[c.key]);
+    }
+    return '<td class="num tabnum">' + formatCell(c.type, tot[c.key]) + delta + '</td>';
   }).join("") + "</tr>";
 
   const totalPages = Math.ceil(filtered.length / state.pageSize);
@@ -1223,6 +1384,86 @@ function startResize(e, colKey) {
   document.body.style.cursor = "col-resize";
   document.addEventListener("mousemove", onMouseMove);
   document.addEventListener("mouseup", onMouseUp);
+}
+
+function csvEscape(s) {
+  s = String(s == null ? "" : s);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function csvValue(type, v) {
+  if (v == null) return "";
+  switch (type) {
+    case "currency": return (Math.round(v * 100) / 100).toString();
+    case "int": return Math.round(v).toString();
+    case "decimal": return (Math.round(v * 10) / 10).toString();
+    case "percent": return (v * 100).toFixed(2) + "%";
+    case "roas": return (v || 0).toFixed(2);
+    case "channel": case "status": return titleCase(v);
+    default: return String(v);
+  }
+}
+
+function pctChangeStr(cur, prev) {
+  if (prev == null || prev === 0) return cur ? "new" : "";
+  const pct = ((cur - prev) / Math.abs(prev)) * 100;
+  if (!isFinite(pct)) return "";
+  return (pct >= 0 ? "+" : "") + pct.toFixed(1) + "%";
+}
+
+function exportCSV() {
+  const cols = shownColumns();
+  const rows = sortedAndFiltered();
+  if (!rows.length) return;
+  const compare = state.compareEnabled;
+
+  const header = [];
+  cols.forEach(c => {
+    header.push(c.label);
+    if (compare && c.align === "num") { header.push(c.label + " (prev)"); header.push(c.label + " \u0394%"); }
+  });
+  const lines = [header.map(csvEscape).join(",")];
+
+  rows.forEach(r => {
+    const cells = [];
+    cols.forEach(c => {
+      cells.push(csvEscape(csvValue(c.type, r[c.key])));
+      if (compare && c.align === "num") {
+        const prev = r._prev ? r._prev[c.key] : null;
+        cells.push(csvEscape(prev == null ? "" : csvValue(c.type, prev)));
+        cells.push(csvEscape(pctChangeStr(r[c.key], prev)));
+      }
+    });
+    lines.push(cells.join(","));
+  });
+
+  const tot = totals(rows);
+  const totPrev = compare ? totals(rows.map(r => r._prev).filter(Boolean)) : {};
+  const totCells = [];
+  cols.forEach((c, i) => {
+    if (i === 0) { totCells.push("Total"); return; }
+    if (c.align !== "num") { totCells.push(""); return; }
+    totCells.push(csvEscape(csvValue(c.type, tot[c.key])));
+    if (compare) {
+      totCells.push(csvEscape(csvValue(c.type, totPrev[c.key])));
+      totCells.push(csvEscape(pctChangeStr(tot[c.key], totPrev[c.key])));
+    }
+  });
+  lines.push(totCells.join(","));
+
+  const csv = "\uFEFF" + lines.join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const sel = document.getElementById("accountSelect");
+  const acctName = (sel.selectedOptions[0] ? sel.selectedOptions[0].text.split(" · ")[0] : "account");
+  const slug = s => s.replace(/[^a-z0-9]+/gi, "-").toLowerCase().replace(/^-|-$/g, "");
+  a.href = url;
+  a.download = "campaigns-" + slug(acctName) + "-" + slug(state.dateRange.label) + ".csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function escapeHtml(s) {
