@@ -30,6 +30,7 @@ export async function onRequestGet(context) {
 
   const query = `
     SELECT
+      campaign.id,
       campaign.name,
       campaign.status,
       campaign.advertising_channel_type,
@@ -63,7 +64,7 @@ export async function onRequestGet(context) {
   );
 
   const campaigns = (result.results || []).map((r, i) => ({
-    id: String(i),
+    id: String(r.campaign?.id ?? i),
     name: r.campaign?.name,
     status: r.campaign?.status,
     channelType: r.campaign?.advertisingChannelType,
