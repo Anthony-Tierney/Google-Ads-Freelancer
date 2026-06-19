@@ -182,6 +182,20 @@
   .check svg { width: 11px; height: 11px; stroke: #fff; stroke-width: 2.5; }
   .pop-row .active-dot { margin-left: auto; color: var(--accent); }
 
+  .pop-div { height: 1px; background: var(--line-soft); margin: 4px 0; }
+  .pop-add { color: var(--accent); font-weight: 540; }
+  .pop-add svg { width: 14px; height: 14px; flex: 0 0 auto; stroke-width: 1.8; }
+  .name-row { display: flex; gap: 6px; padding: 8px 12px; }
+  .name-row input { flex: 1; font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; background: var(--panel); color: var(--ink); min-width: 0; }
+  .name-row input:focus { outline: none; border-color: var(--accent); }
+  .name-row button { font: inherit; border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 7px; padding: 6px 12px; cursor: pointer; font-weight: 540; }
+
+  .resize-handle {
+    position: absolute; right: 0; top: 0; bottom: 0; width: 6px;
+    cursor: col-resize; background: transparent; z-index: 4;
+  }
+  .resize-handle:hover { background: var(--accent); opacity: .5; }
+
   .pagination { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--muted); }
   .page-size { display: flex; align-items: center; gap: 6px; }
   .page-size select { font: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; background: var(--panel); cursor: pointer; color: var(--ink); }
@@ -199,8 +213,9 @@
   thead th:hover { color: var(--ink); }
   thead th .sortable { display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
   thead th.txt .sortable { justify-content: flex-start; }
-  thead th .arr { color: var(--accent); font-size: 11px; }
-  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+  thead th .arr { color: var(--accent); font-size: 15px; line-height: 1; }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--line-soft); border-right: 1px solid var(--line-soft); white-space: nowrap; }
+  tbody td:last-child { border-right: none; }
   tbody tr:hover td { background: var(--line-soft); }
   td.name { font-weight: 540; }
   .sticky-col { position: sticky; left: 0; background: var(--panel); z-index: 1; }
@@ -210,7 +225,8 @@
   .pill.enabled { background: var(--ok-bg); color: var(--ok-fg); border-color: var(--ok-rg); }
   .pill.paused { background: var(--warn-bg); color: var(--warn-fg); border-color: var(--warn-rg); }
   .pill.removed, .pill.other { background: var(--off-bg); color: var(--off-fg); border-color: var(--off-rg); }
-  tfoot td { padding: 11px 12px; font-weight: 600; background: var(--line-soft); border-top: 1px solid var(--line); }
+  tfoot td { padding: 11px 12px; font-weight: 600; background: var(--line-soft); border-top: 1px solid var(--line); border-right: 1px solid var(--line-soft); }
+  tfoot td:last-child { border-right: none; }
   tfoot td.sticky-col { background: var(--line-soft); }
 
   .state { padding: 56px 24px; text-align: center; color: var(--muted); }
@@ -343,16 +359,15 @@
                   </div>
                   <div class="filter-group-items" id="group-type">
                     <div class="filter-section">
-                      <select id="filterChannelType" style="width: 100%; font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; background: var(--panel); color: var(--ink);">
-                        <option value="">All types</option>
-                        <option value="SEARCH">Search</option>
-                        <option value="DISPLAY">Display</option>
-                        <option value="SHOPPING">Shopping</option>
-                        <option value="PERFORMANCE_MAX">Performance Max</option>
-                        <option value="VIDEO">Video</option>
-                        <option value="APP">App</option>
-                        <option value="SMART">Smart</option>
-                      </select>
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="typeSearch" value="SEARCH" /><label for="typeSearch">Search</label></div>
+                        <div class="check-row"><input type="checkbox" id="typeDisplay" value="DISPLAY" /><label for="typeDisplay">Display</label></div>
+                        <div class="check-row"><input type="checkbox" id="typeShopping" value="SHOPPING" /><label for="typeShopping">Shopping</label></div>
+                        <div class="check-row"><input type="checkbox" id="typePmax" value="PERFORMANCE_MAX" /><label for="typePmax">Performance Max</label></div>
+                        <div class="check-row"><input type="checkbox" id="typeVideo" value="VIDEO" /><label for="typeVideo">Video</label></div>
+                        <div class="check-row"><input type="checkbox" id="typeApp" value="APP" /><label for="typeApp">App</label></div>
+                        <div class="check-row"><input type="checkbox" id="typeSmart" value="SMART" /><label for="typeSmart">Smart</label></div>
+                      </div>
                     </div>
                   </div>
 
@@ -563,7 +578,7 @@ const state = {
   visible: new Set(SEED_VIEWS[0].columns),
   sort: { key: "clicks", dir: "desc" },
   filterName: "",
-  filterChannelType: "",
+  filterChannelType: new Set(),
   filterImpOp: ">=",
   filterImpValue: 0,
   filterCostOp: ">=",
@@ -579,6 +594,7 @@ const state = {
   lastAccount: localStorage.getItem("lastSelectedAccount") || "",
   columnWidths: {},
   openFilterGroups: new Set(["group-name", "group-status"]),
+  openColGroups: new Set(["col_group_0"]),
 };
 
 const fmtCurrency = n => new Intl.NumberFormat(LOCALE, { style:"currency", currency:CURRENCY, maximumFractionDigits:2 }).format(n || 0);
@@ -776,7 +792,7 @@ function toggleFilterGroup(id, event) {
 function updateFilterCount() {
   let count = 0;
   if (state.filterName) count++;
-  if (state.filterChannelType) count++;
+  count += state.filterChannelType.size;
   if (state.filterImpValue > 0) count++;
   if (state.filterCostValue > 0) count++;
   count += state.filterStatus.size;
@@ -792,7 +808,12 @@ function updateFilterCount() {
 
 function applyFilters() {
   state.filterName = document.getElementById("filterName").value;
-  state.filterChannelType = document.getElementById("filterChannelType").value;
+  state.filterChannelType = new Set(
+    ["typeSearch","typeDisplay","typeShopping","typePmax","typeVideo","typeApp","typeSmart"]
+      .map(id => document.getElementById(id))
+      .filter(el => el.checked)
+      .map(el => el.value)
+  );
   state.filterImpOp = document.getElementById("filterImpOp").value;
   state.filterImpValue = parseFloat(document.getElementById("filterImpValue").value) || 0;
   state.filterCostOp = document.getElementById("filterCostOp").value;
@@ -810,7 +831,8 @@ function applyFilters() {
 
 function resetFilters() {
   document.getElementById("filterName").value = "";
-  document.getElementById("filterChannelType").value = "";
+  ["typeSearch","typeDisplay","typeShopping","typePmax","typeVideo","typeApp","typeSmart"]
+    .forEach(id => { document.getElementById(id).checked = false; });
   document.getElementById("filterImpValue").value = "0";
   document.getElementById("filterCostValue").value = "0";
   document.getElementById("statusEnabled").checked = true;
@@ -954,7 +976,7 @@ function sortedAndFiltered() {
   const nameQ = state.filterName.toLowerCase();
   return state.campaigns.filter(c => {
     const nameMatch = (c.name || "").toLowerCase().includes(nameQ);
-    const typeMatch = !state.filterChannelType || c.channelType === state.filterChannelType;
+    const typeMatch = state.filterChannelType.size === 0 || state.filterChannelType.has(c.channelType);
     const statusMatch = state.filterStatus.has(c.status);
     
     let impMatch = true;
@@ -1012,7 +1034,8 @@ function renderTable() {
   const arrow = key => state.sort.key === key ? '<span class="arr">' + (state.sort.dir === "desc" ? "\u25be" : "\u25b4") + '</span>' : "";
 
   document.getElementById("thead").innerHTML = "<tr>" + cols.map((c, i) => {
-    const width = state.columnWidths[c.key] ? 'style="width:' + state.columnWidths[c.key] + 'px"' : '';
+    const w = state.columnWidths[c.key];
+    const width = w ? 'style="width:' + w + 'px;min-width:' + w + 'px;max-width:' + w + 'px"' : '';
     return '<th class="' + c.align + (c.key==='name'?' sticky-col':'') + '" data-key="' + c.key + '" ' + width + ' data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + '</span></th>';
   }).join("") + "</tr>";
 
@@ -1037,17 +1060,21 @@ function renderTable() {
   document.getElementById("pageInfo").innerHTML = "Page " + state.currentPage + " of " + totalPages;
 
   document.querySelectorAll("#thead th").forEach(th => {
-    th.addEventListener("mousedown", (e) => {
-      if (e.clientX < th.offsetLeft + th.offsetWidth - 10) {
-        setSort(th.dataset.key);
-      }
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+    handle.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startResize(e, th.dataset.col);
     });
-    
-    const resizeHandle = document.createElement('div');
-    resizeHandle.style.cssText = 'position:absolute;right:0;top:0;bottom:0;width:4px;cursor:col-resize;background:transparent;';
-    resizeHandle.onmousedown = (e) => startResize(e, th.dataset.col);
-    th.style.position = 'relative';
-    th.appendChild(resizeHandle);
+    handle.addEventListener("click", (e) => e.stopPropagation());
+    th.appendChild(handle);
+
+    th.addEventListener("click", (e) => {
+      if (e.target.classList.contains('resize-handle')) return;
+      if (th.dataset.resizing === "1") { th.dataset.resizing = ""; return; }
+      setSort(th.dataset.col);
+    });
   });
 }
 
@@ -1084,7 +1111,7 @@ function renderColsPop() {
     if (cols.length === 0) return;
     
     const id = "col_group_" + i;
-    const isOpen = i === 0;
+    const isOpen = state.openColGroups.has(id);
     html += '<div class="group-header" onclick="toggleColGroup(\'' + id + '\', event)">' +
       '<span class="toggle">' + (isOpen ? '−' : '+') + '</span>' + group + '</div>' +
       '<div class="group-items" id="' + id + '" ' + (isOpen ? '' : 'hidden') + '>';
@@ -1117,9 +1144,11 @@ function toggleColGroup(id, event) {
   if (el.hidden) {
     el.hidden = false;
     toggle.textContent = '−';
+    state.openColGroups.add(id);
   } else {
     el.hidden = true;
     toggle.textContent = '+';
+    state.openColGroups.delete(id);
   }
 }
 
@@ -1171,19 +1200,27 @@ function startResize(e, colKey) {
   const th = document.querySelector('th[data-col="' + colKey + '"]');
   const startX = e.clientX;
   const startWidth = th.offsetWidth;
-  
+  let moved = false;
+
   function onMouseMove(me) {
     const delta = me.clientX - startX;
+    if (Math.abs(delta) > 2) { moved = true; th.dataset.resizing = "1"; }
     const newWidth = Math.max(60, startWidth + delta);
     state.columnWidths[colKey] = newWidth;
     th.style.width = newWidth + 'px';
+    th.style.minWidth = newWidth + 'px';
+    th.style.maxWidth = newWidth + 'px';
   }
-  
+
   function onMouseUp() {
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
+    document.body.style.userSelect = "";
+    document.body.style.cursor = "";
   }
-  
+
+  document.body.style.userSelect = "none";
+  document.body.style.cursor = "col-resize";
   document.addEventListener("mousemove", onMouseMove);
   document.addEventListener("mouseup", onMouseUp);
 }
