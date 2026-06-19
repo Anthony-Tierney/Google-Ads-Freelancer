@@ -389,7 +389,7 @@ const COLUMNS = [
 ];
 
 const SEED_VIEWS = [
-  { id: "all",     name: "Performance overview", columns: COLUMNS.map(c => c.key) },
+  { id: "default", name: "Default View", columns: ["name","status","channelType","budget","clicks","avgCpc","cost","conversions","convRate","cpa","convValue"] },
   { id: "comp",    name: "Competitive", columns: ["name","status","searchImpShare","topImpShare","absTopImpShare","searchClickShare"] },
 ];
 
@@ -400,7 +400,7 @@ const state = {
   filterName: "",
   filterStatus: new Set(["ENABLED"]),
   views: loadViews(),
-  activeView: "all",
+  activeView: "default",
   dateRange: { label: "Last 30 Days", days: 30 },
   pageSize: 10,
   currentPage: 1,
