@@ -23,6 +23,22 @@
     --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
     --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
+  
+  html.dark {
+    --ink: #f6f7f9;
+    --muted: #94a3b8;
+    --faint: #64748b;
+    --line: #334155;
+    --line-soft: #1e293b;
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --accent: #6366f1;
+    --accent-soft: #312e81;
+    --ok-bg: #064e3b; --ok-fg: #86efac; --ok-rg: #166534;
+    --warn-bg: #78350f; --warn-fg: #fbbf24; --warn-rg: #92400e;
+    --off-bg: #1e293b; --off-fg: #94a3b8; --off-rg: #334155;
+  }
+
   * { box-sizing: border-box; }
   html, body { margin: 0; }
   body {
@@ -32,8 +48,23 @@
     -webkit-font-smoothing: antialiased;
     font-size: 14px;
     line-height: 1.45;
+    display: flex;
   }
   .tabnum { font-variant-numeric: tabular-nums; }
+
+  .sidebar {
+    width: 200px; background: var(--panel); border-right: 1px solid var(--line);
+    padding: 16px 0; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;
+  }
+  .nav-item {
+    display: block; padding: 10px 16px; color: var(--ink); text-decoration: none;
+    font-size: 14px; border-left: 3px solid transparent; cursor: pointer;
+    transition: background .15s ease;
+  }
+  .nav-item:hover { background: var(--line-soft); }
+  .nav-item.active { border-left-color: var(--accent); background: var(--accent-soft); font-weight: 560; }
+  
+  .main-content { flex: 1; display: flex; flex-direction: column; }
 
   .topbar {
     display: flex; align-items: center; gap: 12px;
@@ -45,9 +76,12 @@
   .wordmark .mark { font-weight: 650; letter-spacing: -.02em; font-size: 15px; }
   .wordmark .mark b { color: var(--accent); }
   .wordmark .sub { color: var(--faint); font-size: 12.5px; }
-  .topbar .right { margin-left: auto; color: var(--muted); font-size: 13px; }
+  .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .theme-toggle { background: none; border: none; color: var(--ink); cursor: pointer; font-size: 18px; padding: 4px; }
+  .theme-toggle:hover { color: var(--accent); }
+  .user-info { color: var(--muted); font-size: 13px; }
 
-  main { max-width: 1180px; margin: 0 auto; padding: 22px; }
+  main { max-width: 1180px; margin: 0 auto; padding: 22px; flex: 1; }
 
   .gate {
     max-width: 420px; margin: 12vh auto 0; text-align: center;
@@ -64,6 +98,9 @@
   }
   .btn-google:hover { background: #3730a3; }
   .btn-google svg { width: 17px; height: 17px; }
+
+  .page { display: none; }
+  .page.active { display: block; }
 
   .controls-row { margin-bottom: 12px; }
   .controls-row.account { margin-bottom: 16px; }
@@ -104,25 +141,29 @@
   }
   .pop[hidden] { display: none; }
 
-  .filters-menu { width: 280px; padding: 12px; }
-  .filter-section { margin-bottom: 12px; }
-  .filter-section:last-child { margin-bottom: 0; }
+  .filters-menu { width: 320px; padding: 0; max-height: 480px; }
+  .filter-group-header { background: var(--line-soft); padding: 8px 12px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
+  .filter-group-header:hover { background: #f1f5f9; }
+  .filter-group-header .toggle { display: inline-block; width: 12px; text-align: center; font-size: 9px; }
+  .filter-group-items { padding: 0; }
+  .filter-group-items[hidden] { display: none; }
+  .filter-section { padding: 12px; border-bottom: 1px solid var(--line-soft); }
+  .filter-section:last-child { border-bottom: none; }
   .filter-title { font-size: 12px; font-weight: 560; color: var(--ink); margin-bottom: 8px; display: block; }
-  .filter-input { font: inherit; width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; }
+  .filter-input { font: inherit; width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; background: var(--panel); color: var(--ink); }
   .filter-input:focus { outline: none; border-color: var(--accent); }
   .status-checks { display: flex; flex-direction: column; gap: 6px; }
   .check-row { display: flex; align-items: center; gap: 8px; }
-  .check-row input { width: 16px; height: 16px; cursor: pointer; }
+  .check-row input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
   .check-row label { cursor: pointer; font-size: 13px; }
-  .filter-buttons { display: flex; gap: 6px; margin-top: 10px; border-top: 1px solid var(--line-soft); padding-top: 10px; }
-  .filter-buttons button { flex: 1; font: inherit; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-size: 12px; }
+  .filter-buttons { display: flex; gap: 6px; padding: 12px; border-top: 1px solid var(--line-soft); }
+  .filter-buttons button { flex: 1; font: inherit; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-size: 12px; color: var(--ink); }
   .filter-buttons button.apply { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 560; }
 
   .col-pop { width: 280px; padding: 0; max-height: 420px; overflow-y: auto; }
-  .group-header { background: #fbfcfe; padding: 8px 12px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-top: 1px solid var(--line-soft); cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
-  .group-header:first-child { border-top: none; }
+  .group-header { background: var(--line-soft); padding: 8px 12px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
   .group-header:hover { background: #f1f5f9; }
-  .group-header .toggle { display: inline-block; width: 12px; text-align: center; font-size: 9px; color: var(--faint); }
+  .group-header .toggle { display: inline-block; width: 12px; text-align: center; font-size: 9px; }
   .group-items { display: flex; flex-direction: column; }
   .group-items[hidden] { display: none; }
   .pop-row {
@@ -130,7 +171,7 @@
     padding: 8px 12px; border: 0; background: none; font: inherit; color: var(--ink);
     text-align: left; cursor: pointer;
   }
-  .pop-row:hover { background: #f8fafc; }
+  .pop-row:hover { background: var(--line-soft); }
   .pop-row.locked { color: var(--faint); cursor: default; }
   .pop-row.locked:hover { background: none; }
   .check {
@@ -140,50 +181,37 @@
   .check.on { background: var(--accent); border-color: var(--accent); }
   .check svg { width: 11px; height: 11px; stroke: #fff; stroke-width: 2.5; }
   .pop-row .active-dot { margin-left: auto; color: var(--accent); }
-  .pop-div { height: 1px; background: var(--line-soft); margin: 5px 2px; }
-  .pop-add { color: var(--ink); font-weight: 520; }
-  .pop-add svg { width: 15px; height: 15px; stroke: var(--muted); }
-  .name-row { display: flex; gap: 6px; padding: 6px 4px; }
-  .name-row input { flex: 1; font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; }
-  .name-row input:focus { outline: none; border-color: var(--accent); }
-  .name-row button { font: inherit; font-weight: 560; border: 0; background: var(--accent); color: #fff; border-radius: 7px; padding: 0 12px; cursor: pointer; }
 
   .pagination { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--muted); }
   .page-size { display: flex; align-items: center; gap: 6px; }
-  .page-size select { font: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; background: var(--panel); cursor: pointer; }
+  .page-size select { font: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; background: var(--panel); cursor: pointer; color: var(--ink); }
 
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   .scroll { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; }
   thead th {
-    position: sticky; top: 0; background: #fbfcfe; z-index: 2;
+    position: sticky; top: 0; background: var(--line-soft); z-index: 2;
     font-weight: 560; color: var(--muted); font-size: 12.5px;
     padding: 10px 12px; white-space: nowrap; cursor: pointer; user-select: none;
-    border-bottom: 1px solid var(--line); position: relative;
+    border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
   }
+  thead th:last-child { border-right: none; }
   thead th:hover { color: var(--ink); }
-  thead th .resize-handle {
-    position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: transparent; cursor: col-resize;
-  }
-  thead th:hover .resize-handle { background: var(--accent); opacity: 0.5; }
-  thead th .resize-handle:hover { opacity: 1; }
-  th.num, td.num { text-align: center; }
-  th.txt, td.txt { text-align: left; }
-  th .sortable { display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
-  th.txt .sortable { justify-content: flex-start; }
-  th .arr { color: var(--accent); font-size: 11px; }
+  thead th .sortable { display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
+  thead th.txt .sortable { justify-content: flex-start; }
+  thead th .arr { color: var(--accent); font-size: 11px; }
   tbody td { padding: 10px 12px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
-  tbody tr:hover td { background: #f8faff; }
+  tbody tr:hover td { background: var(--line-soft); }
   td.name { font-weight: 540; }
   .sticky-col { position: sticky; left: 0; background: var(--panel); z-index: 1; }
-  thead th.sticky-col { z-index: 3; background: #fbfcfe; }
-  tbody tr:hover td.sticky-col { background: #f8faff; }
+  thead th.sticky-col { z-index: 3; }
+  tbody tr:hover td.sticky-col { background: var(--line-soft); }
   .pill { display: inline-flex; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 540; border: 1px solid; }
   .pill.enabled { background: var(--ok-bg); color: var(--ok-fg); border-color: var(--ok-rg); }
   .pill.paused { background: var(--warn-bg); color: var(--warn-fg); border-color: var(--warn-rg); }
   .pill.removed, .pill.other { background: var(--off-bg); color: var(--off-fg); border-color: var(--off-rg); }
-  tfoot td { padding: 11px 12px; font-weight: 600; background: #fbfcfe; border-top: 1px solid var(--line); }
-  tfoot td.sticky-col { background: #fbfcfe; }
+  tfoot td { padding: 11px 12px; font-weight: 600; background: var(--line-soft); border-top: 1px solid var(--line); }
+  tfoot td.sticky-col { background: var(--line-soft); }
 
   .state { padding: 56px 24px; text-align: center; color: var(--muted); }
   .state .big { color: var(--ink); font-weight: 560; margin-bottom: 4px; }
@@ -214,12 +242,26 @@
   .day-btn:disabled { color: var(--faint); cursor: default; }
 
   .calendar-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; border-top: 1px solid var(--line-soft); padding-top: 16px; }
-  .calendar-buttons button { font: inherit; padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
+  .calendar-buttons button { font: inherit; padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; color: var(--ink); }
   .calendar-buttons button.apply { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 560; }
+
+  .settings-section { margin-bottom: 32px; }
+  .settings-section h2 { font-size: 16px; margin: 0 0 16px; font-weight: 600; }
+  .setting-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+  .setting-item:last-child { border-bottom: none; }
+  .setting-label { font-weight: 540; }
+  .setting-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .toggle { display: inline-flex; width: 44px; height: 24px; background: var(--off-bg); border-radius: 12px; padding: 2px; cursor: pointer; align-items: center; transition: background .15s ease; }
+  .toggle.on { background: var(--accent); }
+  .toggle-dot { width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform .15s ease; }
+  .toggle.on .toggle-dot { transform: translateX(20px); }
 
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } * { transition: none !important; } }
   @media (max-width: 640px) {
+    body { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); flex-direction: row; padding: 8px; }
+    .nav-item { padding: 8px 12px; flex: 1; }
     main { padding: 14px; }
     select { min-width: 0; width: 100%; }
     .calendar-inputs { grid-template-columns: 1fr; }
@@ -227,197 +269,253 @@
 </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="wordmark">
-      <span class="mark">Campaign<b>·</b>Reporting</span>
-      <span class="sub">Google Ads</span>
-    </div>
-    <div class="right" id="userArea"></div>
-  </header>
+  <aside class="sidebar">
+    <a href="#" class="nav-item active" data-page="dashboard">Home</a>
+    <a href="#" class="nav-item" data-page="settings">Settings</a>
+  </aside>
 
-  <main>
-    <section id="signedOut" hidden>
-      <div class="gate">
-        <h1>Connect a Google Ads account</h1>
-        <p>Sign in with your Google account to pull campaign performance for the accounts you manage.</p>
-        <a class="btn-google" href="/api/auth">
-          <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 11v2.8h4.6c-.2 1.2-1.5 3.6-4.6 3.6-2.8 0-5-2.3-5-5.1s2.2-5.1 5-5.1c1.6 0 2.6.7 3.2 1.2l2.2-2.1C17.9 4.9 15.2 4 12 4 6.9 4 2.8 8.1 2.8 13.2S6.9 22.4 12 22.4c5.9 0 9.8-4.1 9.8-9.9 0-.7-.1-1.2-.2-1.7H12z"/></svg>
-          Sign in with Google
-        </a>
+  <div class="main-content">
+    <header class="topbar">
+      <div class="wordmark">
+        <span class="mark">Campaign<b>·</b>Reporting</span>
+        <span class="sub">Google Ads</span>
       </div>
-    </section>
-
-    <section id="signedIn" hidden>
-      <div class="controls-row account">
-        <div>
-          <label class="field-label" for="accountSelect">Account</label>
-          <select id="accountSelect"></select>
-        </div>
+      <div class="right">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
+        <div class="user-info" id="userArea"></div>
       </div>
+    </header>
 
-      <div class="controls-row">
-        <div>
-          <label class="field-label" for="dateSelect">Date range</label>
-          <select id="dateSelect" onchange="onDateRangeChange()">
-            <option value="yesterday">Yesterday</option>
-            <option value="7days">Last 7 Days</option>
-            <option value="14days">Last 14 Days</option>
-            <option value="30days" selected>Last 30 Days</option>
-            <option value="thisMonth">This Month</option>
-            <option value="lastMonth">Last Month</option>
-            <option value="custom">Custom...</option>
-          </select>
-        </div>
-        <div class="grow"></div>
-        <div class="toolset">
-          <div class="filters">
-            <button class="filters-btn" id="filtersBtn" aria-haspopup="true" title="Filters">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M7 12h10M9 18h6"/></svg>
-              <span class="count" id="filterCount" hidden>0</span>
-            </button>
-            <div class="pop filters-menu" id="filtersMenu" hidden>
-              <div class="filter-section">
-                <label class="filter-title">Campaign name</label>
-                <input type="text" class="filter-input" id="filterName" placeholder="Search..." />
-              </div>
-              <div class="filter-section">
-                <label class="filter-title">Campaign type</label>
-                <select id="filterChannelType" style="width: 100%; font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; background: var(--panel);">
-                  <option value="">All types</option>
-                  <option value="SEARCH">Search</option>
-                  <option value="DISPLAY">Display</option>
-                  <option value="SHOPPING">Shopping</option>
-                  <option value="PERFORMANCE_MAX">Performance Max</option>
-                  <option value="VIDEO">Video</option>
-                  <option value="APP">App</option>
-                  <option value="SMART">Smart</option>
-                </select>
-              </div>
-              <div class="filter-section">
-                <label class="filter-title">Impressions</label>
-                <div style="display: grid; grid-template-columns: 80px 1fr; gap: 8px;">
-                  <select id="filterImpOp" style="font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px; background: var(--panel);">
-                    <option value=">=">&ge;</option>
-                    <option value=">">></option>
-                    <option value="=">=</option>
-                    <option value="!=">≠</option>
-                    <option value="<"><</option>
-                    <option value="<=">&le;</option>
-                  </select>
-                  <input type="number" id="filterImpValue" class="filter-input" placeholder="0" style="margin: 0;" />
+    <main>
+      <!-- Dashboard Page -->
+      <section id="dashboard" class="page active">
+        <section id="signedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with your Google account to pull campaign performance for the accounts you manage.</p>
+            <a class="btn-google" href="/api/auth">
+              <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 11v2.8h4.6c-.2 1.2-1.5 3.6-4.6 3.6-2.8 0-5-2.3-5-5.1s2.2-5.1 5-5.1c1.6 0 2.6.7 3.2 1.2l2.2-2.1C17.9 4.9 15.2 4 12 4 6.9 4 2.8 8.1 2.8 13.2S6.9 22.4 12 22.4c5.9 0 9.8-4.1 9.8-9.9 0-.7-.1-1.2-.2-1.7H12z"/></svg>
+              Sign in with Google
+            </a>
+          </div>
+        </section>
+
+        <section id="signedIn" hidden>
+          <div class="controls-row account">
+            <div>
+              <label class="field-label" for="accountSelect">Account</label>
+              <select id="accountSelect"></select>
+            </div>
+          </div>
+
+          <div class="controls-row">
+            <div>
+              <label class="field-label" for="dateSelect">Date range</label>
+              <select id="dateSelect" onchange="onDateRangeChange()">
+                <option value="yesterday">Yesterday</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="14days">Last 14 Days</option>
+                <option value="30days" selected>Last 30 Days</option>
+                <option value="thisMonth">This Month</option>
+                <option value="lastMonth">Last Month</option>
+                <option value="custom">Custom...</option>
+              </select>
+            </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="filtersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                  <span class="count" id="filterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="filtersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('group-name', event)">
+                    <span class="toggle">−</span>Campaign Name
+                  </div>
+                  <div class="filter-group-items" id="group-name">
+                    <div class="filter-section">
+                      <input type="text" class="filter-input" id="filterName" placeholder="Search..." />
+                    </div>
+                  </div>
+
+                  <div class="filter-group-header" onclick="toggleFilterGroup('group-type', event)">
+                    <span class="toggle">−</span>Campaign Type
+                  </div>
+                  <div class="filter-group-items" id="group-type">
+                    <div class="filter-section">
+                      <select id="filterChannelType" style="width: 100%; font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; background: var(--panel); color: var(--ink);">
+                        <option value="">All types</option>
+                        <option value="SEARCH">Search</option>
+                        <option value="DISPLAY">Display</option>
+                        <option value="SHOPPING">Shopping</option>
+                        <option value="PERFORMANCE_MAX">Performance Max</option>
+                        <option value="VIDEO">Video</option>
+                        <option value="APP">App</option>
+                        <option value="SMART">Smart</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="filter-group-header" onclick="toggleFilterGroup('group-impr', event)">
+                    <span class="toggle">−</span>Impressions
+                  </div>
+                  <div class="filter-group-items" id="group-impr">
+                    <div class="filter-section">
+                      <div style="display: grid; grid-template-columns: 80px 1fr; gap: 8px;">
+                        <select id="filterImpOp" style="font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px; background: var(--panel); color: var(--ink);">
+                          <option value=">=">&ge;</option>
+                          <option value=">">></option>
+                          <option value="=">=</option>
+                          <option value="!=">≠</option>
+                          <option value="<"><</option>
+                          <option value="<=">&le;</option>
+                        </select>
+                        <input type="number" id="filterImpValue" class="filter-input" placeholder="0" style="margin: 0;" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="filter-group-header" onclick="toggleFilterGroup('group-cost', event)">
+                    <span class="toggle">−</span>Cost
+                  </div>
+                  <div class="filter-group-items" id="group-cost">
+                    <div class="filter-section">
+                      <div style="display: grid; grid-template-columns: 80px 1fr; gap: 8px;">
+                        <select id="filterCostOp" style="font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px; background: var(--panel); color: var(--ink);">
+                          <option value=">=">&ge;</option>
+                          <option value=">">></option>
+                          <option value="=">=</option>
+                          <option value="!=">≠</option>
+                          <option value="<"><</option>
+                          <option value="<=">&le;</option>
+                        </select>
+                        <input type="number" id="filterCostValue" class="filter-input" placeholder="0" step="0.01" style="margin: 0;" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="filter-group-header" onclick="toggleFilterGroup('group-status', event)">
+                    <span class="toggle">−</span>Status
+                  </div>
+                  <div class="filter-group-items" id="group-status">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row">
+                          <input type="checkbox" id="statusEnabled" checked />
+                          <label for="statusEnabled">Enabled</label>
+                        </div>
+                        <div class="check-row">
+                          <input type="checkbox" id="statusPaused" />
+                          <label for="statusPaused">Paused</label>
+                        </div>
+                        <div class="check-row">
+                          <input type="checkbox" id="statusRemoved" />
+                          <label for="statusRemoved">Removed</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="filter-buttons">
+                    <button onclick="applyFilters()">Apply</button>
+                    <button onclick="resetFilters()">Reset</button>
+                  </div>
                 </div>
               </div>
-              <div class="filter-section">
-                <label class="filter-title">Cost</label>
-                <div style="display: grid; grid-template-columns: 80px 1fr; gap: 8px;">
-                  <select id="filterCostOp" style="font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px; background: var(--panel);">
-                    <option value=">=">&ge;</option>
-                    <option value=">">></option>
-                    <option value="=">=</option>
-                    <option value="!=">≠</option>
-                    <option value="<"><</option>
-                    <option value="<=">&le;</option>
-                  </select>
-                  <input type="number" id="filterCostValue" class="filter-input" placeholder="0" step="0.01" style="margin: 0;" />
-                </div>
+              <div class="filters">
+                <button class="filters-btn" id="viewsBtn" aria-haspopup="true">
+                  <span id="viewsLabel">Views</span>
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+                </button>
+                <div class="pop col-pop" id="viewsPop" hidden></div>
               </div>
-              <div class="filter-section">
-                <label class="filter-title">Status</label>
-                <div class="status-checks">
-                  <div class="check-row">
-                    <input type="checkbox" id="statusEnabled" checked />
-                    <label for="statusEnabled">Enabled</label>
-                  </div>
-                  <div class="check-row">
-                    <input type="checkbox" id="statusPaused" />
-                    <label for="statusPaused">Paused</label>
-                  </div>
-                  <div class="check-row">
-                    <input type="checkbox" id="statusRemoved" />
-                    <label for="statusRemoved">Removed</label>
-                  </div>
-                </div>
-              </div>
-              <div class="filter-buttons">
-                <button onclick="applyFilters()">Apply</button>
-                <button onclick="resetFilters()">Reset</button>
+              <div class="filters">
+                <button class="filters-btn" id="colsBtn" aria-haspopup="true">
+                  Columns <span class="count" id="colsCount">0</span>
+                </button>
+                <div class="pop col-pop" id="colsPop" hidden></div>
               </div>
             </div>
           </div>
-          <div class="filters">
-            <button class="filters-btn" id="viewsBtn" aria-haspopup="true">
-              <span id="viewsLabel">Views</span>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
-            </button>
-            <div class="pop col-pop" id="viewsPop" hidden></div>
-          </div>
-          <div class="filters">
-            <button class="filters-btn" id="colsBtn" aria-haspopup="true">
-              Columns <span class="count" id="colsCount">0</span>
-            </button>
-            <div class="pop col-pop" id="colsPop" hidden></div>
-          </div>
-        </div>
-      </div>
 
-      <div id="customDateModal" class="calendar-modal">
-        <div class="calendar-content">
-          <h3>Custom date range</h3>
-          <div class="calendar-inputs">
-            <div class="calendar-picker">
-              <label class="picker-label">From</label>
-              <div class="month-nav">
-                <button onclick="prevMonth('from')">&larr;</button>
-                <span class="month-label" id="fromMonthLabel"></span>
-                <button onclick="nextMonth('from')">&rarr;</button>
+          <div id="customDateModal" class="calendar-modal">
+            <div class="calendar-content">
+              <h3>Custom date range</h3>
+              <div class="calendar-inputs">
+                <div class="calendar-picker">
+                  <label class="picker-label">From</label>
+                  <div class="month-nav">
+                    <button onclick="prevMonth('from')">&larr;</button>
+                    <span class="month-label" id="fromMonthLabel"></span>
+                    <button onclick="nextMonth('from')">&rarr;</button>
+                  </div>
+                  <div class="calendar-grid" id="fromCalendar"></div>
+                </div>
+                <div class="calendar-picker">
+                  <label class="picker-label">To</label>
+                  <div class="month-nav">
+                    <button onclick="prevMonth('to')">&larr;</button>
+                    <span class="month-label" id="toMonthLabel"></span>
+                    <button onclick="nextMonth('to')">&rarr;</button>
+                  </div>
+                  <div class="calendar-grid" id="toCalendar"></div>
+                </div>
               </div>
-              <div class="calendar-grid" id="fromCalendar"></div>
-            </div>
-            <div class="calendar-picker">
-              <label class="picker-label">To</label>
-              <div class="month-nav">
-                <button onclick="prevMonth('to')">&larr;</button>
-                <span class="month-label" id="toMonthLabel"></span>
-                <button onclick="nextMonth('to')">&rarr;</button>
+              <div class="calendar-buttons">
+                <button onclick="closeCustomDateModal()">Cancel</button>
+                <button class="apply" onclick="applyCustomDate()">Apply</button>
               </div>
-              <div class="calendar-grid" id="toCalendar"></div>
             </div>
           </div>
-          <div class="calendar-buttons">
-            <button onclick="closeCustomDateModal()">Cancel</button>
-            <button class="apply" onclick="applyCustomDate()">Apply</button>
+
+          <div class="panel">
+            <div id="loading" class="state" hidden><div class="spinner"></div>Loading campaigns…</div>
+            <div id="prompt" class="state"><div class="big">Choose an account</div>Select an account above to load its campaigns.</div>
+            <div id="error" class="state" hidden></div>
+            <div id="empty" class="state" hidden><div class="big">No campaigns</div>No campaigns found.</div>
+            <div class="scroll"><table id="table" hidden><thead id="thead"></thead><tbody id="tbody"></tbody><tfoot id="tfoot"></tfoot></table></div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+            <div class="foot-note">Click a column header to sort. Drag column borders to resize. Views are saved in this browser.</div>
+            <div class="pagination" id="pagination" hidden>
+              <div class="page-size">
+                Show <select id="pageSize">
+                  <option value="10">10</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="500">500</option>
+                </select> per page
+              </div>
+              <span id="pageInfo"></span>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- Settings Page -->
+      <section id="settings" class="page">
+        <h1>Settings</h1>
+        <div class="settings-section">
+          <h2>Appearance</h2>
+          <div class="setting-item">
+            <div>
+              <div class="setting-label">Dark Mode</div>
+              <div class="setting-desc">Use dark theme</div>
+            </div>
+            <label class="toggle" id="darkModeToggle" onclick="toggleTheme()">
+              <div class="toggle-dot"></div>
+            </label>
           </div>
         </div>
-      </div>
-
-      <div class="panel">
-        <div id="loading" class="state" hidden><div class="spinner"></div>Loading campaigns…</div>
-        <div id="prompt" class="state"><div class="big">Choose an account</div>Select an account above to load its campaigns.</div>
-        <div id="error" class="state" hidden></div>
-        <div id="empty" class="state" hidden><div class="big">No campaigns</div>No campaigns found.</div>
-        <div class="scroll"><table id="table" hidden><thead id="thead"></thead><tbody id="tbody"></tbody><tfoot id="tfoot"></tfoot></table></div>
-      </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-        <div class="foot-note">Click a column header to sort. Views are saved in this browser.</div>
-        <div class="pagination" id="pagination" hidden>
-          <div class="page-size">
-            Show <select id="pageSize">
-              <option value="10">10</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-              <option value="500">500</option>
-            </select> per page
-          </div>
-          <span id="pageInfo"></span>
-        </div>
-      </div>
-    </section>
-  </main>
+      </section>
+    </main>
+  </div>
 
 <script>
 const CURRENCY = "GBP", LOCALE = "en-GB";
 const VIEWS_KEY = "campaign_reporting_views_v1";
+const DARK_MODE_KEY = "dashboardDarkMode";
 
 const COLUMNS = [
   { key: "name",        label: "Campaign",      type: "text",    align: "txt", locked: true, group: "Settings" },
@@ -480,6 +578,7 @@ const state = {
   calendarToDate: new Date(),
   lastAccount: localStorage.getItem("lastSelectedAccount") || "",
   columnWidths: {},
+  openFilterGroups: new Set(["group-name", "group-status"]),
 };
 
 const fmtCurrency = n => new Intl.NumberFormat(LOCALE, { style:"currency", currency:CURRENCY, maximumFractionDigits:2 }).format(n || 0);
@@ -657,6 +756,23 @@ function applyCustomDate() {
   if (sel.value) loadCampaigns(sel.value);
 }
 
+function toggleFilterGroup(id, event) {
+  event.preventDefault();
+  event.stopPropagation();
+  const el = document.getElementById(id);
+  const header = el.previousElementSibling;
+  const toggle = header.querySelector('.toggle');
+  if (el.hidden) {
+    el.hidden = false;
+    toggle.textContent = '−';
+    state.openFilterGroups.add(id);
+  } else {
+    el.hidden = true;
+    toggle.textContent = '+';
+    state.openFilterGroups.delete(id);
+  }
+}
+
 function updateFilterCount() {
   let count = 0;
   if (state.filterName) count++;
@@ -715,8 +831,43 @@ function saveCustomViews() {
   try { localStorage.setItem(VIEWS_KEY, JSON.stringify(custom)); } catch {}
 }
 
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.toggle('dark');
+  localStorage.setItem(DARK_MODE_KEY, isDark);
+  updateThemeToggle();
+}
+
+function updateThemeToggle() {
+  const isDark = document.documentElement.classList.contains('dark');
+  const toggle = document.getElementById('darkModeToggle');
+  if (toggle) {
+    if (isDark) toggle.classList.add('on');
+    else toggle.classList.remove('on');
+  }
+}
+
+function initTheme() {
+  const isDark = localStorage.getItem(DARK_MODE_KEY) === 'true';
+  if (isDark) document.documentElement.classList.add('dark');
+  updateThemeToggle();
+}
+
+// Navigation
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.preventDefault();
+    const page = item.dataset.page;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(page).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+  });
+});
+
 init();
 async function init() {
+  initTheme();
   try {
     const res = await fetch("/api/accounts", { credentials: "same-origin" });
     const data = await res.json().catch(() => ({}));
@@ -740,7 +891,6 @@ function showApp(accounts) {
   sel.innerHTML = '<option value="">Select an account…</option>' +
     accounts.map(a => '<option value="' + a.id + '">' + escapeHtml(a.name || a.formatted) + ' · ' + a.formatted + '</option>').join("");
   
-  // Restore last selected account
   if (state.lastAccount) {
     sel.value = state.lastAccount;
     loadCampaigns(state.lastAccount);
@@ -863,7 +1013,7 @@ function renderTable() {
 
   document.getElementById("thead").innerHTML = "<tr>" + cols.map((c, i) => {
     const width = state.columnWidths[c.key] ? 'style="width:' + state.columnWidths[c.key] + 'px"' : '';
-    return '<th class="' + c.align + (c.key==='name'?' sticky-col':'') + '" data-key="' + c.key + '" ' + width + '><span class="sortable">' + c.label + arrow(c.key) + '</span><div class="resize-handle" onmousedown="startResize(event, \'' + c.key + '\')"></div></th>';
+    return '<th class="' + c.align + (c.key==='name'?' sticky-col':'') + '" data-key="' + c.key + '" ' + width + ' data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + '</span></th>';
   }).join("") + "</tr>";
 
   document.getElementById("tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
@@ -886,8 +1036,19 @@ function renderTable() {
   const totalPages = Math.ceil(filtered.length / state.pageSize);
   document.getElementById("pageInfo").innerHTML = "Page " + state.currentPage + " of " + totalPages;
 
-  document.querySelectorAll("#thead th").forEach(th =>
-    th.addEventListener("click", (e) => { if (e.target.className !== "resize-handle") setSort(th.dataset.key); }));
+  document.querySelectorAll("#thead th").forEach(th => {
+    th.addEventListener("mousedown", (e) => {
+      if (e.clientX < th.offsetLeft + th.offsetWidth - 10) {
+        setSort(th.dataset.key);
+      }
+    });
+    
+    const resizeHandle = document.createElement('div');
+    resizeHandle.style.cssText = 'position:absolute;right:0;top:0;bottom:0;width:4px;cursor:col-resize;background:transparent;';
+    resizeHandle.onmousedown = (e) => startResize(e, th.dataset.col);
+    th.style.position = 'relative';
+    th.appendChild(resizeHandle);
+  });
 }
 
 function setSort(key) {
@@ -910,7 +1071,6 @@ function wireMenus() {
 function renderColsPop() {
   const pop = document.getElementById("colsPop");
   
-  // Get unique groups in order
   const groups = ["Settings", "Performance", "Conversions", "Efficiency", "Quality", "Market Position"];
   const columnsByGroup = {};
   groups.forEach(g => { columnsByGroup[g] = []; });
@@ -923,9 +1083,9 @@ function renderColsPop() {
     const cols = columnsByGroup[group];
     if (cols.length === 0) return;
     
-    const id = "group_" + i;
-    const isOpen = i === 0; // First group open by default
-    html += '<div class="group-header" onclick="toggleGroup(\'' + id + '\', event)">' +
+    const id = "col_group_" + i;
+    const isOpen = i === 0;
+    html += '<div class="group-header" onclick="toggleColGroup(\'' + id + '\', event)">' +
       '<span class="toggle">' + (isOpen ? '−' : '+') + '</span>' + group + '</div>' +
       '<div class="group-items" id="' + id + '" ' + (isOpen ? '' : 'hidden') + '>';
     
@@ -949,7 +1109,7 @@ function renderColsPop() {
     }));
 }
 
-function toggleGroup(id, event) {
+function toggleColGroup(id, event) {
   event.stopPropagation();
   const el = document.getElementById(id);
   const header = el.previousElementSibling;
@@ -1006,24 +1166,16 @@ function renderViewsLabel() {
 
 function syncColsCount() { document.getElementById("colsCount").textContent = state.visible.size; }
 
-function escapeHtml(s) {
-  return String(s == null ? "" : s).replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
-}
-
-let resizeColumn = null;
-let resizeStart = 0;
-
-function startResize(e, key) {
+function startResize(e, colKey) {
   e.preventDefault();
-  resizeColumn = key;
-  resizeStart = e.clientX;
-  const th = e.target.parentElement;
+  const th = document.querySelector('th[data-col="' + colKey + '"]');
+  const startX = e.clientX;
   const startWidth = th.offsetWidth;
   
   function onMouseMove(me) {
-    const delta = me.clientX - resizeStart;
+    const delta = me.clientX - startX;
     const newWidth = Math.max(60, startWidth + delta);
-    state.columnWidths[key] = newWidth;
+    state.columnWidths[colKey] = newWidth;
     th.style.width = newWidth + 'px';
   }
   
@@ -1034,6 +1186,10 @@ function startResize(e, key) {
   
   document.addEventListener("mousemove", onMouseMove);
   document.addEventListener("mouseup", onMouseUp);
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 }
 </script>
 </body>
