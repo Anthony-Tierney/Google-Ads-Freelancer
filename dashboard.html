@@ -159,9 +159,14 @@
     position: sticky; top: 0; background: #fbfcfe; z-index: 2;
     font-weight: 560; color: var(--muted); font-size: 12.5px;
     padding: 10px 12px; white-space: nowrap; cursor: pointer; user-select: none;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--line); position: relative;
   }
   thead th:hover { color: var(--ink); }
+  thead th .resize-handle {
+    position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: transparent; cursor: col-resize;
+  }
+  thead th:hover .resize-handle { background: var(--accent); opacity: 0.5; }
+  thead th .resize-handle:hover { opacity: 1; }
   th.num, td.num { text-align: center; }
   th.txt, td.txt { text-align: left; }
   th .sortable { display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
@@ -274,6 +279,47 @@
               <div class="filter-section">
                 <label class="filter-title">Campaign name</label>
                 <input type="text" class="filter-input" id="filterName" placeholder="Search..." />
+              </div>
+              <div class="filter-section">
+                <label class="filter-title">Campaign type</label>
+                <select id="filterChannelType" style="width: 100%; font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; background: var(--panel);">
+                  <option value="">All types</option>
+                  <option value="SEARCH">Search</option>
+                  <option value="DISPLAY">Display</option>
+                  <option value="SHOPPING">Shopping</option>
+                  <option value="PERFORMANCE_MAX">Performance Max</option>
+                  <option value="VIDEO">Video</option>
+                  <option value="APP">App</option>
+                  <option value="SMART">Smart</option>
+                </select>
+              </div>
+              <div class="filter-section">
+                <label class="filter-title">Impressions</label>
+                <div style="display: grid; grid-template-columns: 80px 1fr; gap: 8px;">
+                  <select id="filterImpOp" style="font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px; background: var(--panel);">
+                    <option value=">=">&ge;</option>
+                    <option value=">">></option>
+                    <option value="=">=</option>
+                    <option value="!=">≠</option>
+                    <option value="<"><</option>
+                    <option value="<=">&le;</option>
+                  </select>
+                  <input type="number" id="filterImpValue" class="filter-input" placeholder="0" style="margin: 0;" />
+                </div>
+              </div>
+              <div class="filter-section">
+                <label class="filter-title">Cost</label>
+                <div style="display: grid; grid-template-columns: 80px 1fr; gap: 8px;">
+                  <select id="filterCostOp" style="font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px; background: var(--panel);">
+                    <option value=">=">&ge;</option>
+                    <option value=">">></option>
+                    <option value="=">=</option>
+                    <option value="!=">≠</option>
+                    <option value="<"><</option>
+                    <option value="<=">&le;</option>
+                  </select>
+                  <input type="number" id="filterCostValue" class="filter-input" placeholder="0" step="0.01" style="margin: 0;" />
+                </div>
               </div>
               <div class="filter-section">
                 <label class="filter-title">Status</label>
@@ -419,6 +465,11 @@ const state = {
   visible: new Set(SEED_VIEWS[0].columns),
   sort: { key: "clicks", dir: "desc" },
   filterName: "",
+  filterChannelType: "",
+  filterImpOp: ">=",
+  filterImpValue: 0,
+  filterCostOp: ">=",
+  filterCostValue: 0,
   filterStatus: new Set(["ENABLED"]),
   views: loadViews(),
   activeView: "default",
@@ -427,6 +478,8 @@ const state = {
   currentPage: 1,
   calendarFromDate: new Date(),
   calendarToDate: new Date(),
+  lastAccount: localStorage.getItem("lastSelectedAccount") || "",
+  columnWidths: {},
 };
 
 const fmtCurrency = n => new Intl.NumberFormat(LOCALE, { style:"currency", currency:CURRENCY, maximumFractionDigits:2 }).format(n || 0);
@@ -605,7 +658,13 @@ function applyCustomDate() {
 }
 
 function updateFilterCount() {
-  const count = (state.filterName ? 1 : 0) + state.filterStatus.size;
+  let count = 0;
+  if (state.filterName) count++;
+  if (state.filterChannelType) count++;
+  if (state.filterImpValue > 0) count++;
+  if (state.filterCostValue > 0) count++;
+  count += state.filterStatus.size;
+  
   const countEl = document.getElementById("filterCount");
   if (count > 0) {
     countEl.textContent = count;
@@ -617,6 +676,11 @@ function updateFilterCount() {
 
 function applyFilters() {
   state.filterName = document.getElementById("filterName").value;
+  state.filterChannelType = document.getElementById("filterChannelType").value;
+  state.filterImpOp = document.getElementById("filterImpOp").value;
+  state.filterImpValue = parseFloat(document.getElementById("filterImpValue").value) || 0;
+  state.filterCostOp = document.getElementById("filterCostOp").value;
+  state.filterCostValue = parseFloat(document.getElementById("filterCostValue").value) || 0;
   state.filterStatus = new Set([
     document.getElementById("statusEnabled").checked ? "ENABLED" : null,
     document.getElementById("statusPaused").checked ? "PAUSED" : null,
@@ -630,6 +694,9 @@ function applyFilters() {
 
 function resetFilters() {
   document.getElementById("filterName").value = "";
+  document.getElementById("filterChannelType").value = "";
+  document.getElementById("filterImpValue").value = "0";
+  document.getElementById("filterCostValue").value = "0";
   document.getElementById("statusEnabled").checked = true;
   document.getElementById("statusPaused").checked = false;
   document.getElementById("statusRemoved").checked = false;
@@ -672,7 +739,21 @@ function showApp(accounts) {
   const sel = document.getElementById("accountSelect");
   sel.innerHTML = '<option value="">Select an account…</option>' +
     accounts.map(a => '<option value="' + a.id + '">' + escapeHtml(a.name || a.formatted) + ' · ' + a.formatted + '</option>').join("");
-  sel.addEventListener("change", () => { if (sel.value) { state.currentPage = 1; loadCampaigns(sel.value); } });
+  
+  // Restore last selected account
+  if (state.lastAccount) {
+    sel.value = state.lastAccount;
+    loadCampaigns(state.lastAccount);
+  }
+  
+  sel.addEventListener("change", () => { 
+    if (sel.value) { 
+      state.lastAccount = sel.value;
+      localStorage.setItem("lastSelectedAccount", sel.value);
+      state.currentPage = 1; 
+      loadCampaigns(sel.value); 
+    } 
+  });
 
   document.getElementById("pageSize").addEventListener("change", e => { state.pageSize = parseInt(e.target.value); state.currentPage = 1; renderTable(); });
   document.getElementById("filtersBtn").addEventListener("click", e => { e.stopPropagation(); document.getElementById("colsPop").hidden = true; document.getElementById("viewsPop").hidden = true; document.getElementById("filtersMenu").hidden = !document.getElementById("filtersMenu").hidden; });
@@ -723,8 +804,32 @@ function sortedAndFiltered() {
   const nameQ = state.filterName.toLowerCase();
   return state.campaigns.filter(c => {
     const nameMatch = (c.name || "").toLowerCase().includes(nameQ);
+    const typeMatch = !state.filterChannelType || c.channelType === state.filterChannelType;
     const statusMatch = state.filterStatus.has(c.status);
-    return nameMatch && statusMatch;
+    
+    let impMatch = true;
+    if (state.filterImpValue > 0) {
+      const imp = c.impressions;
+      if (state.filterImpOp === ">=") impMatch = imp >= state.filterImpValue;
+      else if (state.filterImpOp === ">") impMatch = imp > state.filterImpValue;
+      else if (state.filterImpOp === "=") impMatch = imp === state.filterImpValue;
+      else if (state.filterImpOp === "!=") impMatch = imp !== state.filterImpValue;
+      else if (state.filterImpOp === "<") impMatch = imp < state.filterImpValue;
+      else if (state.filterImpOp === "<=") impMatch = imp <= state.filterImpValue;
+    }
+    
+    let costMatch = true;
+    if (state.filterCostValue > 0) {
+      const cost = c.cost;
+      if (state.filterCostOp === ">=") costMatch = cost >= state.filterCostValue;
+      else if (state.filterCostOp === ">") costMatch = cost > state.filterCostValue;
+      else if (state.filterCostOp === "=") costMatch = cost === state.filterCostValue;
+      else if (state.filterCostOp === "!=") costMatch = cost !== state.filterCostValue;
+      else if (state.filterCostOp === "<") costMatch = cost < state.filterCostValue;
+      else if (state.filterCostOp === "<=") costMatch = cost <= state.filterCostValue;
+    }
+    
+    return nameMatch && typeMatch && statusMatch && impMatch && costMatch;
   }).sort((a, b) => {
     const { key, dir } = state.sort;
     const av = a[key], bv = b[key];
@@ -756,9 +861,10 @@ function renderTable() {
   const tot = totals(pageRows);
   const arrow = key => state.sort.key === key ? '<span class="arr">' + (state.sort.dir === "desc" ? "\u25be" : "\u25b4") + '</span>' : "";
 
-  document.getElementById("thead").innerHTML = "<tr>" + cols.map(c =>
-    '<th class="' + c.align + (c.key==='name'?' sticky-col':'') + '" data-key="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + '</span></th>'
-  ).join("") + "</tr>";
+  document.getElementById("thead").innerHTML = "<tr>" + cols.map((c, i) => {
+    const width = state.columnWidths[c.key] ? 'style="width:' + state.columnWidths[c.key] + 'px"' : '';
+    return '<th class="' + c.align + (c.key==='name'?' sticky-col':'') + '" data-key="' + c.key + '" ' + width + '><span class="sortable">' + c.label + arrow(c.key) + '</span><div class="resize-handle" onmousedown="startResize(event, \'' + c.key + '\')"></div></th>';
+  }).join("") + "</tr>";
 
   document.getElementById("tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
     if (c.key === "name") return '<td class="txt name sticky-col">' + escapeHtml(r.name) + '</td>';
@@ -781,7 +887,7 @@ function renderTable() {
   document.getElementById("pageInfo").innerHTML = "Page " + state.currentPage + " of " + totalPages;
 
   document.querySelectorAll("#thead th").forEach(th =>
-    th.addEventListener("click", () => setSort(th.dataset.key)));
+    th.addEventListener("click", (e) => { if (e.target.className !== "resize-handle") setSort(th.dataset.key); }));
 }
 
 function setSort(key) {
@@ -819,7 +925,7 @@ function renderColsPop() {
     
     const id = "group_" + i;
     const isOpen = i === 0; // First group open by default
-    html += '<div class="group-header" onclick="toggleGroup(\'' + id + '\')">' +
+    html += '<div class="group-header" onclick="toggleGroup(\'' + id + '\', event)">' +
       '<span class="toggle">' + (isOpen ? '−' : '+') + '</span>' + group + '</div>' +
       '<div class="group-items" id="' + id + '" ' + (isOpen ? '' : 'hidden') + '>';
     
@@ -843,7 +949,8 @@ function renderColsPop() {
     }));
 }
 
-function toggleGroup(id) {
+function toggleGroup(id, event) {
+  event.stopPropagation();
   const el = document.getElementById(id);
   const header = el.previousElementSibling;
   const toggle = header.querySelector('.toggle');
@@ -901,6 +1008,32 @@ function syncColsCount() { document.getElementById("colsCount").textContent = st
 
 function escapeHtml(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+}
+
+let resizeColumn = null;
+let resizeStart = 0;
+
+function startResize(e, key) {
+  e.preventDefault();
+  resizeColumn = key;
+  resizeStart = e.clientX;
+  const th = e.target.parentElement;
+  const startWidth = th.offsetWidth;
+  
+  function onMouseMove(me) {
+    const delta = me.clientX - resizeStart;
+    const newWidth = Math.max(60, startWidth + delta);
+    state.columnWidths[key] = newWidth;
+    th.style.width = newWidth + 'px';
+  }
+  
+  function onMouseUp() {
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+  }
+  
+  document.addEventListener("mousemove", onMouseMove);
+  document.addEventListener("mouseup", onMouseUp);
 }
 </script>
 </body>
