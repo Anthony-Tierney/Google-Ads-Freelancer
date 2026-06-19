@@ -118,11 +118,17 @@
   .filter-buttons button { flex: 1; font: inherit; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-size: 12px; }
   .filter-buttons button.apply { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 560; }
 
-  .col-pop { width: 264px; padding: 6px; max-height: 360px; }
+  .col-pop { width: 280px; padding: 0; max-height: 420px; overflow-y: auto; }
+  .group-header { background: #fbfcfe; padding: 8px 12px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-top: 1px solid var(--line-soft); cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
+  .group-header:first-child { border-top: none; }
+  .group-header:hover { background: #f1f5f9; }
+  .group-header .toggle { display: inline-block; width: 12px; text-align: center; font-size: 9px; color: var(--faint); }
+  .group-items { display: flex; flex-direction: column; }
+  .group-items[hidden] { display: none; }
   .pop-row {
     display: flex; align-items: center; gap: 10px; width: 100%;
-    padding: 8px 9px; border: 0; background: none; font: inherit; color: var(--ink);
-    text-align: left; border-radius: 7px; cursor: pointer;
+    padding: 8px 12px; border: 0; background: none; font: inherit; color: var(--ink);
+    text-align: left; cursor: pointer;
   }
   .pop-row:hover { background: #f8fafc; }
   .pop-row.locked { color: var(--faint); cursor: default; }
@@ -368,24 +374,39 @@ const CURRENCY = "GBP", LOCALE = "en-GB";
 const VIEWS_KEY = "campaign_reporting_views_v1";
 
 const COLUMNS = [
-  { key: "name",        label: "Campaign",      type: "text",    align: "txt", locked: true },
-  { key: "status",      label: "Status",        type: "status",  align: "txt" },
-  { key: "channelType", label: "Type",          type: "channel", align: "txt" },
-  { key: "budget",      label: "Daily budget",  type: "currency",align: "num" },
-  { key: "impressions", label: "Impr.",         type: "int",     align: "num" },
-  { key: "clicks",      label: "Clicks",        type: "int",     align: "num" },
-  { key: "ctr",         label: "CTR",           type: "percent", align: "num" },
-  { key: "avgCpc",      label: "Avg. CPC",      type: "currency",align: "num" },
-  { key: "cost",        label: "Cost",          type: "currency",align: "num" },
-  { key: "conversions", label: "Conv.",         type: "decimal", align: "num" },
-  { key: "convRate",    label: "Conv. rate",    type: "percent", align: "num" },
-  { key: "cpa",         label: "Cost / conv.",  type: "currency",align: "num" },
-  { key: "convValue",   label: "Conv. value",   type: "currency",align: "num" },
-  { key: "roas",        label: "ROAS",          type: "roas",    align: "num" },
-  { key: "searchImpShare", label: "Search Impr. Share", type: "percent", align: "num" },
-  { key: "topImpShare", label: "Top Impr. Share", type: "percent", align: "num" },
-  { key: "absTopImpShare", label: "Abs. Top Impr. Share", type: "percent", align: "num" },
-  { key: "searchClickShare", label: "Click Share", type: "percent", align: "num" },
+  { key: "name",        label: "Campaign",      type: "text",    align: "txt", locked: true, group: "Settings" },
+  { key: "status",      label: "Status",        type: "status",  align: "txt", locked: true, group: "Settings" },
+  { key: "channelType", label: "Type",          type: "channel", align: "txt", locked: true, group: "Settings" },
+  { key: "budget",      label: "Daily budget",  type: "currency",align: "num", locked: true, group: "Settings" },
+  
+  { key: "impressions", label: "Impr.",         type: "int",     align: "num", group: "Performance" },
+  { key: "clicks",      label: "Clicks",        type: "int",     align: "num", group: "Performance" },
+  { key: "interactions",label: "Interactions",  type: "int",     align: "num", group: "Performance" },
+  { key: "cost",        label: "Cost",          type: "currency",align: "num", group: "Performance" },
+  
+  { key: "conversions", label: "Conv.",         type: "decimal", align: "num", group: "Conversions" },
+  { key: "allConversions", label: "All Conv.",  type: "decimal", align: "num", group: "Conversions" },
+  { key: "viewThroughConversions", label: "VTC", type: "decimal", align: "num", group: "Conversions" },
+  { key: "convValue",   label: "Conv. value",   type: "currency",align: "num", group: "Conversions" },
+  
+  { key: "ctr",         label: "CTR",           type: "percent", align: "num", group: "Efficiency" },
+  { key: "interaction_rate", label: "Int. rate", type: "percent", align: "num", group: "Efficiency" },
+  { key: "avgCpc",      label: "Avg. CPC",      type: "currency",align: "num", group: "Efficiency" },
+  { key: "convRate",    label: "Conv. rate",    type: "percent", align: "num", group: "Efficiency" },
+  { key: "cpa",         label: "Cost / conv.",  type: "currency",align: "num", group: "Efficiency" },
+  { key: "cost_per_conversion", label: "Cost per conv.", type: "currency", align: "num", group: "Efficiency" },
+  { key: "roas",        label: "ROAS",          type: "roas",    align: "num", group: "Efficiency" },
+  
+  { key: "invalidClicks", label: "Invalid clicks", type: "int", align: "num", group: "Quality" },
+  { key: "invalidClickRate", label: "Invalid click rate", type: "percent", align: "num", group: "Quality" },
+  { key: "activeViewImpressions", label: "Viewable impr.", type: "int", align: "num", group: "Quality" },
+  { key: "activeViewCtr", label: "Viewable CTR", type: "percent", align: "num", group: "Quality" },
+  
+  { key: "searchImpShare", label: "Search impr. share", type: "percent", align: "num", group: "Market Position" },
+  { key: "topImpShare", label: "Top impr. share", type: "percent", align: "num", group: "Market Position" },
+  { key: "absTopImpShare", label: "Abs. top impr. share", type: "percent", align: "num", group: "Market Position" },
+  { key: "searchClickShare", label: "Click share", type: "percent", align: "num", group: "Market Position" },
+  { key: "searchBudgetLostImpShare", label: "Budget lost impr. share", type: "percent", align: "num", group: "Market Position" },
 ];
 
 const SEED_VIEWS = [
@@ -429,19 +450,28 @@ function formatCell(type, v) {
 
 function withMetrics(c) {
   const imp = +c.impressions || 0, clk = +c.clicks || 0, cost = +c.cost || 0,
-        conv = +c.conversions || 0, val = +c.convValue || 0;
+        conv = +c.conversions || 0, val = +c.convValue || 0, int = +c.interactions || 0;
   return { ...c,
-    impressions: imp, clicks: clk, cost, conversions: conv, convValue: val,
+    impressions: imp, clicks: clk, cost, conversions: conv, convValue: val, interactions: int,
     budget: +c.budget || 0,
+    allConversions: +c.allConversions || 0,
+    viewThroughConversions: +c.viewThroughConversions || 0,
+    invalidClicks: +c.invalidClicks || 0,
+    invalidClickRate: +c.invalidClickRate || 0,
+    activeViewImpressions: +c.activeViewImpressions || 0,
+    activeViewCtr: +c.activeViewCtr || 0,
     ctr: imp ? clk / imp : 0,
+    interaction_rate: imp ? int / imp : 0,
     avgCpc: clk ? cost / clk : 0,
     convRate: clk ? conv / clk : 0,
     cpa: conv ? cost / conv : 0,
+    cost_per_conversion: conv ? cost / conv : 0,
     roas: cost ? val / cost : 0,
     searchImpShare: +c.searchImpShare || 0,
     topImpShare: +c.topImpShare || 0,
     absTopImpShare: +c.absTopImpShare || 0,
     searchClickShare: +c.searchClickShare || 0,
+    searchBudgetLostImpShare: +c.searchBudgetLostImpShare || 0,
   };
 }
 
@@ -773,10 +803,37 @@ function wireMenus() {
 
 function renderColsPop() {
   const pop = document.getElementById("colsPop");
-  pop.innerHTML = COLUMNS.map(c => {
-    const on = state.visible.has(c.key);
-    return '<button class="pop-row ' + (c.locked?'locked':'') + '" data-key="' + c.key + '" ' + (c.locked?'disabled':'') + '><span class="check ' + (on?'on':'') + '">' + (on?'<svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5"/></svg>':'') + '</span>' + c.label + (c.locked?'<span class="active-dot" style="margin-left:auto;font-size:11px;color:var(--faint)">pinned</span>':'') + '</button>';
-  }).join("");
+  
+  // Get unique groups in order
+  const groups = ["Settings", "Performance", "Conversions", "Efficiency", "Quality", "Market Position"];
+  const columnsByGroup = {};
+  groups.forEach(g => { columnsByGroup[g] = []; });
+  COLUMNS.forEach(c => {
+    if (columnsByGroup[c.group]) columnsByGroup[c.group].push(c);
+  });
+
+  let html = '';
+  groups.forEach((group, i) => {
+    const cols = columnsByGroup[group];
+    if (cols.length === 0) return;
+    
+    const id = "group_" + i;
+    const isOpen = i === 0; // First group open by default
+    html += '<div class="group-header" onclick="toggleGroup(\'' + id + '\')">' +
+      '<span class="toggle">' + (isOpen ? '−' : '+') + '</span>' + group + '</div>' +
+      '<div class="group-items" id="' + id + '" ' + (isOpen ? '' : 'hidden') + '>';
+    
+    cols.forEach(c => {
+      const on = state.visible.has(c.key);
+      html += '<button class="pop-row ' + (c.locked?'locked':'') + '" data-key="' + c.key + '" ' + (c.locked?'disabled':'') + '>' +
+        '<span class="check ' + (on?'on':'') + '">' + (on?'<svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5"/></svg>':'') + '</span>' +
+        c.label + (c.locked?'<span class="active-dot" style="margin-left:auto;font-size:11px;color:var(--faint)">pinned</span>':'') + '</button>';
+    });
+    
+    html += '</div>';
+  });
+  
+  pop.innerHTML = html;
   pop.querySelectorAll(".pop-row:not(.locked)").forEach(row =>
     row.addEventListener("click", () => {
       const k = row.dataset.key;
@@ -784,6 +841,19 @@ function renderColsPop() {
       state.activeView = null;
       syncColsCount(); renderColsPop(); renderViewsLabel(); renderTable();
     }));
+}
+
+function toggleGroup(id) {
+  const el = document.getElementById(id);
+  const header = el.previousElementSibling;
+  const toggle = header.querySelector('.toggle');
+  if (el.hidden) {
+    el.hidden = false;
+    toggle.textContent = '−';
+  } else {
+    el.hidden = true;
+    toggle.textContent = '+';
+  }
 }
 
 function renderViewsPop() {
