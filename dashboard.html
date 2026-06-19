@@ -499,7 +499,7 @@
 
           <div id="customDateModal" class="calendar-modal">
             <div class="calendar-content">
-              <h3>Custom date range</h3>
+              <h3 id="calendarTitle">Custom date range</h3>
               <div class="calendar-inputs">
                 <div class="calendar-picker">
                   <label class="picker-label">From</label>
@@ -521,7 +521,7 @@
                 </div>
               </div>
               <div class="calendar-buttons">
-                <button onclick="closeCustomDateModal()">Cancel</button>
+                <button onclick="cancelCustomDate()">Cancel</button>
                 <button class="apply" onclick="applyCustomDate()">Apply</button>
               </div>
             </div>
@@ -877,16 +877,42 @@ function nextMonth(side) {
 
 function closeCustomDateModal() {
   document.getElementById("customDateModal").removeAttribute("open");
-  document.getElementById("dateSelect").value = "30days";
+}
+
+function syncDateSelect() {
+  const r = state.dateRange, sel = document.getElementById("dateSelect");
+  if (r.from && r.to) sel.value = "custom";
+  else if (r.type === "thisMonth") sel.value = "thisMonth";
+  else if (r.type === "lastMonth") sel.value = "lastMonth";
+  else sel.value = ({ 1: "yesterday", 7: "7days", 14: "14days", 30: "30days" })[r.days] || "30days";
+}
+
+function cancelCustomDate() {
+  closeCustomDateModal();
+  if (state.calendarTarget !== "compare") syncDateSelect();
 }
 
 function applyCustomDate() {
   const from = formatDateForGAQL(state.calendarFromDate);
   const to = formatDateForGAQL(state.calendarToDate);
+  const sel = document.getElementById("accountSelect");
+
+  if (state.calendarTarget === "compare") {
+    state.compareCustom = { from, to };
+    state.compareMode = "custom";
+    state.compareEnabled = true;
+    closeCustomDateModal();
+    saveFilters();
+    updateCompareUI();
+    if (sel.value) loadCampaigns(sel.value);
+    return;
+  }
+
   state.dateRange = { label: from + " to " + to, from, to };
   state.currentPage = 1;
   closeCustomDateModal();
-  const sel = document.getElementById("accountSelect");
+  syncDateSelect();
+  if (state.compareEnabled) updateCompareUI();
   if (sel.value) loadCampaigns(sel.value);
 }
 
@@ -959,6 +985,8 @@ function saveFilters() {
       filterCostValue: state.filterCostValue,
       filterStatus: [...state.filterStatus],
       compareEnabled: state.compareEnabled,
+      compareMode: state.compareMode,
+      compareCustom: state.compareCustom,
     }));
   } catch {}
 }
@@ -975,6 +1003,8 @@ function loadFilters() {
     state.filterCostValue = d.filterCostValue || 0;
     state.filterStatus = new Set(d.filterStatus || ["ENABLED"]);
     state.compareEnabled = !!d.compareEnabled;
+    state.compareMode = d.compareMode || "previous";
+    state.compareCustom = d.compareCustom || null;
   } catch {}
 }
 
@@ -992,6 +1022,58 @@ function syncFilterDOM() {
   document.getElementById("statusRemoved").checked = state.filterStatus.has("REMOVED");
   const cmp = document.getElementById("compareBtn");
   if (cmp) cmp.classList.toggle("active", state.compareEnabled);
+}
+
+function updateCompareUI() {
+  const btn = document.getElementById("compareBtn");
+  const label = btn.querySelector(".cmp-label");
+  const cap = document.getElementById("compareCaption");
+  if (!state.compareEnabled) {
+    btn.classList.remove("active");
+    label.textContent = "Compare";
+    cap.hidden = true;
+    cap.textContent = "";
+    return;
+  }
+  btn.classList.add("active");
+  label.textContent = state.compareMode === "custom" ? "vs custom" : "vs previous";
+  const { start, end } = getComparePeriodDates();
+  const fmt = d => d.toLocaleDateString(LOCALE, { day: "numeric", month: "short", year: "numeric" });
+  cap.hidden = false;
+  cap.textContent = "Comparing against " + fmt(start) + " – " + fmt(end);
+}
+
+function saveViewState() {
+  try {
+    localStorage.setItem(VIEWSTATE_KEY, JSON.stringify({
+      visible: [...state.visible],
+      activeView: state.activeView,
+      pageSize: state.pageSize,
+      sort: state.sort,
+      columnWidths: state.columnWidths,
+    }));
+  } catch {}
+}
+
+function loadViewState() {
+  try {
+    const d = JSON.parse(localStorage.getItem(VIEWSTATE_KEY) || "null");
+    if (!d) return;
+    if (Array.isArray(d.visible) && d.visible.length) state.visible = new Set(d.visible);
+    if (d.activeView !== undefined) state.activeView = d.activeView;
+    if (d.pageSize) state.pageSize = d.pageSize;
+    if (d.sort && d.sort.key) state.sort = d.sort;
+    if (d.columnWidths) state.columnWidths = d.columnWidths;
+  } catch {}
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 4000);
 }
 
 function resetFilters() {
@@ -1075,7 +1157,11 @@ function showApp(accounts) {
   document.getElementById("userArea").textContent = accounts.length + " accounts available";
 
   loadFilters();
+  loadViewState();
   syncFilterDOM();
+  document.getElementById("pageSize").value = String(state.pageSize);
+  renderViewsLabel();
+  updateCompareUI();
 
   const sel = document.getElementById("accountSelect");
   sel.innerHTML = '<option value="">Select an account…</option>' +
@@ -1095,23 +1181,53 @@ function showApp(accounts) {
     } 
   });
 
-  document.getElementById("pageSize").addEventListener("change", e => { state.pageSize = parseInt(e.target.value); state.currentPage = 1; renderTable(); });
-  document.getElementById("filtersBtn").addEventListener("click", e => { e.stopPropagation(); document.getElementById("colsPop").hidden = true; document.getElementById("viewsPop").hidden = true; document.getElementById("filtersMenu").hidden = !document.getElementById("filtersMenu").hidden; });
-  document.addEventListener("click", () => { document.getElementById("filtersMenu").hidden = true; document.getElementById("colsPop").hidden = true; document.getElementById("viewsPop").hidden = true; });
+  document.getElementById("pageSize").addEventListener("change", e => { state.pageSize = parseInt(e.target.value); state.currentPage = 1; saveViewState(); renderTable(); });
+  document.getElementById("filtersBtn").addEventListener("click", e => { e.stopPropagation(); closeAllMenus(); document.getElementById("filtersMenu").hidden = !document.getElementById("filtersMenu").hidden; });
+  document.addEventListener("click", closeAllMenus);
   document.getElementById("filtersMenu").addEventListener("click", e => e.stopPropagation());
 
-  document.getElementById("compareBtn").addEventListener("click", () => {
-    state.compareEnabled = !state.compareEnabled;
-    document.getElementById("compareBtn").classList.toggle("active", state.compareEnabled);
-    saveFilters();
-    const a = document.getElementById("accountSelect");
-    if (a.value) loadCampaigns(a.value);
-  });
-  document.getElementById("exportBtn").addEventListener("click", exportCSV);
+  // Compare dropdown
+  const comparePop = document.getElementById("comparePop");
+  document.getElementById("compareBtn").addEventListener("click", e => { e.stopPropagation(); closeAllMenus(); comparePop.hidden = !comparePop.hidden; });
+  comparePop.addEventListener("click", e => e.stopPropagation());
+  comparePop.querySelectorAll("[data-cmp]").forEach(b => b.addEventListener("click", () => {
+    comparePop.hidden = true;
+    const mode = b.dataset.cmp;
+    if (mode === "off") {
+      state.compareEnabled = false; state.compareMode = "previous";
+      saveFilters(); updateCompareUI();
+      const a = document.getElementById("accountSelect"); if (a.value) loadCampaigns(a.value);
+    } else if (mode === "previous") {
+      state.compareEnabled = true; state.compareMode = "previous";
+      saveFilters(); updateCompareUI();
+      const a = document.getElementById("accountSelect"); if (a.value) loadCampaigns(a.value);
+    } else if (mode === "custom") {
+      openCompareCustom();
+    }
+  }));
+
+  // Export dropdown
+  const exportPop = document.getElementById("exportPop");
+  document.getElementById("exportBtn").addEventListener("click", e => { e.stopPropagation(); closeAllMenus(); exportPop.hidden = !exportPop.hidden; });
+  exportPop.addEventListener("click", e => e.stopPropagation());
+  exportPop.querySelectorAll("[data-fmt]").forEach(b => b.addEventListener("click", () => {
+    exportPop.hidden = true;
+    const fmt = b.dataset.fmt;
+    if (fmt === "csv") exportCSV();
+    else if (fmt === "pdf") exportPDF();
+    else if (fmt === "sheets") exportSheets();
+  }));
 
   wireMenus();
   syncColsCount();
   updateFilterCount();
+}
+
+function closeAllMenus() {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.hidden = true;
+  });
 }
 
 async function loadCampaigns(customerId) {
@@ -1138,14 +1254,14 @@ async function loadCampaigns(customerId) {
       return;
     }
 
-    // Period-over-period comparison: fetch the previous equivalent period and match by name
+    // Period-over-period comparison: fetch the comparison period and match by campaign id
     if (state.compareEnabled) {
       try {
-        const res2 = await fetch("/api/campaigns?customerId=" + encodeURIComponent(customerId) + "&dateRange=" + encodeURIComponent(getPreviousDateRange()), { credentials: "same-origin" });
+        const res2 = await fetch("/api/campaigns?customerId=" + encodeURIComponent(customerId) + "&dateRange=" + encodeURIComponent(getCompareDateRange()), { credentials: "same-origin" });
         const prevData = await res2.json().catch(() => ({}));
-        const prevByName = {};
-        (prevData.campaigns || []).map(withMetrics).forEach(c => { prevByName[c.name] = c; });
-        state.campaigns.forEach(c => { c._prev = prevByName[c.name] || null; });
+        const prevById = {};
+        (prevData.campaigns || []).map(withMetrics).forEach(c => { prevById[c.id] = c; });
+        state.campaigns.forEach(c => { c._prev = prevById[c.id] || null; });
       } catch { state.campaigns.forEach(c => { c._prev = null; }); }
     } else {
       state.campaigns.forEach(c => { c._prev = null; });
@@ -1240,10 +1356,11 @@ function renderTable() {
   const totPrev = state.compareEnabled ? totals(pageRows.map(r => r._prev).filter(Boolean)) : {};
   const arrow = key => state.sort.key === key ? '<span class="arr">' + (state.sort.dir === "desc" ? "\u25be" : "\u25b4") + '</span>' : "";
 
+  document.getElementById("colgroup").innerHTML = cols.map(c =>
+    '<col data-col="' + c.key + '" style="width:' + colWidth(c) + 'px">').join("");
+
   document.getElementById("thead").innerHTML = "<tr>" + cols.map((c, i) => {
-    const w = state.columnWidths[c.key];
-    const width = w ? 'style="width:' + w + 'px;min-width:' + w + 'px;max-width:' + w + 'px"' : '';
-    return '<th class="' + c.align + '" data-key="' + c.key + '" ' + width + ' data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + '</span></th>';
+    return '<th class="' + c.align + '" data-key="' + c.key + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + '</span></th>';
   }).join("") + "</tr>";
 
   document.getElementById("tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
@@ -1297,15 +1414,23 @@ function setSort(key) {
   const s = state.sort;
   state.sort = s.key === key ? { key, dir: s.dir === "desc" ? "asc" : "desc" } : { key, dir: "desc" };
   state.currentPage = 1;
+  saveViewState();
   renderTable();
+}
+
+function colWidth(c) {
+  if (state.columnWidths[c.key]) return state.columnWidths[c.key];
+  if (c.key === "name") return 260;
+  const byType = { status: 110, channel: 140, currency: 120, percent: 130, int: 110, decimal: 110, roas: 100 };
+  return byType[c.type] || 120;
 }
 
 function wireMenus() {
   const colsBtn = document.getElementById("colsBtn"), colsPop = document.getElementById("colsPop");
   const viewsBtn = document.getElementById("viewsBtn"), viewsPop = document.getElementById("viewsPop");
 
-  colsBtn.addEventListener("click", e => { e.stopPropagation(); viewsPop.hidden = true; document.getElementById("filtersMenu").hidden = true; renderColsPop(); colsPop.hidden = !colsPop.hidden; });
-  viewsBtn.addEventListener("click", e => { e.stopPropagation(); colsPop.hidden = true; document.getElementById("filtersMenu").hidden = true; renderViewsPop(); viewsPop.hidden = !viewsPop.hidden; });
+  colsBtn.addEventListener("click", e => { e.stopPropagation(); const open = colsPop.hidden; closeAllMenus(); if (open) { renderColsPop(); colsPop.hidden = false; } });
+  viewsBtn.addEventListener("click", e => { e.stopPropagation(); const open = viewsPop.hidden; closeAllMenus(); if (open) { renderViewsPop(); viewsPop.hidden = false; } });
   colsPop.addEventListener("click", e => e.stopPropagation());
   viewsPop.addEventListener("click", e => e.stopPropagation());
 }
@@ -1347,6 +1472,7 @@ function renderColsPop() {
       const k = row.dataset.key;
       state.visible.has(k) ? state.visible.delete(k) : state.visible.add(k);
       state.activeView = null;
+      saveViewState();
       syncColsCount(); renderColsPop(); renderViewsLabel(); renderTable();
     }));
 }
@@ -1388,7 +1514,7 @@ function showNameInput() {
     const name = input.value.trim(); if (!name) return;
     const id = "v_" + Date.now();
     state.views.push({ id, name, columns: shownColumns().map(c => c.key) });
-    state.activeView = id; saveCustomViews();
+    state.activeView = id; saveCustomViews(); saveViewState();
     renderViewsLabel(); renderViewsPop();
   };
   row.querySelector("button").addEventListener("click", save);
@@ -1400,6 +1526,7 @@ function applyView(id) {
   state.visible = new Set(v.columns);
   state.activeView = id;
   document.getElementById("viewsPop").hidden = true;
+  saveViewState();
   syncColsCount(); renderViewsLabel(); renderTable();
 }
 
@@ -1412,19 +1539,17 @@ function syncColsCount() { document.getElementById("colsCount").textContent = st
 
 function startResize(e, colKey) {
   e.preventDefault();
+  const col = document.querySelector('col[data-col="' + colKey + '"]');
   const th = document.querySelector('th[data-col="' + colKey + '"]');
   const startX = e.clientX;
-  const startWidth = th.offsetWidth;
-  let moved = false;
+  const startWidth = col ? col.getBoundingClientRect().width : (th ? th.offsetWidth : 120);
 
   function onMouseMove(me) {
     const delta = me.clientX - startX;
-    if (Math.abs(delta) > 2) { moved = true; th.dataset.resizing = "1"; }
-    const newWidth = Math.max(60, startWidth + delta);
+    if (Math.abs(delta) > 2 && th) th.dataset.resizing = "1";
+    const newWidth = Math.max(60, Math.round(startWidth + delta));
     state.columnWidths[colKey] = newWidth;
-    th.style.width = newWidth + 'px';
-    th.style.minWidth = newWidth + 'px';
-    th.style.maxWidth = newWidth + 'px';
+    if (col) col.style.width = newWidth + 'px';
   }
 
   function onMouseUp() {
@@ -1432,6 +1557,7 @@ function startResize(e, colKey) {
     document.removeEventListener("mouseup", onMouseUp);
     document.body.style.userSelect = "";
     document.body.style.cursor = "";
+    saveViewState();
   }
 
   document.body.style.userSelect = "none";
@@ -1518,6 +1644,129 @@ function exportCSV() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src; s.onload = () => resolve(); s.onerror = () => reject(new Error("load failed"));
+    document.head.appendChild(s);
+  });
+}
+
+async function ensurePdfLibs() {
+  if (window.jspdf && window.jspdf.jsPDF) return true;
+  try {
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js");
+    return !!(window.jspdf && window.jspdf.jsPDF);
+  } catch { return false; }
+}
+
+function currentAccountName() {
+  const sel = document.getElementById("accountSelect");
+  return sel.selectedOptions[0] ? sel.selectedOptions[0].text.split(" · ")[0] : "account";
+}
+
+async function exportPDF() {
+  const rows = sortedAndFiltered();
+  if (!rows.length) return;
+  showToast("Preparing PDF…");
+  const ok = await ensurePdfLibs();
+  if (!ok) { showToast("Couldn't load the PDF library — opening print dialog instead."); window.print(); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+  const cols = shownColumns();
+  const compare = state.compareEnabled;
+
+  const head = [cols.map(c => c.label)];
+  const body = rows.map(r => cols.map(c => {
+    if (c.type === "status") return titleCase(r.status);
+    let v = formatCell(c.type, r[c.key]);
+    if (compare && c.align === "num" && r._prev) {
+      const d = pctChangeStr(r[c.key], r._prev[c.key]);
+      if (d) v += "\n" + d;
+    }
+    return v;
+  }));
+
+  const tot = totals(rows);
+  const totPrev = compare ? totals(rows.map(r => r._prev).filter(Boolean)) : {};
+  body.push(cols.map((c, i) => {
+    if (i === 0) return "Total · " + rows.length;
+    if (c.align !== "num") return "";
+    let v = formatCell(c.type, tot[c.key]);
+    if (compare) { const d = pctChangeStr(tot[c.key], totPrev[c.key]); if (d) v += "\n" + d; }
+    return v;
+  }));
+
+  const acctName = currentAccountName();
+  doc.setFontSize(14); doc.setTextColor(20); doc.text("Campaign Report", 40, 34);
+  doc.setFontSize(9); doc.setTextColor(110);
+  doc.text(acctName + "    ·    " + state.dateRange.label, 40, 50);
+  let startY = 64;
+  if (compare) {
+    const { start, end } = getComparePeriodDates();
+    const fmt = d => d.toLocaleDateString(LOCALE, { day: "numeric", month: "short", year: "numeric" });
+    doc.text("Compared against " + fmt(start) + " – " + fmt(end), 40, 63);
+    startY = 78;
+  }
+
+  const lastRow = body.length - 1;
+  doc.autoTable({
+    head, body, startY,
+    styles: { fontSize: 7, cellPadding: 3, overflow: "linebreak" },
+    headStyles: { fillColor: [67, 56, 202], textColor: 255, fontSize: 7 },
+    didParseCell: (data) => {
+      if (data.section === "body" && data.row.index === lastRow) {
+        data.cell.styles.fontStyle = "bold";
+        data.cell.styles.fillColor = [241, 245, 249];
+      }
+    },
+  });
+
+  const slug = s => s.replace(/[^a-z0-9]+/gi, "-").toLowerCase().replace(/^-|-$/g, "");
+  doc.save("campaigns-" + slug(acctName) + "-" + slug(state.dateRange.label) + ".pdf");
+  showToast("PDF downloaded.");
+}
+
+async function exportSheets() {
+  const cols = shownColumns();
+  const rows = sortedAndFiltered();
+  if (!rows.length) return;
+  const compare = state.compareEnabled;
+
+  const header = [];
+  cols.forEach(c => {
+    header.push(c.label);
+    if (compare && c.align === "num") { header.push(c.label + " (prev)"); header.push(c.label + " \u0394%"); }
+  });
+  const lines = [header.join("\t")];
+  rows.forEach(r => {
+    const cells = [];
+    cols.forEach(c => {
+      cells.push(csvValue(c.type, r[c.key]));
+      if (compare && c.align === "num") {
+        const prev = r._prev ? r._prev[c.key] : null;
+        cells.push(prev == null ? "" : csvValue(c.type, prev));
+        cells.push(pctChangeStr(r[c.key], prev));
+      }
+    });
+    lines.push(cells.join("\t"));
+  });
+  const tsv = lines.join("\n");
+
+  // Open the new sheet within the click gesture so it isn't popup-blocked, then copy.
+  const win = window.open("https://sheets.new", "_blank");
+  try {
+    await navigator.clipboard.writeText(tsv);
+    showToast("Data copied — switch to the new Google Sheet and paste (Ctrl/Cmd + V).");
+  } catch {
+    if (win) win.close();
+    showToast("Clipboard was blocked — downloading a CSV instead.");
+    exportCSV();
+  }
 }
 
 function escapeHtml(s) {
