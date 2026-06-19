@@ -22,6 +22,12 @@ export async function onRequestGet(context) {
 
   const accessToken = await getAccessToken(env, refreshToken);
 
+  // Build WHERE clause - if dateRange already contains segments.date, use it directly
+  let whereClause = "segments.date DURING " + dateRange;
+  if (dateRange.includes("segments.date")) {
+    whereClause = dateRange;
+  }
+
   const query = `
     SELECT
       campaign.name,
@@ -38,7 +44,7 @@ export async function onRequestGet(context) {
       metrics.search_absolute_top_impression_share,
       metrics.search_click_share
     FROM campaign
-    WHERE segments.date DURING ${dateRange}
+    WHERE ${whereClause}
     ORDER BY metrics.clicks DESC`;
 
   const result = await adsRequest(
