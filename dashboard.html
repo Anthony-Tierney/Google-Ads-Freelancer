@@ -86,15 +86,16 @@
   .grow { flex: 1; }
   .toolset { display: flex; align-items: flex-end; gap: 8px; margin-left: auto; }
 
-  .menu { position: relative; }
-  .menu-btn {
+  .filters { position: relative; }
+  .filters-btn {
     font: inherit; display: inline-flex; align-items: center; gap: 7px;
     background: var(--panel); border: 1px solid var(--line); border-radius: 9px;
     padding: 8px 12px; cursor: pointer; color: var(--ink); font-weight: 520;
+    position: relative;
   }
-  .menu-btn:hover { background: #fbfcfe; }
-  .menu-btn .count { background: var(--off-bg); color: var(--muted); border-radius: 999px; padding: 0 7px; font-size: 12px; }
-  .filter-btn svg { width: 16px; height: 16px; }
+  .filters-btn:hover { background: #fbfcfe; }
+  .filters-btn .count { background: var(--accent); color: #fff; border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+  .filters-btn svg { width: 16px; height: 16px; }
 
   .pop {
     position: absolute; right: 0; top: calc(100% + 6px); z-index: 30;
@@ -103,7 +104,7 @@
   }
   .pop[hidden] { display: none; }
 
-  .filter-menu { width: 280px; padding: 12px; }
+  .filters-menu { width: 280px; padding: 12px; }
   .filter-section { margin-bottom: 12px; }
   .filter-section:last-child { margin-bottom: 0; }
   .filter-title { font-size: 12px; font-weight: 560; color: var(--ink); margin-bottom: 8px; display: block; }
@@ -155,10 +156,10 @@
     border-bottom: 1px solid var(--line);
   }
   thead th:hover { color: var(--ink); }
-  th.num, td.num { text-align: right; }
+  th.num, td.num { text-align: center; }
   th.txt, td.txt { text-align: left; }
-  th .sortable { display: inline-flex; align-items: center; gap: 4px; }
-  th.num .sortable { flex-direction: row-reverse; }
+  th .sortable { display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
+  th.txt .sortable { justify-content: flex-start; }
   th .arr { color: var(--accent); font-size: 11px; }
   tbody td { padding: 10px 12px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
   tbody tr:hover td { background: #f8faff; }
@@ -179,11 +180,38 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .foot-note { color: var(--faint); font-size: 12px; margin-top: 10px; }
 
+  .calendar-modal { position: fixed; inset: 0; background: rgba(15,23,42,.5); display: none; align-items: center; justify-content: center; z-index: 100; }
+  .calendar-modal[open] { display: flex; }
+  .calendar-content { background: var(--panel); border-radius: 12px; padding: 24px; max-width: 700px; box-shadow: var(--shadow); }
+  .calendar-content h3 { margin: 0 0 20px; font-size: 16px; }
+  .calendar-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .calendar-picker { display: flex; flex-direction: column; gap: 8px; }
+  .picker-label { font-size: 12px; font-weight: 560; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); }
+  .month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .month-nav button { font: inherit; border: 0; background: none; color: var(--accent); cursor: pointer; font-weight: 560; padding: 4px 8px; }
+  .month-nav button:hover { background: var(--accent-soft); border-radius: 6px; }
+  .month-label { font-weight: 560; font-size: 14px; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 8px; }
+  .day-header { text-align: center; font-size: 11px; font-weight: 560; color: var(--faint); padding: 6px 0; }
+  .day-btn {
+    aspect-ratio: 1; font: inherit; border: 1px solid var(--line); background: var(--panel); border-radius: 6px; cursor: pointer;
+    font-size: 12px; color: var(--ink);
+  }
+  .day-btn:hover { border-color: var(--accent); }
+  .day-btn.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .day-btn.other-month { color: var(--faint); }
+  .day-btn:disabled { color: var(--faint); cursor: default; }
+
+  .calendar-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; border-top: 1px solid var(--line-soft); padding-top: 16px; }
+  .calendar-buttons button { font: inherit; padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
+  .calendar-buttons button.apply { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 560; }
+
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } * { transition: none !important; } }
   @media (max-width: 640px) {
     main { padding: 14px; }
     select { min-width: 0; width: 100%; }
+    .calendar-inputs { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -231,11 +259,12 @@
         </div>
         <div class="grow"></div>
         <div class="toolset">
-          <div class="menu">
-            <button class="menu-btn filter-btn" id="filterBtn" aria-haspopup="true" title="Filter">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <div class="filters">
+            <button class="filters-btn" id="filtersBtn" aria-haspopup="true" title="Filters">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M7 12h10M9 18h6"/></svg>
+              <span class="count" id="filterCount" hidden>0</span>
             </button>
-            <div class="pop filter-menu" id="filterMenu" hidden>
+            <div class="pop filters-menu" id="filtersMenu" hidden>
               <div class="filter-section">
                 <label class="filter-title">Campaign name</label>
                 <input type="text" class="filter-input" id="filterName" placeholder="Search..." />
@@ -263,15 +292,15 @@
               </div>
             </div>
           </div>
-          <div class="menu">
-            <button class="menu-btn" id="viewsBtn" aria-haspopup="true">
+          <div class="filters">
+            <button class="filters-btn" id="viewsBtn" aria-haspopup="true">
               <span id="viewsLabel">Views</span>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
             </button>
             <div class="pop col-pop" id="viewsPop" hidden></div>
           </div>
-          <div class="menu">
-            <button class="menu-btn" id="colsBtn" aria-haspopup="true">
+          <div class="filters">
+            <button class="filters-btn" id="colsBtn" aria-haspopup="true">
               Columns <span class="count" id="colsCount">0</span>
             </button>
             <div class="pop col-pop" id="colsPop" hidden></div>
@@ -279,22 +308,32 @@
         </div>
       </div>
 
-      <div id="customDateModal" hidden style="position: fixed; inset: 0; background: rgba(15,23,42,.5); display: flex; align-items: center; justify-content: center; z-index: 100;">
-        <div style="background: var(--panel); border-radius: 12px; padding: 24px; max-width: 380px; box-shadow: var(--shadow);">
-          <h3 style="margin: 0 0 16px; font-size: 16px;">Custom date range</h3>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-            <div>
-              <label class="field-label">From</label>
-              <input type="date" id="customFrom" style="font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%;" />
+      <div id="customDateModal" class="calendar-modal">
+        <div class="calendar-content">
+          <h3>Custom date range</h3>
+          <div class="calendar-inputs">
+            <div class="calendar-picker">
+              <label class="picker-label">From</label>
+              <div class="month-nav">
+                <button onclick="prevMonth('from')">&larr;</button>
+                <span class="month-label" id="fromMonthLabel"></span>
+                <button onclick="nextMonth('from')">&rarr;</button>
+              </div>
+              <div class="calendar-grid" id="fromCalendar"></div>
             </div>
-            <div>
-              <label class="field-label">To</label>
-              <input type="date" id="customTo" style="font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%;" />
+            <div class="calendar-picker">
+              <label class="picker-label">To</label>
+              <div class="month-nav">
+                <button onclick="prevMonth('to')">&larr;</button>
+                <span class="month-label" id="toMonthLabel"></span>
+                <button onclick="nextMonth('to')">&rarr;</button>
+              </div>
+              <div class="calendar-grid" id="toCalendar"></div>
             </div>
           </div>
-          <div style="display: flex; gap: 8px; justify-content: flex-end;">
-            <button onclick="closeCustomDateModal()" style="font: inherit; padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); cursor: pointer;">Cancel</button>
-            <button onclick="applyCustomDate()" style="font: inherit; padding: 8px 14px; border-radius: 7px; border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; font-weight: 560;">Apply</button>
+          <div class="calendar-buttons">
+            <button onclick="closeCustomDateModal()">Cancel</button>
+            <button class="apply" onclick="applyCustomDate()">Apply</button>
           </div>
         </div>
       </div>
@@ -365,6 +404,8 @@ const state = {
   dateRange: { label: "Last 30 Days", days: 30 },
   pageSize: 10,
   currentPage: 1,
+  calendarFromDate: new Date(),
+  calendarToDate: new Date(),
 };
 
 const fmtCurrency = n => new Intl.NumberFormat(LOCALE, { style:"currency", currency:CURRENCY, maximumFractionDigits:2 }).format(n || 0);
@@ -409,15 +450,15 @@ function getDateRange() {
   if (r.type === "thisMonth") {
     const now = new Date();
     const first = new Date(now.getFullYear(), now.getMonth(), 1);
-    return formatDateForGAQL(first) + " DURING " + formatDateForGAQL(now);
+    return "segments.date >= '" + formatDateForGAQL(first) + "' AND segments.date <= '" + formatDateForGAQL(now) + "'";
   }
   if (r.type === "lastMonth") {
     const now = new Date();
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
-    return formatDateForGAQL(lastMonth) + " DURING " + formatDateForGAQL(lastDay);
+    return "segments.date >= '" + formatDateForGAQL(lastMonth) + "' AND segments.date <= '" + formatDateForGAQL(lastDay) + "'";
   }
-  if (r.from && r.to) return r.from + " DURING " + r.to;
+  if (r.from && r.to) return "segments.date >= '" + r.from + "' AND segments.date <= '" + r.to + "'";
   if (r.days === 1) return "YESTERDAY";
   if (r.days === 7) return "LAST_7_DAYS";
   if (r.days === 14) return "LAST_14_DAYS";
@@ -440,7 +481,11 @@ function onDateRangeChange() {
     "lastMonth": { label: "Last Month", type: "lastMonth" },
   };
   if (val === "custom") {
-    document.getElementById("customDateModal").hidden = false;
+    state.calendarFromDate = new Date();
+    state.calendarToDate = new Date();
+    renderCalendar('from');
+    renderCalendar('to');
+    document.getElementById("customDateModal").setAttribute("open", "");
   } else {
     state.dateRange = map[val];
     state.currentPage = 1;
@@ -449,20 +494,95 @@ function onDateRangeChange() {
   }
 }
 
+function renderCalendar(side) {
+  const date = side === 'from' ? new Date(state.calendarFromDate) : new Date(state.calendarToDate);
+  const year = date.getFullYear(), month = date.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const prevLastDay = new Date(year, month, 0);
+
+  document.getElementById(side + "MonthLabel").innerHTML = new Date(year, month).toLocaleString(LOCALE, { month: 'long', year: 'numeric' });
+
+  const grid = document.getElementById(side + "Calendar");
+  grid.innerHTML = '';
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  dayNames.forEach(d => {
+    const hdr = document.createElement('div');
+    hdr.className = 'day-header';
+    hdr.textContent = d;
+    grid.appendChild(hdr);
+  });
+
+  for (let i = firstDay.getDay() - 1; i >= 0; i--) {
+    const btn = document.createElement('button');
+    btn.className = 'day-btn other-month';
+    btn.textContent = prevLastDay.getDate() - i;
+    btn.disabled = true;
+    grid.appendChild(btn);
+  }
+
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const btn = document.createElement('button');
+    btn.className = 'day-btn';
+    btn.textContent = d;
+    const fullDate = new Date(year, month, d);
+    const dateStr = formatDateForGAQL(fullDate);
+    const selectedStr = side === 'from' ? formatDateForGAQL(state.calendarFromDate) : formatDateForGAQL(state.calendarToDate);
+    if (dateStr === selectedStr) btn.classList.add('selected');
+    btn.onclick = () => {
+      if (side === 'from') state.calendarFromDate = fullDate;
+      else state.calendarToDate = fullDate;
+      renderCalendar(side);
+    };
+    grid.appendChild(btn);
+  }
+
+  for (let d = 1; d <= (7 - lastDay.getDay()) % 7; d++) {
+    const btn = document.createElement('button');
+    btn.className = 'day-btn other-month';
+    btn.textContent = d;
+    btn.disabled = true;
+    grid.appendChild(btn);
+  }
+}
+
+function prevMonth(side) {
+  if (side === 'from') state.calendarFromDate = new Date(state.calendarFromDate.getFullYear(), state.calendarFromDate.getMonth() - 1);
+  else state.calendarToDate = new Date(state.calendarToDate.getFullYear(), state.calendarToDate.getMonth() - 1);
+  renderCalendar(side);
+}
+
+function nextMonth(side) {
+  if (side === 'from') state.calendarFromDate = new Date(state.calendarFromDate.getFullYear(), state.calendarFromDate.getMonth() + 1);
+  else state.calendarToDate = new Date(state.calendarToDate.getFullYear(), state.calendarToDate.getMonth() + 1);
+  renderCalendar(side);
+}
+
 function closeCustomDateModal() {
-  document.getElementById("customDateModal").hidden = true;
+  document.getElementById("customDateModal").removeAttribute("open");
   document.getElementById("dateSelect").value = "30days";
 }
 
 function applyCustomDate() {
-  const from = document.getElementById("customFrom").value;
-  const to = document.getElementById("customTo").value;
-  if (!from || !to) { alert("Please select both dates"); return; }
+  const from = formatDateForGAQL(state.calendarFromDate);
+  const to = formatDateForGAQL(state.calendarToDate);
   state.dateRange = { label: from + " to " + to, from, to };
   state.currentPage = 1;
   closeCustomDateModal();
   const sel = document.getElementById("accountSelect");
   if (sel.value) loadCampaigns(sel.value);
+}
+
+function updateFilterCount() {
+  const count = (state.filterName ? 1 : 0) + state.filterStatus.size;
+  const countEl = document.getElementById("filterCount");
+  if (count > 0) {
+    countEl.textContent = count;
+    countEl.hidden = false;
+  } else {
+    countEl.hidden = true;
+  }
 }
 
 function applyFilters() {
@@ -473,7 +593,8 @@ function applyFilters() {
     document.getElementById("statusRemoved").checked ? "REMOVED" : null,
   ].filter(x => x));
   state.currentPage = 1;
-  document.getElementById("filterMenu").hidden = true;
+  document.getElementById("filtersMenu").hidden = true;
+  updateFilterCount();
   renderTable();
 }
 
@@ -524,12 +645,13 @@ function showApp(accounts) {
   sel.addEventListener("change", () => { if (sel.value) { state.currentPage = 1; loadCampaigns(sel.value); } });
 
   document.getElementById("pageSize").addEventListener("change", e => { state.pageSize = parseInt(e.target.value); state.currentPage = 1; renderTable(); });
-  document.getElementById("filterBtn").addEventListener("click", e => { e.stopPropagation(); document.getElementById("colsPop").hidden = true; document.getElementById("viewsPop").hidden = true; document.getElementById("filterMenu").hidden = !document.getElementById("filterMenu").hidden; });
-  document.addEventListener("click", () => { document.getElementById("filterMenu").hidden = true; document.getElementById("colsPop").hidden = true; document.getElementById("viewsPop").hidden = true; });
-  document.getElementById("filterMenu").addEventListener("click", e => e.stopPropagation());
+  document.getElementById("filtersBtn").addEventListener("click", e => { e.stopPropagation(); document.getElementById("colsPop").hidden = true; document.getElementById("viewsPop").hidden = true; document.getElementById("filtersMenu").hidden = !document.getElementById("filtersMenu").hidden; });
+  document.addEventListener("click", () => { document.getElementById("filtersMenu").hidden = true; document.getElementById("colsPop").hidden = true; document.getElementById("viewsPop").hidden = true; });
+  document.getElementById("filtersMenu").addEventListener("click", e => e.stopPropagation());
 
   wireMenus();
   syncColsCount();
+  updateFilterCount();
 }
 
 async function loadCampaigns(customerId) {
@@ -546,7 +668,7 @@ async function loadCampaigns(customerId) {
     if (!res.ok || data.error) {
       document.getElementById("loading").hidden = true;
       document.getElementById("error").hidden = false;
-      document.getElementById("error").innerHTML = '<div class="big">Couldn\'t load campaigns</div>' + escapeHtml(data.error || ("Request failed (" + res.status + ")"));
+      document.getElementById("error").innerHTML = '<div class="big">Couldn\'t load campaigns</div>' + escapeHtml(data.error || ("Request failed"));
       return;
     }
     state.campaigns = (data.campaigns || []).map(withMetrics);
@@ -643,8 +765,8 @@ function wireMenus() {
   const colsBtn = document.getElementById("colsBtn"), colsPop = document.getElementById("colsPop");
   const viewsBtn = document.getElementById("viewsBtn"), viewsPop = document.getElementById("viewsPop");
 
-  colsBtn.addEventListener("click", e => { e.stopPropagation(); viewsPop.hidden = true; document.getElementById("filterMenu").hidden = true; renderColsPop(); colsPop.hidden = !colsPop.hidden; });
-  viewsBtn.addEventListener("click", e => { e.stopPropagation(); colsPop.hidden = true; document.getElementById("filterMenu").hidden = true; renderViewsPop(); viewsPop.hidden = !viewsPop.hidden; });
+  colsBtn.addEventListener("click", e => { e.stopPropagation(); viewsPop.hidden = true; document.getElementById("filtersMenu").hidden = true; renderColsPop(); colsPop.hidden = !colsPop.hidden; });
+  viewsBtn.addEventListener("click", e => { e.stopPropagation(); colsPop.hidden = true; document.getElementById("filtersMenu").hidden = true; renderViewsPop(); viewsPop.hidden = !viewsPop.hidden; });
   colsPop.addEventListener("click", e => e.stopPropagation());
   viewsPop.addEventListener("click", e => e.stopPropagation());
 }
