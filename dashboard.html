@@ -132,6 +132,12 @@
   }
   .filters-btn:hover { background: #fbfcfe; }
   .filters-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 560; }
+  .compare-caption { margin: -4px 0 12px; font-size: 12.5px; color: var(--accent); font-weight: 520; }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--panel); padding: 11px 18px; border-radius: 9px;
+    font-size: 13px; box-shadow: var(--shadow); z-index: 200; max-width: 90vw;
+  }
   .filters-btn .count { background: var(--accent); color: #fff; border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
   .filters-btn svg { width: 16px; height: 16px; }
 
@@ -203,7 +209,8 @@
 
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   .scroll { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  thead th, tbody td, tfoot td { overflow: hidden; text-overflow: ellipsis; }
   thead th {
     position: sticky; top: 0; background: var(--line-soft); z-index: 2;
     font-weight: 560; color: var(--muted); font-size: 12.5px;
@@ -344,17 +351,33 @@
             </div>
             <div>
               <label class="field-label">&nbsp;</label>
-              <button class="filters-btn" id="compareBtn" title="Compare to previous period">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6 4 4 6-6M14 7h6v6"/></svg>
-                Compare
-              </button>
+              <div class="filters">
+                <button class="filters-btn" id="compareBtn" title="Compare to another period">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6 4 4 6-6M14 7h6v6"/></svg>
+                  <span class="cmp-label">Compare</span>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+                </button>
+                <div class="pop col-pop" id="comparePop" hidden>
+                  <button class="pop-row" data-cmp="off">No comparison</button>
+                  <button class="pop-row" data-cmp="previous">Previous period</button>
+                  <button class="pop-row" data-cmp="custom">Custom range…</button>
+                </div>
+              </div>
             </div>
             <div>
               <label class="field-label">&nbsp;</label>
-              <button class="filters-btn" id="exportBtn" title="Export current view to CSV">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-                Export
-              </button>
+              <div class="filters">
+                <button class="filters-btn" id="exportBtn" title="Export current view">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+                  Export
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+                </button>
+                <div class="pop col-pop" id="exportPop" hidden>
+                  <button class="pop-row" data-fmt="csv">Download CSV</button>
+                  <button class="pop-row" data-fmt="pdf">Download PDF</button>
+                  <button class="pop-row" data-fmt="sheets">Copy for Google Sheets</button>
+                </div>
+              </div>
             </div>
             <div class="grow"></div>
             <div class="toolset">
@@ -472,6 +495,8 @@
             </div>
           </div>
 
+          <div id="compareCaption" class="compare-caption" hidden></div>
+
           <div id="customDateModal" class="calendar-modal">
             <div class="calendar-content">
               <h3>Custom date range</h3>
@@ -507,7 +532,7 @@
             <div id="prompt" class="state"><div class="big">Choose an account</div>Select an account above to load its campaigns.</div>
             <div id="error" class="state" hidden></div>
             <div id="empty" class="state" hidden><div class="big">No campaigns</div>No campaigns found.</div>
-            <div class="scroll"><table id="table" hidden><thead id="thead"></thead><tbody id="tbody"></tbody><tfoot id="tfoot"></tfoot></table></div>
+            <div class="scroll"><table id="table" hidden><colgroup id="colgroup"></colgroup><thead id="thead"></thead><tbody id="tbody"></tbody><tfoot id="tfoot"></tfoot></table></div>
           </div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
@@ -546,11 +571,14 @@
     </main>
   </div>
 
+  <div id="toast" class="toast" hidden></div>
+
 <script>
 const CURRENCY = "GBP", LOCALE = "en-GB";
 const VIEWS_KEY = "campaign_reporting_views_v1";
 const DARK_MODE_KEY = "dashboardDarkMode";
 const FILTERS_KEY = "campaign_reporting_filters_v1";
+const VIEWSTATE_KEY = "campaign_reporting_viewstate_v1";
 const TYPE_CHECKBOXES = [
   ["typeSearch", "SEARCH"], ["typeDisplay", "DISPLAY"], ["typeShopping", "SHOPPING"],
   ["typePmax", "PERFORMANCE_MAX"], ["typeVideo", "VIDEO"], ["typeApp", "APP"], ["typeSmart", "SMART"],
@@ -624,6 +652,9 @@ const state = {
   openFilterGroups: new Set(),
   openColGroups: new Set(["col_group_0"]),
   compareEnabled: false,
+  compareMode: "previous",
+  compareCustom: null,
+  calendarTarget: "main",
 };
 
 const fmtCurrency = n => new Intl.NumberFormat(LOCALE, { style:"currency", currency:CURRENCY, maximumFractionDigits:2 }).format(n || 0);
@@ -723,13 +754,22 @@ function getCurrentPeriodDates() {
   return { start, end: yesterday };
 }
 
-// GAQL where-clause for the period immediately preceding the current one (same length)
-function getPreviousDateRange() {
+// Returns { start: Date, end: Date } for the active comparison period
+function getComparePeriodDates() {
+  if (state.compareMode === "custom" && state.compareCustom) {
+    return { start: parseGAQLDate(state.compareCustom.from), end: parseGAQLDate(state.compareCustom.to) };
+  }
+  // previous period: same length, immediately before the current range
   const { start, end } = getCurrentPeriodDates();
   const dayCount = Math.round((end - start) / 86400000) + 1;
   const prevEnd = new Date(start); prevEnd.setDate(start.getDate() - 1);
   const prevStart = new Date(prevEnd); prevStart.setDate(prevEnd.getDate() - (dayCount - 1));
-  return "segments.date >= '" + formatDateForGAQL(prevStart) + "' AND segments.date <= '" + formatDateForGAQL(prevEnd) + "'";
+  return { start: prevStart, end: prevEnd };
+}
+
+function getCompareDateRange() {
+  const { start, end } = getComparePeriodDates();
+  return "segments.date >= '" + formatDateForGAQL(start) + "' AND segments.date <= '" + formatDateForGAQL(end) + "'";
 }
 
 function onDateRangeChange() {
@@ -743,17 +783,31 @@ function onDateRangeChange() {
     "lastMonth": { label: "Last Month", type: "lastMonth" },
   };
   if (val === "custom") {
+    state.calendarTarget = "main";
     state.calendarFromDate = new Date();
     state.calendarToDate = new Date();
+    document.getElementById("calendarTitle").textContent = "Custom date range";
     renderCalendar('from');
     renderCalendar('to');
     document.getElementById("customDateModal").setAttribute("open", "");
   } else {
     state.dateRange = map[val];
     state.currentPage = 1;
+    if (state.compareEnabled) updateCompareUI();
     const sel = document.getElementById("accountSelect");
     if (sel.value) loadCampaigns(sel.value);
   }
+}
+
+function openCompareCustom() {
+  state.calendarTarget = "compare";
+  const seed = getComparePeriodDates();
+  state.calendarFromDate = new Date(seed.start);
+  state.calendarToDate = new Date(seed.end);
+  document.getElementById("calendarTitle").textContent = "Comparison date range";
+  renderCalendar('from');
+  renderCalendar('to');
+  document.getElementById("customDateModal").setAttribute("open", "");
 }
 
 function renderCalendar(side) {
