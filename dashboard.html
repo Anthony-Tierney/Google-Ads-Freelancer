@@ -211,6 +211,8 @@
   .scroll { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   thead th, tbody td, tfoot td { overflow: hidden; text-overflow: ellipsis; }
+  th.num, td.num { text-align: center; }
+  th.txt, td.txt { text-align: left; }
   thead th {
     position: sticky; top: 0; background: var(--line-soft); z-index: 2;
     font-weight: 560; color: var(--muted); font-size: 12.5px;
@@ -273,6 +275,23 @@
   .calendar-buttons button { font: inherit; padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; color: var(--ink); }
   .calendar-buttons button.apply { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 560; }
 
+  .audit-summary { display: flex; gap: 12px; flex-wrap: wrap; }
+  .audit-card { flex: 1; min-width: 150px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+  .audit-card .num-big { font-size: 26px; font-weight: 650; letter-spacing: -.02em; }
+  .audit-card .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .audit-card.bad .num-big { color: #dc2626; }
+  .audit-card.warn .num-big { color: #b45309; }
+  .audit-card.ok .num-big { color: #047857; }
+  #audTable td, #audTable th { padding: 12px; border-bottom: 1px solid var(--line-soft); text-align: left; vertical-align: top; }
+  #audTable th { background: var(--line-soft); color: var(--muted); font-weight: 560; font-size: 12.5px; }
+  .issue-tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 540; border: 1px solid; margin: 2px 4px 2px 0; }
+  .issue-tag.disapproved { background: var(--off-bg); color: #dc2626; border-color: #fca5a5; }
+  .issue-tag.limited { background: var(--warn-bg); color: var(--warn-fg); border-color: var(--warn-rg); }
+  .issue-tag.suspended { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+  .issue-tag.clean { background: var(--ok-bg); color: var(--ok-fg); border-color: var(--ok-rg); }
+  .aud-detail { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
+  .aud-spinner { width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; vertical-align: middle; }
+
   .settings-section { margin-bottom: 32px; }
   .settings-section h2 { font-size: 16px; margin: 0 0 16px; font-weight: 600; }
   .setting-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
@@ -299,6 +318,8 @@
 <body>
   <aside class="sidebar">
     <a href="#" class="nav-item active" data-page="dashboard">Home</a>
+    <a href="#" class="nav-item" data-page="allaccounts">All Accounts</a>
+    <a href="#" class="nav-item" data-page="audit">Audit</a>
     <a href="#" class="nav-item" data-page="settings">Settings</a>
   </aside>
 
@@ -552,6 +573,105 @@
         </section>
       </section>
 
+      <!-- All Accounts Page -->
+      <section id="allaccounts" class="page">
+        <section id="accSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to see your portfolio across all accounts.</p>
+            <a class="btn-google" href="/api/auth">
+              <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 11v2.8h4.6c-.2 1.2-1.5 3.6-4.6 3.6-2.8 0-5-2.3-5-5.1s2.2-5.1 5-5.1c1.6 0 2.6.7 3.2 1.2l2.2-2.1C17.9 4.9 15.2 4 12 4 6.9 4 2.8 8.1 2.8 13.2S6.9 22.4 12 22.4c5.9 0 9.8-4.1 9.8-9.9 0-.7-.1-1.2-.2-1.7H12z"/></svg>
+              Sign in with Google
+            </a>
+          </div>
+        </section>
+
+        <section id="accSignedIn" hidden>
+          <div class="controls-row">
+            <div>
+              <label class="field-label" for="accDateSelect">Date range</label>
+              <select id="accDateSelect" onchange="onAccDateRangeChange()">
+                <option value="yesterday">Yesterday</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="14days">Last 14 Days</option>
+                <option value="30days" selected>Last 30 Days</option>
+                <option value="thisMonth">This Month</option>
+                <option value="lastMonth">Last Month</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">&nbsp;</label>
+              <input type="text" id="accSearch" class="filter-input" placeholder="Search accounts…" style="width:200px" oninput="renderAccountsTable()" />
+            </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="accExportBtn" title="Export current view">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+                  Export
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+                </button>
+                <div class="pop col-pop" id="accExportPop" hidden>
+                  <button class="pop-row" data-accfmt="csv">Download CSV</button>
+                  <button class="pop-row" data-accfmt="pdf">Download PDF</button>
+                  <button class="pop-row" data-accfmt="sheets">Copy for Google Sheets</button>
+                </div>
+              </div>
+              <div class="filters">
+                <button class="filters-btn" id="accColsBtn" aria-haspopup="true">
+                  Columns <span class="count" id="accColsCount">0</span>
+                </button>
+                <div class="pop col-pop" id="accColsPop" hidden></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div id="accLoading" class="state"><div class="spinner"></div>Loading accounts…</div>
+            <div id="accError" class="state" hidden></div>
+            <div id="accEmpty" class="state" hidden><div class="big">No accounts</div>No accounts found.</div>
+            <div class="scroll"><table id="accTable" hidden><colgroup id="acc-colgroup"></colgroup><thead id="acc-thead"></thead><tbody id="acc-tbody"></tbody><tfoot id="acc-tfoot"></tfoot></table></div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+            <div class="foot-note">Each row aggregates all campaigns in that account for the selected period. Click a header to sort; drag or double-click borders to resize.</div>
+            <div class="pagination" id="accPagination" hidden>
+              <div class="page-size">Show <select id="accPageSize"><option value="10">10</option><option value="25" selected>25</option><option value="50">50</option><option value="100">100</option></select> per page</div>
+              <span id="accPageInfo"></span>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- Audit Page -->
+      <section id="audit" class="page">
+        <section id="audSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to audit your accounts for policy issues.</p>
+            <a class="btn-google" href="/api/auth">
+              <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 11v2.8h4.6c-.2 1.2-1.5 3.6-4.6 3.6-2.8 0-5-2.3-5-5.1s2.2-5.1 5-5.1c1.6 0 2.6.7 3.2 1.2l2.2-2.1C17.9 4.9 15.2 4 12 4 6.9 4 2.8 8.1 2.8 13.2S6.9 22.4 12 22.4c5.9 0 9.8-4.1 9.8-9.9 0-.7-.1-1.2-.2-1.7H12z"/></svg>
+              Sign in with Google
+            </a>
+          </div>
+        </section>
+
+        <section id="audSignedIn" hidden>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+            <h1 style="margin:0;font-size:19px;">Account Audit</h1>
+            <span class="foot-note" style="margin:0;">Checks each account for suspension and disapproved or limited ads.</span>
+            <div class="grow"></div>
+            <button class="filters-btn" id="audRefreshBtn" title="Re-run audit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v5h-5"/></svg>Re-run</button>
+          </div>
+
+          <div class="audit-summary" id="auditSummary"></div>
+
+          <div class="panel" style="margin-top:14px;">
+            <div class="scroll"><table id="audTable"><thead id="aud-thead"></thead><tbody id="aud-tbody"></tbody></table></div>
+          </div>
+        </section>
+      </section>
+
       <!-- Settings Page -->
       <section id="settings" class="page">
         <h1>Settings</h1>
@@ -628,6 +748,49 @@ const SEED_VIEWS = [
   { id: "default", name: "Default View", columns: ["name","status","channelType","budget","clicks","avgCpc","cost","conversions","convRate","cpa","convValue"] },
   { id: "comp",    name: "Competitive", columns: ["name","status","searchImpShare","topImpShare","absTopImpShare","searchClickShare"] },
 ];
+
+// Account-level columns (aggregated across each account's campaigns)
+const ACCOUNT_COLUMNS = [
+  { key: "name",        label: "Account",     type: "text",    align: "txt", locked: true, group: "Account" },
+  { key: "impressions", label: "Impr.",       type: "int",     align: "num", group: "Performance" },
+  { key: "clicks",      label: "Clicks",      type: "int",     align: "num", group: "Performance" },
+  { key: "interactions",label: "Interactions",type: "int",     align: "num", group: "Performance" },
+  { key: "cost",        label: "Cost",        type: "currency",align: "num", group: "Performance" },
+  { key: "conversions", label: "Conv.",       type: "decimal", align: "num", group: "Conversions" },
+  { key: "allConversions", label: "All Conv.",type: "decimal", align: "num", group: "Conversions" },
+  { key: "viewThroughConversions", label: "VTC", type: "decimal", align: "num", group: "Conversions" },
+  { key: "convValue",   label: "Conv. value", type: "currency",align: "num", group: "Conversions" },
+  { key: "ctr",         label: "CTR",         type: "percent", align: "num", group: "Efficiency" },
+  { key: "interaction_rate", label: "Int. rate", type: "percent", align: "num", group: "Efficiency" },
+  { key: "avgCpc",      label: "Avg. CPC",    type: "currency",align: "num", group: "Efficiency" },
+  { key: "convRate",    label: "Conv. rate",  type: "percent", align: "num", group: "Efficiency" },
+  { key: "cpa",         label: "Cost / conv.",type: "currency",align: "num", group: "Efficiency" },
+  { key: "cost_per_conversion", label: "Cost per conv.", type: "currency", align: "num", group: "Efficiency" },
+  { key: "roas",        label: "ROAS",        type: "roas",    align: "num", group: "Efficiency" },
+  { key: "invalidClicks", label: "Invalid clicks", type: "int", align: "num", group: "Quality" },
+  { key: "invalidClickRate", label: "Invalid click rate", type: "percent", align: "num", group: "Quality" },
+  { key: "activeViewImpressions", label: "Viewable impr.", type: "int", align: "num", group: "Quality" },
+];
+const ACCOUNT_GROUPS = ["Account", "Performance", "Conversions", "Efficiency", "Quality"];
+const ACCOUNT_DEFAULT_VISIBLE = ["name","impressions","clicks","cost","conversions","convRate","cpa","convValue","roas"];
+
+let ACCOUNTS = [];
+let signedIn = false;
+
+const accState = {
+  rows: [],
+  visible: new Set(ACCOUNT_DEFAULT_VISIBLE),
+  sort: { key: "cost", dir: "desc" },
+  dateRange: { label: "Last 30 Days", days: 30 },
+  pageSize: 25,
+  currentPage: 1,
+  search: "",
+  openColGroups: new Set(["accColsPop_g0"]),
+  columnWidths: {},
+  loaded: false,
+};
+
+const auditState = { rows: [], loaded: false };
 
 const state = {
   campaigns: [],
@@ -1131,6 +1294,8 @@ document.querySelectorAll('.nav-item').forEach(item => {
     document.getElementById(page).classList.add('active');
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     item.classList.add('active');
+    if (page === "allaccounts") initAllAccounts();
+    if (page === "audit") initAudit();
   });
 });
 
@@ -1141,6 +1306,8 @@ async function init() {
     const res = await fetch("/api/accounts", { credentials: "same-origin" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.error || !data.accounts) { showSignedOut(); return; }
+    ACCOUNTS = data.accounts;
+    signedIn = true;
     showApp(data.accounts);
   } catch {
     showSignedOut();
@@ -1150,6 +1317,10 @@ async function init() {
 function showSignedOut() {
   document.getElementById("signedOut").hidden = false;
   document.getElementById("signedIn").hidden = true;
+  document.getElementById("accSignedOut").hidden = false;
+  document.getElementById("accSignedIn").hidden = true;
+  document.getElementById("audSignedOut").hidden = false;
+  document.getElementById("audSignedIn").hidden = true;
 }
 
 function showApp(accounts) {
@@ -1224,7 +1395,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -1364,28 +1535,28 @@ function renderTable() {
   }).join("") + "</tr>";
 
   document.getElementById("tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
-    if (c.key === "name") return '<td class="txt name">' + escapeHtml(r.name) + '</td>';
+    if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + '</td>';
     if (c.type === "status") {
       const s = (r.status || "").toLowerCase();
       const cls = ["enabled","paused","removed"].includes(s) ? s : "other";
-      return '<td class="txt"><span class="pill ' + cls + '">' + titleCase(r.status) + '</span></td>';
+      return '<td class="txt" data-col="' + c.key + '"><span class="pill ' + cls + '">' + titleCase(r.status) + '</span></td>';
     }
     const cls = c.align === "num" ? "num tabnum" : "txt";
     let delta = "";
     if (state.compareEnabled && c.align === "num" && r._prev) {
       delta = deltaHtml(c.key, r[c.key], r._prev[c.key]);
     }
-    return '<td class="' + cls + '">' + formatCell(c.type, r[c.key]) + delta + '</td>';
+    return '<td class="' + cls + '" data-col="' + c.key + '">' + formatCell(c.type, r[c.key]) + delta + '</td>';
   }).join("") + "</tr>").join("");
 
   document.getElementById("tfoot").innerHTML = "<tr>" + cols.map((c, i) => {
-    if (i === 0) return '<td class="txt">Total · ' + pageRows.length + '</td>';
-    if (c.type === "text" || c.type === "status" || c.type === "channel") return '<td></td>';
+    if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total · ' + pageRows.length + '</td>';
+    if (c.type === "text" || c.type === "status" || c.type === "channel") return '<td data-col="' + c.key + '"></td>';
     let delta = "";
     if (state.compareEnabled) {
       delta = deltaHtml(c.key, tot[c.key], totPrev[c.key]);
     }
-    return '<td class="num tabnum">' + formatCell(c.type, tot[c.key]) + delta + '</td>';
+    return '<td class="num tabnum" data-col="' + c.key + '">' + formatCell(c.type, tot[c.key]) + delta + '</td>';
   }).join("") + "</tr>";
 
   const totalPages = Math.ceil(filtered.length / state.pageSize);
@@ -1400,6 +1571,11 @@ function renderTable() {
       startResize(e, th.dataset.col);
     });
     handle.addEventListener("click", (e) => e.stopPropagation());
+    handle.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      autoFitColumn(th.dataset.col, { colgroup: "colgroup", thead: "thead", tbody: "tbody", tfoot: "tfoot" });
+    });
     th.appendChild(handle);
 
     th.addEventListener("click", (e) => {
@@ -1418,11 +1594,50 @@ function setSort(key) {
   renderTable();
 }
 
-function colWidth(c) {
-  if (state.columnWidths[c.key]) return state.columnWidths[c.key];
+function colWidth(c, widths) {
+  widths = widths || state.columnWidths;
+  if (widths[c.key]) return widths[c.key];
   if (c.key === "name") return 260;
   const byType = { status: 110, channel: 140, currency: 120, percent: 130, int: 110, decimal: 110, roas: 100 };
   return byType[c.type] || 120;
+}
+
+function measureText(text, font) {
+  const span = measureText._el || (measureText._el = (() => {
+    const s = document.createElement("span");
+    s.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:-9999px";
+    document.body.appendChild(s);
+    return s;
+  })());
+  span.style.font = font;
+  span.textContent = text;
+  return span.offsetWidth;
+}
+
+// Auto-fit a column to its widest visible content (header + page rows + totals), like Excel double-click.
+function autoFitColumn(colKey, ids, widths, onDone) {
+  widths = widths || state.columnWidths;
+  if (onDone === undefined) onDone = saveViewState;
+  const c = COLUMNS.find(x => x.key === colKey) || ACCOUNT_COLUMNS.find(x => x.key === colKey);
+  if (!c) return;
+  const headEl = document.querySelector("#" + ids.thead + " th[data-col='" + colKey + "']");
+  const bodyCell = document.querySelector("#" + ids.tbody + " td");
+  const headerFont = headEl ? getComputedStyle(headEl).font : "560 12.5px sans-serif";
+  const bodyFont = bodyCell ? getComputedStyle(bodyCell).font : "14px sans-serif";
+
+  let max = measureText(c.label, headerFont) + 22; // header + sort-arrow allowance
+  document.querySelectorAll("#" + ids.tbody + " tr").forEach(tr => {
+    const cell = tr.querySelector("td[data-col='" + colKey + "']");
+    if (cell) max = Math.max(max, measureText(cell.textContent, bodyFont));
+  });
+  const footCell = document.querySelector("#" + ids.tfoot + " td[data-col='" + colKey + "']");
+  if (footCell) max = Math.max(max, measureText(footCell.textContent, bodyFont));
+
+  const width = Math.max(60, Math.ceil(max) + 26); // + cell padding
+  widths[colKey] = width;
+  const col = document.querySelector("#" + ids.colgroup + " col[data-col='" + colKey + "']");
+  if (col) col.style.width = width + "px";
+  if (onDone) onDone();
 }
 
 function wireMenus() {
@@ -1537,10 +1752,13 @@ function renderViewsLabel() {
 
 function syncColsCount() { document.getElementById("colsCount").textContent = state.visible.size; }
 
-function startResize(e, colKey) {
+function startResize(e, colKey, ids, widths, onDone) {
   e.preventDefault();
-  const col = document.querySelector('col[data-col="' + colKey + '"]');
-  const th = document.querySelector('th[data-col="' + colKey + '"]');
+  ids = ids || { colgroup: "colgroup", thead: "thead", tbody: "tbody", tfoot: "tfoot" };
+  widths = widths || state.columnWidths;
+  if (onDone === undefined) onDone = saveViewState;
+  const col = document.querySelector("#" + ids.colgroup + ' col[data-col="' + colKey + '"]');
+  const th = document.querySelector("#" + ids.thead + ' th[data-col="' + colKey + '"]');
   const startX = e.clientX;
   const startWidth = col ? col.getBoundingClientRect().width : (th ? th.offsetWidth : 120);
 
@@ -1548,7 +1766,7 @@ function startResize(e, colKey) {
     const delta = me.clientX - startX;
     if (Math.abs(delta) > 2 && th) th.dataset.resizing = "1";
     const newWidth = Math.max(60, Math.round(startWidth + delta));
-    state.columnWidths[colKey] = newWidth;
+    widths[colKey] = newWidth;
     if (col) col.style.width = newWidth + 'px';
   }
 
@@ -1557,7 +1775,7 @@ function startResize(e, colKey) {
     document.removeEventListener("mouseup", onMouseUp);
     document.body.style.userSelect = "";
     document.body.style.cursor = "";
-    saveViewState();
+    if (onDone) onDone();
   }
 
   document.body.style.userSelect = "none";
@@ -1767,6 +1985,392 @@ async function exportSheets() {
     showToast("Clipboard was blocked — downloading a CSV instead.");
     exportCSV();
   }
+}
+
+/* ============================ Shared helpers ============================ */
+
+function mapLimit(items, limit, fn) {
+  let i = 0;
+  const runners = [];
+  const run = async () => { while (i < items.length) { const idx = i++; await fn(items[idx], idx); } };
+  for (let k = 0; k < Math.min(limit, items.length); k++) runners.push(run());
+  return Promise.all(runners);
+}
+
+function periodMapToRange(val) {
+  const map = {
+    "yesterday": { label: "Yesterday", days: 1 },
+    "7days": { label: "Last 7 Days", days: 7 },
+    "14days": { label: "Last 14 Days", days: 14 },
+    "30days": { label: "Last 30 Days", days: 30 },
+    "thisMonth": { label: "This Month", type: "thisMonth" },
+    "lastMonth": { label: "Last Month", type: "lastMonth" },
+  };
+  return map[val] || map["30days"];
+}
+
+// Build a GAQL date range string from any dateRange-shaped object
+function rangeToGAQL(r) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  if (r.type === "thisMonth") {
+    const first = new Date(today.getFullYear(), today.getMonth(), 1);
+    return "segments.date >= '" + formatDateForGAQL(first) + "' AND segments.date <= '" + formatDateForGAQL(today) + "'";
+  }
+  if (r.type === "lastMonth") {
+    const lm = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const ld = new Date(today.getFullYear(), today.getMonth(), 0);
+    return "segments.date >= '" + formatDateForGAQL(lm) + "' AND segments.date <= '" + formatDateForGAQL(ld) + "'";
+  }
+  if (r.from && r.to) return "segments.date >= '" + r.from + "' AND segments.date <= '" + r.to + "'";
+  if (r.days === 1) return "YESTERDAY";
+  if (r.days === 7) return "LAST_7_DAYS";
+  if (r.days === 14) return "LAST_14_DAYS";
+  return "LAST_30_DAYS";
+}
+
+// Generic grouped (accordion) column picker
+function renderGroupedCols(popId, columns, groupOrder, visibleSet, openGroups, onToggle) {
+  const pop = document.getElementById(popId);
+  const byGroup = {}; groupOrder.forEach(g => byGroup[g] = []);
+  columns.forEach(c => { if (byGroup[c.group]) byGroup[c.group].push(c); });
+  let html = "";
+  groupOrder.forEach((group, i) => {
+    const cols = byGroup[group]; if (!cols.length) return;
+    const id = popId + "_g" + i;
+    const open = openGroups.has(id);
+    html += '<div class="group-header" data-grp="' + id + '"><span class="toggle">' + (open ? "−" : "+") + "</span>" + group + "</div>" +
+      '<div class="group-items" id="' + id + '" ' + (open ? "" : "hidden") + ">";
+    cols.forEach(c => {
+      const on = visibleSet.has(c.key);
+      html += '<button class="pop-row ' + (c.locked ? "locked" : "") + '" data-key="' + c.key + '" ' + (c.locked ? "disabled" : "") + ">" +
+        '<span class="check ' + (on ? "on" : "") + '">' + (on ? '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5"/></svg>' : "") + "</span>" +
+        c.label + (c.locked ? '<span class="active-dot" style="margin-left:auto;font-size:11px;color:var(--faint)">pinned</span>' : "") + "</button>";
+    });
+    html += "</div>";
+  });
+  pop.innerHTML = html;
+  pop.querySelectorAll(".group-header").forEach(h => h.addEventListener("click", e => {
+    e.stopPropagation();
+    const id = h.dataset.grp, el = document.getElementById(id), tog = h.querySelector(".toggle");
+    if (el.hidden) { el.hidden = false; tog.textContent = "−"; openGroups.add(id); }
+    else { el.hidden = true; tog.textContent = "+"; openGroups.delete(id); }
+  }));
+  pop.querySelectorAll(".pop-row:not(.locked)").forEach(row => row.addEventListener("click", () => onToggle(row.dataset.key)));
+}
+
+/* ============================ All Accounts page ============================ */
+
+function initAllAccounts() {
+  document.getElementById("accSignedOut").hidden = signedIn;
+  document.getElementById("accSignedIn").hidden = !signedIn;
+  if (!signedIn || accState.loaded) return;
+  accState.loaded = true;
+  document.getElementById("accPageSize").value = String(accState.pageSize);
+  wireAccountsControls();
+  loadAllAccounts();
+}
+
+function wireAccountsControls() {
+  document.getElementById("accPageSize").addEventListener("change", e => { accState.pageSize = parseInt(e.target.value); accState.currentPage = 1; renderAccountsTable(); });
+
+  const colsBtn = document.getElementById("accColsBtn"), colsPop = document.getElementById("accColsPop");
+  colsBtn.addEventListener("click", e => { e.stopPropagation(); const open = colsPop.hidden; closeAllMenus(); if (open) { renderAccColsPop(); colsPop.hidden = false; } });
+  colsPop.addEventListener("click", e => e.stopPropagation());
+
+  const exportPop = document.getElementById("accExportPop");
+  document.getElementById("accExportBtn").addEventListener("click", e => { e.stopPropagation(); const open = exportPop.hidden; closeAllMenus(); if (open) exportPop.hidden = false; });
+  exportPop.addEventListener("click", e => e.stopPropagation());
+  exportPop.querySelectorAll("[data-accfmt]").forEach(b => b.addEventListener("click", () => {
+    exportPop.hidden = true;
+    const fmt = b.dataset.accfmt;
+    if (fmt === "csv") accExport("csv");
+    else if (fmt === "pdf") accExport("pdf");
+    else if (fmt === "sheets") accExport("sheets");
+  }));
+  syncAccColsCount();
+}
+
+function onAccDateRangeChange() {
+  accState.dateRange = periodMapToRange(document.getElementById("accDateSelect").value);
+  accState.currentPage = 1;
+  loadAllAccounts();
+}
+
+function aggregateCampaigns(campaigns) {
+  const t = (campaigns || []).reduce((a, c) => {
+    a.impressions += +c.impressions || 0;
+    a.clicks += +c.clicks || 0;
+    a.interactions += +c.interactions || 0;
+    a.cost += +c.cost || 0;
+    a.conversions += +c.conversions || 0;
+    a.convValue += +c.convValue || 0;
+    a.allConversions += +c.allConversions || 0;
+    a.viewThroughConversions += +c.viewThroughConversions || 0;
+    a.invalidClicks += +c.invalidClicks || 0;
+    a.activeViewImpressions += +c.activeViewImpressions || 0;
+    return a;
+  }, { impressions:0, clicks:0, interactions:0, cost:0, conversions:0, convValue:0, allConversions:0, viewThroughConversions:0, invalidClicks:0, activeViewImpressions:0, budget:0 });
+  const row = withMetrics(t);
+  row.invalidClickRate = (row.clicks + row.invalidClicks) ? row.invalidClicks / (row.clicks + row.invalidClicks) : 0;
+  return row;
+}
+
+async function loadAllAccounts() {
+  const loading = document.getElementById("accLoading");
+  loading.hidden = false;
+  document.getElementById("accError").hidden = true;
+  document.getElementById("accEmpty").hidden = true;
+  document.getElementById("accTable").hidden = true;
+  document.getElementById("accPagination").hidden = true;
+
+  if (!ACCOUNTS.length) { loading.hidden = true; document.getElementById("accEmpty").hidden = false; return; }
+
+  const range = rangeToGAQL(accState.dateRange);
+  const rows = [];
+  await mapLimit(ACCOUNTS, 4, async (a) => {
+    try {
+      const res = await fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(range), { credentials: "same-origin" });
+      const data = await res.json().catch(() => ({}));
+      const campaigns = (data.campaigns || []).map(withMetrics);
+      const row = aggregateCampaigns(campaigns);
+      row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
+      rows.push(row);
+    } catch {
+      const row = aggregateCampaigns([]);
+      row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
+      rows.push(row);
+    }
+  });
+
+  accState.rows = rows;
+  loading.hidden = true;
+  document.getElementById("accTable").hidden = false;
+  document.getElementById("accPagination").hidden = false;
+  renderAccountsTable();
+}
+
+function accShownColumns() { return ACCOUNT_COLUMNS.filter(c => accState.visible.has(c.key)); }
+
+function accSortedFiltered() {
+  const q = accState.search.trim().toLowerCase();
+  return accState.rows.filter(r => !q || (r.name || "").toLowerCase().includes(q) || (r.formatted || "").includes(q))
+    .sort((a, b) => {
+      const { key, dir } = accState.sort, sign = dir === "asc" ? 1 : -1;
+      const av = a[key], bv = b[key];
+      if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
+      return ((av || 0) - (bv || 0)) * sign;
+    });
+}
+
+function accTotals(rows) { return aggregateCampaigns(rows); }
+
+function renderAccountsTable() {
+  accState.search = document.getElementById("accSearch").value;
+  const cols = accShownColumns();
+  const filtered = accSortedFiltered();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / accState.pageSize));
+  if (accState.currentPage > totalPages) accState.currentPage = totalPages;
+  const start = (accState.currentPage - 1) * accState.pageSize;
+  const pageRows = filtered.slice(start, start + accState.pageSize);
+  const tot = accTotals(filtered);
+  const arrow = key => accState.sort.key === key ? '<span class="arr">' + (accState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
+
+  document.getElementById("acc-colgroup").innerHTML = cols.map(c => '<col data-col="' + c.key + '" style="width:' + colWidth(c, accState.columnWidths) + 'px">').join("");
+  document.getElementById("acc-thead").innerHTML = "<tr>" + cols.map(c =>
+    '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
+
+  document.getElementById("acc-tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
+    if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
+    const cls = c.align === "num" ? "num tabnum" : "txt";
+    return '<td class="' + cls + '" data-col="' + c.key + '">' + formatCell(c.type, r[c.key]) + "</td>";
+  }).join("") + "</tr>").join("");
+
+  document.getElementById("acc-tfoot").innerHTML = "<tr>" + cols.map((c, i) => {
+    if (i === 0) return '<td class="txt" data-col="name">Total · ' + filtered.length + "</td>";
+    return '<td class="num tabnum" data-col="' + c.key + '">' + formatCell(c.type, tot[c.key]) + "</td>";
+  }).join("") + "</tr>";
+
+  const totalPagesLabel = totalPages;
+  document.getElementById("accPageInfo").textContent = "Page " + accState.currentPage + " of " + totalPagesLabel;
+
+  const ids = { colgroup: "acc-colgroup", thead: "acc-thead", tbody: "acc-tbody", tfoot: "acc-tfoot" };
+  document.querySelectorAll("#acc-thead th").forEach(th => {
+    const handle = document.createElement("div");
+    handle.className = "resize-handle";
+    handle.addEventListener("mousedown", e => { e.preventDefault(); e.stopPropagation(); startResize(e, th.dataset.col, ids, accState.columnWidths, null); });
+    handle.addEventListener("click", e => e.stopPropagation());
+    handle.addEventListener("dblclick", e => { e.preventDefault(); e.stopPropagation(); autoFitColumn(th.dataset.col, ids, accState.columnWidths, null); });
+    th.appendChild(handle);
+    th.addEventListener("click", e => {
+      if (e.target.classList.contains("resize-handle")) return;
+      if (th.dataset.resizing === "1") { th.dataset.resizing = ""; return; }
+      const k = th.dataset.col, s = accState.sort;
+      accState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
+      accState.currentPage = 1;
+      renderAccountsTable();
+    });
+  });
+}
+
+function renderAccColsPop() {
+  renderGroupedCols("accColsPop", ACCOUNT_COLUMNS, ACCOUNT_GROUPS, accState.visible, accState.openColGroups, key => {
+    accState.visible.has(key) ? accState.visible.delete(key) : accState.visible.add(key);
+    syncAccColsCount(); renderAccColsPop(); renderAccountsTable();
+  });
+}
+
+function syncAccColsCount() { document.getElementById("accColsCount").textContent = accState.visible.size; }
+
+function accExport(fmt) {
+  const cols = accShownColumns();
+  const rows = accSortedFiltered();
+  if (!rows.length) return;
+  const fileBase = "all-accounts-" + (accState.dateRange.label || "").replace(/[^a-z0-9]+/gi, "-").toLowerCase().replace(/^-|-$/g, "");
+
+  if (fmt === "csv") {
+    const lines = [cols.map(c => csvEscape(c.label)).join(",")];
+    rows.forEach(r => lines.push(cols.map(c => csvEscape(csvValue(c.type, r[c.key]))).join(",")));
+    const tot = accTotals(rows);
+    lines.push(cols.map((c, i) => i === 0 ? "Total" : csvEscape(csvValue(c.type, tot[c.key]))).join(","));
+    downloadBlob("\uFEFF" + lines.join("\r\n"), fileBase + ".csv", "text/csv;charset=utf-8;");
+  } else if (fmt === "sheets") {
+    const lines = [cols.map(c => c.label).join("\t")];
+    rows.forEach(r => lines.push(cols.map(c => csvValue(c.type, r[c.key])).join("\t")));
+    const win = window.open("https://sheets.new", "_blank");
+    navigator.clipboard.writeText(lines.join("\n"))
+      .then(() => showToast("Data copied — paste (Ctrl/Cmd + V) into the new Google Sheet."))
+      .catch(() => { if (win) win.close(); showToast("Clipboard blocked — downloading CSV instead."); accExport("csv"); });
+  } else if (fmt === "pdf") {
+    accExportPDF(cols, rows, fileBase);
+  }
+}
+
+async function accExportPDF(cols, rows, fileBase) {
+  showToast("Preparing PDF…");
+  const ok = await ensurePdfLibs();
+  if (!ok) { showToast("Couldn't load the PDF library — opening print instead."); window.print(); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+  const head = [cols.map(c => c.label)];
+  const body = rows.map(r => cols.map(c => formatCell(c.type, r[c.key])));
+  const tot = accTotals(rows);
+  body.push(cols.map((c, i) => i === 0 ? "Total · " + rows.length : formatCell(c.type, tot[c.key])));
+  doc.setFontSize(14); doc.setTextColor(20); doc.text("All Accounts", 40, 34);
+  doc.setFontSize(9); doc.setTextColor(110); doc.text(accState.dateRange.label, 40, 50);
+  const lastRow = body.length - 1;
+  doc.autoTable({
+    head, body, startY: 64,
+    styles: { fontSize: 7, cellPadding: 3, overflow: "linebreak" },
+    headStyles: { fillColor: [67, 56, 202], textColor: 255, fontSize: 7 },
+    didParseCell: d => { if (d.section === "body" && d.row.index === lastRow) { d.cell.styles.fontStyle = "bold"; d.cell.styles.fillColor = [241, 245, 249]; } },
+  });
+  doc.save(fileBase + ".pdf");
+  showToast("PDF downloaded.");
+}
+
+function downloadBlob(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============================ Audit page ============================ */
+
+function initAudit() {
+  document.getElementById("audSignedOut").hidden = signedIn;
+  document.getElementById("audSignedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  const btn = document.getElementById("audRefreshBtn");
+  if (!btn.dataset.wired) { btn.dataset.wired = "1"; btn.addEventListener("click", () => loadAudit(true)); }
+  if (!auditState.loaded) loadAudit(false);
+}
+
+async function loadAudit(force) {
+  if (auditState.loaded && !force) return;
+  auditState.loaded = true;
+  auditState.rows = ACCOUNTS.map(a => ({ id: a.id, name: a.name || a.formatted, formatted: a.formatted, loading: true }));
+  renderAuditTable();
+  renderAuditSummary();
+
+  await mapLimit(auditState.rows, 4, async (row) => {
+    try {
+      const res = await fetch("/api/audit?customerId=" + encodeURIComponent(row.id), { credentials: "same-origin" });
+      const d = await res.json().catch(() => ({}));
+      row.accountStatus = d.accountStatus;
+      row.disapproved = d.disapproved || 0;
+      row.limited = d.limited || 0;
+      row.issues = d.issues || [];
+      row.error = (d.error && d.accountStatus === undefined) ? (d.error) : null;
+    } catch {
+      row.error = "Request failed";
+    }
+    row.loading = false;
+    renderAuditTable();
+    renderAuditSummary();
+  });
+}
+
+function statusPill(status) {
+  const s = (status || "").toUpperCase();
+  if (s === "ENABLED") return '<span class="pill enabled">Active</span>';
+  if (s === "SUSPENDED") return '<span class="issue-tag suspended">Suspended</span>';
+  if (s === "CANCELED" || s === "CLOSED") return '<span class="pill removed">' + titleCase(s) + "</span>";
+  return '<span class="pill other">' + (s ? titleCase(s) : "Unknown") + "</span>";
+}
+
+function renderAuditTable() {
+  document.getElementById("aud-thead").innerHTML =
+    "<tr><th style='width:30%'>Account</th><th style='width:16%'>Status</th><th style='width:22%'>Policy flags</th><th>Details</th></tr>";
+
+  document.getElementById("aud-tbody").innerHTML = auditState.rows.map(r => {
+    if (r.loading) {
+      return "<tr><td><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></td>" +
+        "<td colspan='3'><span class='aud-spinner'></span> <span style='color:var(--muted)'>Checking…</span></td></tr>";
+    }
+    if (r.error) {
+      return "<tr><td><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></td>" +
+        "<td>" + statusPill(r.accountStatus) + "</td><td colspan='2' style='color:var(--muted)'>Couldn't audit: " + escapeHtml(r.error) + "</td></tr>";
+    }
+    const flags = [];
+    if ((r.accountStatus || "").toUpperCase() === "SUSPENDED") flags.push('<span class="issue-tag suspended">Account suspended</span>');
+    if (r.disapproved > 0) flags.push('<span class="issue-tag disapproved">' + r.disapproved + ' disapproved</span>');
+    if (r.limited > 0) flags.push('<span class="issue-tag limited">' + r.limited + ' limited</span>');
+    if (!flags.length) flags.push('<span class="issue-tag clean">No issues</span>');
+
+    let details = "";
+    if (r.issues && r.issues.length) {
+      const sample = r.issues.slice(0, 5).map(x =>
+        "• " + escapeHtml(x.campaign || "—") + (x.adGroup ? " › " + escapeHtml(x.adGroup) : "") + " — " + escapeHtml(titleCase(x.status || ""))).join("<br>");
+      const more = r.issues.length > 5 ? "<br><em>+ " + (r.issues.length - 5) + " more</em>" : "";
+      details = "<div class='aud-detail'>" + sample + more + "</div>";
+    } else {
+      details = "<span style='color:var(--muted)'>—</span>";
+    }
+
+    return "<tr><td><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></td>" +
+      "<td>" + statusPill(r.accountStatus) + "</td>" +
+      "<td>" + flags.join(" ") + "</td>" +
+      "<td>" + details + "</td></tr>";
+  }).join("");
+}
+
+function renderAuditSummary() {
+  const rows = auditState.rows;
+  const done = rows.filter(r => !r.loading);
+  const withIssues = done.filter(r => (r.disapproved > 0) || (r.limited > 0) || (r.accountStatus || "").toUpperCase() === "SUSPENDED").length;
+  const disapproved = done.reduce((a, r) => a + (r.disapproved || 0), 0);
+  const limited = done.reduce((a, r) => a + (r.limited || 0), 0);
+  const suspended = done.filter(r => (r.accountStatus || "").toUpperCase() === "SUSPENDED").length;
+  const card = (cls, num, lbl) => '<div class="audit-card ' + cls + '"><div class="num-big">' + num + '</div><div class="lbl">' + lbl + "</div></div>";
+  document.getElementById("auditSummary").innerHTML =
+    card("", rows.length, "Accounts") +
+    card(withIssues ? "warn" : "ok", withIssues, "With issues") +
+    card(disapproved ? "bad" : "ok", disapproved, "Disapproved ads") +
+    card(limited ? "warn" : "ok", limited, "Limited ads") +
+    card(suspended ? "bad" : "ok", suspended, "Suspended");
 }
 
 function escapeHtml(s) {
