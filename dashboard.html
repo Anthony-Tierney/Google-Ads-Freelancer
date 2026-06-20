@@ -319,16 +319,29 @@
   .aud-detail { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
   .aud-spinner { width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; vertical-align: middle; }
 
-  #bpTable { width: 100%; border-collapse: collapse; }
-  #bpTable th { text-align: left; padding: 11px 14px; background: var(--line-soft); color: var(--muted); font-weight: 560; font-size: 12.5px; border-bottom: 1px solid var(--line); }
-  #bpTable td { padding: 12px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
-  #bpTable td.acct strong { font-weight: 560; }
-  #bpTable td.acct .sub { font-size: 12px; color: var(--faint); }
+  .bp-cards { display: flex; flex-direction: column; gap: 12px; }
+  .bp-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
+  .bp-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+  .bp-acct strong { font-weight: 600; font-size: 15px; }
+  .bp-acct .sub { display: block; font-size: 12px; color: var(--faint); margin-top: 1px; }
+  .bp-budget { display: flex; align-items: center; gap: 8px; }
+  .bp-budget-label { font-size: 12px; color: var(--muted); }
+  .bp-budget-value { font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .bp-budget-value.unset { color: var(--faint); font-weight: 500; font-style: italic; }
+  .bp-iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); color: var(--muted); cursor: pointer; padding: 0; }
+  .bp-iconbtn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+  .bp-iconbtn svg { width: 15px; height: 15px; }
+  .bp-iconbtn.save { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .bp-iconbtn.save:hover { background: #3730a3; }
+
   .budget-input { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); overflow: hidden; }
-  .budget-input .cur { padding: 0 4px 0 9px; color: var(--muted); font-size: 13px; }
-  .budget-input input { width: 92px; border: 0; padding: 7px 9px 7px 2px; font: inherit; background: none; color: var(--ink); }
+  .budget-input .cur { padding: 0 2px 0 9px; color: var(--muted); font-size: 13px; }
+  .budget-input input { width: 100px; border: 0; padding: 7px 9px 7px 2px; font: inherit; background: none; color: var(--ink); }
   .budget-input input:focus { outline: none; }
-  .budget-input:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .budget-input:focus-within { border-color: var(--accent); }
+
+  .bp-card-foot { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 12px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .bp-card-foot strong { color: var(--ink); font-weight: 600; }
 
   .pace-wrap { min-width: 220px; }
   .pace-bar { position: relative; height: 14px; background: var(--off-bg); border-radius: 7px; overflow: hidden; }
@@ -373,9 +386,9 @@
 </head>
 <body>
   <aside class="sidebar">
-    <a href="#" class="nav-item" data-page="allaccounts">Accounts</a>
+    <a href="#" class="nav-item active" data-page="allaccounts">Accounts</a>
     <a href="#" class="nav-item nav-sub" data-page="budgetpacing">Budget Pacing</a>
-    <a href="#" class="nav-item active" data-page="dashboard">Campaigns</a>
+    <a href="#" class="nav-item" data-page="dashboard">Campaigns</a>
     <a href="#" class="nav-item" data-page="audit">Audit</a>
     <a href="#" class="nav-item" data-page="settings">Settings</a>
   </aside>
@@ -403,7 +416,7 @@
 
     <main>
       <!-- Dashboard Page -->
-      <section id="dashboard" class="page active">
+      <section id="dashboard" class="page">
         <section id="signedOut" hidden>
           <div class="gate">
             <h1>Connect a Google Ads account</h1>
@@ -640,7 +653,7 @@
       </section>
 
       <!-- All Accounts Page -->
-      <section id="allaccounts" class="page">
+      <section id="allaccounts" class="page active">
         <section id="accSignedOut" hidden>
           <div class="gate">
             <h1>Connect a Google Ads account</h1>
@@ -788,16 +801,11 @@
             <span class="bp-legend"><span class="dot" style="background:var(--ink)"></span>Expected pace</span>
           </div>
 
-          <div class="panel">
-            <div id="bpLoading" class="state"><div class="spinner"></div>Loading month-to-date spend…</div>
-            <div id="bpError" class="state" hidden></div>
-            <div id="bpEmpty" class="state" hidden><div class="big">No accounts</div>No accounts found.</div>
-            <div class="scroll"><table id="bpTable" hidden>
-              <thead><tr><th style="width:26%">Account</th><th style="width:14%">Spend (MTD)</th><th style="width:18%">Monthly budget</th><th>Pacing</th></tr></thead>
-              <tbody id="bp-tbody"></tbody>
-            </table></div>
-          </div>
-          <div class="foot-note" style="margin-top:10px;">Budgets are saved in this browser. Suggested budget is the sum of enabled daily budgets × days in the month.</div>
+          <div id="bpLoading" class="state"><div class="spinner"></div>Loading month-to-date spend…</div>
+          <div id="bpError" class="state" hidden></div>
+          <div id="bpEmpty" class="state" hidden><div class="big">No accounts</div>No accounts found.</div>
+          <div id="bpCards" class="bp-cards" hidden></div>
+          <div class="foot-note" style="margin-top:14px;">Budgets are saved to your account and sync across devices. Suggested budget is the sum of enabled daily budgets × days in the month.</div>
         </section>
       </section>
 
@@ -923,7 +931,7 @@ const accState = {
 const auditState = { rows: [], loaded: false };
 
 const BUDGETS_KEY = "budget_pacing_monthly_v1";
-const bpState = { rows: [], loaded: false, budgets: {} };
+const bpState = { rows: [], loaded: false, budgets: {}, editing: null };
 
 const state = {
   campaigns: [],
@@ -1529,6 +1537,9 @@ function showApp(accounts) {
   wireMenus();
   syncColsCount();
   updateFilterCount();
+
+  // Accounts is the default landing page — load it now.
+  initAllAccounts();
 }
 
 function closeAllMenus() {
@@ -2552,12 +2563,46 @@ function renderAuditSummary() {
 
 /* ============================ Budget Pacing page ============================ */
 
-function loadBudgets() {
-  try { bpState.budgets = JSON.parse(localStorage.getItem(BUDGETS_KEY) || "{}") || {}; }
-  catch { bpState.budgets = {}; }
-}
-function saveBudgets() {
+function mirrorBudgetsLocal() {
   try { localStorage.setItem(BUDGETS_KEY, JSON.stringify(bpState.budgets)); } catch {}
+}
+
+async function loadBudgets() {
+  try {
+    const res = await fetch("/api/budgets", { credentials: "same-origin" });
+    if (res.ok) {
+      const d = await res.json();
+      bpState.budgets = d.budgets || {};
+      mirrorBudgetsLocal();
+      return;
+    }
+    throw new Error("server");
+  } catch {
+    // Fallback to the local cache (e.g. endpoint not deployed yet)
+    try { bpState.budgets = JSON.parse(localStorage.getItem(BUDGETS_KEY) || "{}") || {}; }
+    catch { bpState.budgets = {}; }
+  }
+}
+
+async function saveBudget(id, amount) {
+  // Optimistic local update
+  if (amount == null || amount <= 0) delete bpState.budgets[id];
+  else bpState.budgets[id] = amount;
+  mirrorBudgetsLocal();
+  bpState.editing = null;
+  renderBudgetPacing();
+  // Persist to server
+  try {
+    const res = await fetch("/api/budgets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ customerId: id, amount: (amount && amount > 0) ? amount : null }),
+    });
+    if (!res.ok) throw new Error();
+  } catch {
+    showToast("Saved on this device — couldn't reach the server.");
+  }
 }
 
 function initBudgetPacing() {
@@ -2566,7 +2611,7 @@ function initBudgetPacing() {
   if (!signedIn) return;
   const btn = document.getElementById("bpRefreshBtn");
   if (!btn.dataset.wired) { btn.dataset.wired = "1"; btn.addEventListener("click", () => loadBudgetPacing(true)); }
-  if (!bpState.loaded) { loadBudgets(); loadBudgetPacing(false); }
+  if (!bpState.loaded) loadBudgetPacing(false);
 }
 
 function monthInfo() {
@@ -2589,7 +2634,9 @@ async function loadBudgetPacing(force) {
   loading.hidden = false;
   document.getElementById("bpError").hidden = true;
   document.getElementById("bpEmpty").hidden = true;
-  document.getElementById("bpTable").hidden = true;
+  document.getElementById("bpCards").hidden = true;
+
+  await loadBudgets();
 
   if (!ACCOUNTS.length) { loading.hidden = true; document.getElementById("bpEmpty").hidden = false; return; }
 
@@ -2611,22 +2658,52 @@ async function loadBudgetPacing(force) {
   rows.sort((x, y) => y.spend - x.spend);
   bpState.rows = rows;
   loading.hidden = true;
-  document.getElementById("bpTable").hidden = false;
+  document.getElementById("bpCards").hidden = false;
   renderBudgetPacing();
 }
+
+const PENCIL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
+const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+const X_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
 
 function renderBudgetPacing() {
   const mi = monthInfo();
   const pacePct = mi.pace * 100;
 
-  document.getElementById("bp-tbody").innerHTML = bpState.rows.map(r => {
+  document.getElementById("bpCards").innerHTML = bpState.rows.map(r => {
     const saved = bpState.budgets[r.id];
     const budget = (saved != null && saved !== "") ? Number(saved) : 0;
     const suggested = Math.round(r.dailyBudget * mi.daysInMonth);
+    const editing = bpState.editing === r.id;
 
-    let pacing;
+    // Budget control (display value + pencil, or inline editor)
+    let budgetControl;
+    if (editing) {
+      budgetControl =
+        '<div class="bp-budget">' +
+          '<span class="bp-budget-label">Monthly budget</span>' +
+          '<span class="budget-input"><span class="cur">£</span>' +
+            '<input type="number" min="0" step="50" id="bpInput" data-acc="' + r.id + '" value="' + (budget || "") + '" placeholder="' + (suggested || 0) + '" /></span>' +
+          '<button class="bp-iconbtn save" data-save="' + r.id + '" title="Save">' + CHECK_SVG + '</button>' +
+          '<button class="bp-iconbtn" data-cancel="1" title="Cancel">' + X_SVG + '</button>' +
+        '</div>';
+    } else {
+      const valHtml = budget > 0
+        ? '<span class="bp-budget-value">' + fmtCurrency(budget) + '</span>'
+        : '<span class="bp-budget-value unset">Not set</span>';
+      budgetControl =
+        '<div class="bp-budget">' +
+          '<span class="bp-budget-label">Monthly budget</span>' +
+          valHtml +
+          '<button class="bp-iconbtn" data-edit="' + r.id + '" title="Edit budget">' + PENCIL_SVG + '</button>' +
+        '</div>';
+    }
+
+    // Pacing bar + footer
+    let bar, foot;
     if (!budget || budget <= 0) {
-      pacing = '<div class="pace-none">Set a monthly budget to see pacing</div>';
+      bar = '<div class="pace-none">Set a monthly budget to see pacing.' + (suggested ? ' Suggested: ' + fmtCurrency(suggested) + '.' : '') + '</div>';
+      foot = '<span>Spend MTD <strong>' + fmtCurrency(r.spend) + '</strong></span>';
     } else {
       const spendPct = (r.spend / budget) * 100;
       const fillPct = Math.min(spendPct, 100);
@@ -2648,37 +2725,52 @@ function renderBudgetPacing() {
       }
       if (spendPct >= 100) paceText = '<span class="over">Over budget</span>';
 
-      pacing =
-        '<div class="pace-wrap">' +
-          '<div class="pace-bar">' +
-            '<div class="pace-fill ' + status + '" style="width:' + fillPct.toFixed(1) + '%"></div>' +
-            '<div class="pace-marker" style="left:' + pacePct.toFixed(1) + '%" title="Expected pace today"></div>' +
-          '</div>' +
-          '<div class="pace-label">' + fmtCurrency(r.spend) + ' <span class="muted">/ ' + fmtCurrency(budget) + '</span> · ' +
-            spendPct.toFixed(0) + '% · ' + paceText +
-            ' <span class="muted">· proj. ' + fmtCurrency(projected) + '</span></div>' +
+      bar =
+        '<div class="pace-bar">' +
+          '<div class="pace-fill ' + status + '" style="width:' + fillPct.toFixed(1) + '%"></div>' +
+          '<div class="pace-marker" style="left:' + pacePct.toFixed(1) + '%" title="Expected pace today"></div>' +
         '</div>';
+      foot =
+        '<span>Spend MTD <strong>' + fmtCurrency(r.spend) + '</strong></span>' +
+        '<span>' + spendPct.toFixed(0) + '% of budget</span>' +
+        '<span>' + paceText + '</span>' +
+        '<span>Projected <strong>' + fmtCurrency(projected) + '</strong></span>';
     }
 
-    const val = (saved != null && saved !== "") ? saved : "";
-    return '<tr>' +
-      '<td class="acct"><strong>' + escapeHtml(r.name) + '</strong><div class="sub">' + escapeHtml(r.formatted) + '</div></td>' +
-      '<td class="tabnum">' + fmtCurrency(r.spend) + '</td>' +
-      '<td><span class="budget-input"><span class="cur">£</span><input type="number" min="0" step="50" data-acc="' + r.id + '" value="' + val + '" placeholder="' + (suggested || 0) + '" /></span></td>' +
-      '<td>' + pacing + '</td>' +
-    '</tr>';
+    return '<div class="bp-card">' +
+        '<div class="bp-card-head">' +
+          '<div class="bp-acct"><strong>' + escapeHtml(r.name) + '</strong><span class="sub">' + escapeHtml(r.formatted) + '</span></div>' +
+          budgetControl +
+        '</div>' +
+        bar +
+        '<div class="bp-card-foot">' + foot + '</div>' +
+      '</div>';
   }).join("");
 
-  document.querySelectorAll('#bp-tbody input[data-acc]').forEach(inp => {
-    inp.addEventListener("change", () => {
-      const id = inp.dataset.acc;
-      const v = inp.value.trim();
-      if (v === "" || Number(v) <= 0) delete bpState.budgets[id];
-      else bpState.budgets[id] = Number(v);
-      saveBudgets();
-      renderBudgetPacing();
+  // Wire edit / save / cancel
+  document.querySelectorAll('#bpCards [data-edit]').forEach(b => b.addEventListener("click", () => {
+    bpState.editing = b.dataset.edit;
+    renderBudgetPacing();
+    const inp = document.getElementById("bpInput");
+    if (inp) { inp.focus(); inp.select(); }
+  }));
+  document.querySelectorAll('#bpCards [data-cancel]').forEach(b => b.addEventListener("click", () => {
+    bpState.editing = null;
+    renderBudgetPacing();
+  }));
+  document.querySelectorAll('#bpCards [data-save]').forEach(b => b.addEventListener("click", () => {
+    const id = b.dataset.save;
+    const inp = document.getElementById("bpInput");
+    const v = inp ? inp.value.trim() : "";
+    saveBudget(id, v === "" ? null : Number(v));
+  }));
+  const inp = document.getElementById("bpInput");
+  if (inp) {
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter") { const v = inp.value.trim(); saveBudget(inp.dataset.acc, v === "" ? null : Number(v)); }
+      else if (e.key === "Escape") { bpState.editing = null; renderBudgetPacing(); }
     });
-  });
+  }
 }
 
 function escapeHtml(s) {
