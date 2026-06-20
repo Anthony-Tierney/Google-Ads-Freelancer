@@ -640,6 +640,30 @@
             <div class="grow"></div>
             <div class="toolset">
               <div class="filters">
+                <button class="filters-btn" id="accFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                  <span class="count" id="accFilterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="accFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('acc-group-status', event)">
+                    <span class="toggle">−</span>Status
+                  </div>
+                  <div class="filter-group-items" id="acc-group-status">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="accStatusActive" checked /><label for="accStatusActive">Active</label></div>
+                        <div class="check-row"><input type="checkbox" id="accStatusInactive" /><label for="accStatusInactive">Inactive</label></div>
+                      </div>
+                      <div class="foot-note" style="margin-top:8px;">Active = at least one enabled campaign.</div>
+                    </div>
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetAccFilters()">Reset</button>
+                    <button class="apply" onclick="applyAccFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
+              <div class="filters">
                 <button class="filters-btn" id="accExportBtn" title="Export current view">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
                   Export
@@ -1431,7 +1455,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -2123,7 +2147,37 @@ function wireAccountsControls() {
     else if (fmt === "pdf") accExport("pdf");
     else if (fmt === "sheets") accExport("sheets");
   }));
+
+  const filtersMenu = document.getElementById("accFiltersMenu");
+  document.getElementById("accFiltersBtn").addEventListener("click", e => { e.stopPropagation(); const open = filtersMenu.hidden; closeAllMenus(); if (open) filtersMenu.hidden = false; });
+  filtersMenu.addEventListener("click", e => e.stopPropagation());
+
   syncAccColsCount();
+  updateAccFilterCount();
+}
+
+function applyAccFilters() {
+  accState.filterAccountStatus = new Set([
+    document.getElementById("accStatusActive").checked ? "active" : null,
+    document.getElementById("accStatusInactive").checked ? "inactive" : null,
+  ].filter(Boolean));
+  accState.currentPage = 1;
+  document.getElementById("accFiltersMenu").hidden = true;
+  updateAccFilterCount();
+  renderAccountsTable();
+}
+
+function resetAccFilters() {
+  document.getElementById("accStatusActive").checked = true;
+  document.getElementById("accStatusInactive").checked = false;
+  applyAccFilters();
+}
+
+function updateAccFilterCount() {
+  const n = accState.filterAccountStatus.size;
+  const el = document.getElementById("accFilterCount");
+  if (n > 0) { el.textContent = n; el.hidden = false; }
+  else { el.hidden = true; }
 }
 
 function onAccDateRangeChange() {
@@ -2169,10 +2223,13 @@ async function loadAllAccounts() {
       const data = await res.json().catch(() => ({}));
       const campaigns = (data.campaigns || []).map(withMetrics);
       const row = aggregateCampaigns(campaigns);
+      row.enabledCount = campaigns.filter(c => (c.status || "").toUpperCase() === "ENABLED").length;
+      row.hasEnabled = row.enabledCount > 0;
       row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
       rows.push(row);
     } catch {
       const row = aggregateCampaigns([]);
+      row.enabledCount = 0; row.hasEnabled = false;
       row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
       rows.push(row);
     }
@@ -2189,7 +2246,14 @@ function accShownColumns() { return ACCOUNT_COLUMNS.filter(c => accState.visible
 
 function accSortedFiltered() {
   const q = accState.search.trim().toLowerCase();
-  return accState.rows.filter(r => !q || (r.name || "").toLowerCase().includes(q) || (r.formatted || "").includes(q))
+  const statuses = accState.filterAccountStatus;
+  return accState.rows.filter(r => {
+    const searchMatch = !q || (r.name || "").toLowerCase().includes(q) || (r.formatted || "").includes(q);
+    let statusMatch;
+    if (statuses.size === 0) statusMatch = false;
+    else statusMatch = (r.hasEnabled && statuses.has("active")) || (!r.hasEnabled && statuses.has("inactive"));
+    return searchMatch && statusMatch;
+  })
     .sort((a, b) => {
       const { key, dir } = accState.sort, sign = dir === "asc" ? 1 : -1;
       const av = a[key], bv = b[key];
