@@ -349,6 +349,21 @@
   .bp-stat-value.over { color: #dc2626; }
   .bp-stat-value.under { color: #b45309; }
   .bp-stat-value.ontrack { color: #047857; }
+  .bp-rec { margin-top: 12px; padding: 11px 14px 11px 13px; border-radius: 9px; background: var(--bg); border: 1px solid var(--line-soft); border-left: 3px solid var(--accent); font-size: 13px; line-height: 1.55; color: var(--ink); }
+  .bp-rec.over { border-left-color: #dc2626; }
+  .bp-rec.under { border-left-color: #d97706; }
+  .bp-rec.ontrack { border-left-color: #16a34a; }
+  .bp-rec .rec-lbl { font-weight: 600; }
+  .bp-rec strong { font-weight: 600; }
+
+  .bp-inactive-head { margin: 26px 0 10px; }
+  .bp-inactive-head h2 { font-size: 15px; margin: 0; font-weight: 600; }
+  .bp-inactive-head .sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  #bpInactiveTable { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  #bpInactiveTable th { text-align: left; padding: 9px 14px; background: var(--line-soft); color: var(--muted); font-weight: 560; font-size: 12px; }
+  #bpInactiveTable td { padding: 9px 14px; border-top: 1px solid var(--line-soft); font-size: 13px; }
+  #bpInactiveTable td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+  #bpInactiveTable .sub { color: var(--faint); font-size: 12px; }
 
   .pace-wrap { min-width: 220px; }
   .pace-bar { position: relative; height: 14px; background: var(--off-bg); border-radius: 7px; overflow: hidden; }
@@ -813,6 +828,7 @@
           <div id="bpEmpty" class="state" hidden><div class="big">No accounts</div>No accounts found.</div>
           <div id="bpCards" class="bp-cards" hidden></div>
           <div class="foot-note" style="margin-top:14px;">Budgets are saved to your account and sync across devices. Suggested budget is the sum of enabled daily budgets × days in the month.</div>
+          <div id="bpInactive" hidden></div>
         </section>
       </section>
 
@@ -969,6 +985,7 @@ const state = {
 };
 
 const fmtCurrency = n => new Intl.NumberFormat(LOCALE, { style:"currency", currency:CURRENCY, maximumFractionDigits:2 }).format(n || 0);
+const fmtCurrency0 = n => new Intl.NumberFormat(LOCALE, { style:"currency", currency:CURRENCY, maximumFractionDigits:0 }).format(Math.round(n || 0));
 const fmtInt = n => new Intl.NumberFormat(LOCALE).format(Math.round(n || 0));
 const fmtDec = n => new Intl.NumberFormat(LOCALE, { maximumFractionDigits:1 }).format(n || 0);
 const fmtPct = n => ((n || 0) * 100).toFixed(2) + "%";
@@ -2653,7 +2670,7 @@ async function loadBudgetPacing(force) {
   const weekRange = "LAST_7_DAYS";
   const rows = [];
   await mapLimit(ACCOUNTS, 4, async (a) => {
-    let spend = 0, dailyBudget = 0, last7 = 0;
+    let spend = 0, dailyBudget = 0, last7 = 0, enabledCount = 0;
     try {
       const [mRes, wRes] = await Promise.all([
         fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(monthRange), { credentials: "same-origin" }),
@@ -2662,12 +2679,12 @@ async function loadBudgetPacing(force) {
       const mData = await mRes.json().catch(() => ({}));
       (mData.campaigns || []).forEach(c => {
         spend += +c.cost || 0;
-        if ((c.status || "").toUpperCase() === "ENABLED") dailyBudget += +c.budget || 0;
+        if ((c.status || "").toUpperCase() === "ENABLED") { dailyBudget += +c.budget || 0; enabledCount++; }
       });
       const wData = await wRes.json().catch(() => ({}));
       (wData.campaigns || []).forEach(c => { last7 += +c.cost || 0; });
     } catch {}
-    rows.push({ id: a.id, name: a.name || a.formatted, formatted: a.formatted, spend, dailyBudget, last7 });
+    rows.push({ id: a.id, name: a.name || a.formatted, formatted: a.formatted, spend, dailyBudget, last7, hasEnabled: enabledCount > 0 });
   });
 
   rows.sort((x, y) => y.spend - x.spend);
@@ -2685,7 +2702,10 @@ function renderBudgetPacing() {
   const mi = monthInfo();
   const pacePct = mi.pace * 100;
 
-  document.getElementById("bpCards").innerHTML = bpState.rows.map(r => {
+  const active = bpState.rows.filter(r => r.hasEnabled);
+  const inactive = bpState.rows.filter(r => !r.hasEnabled);
+
+  document.getElementById("bpCards").innerHTML = (active.length ? active : []).map(r => {
     const saved = bpState.budgets[r.id];
     const budget = (saved != null && saved !== "") ? Number(saved) : 0;
     const suggested = Math.round(r.dailyBudget * mi.daysInMonth);
@@ -2763,6 +2783,8 @@ function renderBudgetPacing() {
         stat("Projected", fmtCurrency(projected));
     }
 
+    const rec = buildRecommendation(r, budget, mi, avg7, projected);
+
     return '<div class="bp-card">' +
         '<div class="bp-card-head">' +
           '<div class="bp-acct"><strong>' + escapeHtml(r.name) + '</strong><span class="sub">' + escapeHtml(r.formatted) + '</span></div>' +
@@ -2770,8 +2792,15 @@ function renderBudgetPacing() {
         '</div>' +
         bar +
         '<div class="bp-card-foot">' + foot + '</div>' +
+        rec +
       '</div>';
   }).join("");
+
+  if (!active.length) {
+    document.getElementById("bpCards").innerHTML = '<div class="state"><div class="big">No active accounts</div>None of your accounts have enabled campaigns this month.</div>';
+  }
+
+  renderInactiveAccounts(inactive);
 
   // Wire edit / save / cancel
   document.querySelectorAll('#bpCards [data-edit]').forEach(b => b.addEventListener("click", () => {
@@ -2811,10 +2840,10 @@ function paceStatus(spend, budget, mi) {
   return "ontrack";
 }
 
-// Show the amber warning in the side nav if any budgeted account is off pace.
+// Show the amber warning in the side nav if any active, budgeted account is off pace.
 function updateBpNavWarning() {
   const mi = monthInfo();
-  const anyOff = bpState.rows.some(r => {
+  const anyOff = bpState.rows.filter(r => r.hasEnabled).some(r => {
     const saved = bpState.budgets[r.id];
     const budget = (saved != null && saved !== "") ? Number(saved) : 0;
     const st = paceStatus(r.spend, budget, mi);
@@ -2822,6 +2851,54 @@ function updateBpNavWarning() {
   });
   const el = document.getElementById("bpNavWarn");
   if (el) el.hidden = !anyOff;
+}
+
+// Personalised pacing recommendation for an account card.
+function buildRecommendation(r, budget, mi, avg7, projected) {
+  if (!budget || budget <= 0) {
+    return '<div class="bp-rec"><span class="rec-lbl">Recommendation:</span> Set a monthly budget to get a pacing recommendation for this account.</div>';
+  }
+  const remainingDays = Math.max(0, mi.daysInMonth - mi.dayOfMonth);
+  const budgetStr = fmtCurrency0(budget);
+  const days = n => n + (n === 1 ? " day" : " days");
+
+  if (remainingDays <= 0) {
+    const sign = r.spend > budget ? "over" : "under";
+    const cls = r.spend > budget ? "over" : (r.spend < budget * 0.95 ? "under" : "ontrack");
+    return '<div class="bp-rec ' + cls + '"><span class="rec-lbl">Recommendation:</span> The month is complete. Final spend of <strong>' + fmtCurrency0(r.spend) + '</strong> came in <strong>' + fmtCurrency0(Math.abs(r.spend - budget)) + '</strong> ' + sign + ' the ' + budgetStr + ' monthly budget.</div>';
+  }
+
+  if (r.spend >= budget) {
+    return '<div class="bp-rec over"><span class="rec-lbl">Recommendation:</span> Spend has already passed the ' + budgetStr + ' monthly budget by <strong>' + fmtCurrency0(r.spend - budget) + '</strong> with ' + days(remainingDays) + ' left. Consider pausing or lowering daily spend to limit further overspend.</div>';
+  }
+
+  const requiredDaily = (budget - r.spend) / remainingDays;
+  const band = budget * 0.05;
+  const diff = projected - budget;
+
+  if (diff > band) {
+    const z = avg7 - requiredDaily;
+    return '<div class="bp-rec over"><span class="rec-lbl">Recommendation:</span> Based on spending for the past 7 days, this account is projected to <strong>overspend by ' + fmtCurrency0(diff) + '</strong> versus the client\u2019s ' + budgetStr + ' monthly budget. Reducing average daily spend by <strong>' + fmtCurrency0(z) + '</strong> \u2014 from ' + fmtCurrency0(avg7) + ' to ' + fmtCurrency0(requiredDaily) + ' per day across the remaining ' + days(remainingDays) + ' \u2014 would bring spend in on budget.</div>';
+  }
+  if (diff < -band) {
+    const z = requiredDaily - avg7;
+    return '<div class="bp-rec under"><span class="rec-lbl">Recommendation:</span> Based on spending for the past 7 days, this account is projected to <strong>underspend by ' + fmtCurrency0(-diff) + '</strong> versus the client\u2019s ' + budgetStr + ' monthly budget. Increasing average daily spend by <strong>' + fmtCurrency0(z) + '</strong> \u2014 from ' + fmtCurrency0(avg7) + ' to ' + fmtCurrency0(requiredDaily) + ' per day across the remaining ' + days(remainingDays) + ' \u2014 would use the full budget.</div>';
+  }
+  return '<div class="bp-rec ontrack"><span class="rec-lbl">Recommendation:</span> Based on the past 7 days, projected spend of <strong>' + fmtCurrency0(projected) + '</strong> is in line with the ' + budgetStr + ' monthly budget. Hold the current daily rate of around ' + fmtCurrency0(avg7) + ' per day.</div>';
+}
+
+// Small table of accounts with no enabled campaigns this month.
+function renderInactiveAccounts(inactive) {
+  const el = document.getElementById("bpInactive");
+  if (!inactive.length) { el.hidden = true; el.innerHTML = ""; return; }
+  el.hidden = false;
+  const rows = inactive.slice().sort((a, b) => (a.name || "").localeCompare(b.name || "")).map(r =>
+    '<tr><td><strong>' + escapeHtml(r.name) + '</strong></td><td class="sub">' + escapeHtml(r.formatted) + '</td><td class="num">' + fmtCurrency(r.spend) + '</td></tr>'
+  ).join("");
+  el.innerHTML =
+    '<div class="bp-inactive-head"><h2>Inactive accounts (' + inactive.length + ')</h2>' +
+    '<div class="sub">No enabled campaigns this month \u2014 hidden from pacing above.</div></div>' +
+    '<table id="bpInactiveTable"><thead><tr><th>Account</th><th>Account ID</th><th style="text-align:right">Spend (MTD)</th></tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
 function escapeHtml(s) {
