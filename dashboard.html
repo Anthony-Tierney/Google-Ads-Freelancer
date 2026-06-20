@@ -63,6 +63,8 @@
   }
   .nav-item:hover { background: var(--line-soft); }
   .nav-item.active { border-left-color: var(--accent); background: var(--accent-soft); font-weight: 560; }
+  .nav-sub { padding-left: 32px; font-size: 13px; color: var(--muted); }
+  .nav-sub::before { content: "└ "; color: var(--faint); margin-right: 2px; }
   
   .main-content { flex: 1; display: flex; flex-direction: column; }
 
@@ -317,6 +319,35 @@
   .aud-detail { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
   .aud-spinner { width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; vertical-align: middle; }
 
+  #bpTable { width: 100%; border-collapse: collapse; }
+  #bpTable th { text-align: left; padding: 11px 14px; background: var(--line-soft); color: var(--muted); font-weight: 560; font-size: 12.5px; border-bottom: 1px solid var(--line); }
+  #bpTable td { padding: 12px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+  #bpTable td.acct strong { font-weight: 560; }
+  #bpTable td.acct .sub { font-size: 12px; color: var(--faint); }
+  .budget-input { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); overflow: hidden; }
+  .budget-input .cur { padding: 0 4px 0 9px; color: var(--muted); font-size: 13px; }
+  .budget-input input { width: 92px; border: 0; padding: 7px 9px 7px 2px; font: inherit; background: none; color: var(--ink); }
+  .budget-input input:focus { outline: none; }
+  .budget-input:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+  .pace-wrap { min-width: 220px; }
+  .pace-bar { position: relative; height: 14px; background: var(--off-bg); border-radius: 7px; overflow: hidden; }
+  .pace-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 7px; transition: width .3s ease; }
+  .pace-fill.ontrack { background: #16a34a; }
+  .pace-fill.under { background: #d97706; }
+  .pace-fill.over { background: #dc2626; }
+  .pace-marker { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); border-radius: 2px; }
+  .pace-marker::after { content: ""; position: absolute; top: -3px; left: -2px; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
+  .pace-label { margin-top: 7px; font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .pace-label .muted { color: var(--muted); }
+  .pace-label .over { color: #dc2626; font-weight: 540; }
+  .pace-label .under { color: #b45309; font-weight: 540; }
+  .pace-label .ontrack { color: #047857; font-weight: 540; }
+  .pace-none { color: var(--faint); font-size: 13px; }
+  .bp-meta { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+  .bp-legend { display: inline-flex; align-items: center; gap: 5px; margin-left: 14px; font-size: 12px; color: var(--muted); }
+  .bp-legend .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
   .settings-section { margin-bottom: 32px; }
   .settings-section h2 { font-size: 16px; margin: 0 0 16px; font-weight: 600; }
   .setting-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
@@ -342,8 +373,9 @@
 </head>
 <body>
   <aside class="sidebar">
-    <a href="#" class="nav-item active" data-page="dashboard">Home</a>
-    <a href="#" class="nav-item" data-page="allaccounts">All Accounts</a>
+    <a href="#" class="nav-item" data-page="allaccounts">Accounts</a>
+    <a href="#" class="nav-item nav-sub" data-page="budgetpacing">Budget Pacing</a>
+    <a href="#" class="nav-item active" data-page="dashboard">Campaigns</a>
     <a href="#" class="nav-item" data-page="audit">Audit</a>
     <a href="#" class="nav-item" data-page="settings">Settings</a>
   </aside>
@@ -438,7 +470,7 @@
             <div class="toolset">
               <div class="filters">
                 <button class="filters-btn" id="filtersBtn" aria-haspopup="true" title="Filters">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                   <span class="count" id="filterCount" hidden>0</span>
                 </button>
                 <div class="pop filters-menu" id="filtersMenu" hidden>
@@ -641,7 +673,7 @@
             <div class="toolset">
               <div class="filters">
                 <button class="filters-btn" id="accFiltersBtn" aria-haspopup="true" title="Filters">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                   <span class="count" id="accFilterCount" hidden>0</span>
                 </button>
                 <div class="pop filters-menu" id="accFiltersMenu" hidden>
@@ -727,6 +759,45 @@
           <div class="panel" style="margin-top:14px;">
             <div class="scroll"><table id="audTable"><thead id="aud-thead"></thead><tbody id="aud-tbody"></tbody></table></div>
           </div>
+        </section>
+      </section>
+
+      <!-- Budget Pacing Page -->
+      <section id="budgetpacing" class="page">
+        <section id="bpSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to track monthly spend against budget.</p>
+            <a class="btn-google" href="/api/auth">
+              <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 11v2.8h4.6c-.2 1.2-1.5 3.6-4.6 3.6-2.8 0-5-2.3-5-5.1s2.2-5.1 5-5.1c1.6 0 2.6.7 3.2 1.2l2.2-2.1C17.9 4.9 15.2 4 12 4 6.9 4 2.8 8.1 2.8 13.2S6.9 22.4 12 22.4c5.9 0 9.8-4.1 9.8-9.9 0-.7-.1-1.2-.2-1.7H12z"/></svg>
+              Sign in with Google
+            </a>
+          </div>
+        </section>
+
+        <section id="bpSignedIn" hidden>
+          <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
+            <h1 style="margin:0;font-size:19px;">Budget Pacing</h1>
+            <button class="filters-btn" id="bpRefreshBtn" title="Refresh" style="margin-left:auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v5h-5"/></svg>Refresh</button>
+          </div>
+          <div class="bp-meta" id="bpMeta">
+            <span id="bpPeriodText"></span>
+            <span class="bp-legend"><span class="dot" style="background:#16a34a"></span>On track</span>
+            <span class="bp-legend"><span class="dot" style="background:#d97706"></span>Under pace</span>
+            <span class="bp-legend"><span class="dot" style="background:#dc2626"></span>Over pace</span>
+            <span class="bp-legend"><span class="dot" style="background:var(--ink)"></span>Expected pace</span>
+          </div>
+
+          <div class="panel">
+            <div id="bpLoading" class="state"><div class="spinner"></div>Loading month-to-date spend…</div>
+            <div id="bpError" class="state" hidden></div>
+            <div id="bpEmpty" class="state" hidden><div class="big">No accounts</div>No accounts found.</div>
+            <div class="scroll"><table id="bpTable" hidden>
+              <thead><tr><th style="width:26%">Account</th><th style="width:14%">Spend (MTD)</th><th style="width:18%">Monthly budget</th><th>Pacing</th></tr></thead>
+              <tbody id="bp-tbody"></tbody>
+            </table></div>
+          </div>
+          <div class="foot-note" style="margin-top:10px;">Budgets are saved in this browser. Suggested budget is the sum of enabled daily budgets × days in the month.</div>
         </section>
       </section>
 
@@ -850,6 +921,9 @@ const accState = {
 };
 
 const auditState = { rows: [], loaded: false };
+
+const BUDGETS_KEY = "budget_pacing_monthly_v1";
+const bpState = { rows: [], loaded: false, budgets: {} };
 
 const state = {
   campaigns: [],
@@ -1357,6 +1431,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.add('active');
     if (page === "allaccounts") initAllAccounts();
     if (page === "audit") initAudit();
+    if (page === "budgetpacing") initBudgetPacing();
   });
 });
 
@@ -1382,6 +1457,8 @@ function showSignedOut() {
   document.getElementById("accSignedIn").hidden = true;
   document.getElementById("audSignedOut").hidden = false;
   document.getElementById("audSignedIn").hidden = true;
+  document.getElementById("bpSignedOut").hidden = false;
+  document.getElementById("bpSignedIn").hidden = true;
 }
 
 function showApp(accounts) {
@@ -2471,6 +2548,137 @@ function renderAuditSummary() {
     card(disapproved ? "bad" : "ok", disapproved, "Disapproved ads") +
     card(limited ? "warn" : "ok", limited, "Limited ads") +
     card(suspended ? "bad" : "ok", suspended, "Suspended");
+}
+
+/* ============================ Budget Pacing page ============================ */
+
+function loadBudgets() {
+  try { bpState.budgets = JSON.parse(localStorage.getItem(BUDGETS_KEY) || "{}") || {}; }
+  catch { bpState.budgets = {}; }
+}
+function saveBudgets() {
+  try { localStorage.setItem(BUDGETS_KEY, JSON.stringify(bpState.budgets)); } catch {}
+}
+
+function initBudgetPacing() {
+  document.getElementById("bpSignedOut").hidden = signedIn;
+  document.getElementById("bpSignedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  const btn = document.getElementById("bpRefreshBtn");
+  if (!btn.dataset.wired) { btn.dataset.wired = "1"; btn.addEventListener("click", () => loadBudgetPacing(true)); }
+  if (!bpState.loaded) { loadBudgets(); loadBudgetPacing(false); }
+}
+
+function monthInfo() {
+  const today = new Date();
+  const year = today.getFullYear(), month = today.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const dayOfMonth = today.getDate();
+  const label = today.toLocaleDateString(LOCALE, { month: "long", year: "numeric" });
+  return { daysInMonth, dayOfMonth, label, pace: dayOfMonth / daysInMonth };
+}
+
+async function loadBudgetPacing(force) {
+  if (bpState.loaded && !force) return;
+  bpState.loaded = true;
+
+  const mi = monthInfo();
+  document.getElementById("bpPeriodText").textContent = mi.label + " · day " + mi.dayOfMonth + " of " + mi.daysInMonth;
+
+  const loading = document.getElementById("bpLoading");
+  loading.hidden = false;
+  document.getElementById("bpError").hidden = true;
+  document.getElementById("bpEmpty").hidden = true;
+  document.getElementById("bpTable").hidden = true;
+
+  if (!ACCOUNTS.length) { loading.hidden = true; document.getElementById("bpEmpty").hidden = false; return; }
+
+  const range = rangeToGAQL({ type: "thisMonth" });
+  const rows = [];
+  await mapLimit(ACCOUNTS, 4, async (a) => {
+    let spend = 0, dailyBudget = 0;
+    try {
+      const res = await fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(range), { credentials: "same-origin" });
+      const data = await res.json().catch(() => ({}));
+      (data.campaigns || []).forEach(c => {
+        spend += +c.cost || 0;
+        if ((c.status || "").toUpperCase() === "ENABLED") dailyBudget += +c.budget || 0;
+      });
+    } catch {}
+    rows.push({ id: a.id, name: a.name || a.formatted, formatted: a.formatted, spend, dailyBudget });
+  });
+
+  rows.sort((x, y) => y.spend - x.spend);
+  bpState.rows = rows;
+  loading.hidden = true;
+  document.getElementById("bpTable").hidden = false;
+  renderBudgetPacing();
+}
+
+function renderBudgetPacing() {
+  const mi = monthInfo();
+  const pacePct = mi.pace * 100;
+
+  document.getElementById("bp-tbody").innerHTML = bpState.rows.map(r => {
+    const saved = bpState.budgets[r.id];
+    const budget = (saved != null && saved !== "") ? Number(saved) : 0;
+    const suggested = Math.round(r.dailyBudget * mi.daysInMonth);
+
+    let pacing;
+    if (!budget || budget <= 0) {
+      pacing = '<div class="pace-none">Set a monthly budget to see pacing</div>';
+    } else {
+      const spendPct = (r.spend / budget) * 100;
+      const fillPct = Math.min(spendPct, 100);
+      const expectedToDate = budget * mi.pace;
+      const projected = mi.dayOfMonth ? r.spend * (mi.daysInMonth / mi.dayOfMonth) : 0;
+
+      let status, paceText;
+      if (r.spend > expectedToDate * 1.1) {
+        status = "over";
+        const over = expectedToDate ? ((r.spend - expectedToDate) / expectedToDate) * 100 : 0;
+        paceText = '<span class="over">' + over.toFixed(0) + '% over pace</span>';
+      } else if (r.spend < expectedToDate * 0.9) {
+        status = "under";
+        const under = expectedToDate ? ((expectedToDate - r.spend) / expectedToDate) * 100 : 0;
+        paceText = '<span class="under">' + under.toFixed(0) + '% under pace</span>';
+      } else {
+        status = "ontrack";
+        paceText = '<span class="ontrack">On track</span>';
+      }
+      if (spendPct >= 100) paceText = '<span class="over">Over budget</span>';
+
+      pacing =
+        '<div class="pace-wrap">' +
+          '<div class="pace-bar">' +
+            '<div class="pace-fill ' + status + '" style="width:' + fillPct.toFixed(1) + '%"></div>' +
+            '<div class="pace-marker" style="left:' + pacePct.toFixed(1) + '%" title="Expected pace today"></div>' +
+          '</div>' +
+          '<div class="pace-label">' + fmtCurrency(r.spend) + ' <span class="muted">/ ' + fmtCurrency(budget) + '</span> · ' +
+            spendPct.toFixed(0) + '% · ' + paceText +
+            ' <span class="muted">· proj. ' + fmtCurrency(projected) + '</span></div>' +
+        '</div>';
+    }
+
+    const val = (saved != null && saved !== "") ? saved : "";
+    return '<tr>' +
+      '<td class="acct"><strong>' + escapeHtml(r.name) + '</strong><div class="sub">' + escapeHtml(r.formatted) + '</div></td>' +
+      '<td class="tabnum">' + fmtCurrency(r.spend) + '</td>' +
+      '<td><span class="budget-input"><span class="cur">£</span><input type="number" min="0" step="50" data-acc="' + r.id + '" value="' + val + '" placeholder="' + (suggested || 0) + '" /></span></td>' +
+      '<td>' + pacing + '</td>' +
+    '</tr>';
+  }).join("");
+
+  document.querySelectorAll('#bp-tbody input[data-acc]').forEach(inp => {
+    inp.addEventListener("change", () => {
+      const id = inp.dataset.acc;
+      const v = inp.value.trim();
+      if (v === "" || Number(v) <= 0) delete bpState.budgets[id];
+      else bpState.budgets[id] = Number(v);
+      saveBudgets();
+      renderBudgetPacing();
+    });
+  });
 }
 
 function escapeHtml(s) {
