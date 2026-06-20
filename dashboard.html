@@ -65,6 +65,8 @@
   .nav-item.active { border-left-color: var(--accent); background: var(--accent-soft); font-weight: 560; }
   .nav-sub { padding-left: 32px; font-size: 13px; color: var(--muted); }
   .nav-sub::before { content: "└ "; color: var(--faint); margin-right: 2px; }
+  .nav-warn { display: inline-flex; vertical-align: middle; color: #d97706; margin-left: 5px; }
+  .nav-warn svg { width: 15px; height: 15px; }
   
   .main-content { flex: 1; display: flex; flex-direction: column; }
 
@@ -340,8 +342,13 @@
   .budget-input input:focus { outline: none; }
   .budget-input:focus-within { border-color: var(--accent); }
 
-  .bp-card-foot { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 12px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .bp-card-foot strong { color: var(--ink); font-weight: 600; }
+  .bp-card-foot { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .bp-stat { flex: 1; min-width: 118px; background: var(--bg); border: 1px solid var(--line-soft); border-radius: 9px; padding: 9px 12px; }
+  .bp-stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
+  .bp-stat-value { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .bp-stat-value.over { color: #dc2626; }
+  .bp-stat-value.under { color: #b45309; }
+  .bp-stat-value.ontrack { color: #047857; }
 
   .pace-wrap { min-width: 220px; }
   .pace-bar { position: relative; height: 14px; background: var(--off-bg); border-radius: 7px; overflow: hidden; }
@@ -387,7 +394,7 @@
 <body>
   <aside class="sidebar">
     <a href="#" class="nav-item active" data-page="allaccounts">Accounts</a>
-    <a href="#" class="nav-item nav-sub" data-page="budgetpacing">Budget Pacing</a>
+    <a href="#" class="nav-item nav-sub" data-page="budgetpacing">Budget Pacing<span class="nav-warn" id="bpNavWarn" hidden title="One or more accounts are off pace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
     <a href="#" class="nav-item" data-page="dashboard">Campaigns</a>
     <a href="#" class="nav-item" data-page="audit">Audit</a>
     <a href="#" class="nav-item" data-page="settings">Settings</a>
@@ -1540,6 +1547,8 @@ function showApp(accounts) {
 
   // Accounts is the default landing page — load it now.
   initAllAccounts();
+  // Load budget pacing in the background so the side-nav pace warning is accurate on login.
+  loadBudgetPacing(false);
 }
 
 function closeAllMenus() {
@@ -2640,19 +2649,25 @@ async function loadBudgetPacing(force) {
 
   if (!ACCOUNTS.length) { loading.hidden = true; document.getElementById("bpEmpty").hidden = false; return; }
 
-  const range = rangeToGAQL({ type: "thisMonth" });
+  const monthRange = rangeToGAQL({ type: "thisMonth" });
+  const weekRange = "LAST_7_DAYS";
   const rows = [];
   await mapLimit(ACCOUNTS, 4, async (a) => {
-    let spend = 0, dailyBudget = 0;
+    let spend = 0, dailyBudget = 0, last7 = 0;
     try {
-      const res = await fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(range), { credentials: "same-origin" });
-      const data = await res.json().catch(() => ({}));
-      (data.campaigns || []).forEach(c => {
+      const [mRes, wRes] = await Promise.all([
+        fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(monthRange), { credentials: "same-origin" }),
+        fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(weekRange), { credentials: "same-origin" }),
+      ]);
+      const mData = await mRes.json().catch(() => ({}));
+      (mData.campaigns || []).forEach(c => {
         spend += +c.cost || 0;
         if ((c.status || "").toUpperCase() === "ENABLED") dailyBudget += +c.budget || 0;
       });
+      const wData = await wRes.json().catch(() => ({}));
+      (wData.campaigns || []).forEach(c => { last7 += +c.cost || 0; });
     } catch {}
-    rows.push({ id: a.id, name: a.name || a.formatted, formatted: a.formatted, spend, dailyBudget });
+    rows.push({ id: a.id, name: a.name || a.formatted, formatted: a.formatted, spend, dailyBudget, last7 });
   });
 
   rows.sort((x, y) => y.spend - x.spend);
@@ -2699,42 +2714,53 @@ function renderBudgetPacing() {
         '</div>';
     }
 
-    // Pacing bar + footer
+    // Avg daily spend over the last 7 full days, and a steadier projection
+    const avg7 = (r.last7 || 0) / 7;
+    const remainingDays = Math.max(0, mi.daysInMonth - mi.dayOfMonth);
+    const projected = r.spend + avg7 * remainingDays;
+
+    const stat = (label, value, cls) =>
+      '<div class="bp-stat"><div class="bp-stat-label">' + label + '</div>' +
+      '<div class="bp-stat-value' + (cls ? ' ' + cls : '') + '">' + value + '</div></div>';
+
+    // Pacing bar + scorecards
     let bar, foot;
     if (!budget || budget <= 0) {
       bar = '<div class="pace-none">Set a monthly budget to see pacing.' + (suggested ? ' Suggested: ' + fmtCurrency(suggested) + '.' : '') + '</div>';
-      foot = '<span>Spend MTD <strong>' + fmtCurrency(r.spend) + '</strong></span>';
+      foot =
+        stat("Spend (MTD)", fmtCurrency(r.spend)) +
+        stat("Avg. Spend (Last 7 Days)", fmtCurrency(avg7)) +
+        stat("Projected", fmtCurrency(projected));
     } else {
       const spendPct = (r.spend / budget) * 100;
       const fillPct = Math.min(spendPct, 100);
       const expectedToDate = budget * mi.pace;
-      const projected = mi.dayOfMonth ? r.spend * (mi.daysInMonth / mi.dayOfMonth) : 0;
+      const status = paceStatus(r.spend, budget, mi);
 
-      let status, paceText;
-      if (r.spend > expectedToDate * 1.1) {
-        status = "over";
+      let verdict;
+      if (status === "over") {
         const over = expectedToDate ? ((r.spend - expectedToDate) / expectedToDate) * 100 : 0;
-        paceText = '<span class="over">' + over.toFixed(0) + '% over pace</span>';
-      } else if (r.spend < expectedToDate * 0.9) {
-        status = "under";
+        verdict = over.toFixed(0) + "% over pace";
+      } else if (status === "under") {
         const under = expectedToDate ? ((expectedToDate - r.spend) / expectedToDate) * 100 : 0;
-        paceText = '<span class="under">' + under.toFixed(0) + '% under pace</span>';
+        verdict = under.toFixed(0) + "% under pace";
       } else {
-        status = "ontrack";
-        paceText = '<span class="ontrack">On track</span>';
+        verdict = "On track";
       }
-      if (spendPct >= 100) paceText = '<span class="over">Over budget</span>';
+      let colorClass = status;
+      if (spendPct >= 100) { verdict = "Over budget"; colorClass = "over"; }
 
       bar =
         '<div class="pace-bar">' +
-          '<div class="pace-fill ' + status + '" style="width:' + fillPct.toFixed(1) + '%"></div>' +
+          '<div class="pace-fill ' + (spendPct >= 100 ? "over" : status) + '" style="width:' + fillPct.toFixed(1) + '%"></div>' +
           '<div class="pace-marker" style="left:' + pacePct.toFixed(1) + '%" title="Expected pace today"></div>' +
         '</div>';
       foot =
-        '<span>Spend MTD <strong>' + fmtCurrency(r.spend) + '</strong></span>' +
-        '<span>' + spendPct.toFixed(0) + '% of budget</span>' +
-        '<span>' + paceText + '</span>' +
-        '<span>Projected <strong>' + fmtCurrency(projected) + '</strong></span>';
+        stat("Spend (MTD)", fmtCurrency(r.spend)) +
+        stat("% of budget", spendPct.toFixed(0) + "%") +
+        stat("Pace", verdict, colorClass) +
+        stat("Avg. Spend (Last 7 Days)", fmtCurrency(avg7)) +
+        stat("Projected", fmtCurrency(projected));
     }
 
     return '<div class="bp-card">' +
@@ -2771,6 +2797,31 @@ function renderBudgetPacing() {
       else if (e.key === "Escape") { bpState.editing = null; renderBudgetPacing(); }
     });
   }
+
+  updateBpNavWarning();
+}
+
+// Pace status for an account: "ontrack" | "over" | "under" | null (no budget)
+function paceStatus(spend, budget, mi) {
+  if (!budget || budget <= 0) return null;
+  const expected = budget * mi.pace;
+  if ((spend / budget) >= 1) return "over";
+  if (spend > expected * 1.1) return "over";
+  if (spend < expected * 0.9) return "under";
+  return "ontrack";
+}
+
+// Show the amber warning in the side nav if any budgeted account is off pace.
+function updateBpNavWarning() {
+  const mi = monthInfo();
+  const anyOff = bpState.rows.some(r => {
+    const saved = bpState.budgets[r.id];
+    const budget = (saved != null && saved !== "") ? Number(saved) : 0;
+    const st = paceStatus(r.spend, budget, mi);
+    return st && st !== "ontrack";
+  });
+  const el = document.getElementById("bpNavWarn");
+  if (el) el.hidden = !anyOff;
 }
 
 function escapeHtml(s) {
