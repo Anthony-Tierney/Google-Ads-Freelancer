@@ -872,7 +872,7 @@
               <thead id="assets-thead"></thead><tbody id="assets-tbody"></tbody><tfoot id="assets-tfoot"></tfoot>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Counts reflect campaign-level assets that are enabled and actually serving (policy-approved). Account-level assets aren't included. Cells are red when 0; for Sitelinks, fewer than 2 is red, 2–7 is orange (room to add more), and 8+ is green (optimal).</div>
+          <div class="foot-note" style="margin-top:10px;">Counts reflect campaign-level assets that are enabled and actually serving (policy-approved). Account-level assets aren't included. Image extensions are split by shape: Landscape (1.91:1) and Square (1:1). Cells are red when 0, orange when below the recommended count, and green when optimal (Sitelinks 8+, Landscape 2+, Square 5+).</div>
         </section>
       </section>
 
@@ -3002,13 +3002,16 @@ const ASSET_COLUMNS = [
   { key: "name",      label: "Campaign",            type: "text",   align: "txt" },
   { key: "status",    label: "Status",              type: "status", align: "txt" },
   { key: "sitelinks", label: "Sitelinks",           type: "int",    align: "num" },
-  { key: "images",    label: "Images",              type: "int",    align: "num" },
+  { key: "landscape", label: "Landscape (1.91:1)",  type: "int",    align: "num" },
+  { key: "square",    label: "Square (1:1)",        type: "int",    align: "num" },
   { key: "callouts",  label: "Callouts",            type: "int",    align: "num" },
   { key: "snippets",  label: "Structured Snippets", type: "int",    align: "num" },
 ];
 const assetsState = { rows: [], account: "", sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]) };
 
 const SITELINK_TOOLTIP = "Your ad can show up to 6 sitelinks on desktop and 8 on mobile. Consider adding more Sitelinks to maximise your ad's real estate on the search results page.";
+const LANDSCAPE_TOOLTIP = "Your ad can show up to 2 landscape images to desktop users. Consider adding more landscape images to maximise your ad's real estate on the search results page.";
+const SQUARE_TOOLTIP = "Your ad can show up to 5 square images side-by-side to desktop users. Consider adding more square images to maximise your ad's real estate on the search results page.";
 const WARN_TRI_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
 
 function initAssets() {
@@ -3126,7 +3129,7 @@ function renderAssetsTable() {
     return assetCellHtml(c.key, r[c.key] || 0);
   }).join("") + "</tr>").join("");
 
-  const tot = rows.reduce((a, r) => { a.sitelinks += r.sitelinks || 0; a.images += r.images || 0; a.callouts += r.callouts || 0; a.snippets += r.snippets || 0; return a; }, { sitelinks: 0, images: 0, callouts: 0, snippets: 0 });
+  const tot = rows.reduce((a, r) => { a.sitelinks += r.sitelinks || 0; a.landscape += r.landscape || 0; a.square += r.square || 0; a.callouts += r.callouts || 0; a.snippets += r.snippets || 0; return a; }, { sitelinks: 0, landscape: 0, square: 0, callouts: 0, snippets: 0 });
   document.getElementById("assets-tfoot").innerHTML = "<tr>" + ASSET_COLUMNS.map((c, i) => {
     if (i === 0) return '<td class="txt">Total · ' + rows.length + "</td>";
     if (c.type === "status") return "<td></td>";
@@ -3140,19 +3143,32 @@ function renderAssetsTable() {
   }));
 }
 
-// Conditional cell formatting. Sitelinks: <2 red, 2-7 orange (+warn), 8+ green.
-// Other asset columns: 0 red, otherwise plain.
+// Conditional cell formatting.
+//   Sitelinks: 0 red (+warn), 1-7 orange (+warn), 8+ green.
+//   Landscape: 0 red, 1 orange (+warn), 2+ green.
+//   Square:    0 red, 1-4 orange (+warn), 5+ green.
+//   Callouts/Snippets: 0 red, otherwise plain.
 function assetCellHtml(key, v) {
+  const warnIcon = tip => ' <span class="sl-warn" title="' + tip + '">' + WARN_TRI_SVG + "</span>";
+  const cell = (cls, icon) => '<td class="num tabnum ' + cls + '">' + fmtInt(v) + (icon || "") + "</td>";
+
   if (key === "sitelinks") {
-    let cls, warn;
-    if (v >= 8) { cls = "cell-green"; warn = false; }
-    else if (v >= 2) { cls = "cell-orange"; warn = true; }
-    else { cls = "cell-red"; warn = true; } // 0 or 1 sitelinks won't serve
-    const icon = warn ? ' <span class="sl-warn" title="' + SITELINK_TOOLTIP + '">' + WARN_TRI_SVG + "</span>" : "";
-    return '<td class="num tabnum ' + cls + '">' + fmtInt(v) + icon + "</td>";
+    if (v >= 8) return cell("cell-green");
+    if (v >= 1) return cell("cell-orange", warnIcon(SITELINK_TOOLTIP)); // 1-7
+    return cell("cell-red", warnIcon(SITELINK_TOOLTIP)); // 0
   }
-  const cls = v === 0 ? " cell-red" : "";
-  return '<td class="num tabnum' + cls + '">' + fmtInt(v) + "</td>";
+  if (key === "landscape") {
+    if (v >= 2) return cell("cell-green");
+    if (v === 1) return cell("cell-orange", warnIcon(LANDSCAPE_TOOLTIP));
+    return cell("cell-red"); // 0 — no icon (icon only on orange)
+  }
+  if (key === "square") {
+    if (v >= 5) return cell("cell-green");
+    if (v >= 1) return cell("cell-orange", warnIcon(SQUARE_TOOLTIP)); // 1-4
+    return cell("cell-red"); // 0 — no icon (icon only on orange)
+  }
+  const cls = v === 0 ? "cell-red" : "";
+  return '<td class="num tabnum' + (cls ? " " + cls : "") + '">' + fmtInt(v) + "</td>";
 }
 
 function escapeHtml(s) {
