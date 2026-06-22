@@ -60,6 +60,7 @@ export async function onRequestGet(context) {
         query: `
           SELECT
             campaign.id,
+            campaign.status,
             campaign_asset.field_type,
             campaign_asset.status,
             campaign_asset.primary_status,
