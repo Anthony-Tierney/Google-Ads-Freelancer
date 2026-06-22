@@ -47,8 +47,10 @@ export async function onRequestGet(context) {
     return json({ error: (e && e.message) ? e.message : "Could not load campaigns" }, 500);
   }
 
-  // 2) Campaign-level assets that are actually serving.
-  //    primary_status = ELIGIBLE means enabled AND policy-approved AND eligible to serve.
+  // 2) Campaign-level assets. We filter on the enabled link status in the query
+  //    (filterable), then determine "actually serving" from primary_status in code,
+  //    because primary_status is selectable but not reliably filterable.
+  let assetError = null;
   try {
     const assetRes = await adsRequest(
       env,
@@ -64,15 +66,22 @@ export async function onRequestGet(context) {
             asset.id
           FROM campaign_asset
           WHERE campaign_asset.status = 'ENABLED'
-            AND campaign_asset.primary_status = 'ELIGIBLE'
             AND campaign_asset.field_type IN ('SITELINK','IMAGE','CALLOUT','STRUCTURED_SNIPPET')
             AND campaign.status != 'REMOVED'`,
       }
     );
+
+    // ELIGIBLE = serving & approved; LIMITED = approved but serving with limits.
+    // Anything else (NOT_ELIGIBLE/PENDING/PAUSED/REMOVED) is not actually serving.
+    // If the API doesn't report a primary status, fall back to the enabled link.
+    const SERVING = new Set(["ELIGIBLE", "LIMITED"]);
     (assetRes.results || []).forEach((r) => {
       const cid = String(r.campaign?.id);
       const c = campaigns[cid];
       if (!c) return;
+      const ps = r.campaignAsset?.primaryStatus;
+      const serving = ps ? SERVING.has(ps) : true;
+      if (!serving) return;
       switch (r.campaignAsset?.fieldType) {
         case "SITELINK": c.sitelinks++; break;
         case "IMAGE": c.images++; break;
@@ -81,8 +90,8 @@ export async function onRequestGet(context) {
       }
     });
   } catch (e) {
-    return json({ campaigns: Object.values(campaigns), error: (e && e.message) ? e.message : "Could not load assets" });
+    assetError = (e && e.message) ? e.message : "Could not load assets";
   }
 
-  return json({ campaigns: Object.values(campaigns) });
+  return json({ campaigns: Object.values(campaigns), assetError });
 }
