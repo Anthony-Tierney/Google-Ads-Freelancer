@@ -66,7 +66,7 @@ export async function onRequestGet(context) {
             asset.id
           FROM campaign_asset
           WHERE campaign_asset.status = 'ENABLED'
-            AND campaign_asset.field_type IN ('SITELINK','IMAGE','CALLOUT','STRUCTURED_SNIPPET')
+            AND campaign_asset.field_type IN ('SITELINK','AD_IMAGE','CALLOUT','STRUCTURED_SNIPPET')
             AND campaign.status != 'REMOVED'`,
       }
     );
@@ -84,7 +84,7 @@ export async function onRequestGet(context) {
       if (!serving) return;
       switch (r.campaignAsset?.fieldType) {
         case "SITELINK": c.sitelinks++; break;
-        case "IMAGE": c.images++; break;
+        case "AD_IMAGE": c.images++; break;
         case "CALLOUT": c.callouts++; break;
         case "STRUCTURED_SNIPPET": c.snippets++; break;
       }
