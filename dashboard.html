@@ -321,6 +321,7 @@
   .aud-detail { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
   .aud-spinner { width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; vertical-align: middle; }
   td.asset-zero { color: #b45309; font-weight: 600; background: var(--warn-bg); }
+  .as-warn { background: var(--warn-bg); color: var(--warn-fg); border: 1px solid var(--warn-rg); border-radius: 9px; padding: 9px 12px; font-size: 13px; margin-bottom: 12px; }
 
   .bp-cards { display: flex; flex-direction: column; gap: 12px; }
   .bp-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
@@ -824,6 +825,7 @@
             </div>
           </div>
 
+          <div id="asWarn" class="as-warn" hidden></div>
           <div class="panel">
             <div id="asLoading" class="state" hidden><div class="spinner"></div>Loading assets…</div>
             <div id="asPrompt" class="state"><div class="big">Choose an account</div>Select an account above to audit its serving assets.</div>
@@ -2989,6 +2991,7 @@ async function loadAssets(customerId) {
   document.getElementById("asPrompt").hidden = true;
   document.getElementById("asError").hidden = true;
   document.getElementById("asEmpty").hidden = true;
+  document.getElementById("asWarn").hidden = true;
   document.getElementById("assetsTable").hidden = true;
 
   try {
@@ -3002,6 +3005,13 @@ async function loadAssets(customerId) {
     }
     assetsState.rows = data.campaigns || [];
     document.getElementById("asLoading").hidden = true;
+
+    if (data.assetError) {
+      const w = document.getElementById("asWarn");
+      w.hidden = false;
+      w.textContent = "Asset data couldn't be read for this account: " + data.assetError;
+    }
+
     if (!assetsState.rows.length) { document.getElementById("asEmpty").hidden = false; return; }
     document.getElementById("assetsTable").hidden = false;
     renderAssetsTable();
