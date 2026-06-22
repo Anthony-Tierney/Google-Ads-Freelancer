@@ -38,7 +38,8 @@ export async function onRequestGet(context) {
         name: r.campaign?.name,
         status: r.campaign?.status,
         sitelinks: 0,
-        images: 0,
+        landscape: 0,
+        square: 0,
         callouts: 0,
         snippets: 0,
       };
@@ -64,7 +65,9 @@ export async function onRequestGet(context) {
             campaign_asset.field_type,
             campaign_asset.status,
             campaign_asset.primary_status,
-            asset.id
+            asset.id,
+            asset.image_asset.full_size.width_pixels,
+            asset.image_asset.full_size.height_pixels
           FROM campaign_asset
           WHERE campaign_asset.status = 'ENABLED'
             AND campaign_asset.field_type IN ('SITELINK','AD_IMAGE','CALLOUT','STRUCTURED_SNIPPET')
@@ -85,7 +88,15 @@ export async function onRequestGet(context) {
       if (!serving) return;
       switch (r.campaignAsset?.fieldType) {
         case "SITELINK": c.sitelinks++; break;
-        case "AD_IMAGE": c.images++; break;
+        case "AD_IMAGE": {
+          // Distinguish 1:1 square from 1.91:1 landscape by aspect ratio.
+          // A ratio >= 1.3 is landscape; otherwise treat as square (1:1).
+          const w = Number(r.asset?.imageAsset?.fullSize?.widthPixels) || 0;
+          const h = Number(r.asset?.imageAsset?.fullSize?.heightPixels) || 0;
+          if (w && h && (w / h) >= 1.3) c.landscape++;
+          else c.square++;
+          break;
+        }
         case "CALLOUT": c.callouts++; break;
         case "STRUCTURED_SNIPPET": c.snippets++; break;
       }
