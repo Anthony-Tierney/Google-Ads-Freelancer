@@ -49,7 +49,9 @@ export async function onRequestGet(context) {
         query: `
           SELECT
             campaign.name,
+            campaign.status,
             ad_group.name,
+            ad_group_ad.status,
             ad_group_ad.policy_summary.approval_status,
             ad_group_ad.policy_summary.review_status,
             ad_group_ad.ad.id
