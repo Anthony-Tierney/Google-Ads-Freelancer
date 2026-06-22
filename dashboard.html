@@ -17,6 +17,9 @@
     --accent-soft: #eef2ff;
     --ok-bg: #ecfdf5; --ok-fg: #047857; --ok-rg: #a7f3d0;
     --warn-bg: #fffbeb; --warn-fg: #b45309; --warn-rg: #fde68a;
+    --cell-red-bg: #fee2e2; --cell-red-fg: #b91c1c;
+    --cell-orange-bg: #ffedd5; --cell-orange-fg: #c2410c;
+    --cell-green-bg: #dcfce7; --cell-green-fg: #15803d;
     --off-bg: #f1f5f9; --off-fg: #64748b; --off-rg: #e2e8f0;
     --radius: 10px;
     --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.05);
@@ -36,6 +39,9 @@
     --accent-soft: #312e81;
     --ok-bg: #064e3b; --ok-fg: #86efac; --ok-rg: #166534;
     --warn-bg: #78350f; --warn-fg: #fbbf24; --warn-rg: #92400e;
+    --cell-red-bg: #7f1d1d; --cell-red-fg: #fecaca;
+    --cell-orange-bg: #7c2d12; --cell-orange-fg: #fed7aa;
+    --cell-green-bg: #14532d; --cell-green-fg: #bbf7d0;
     --off-bg: #1e293b; --off-fg: #94a3b8; --off-rg: #334155;
   }
 
@@ -320,7 +326,11 @@
   .issue-tag.clean { background: var(--ok-bg); color: var(--ok-fg); border-color: var(--ok-rg); }
   .aud-detail { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
   .aud-spinner { width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; vertical-align: middle; }
-  td.asset-zero { color: #b45309; font-weight: 600; background: var(--warn-bg); }
+  td.cell-red { background: var(--cell-red-bg) !important; color: var(--cell-red-fg) !important; font-weight: 600; }
+  td.cell-orange { background: var(--cell-orange-bg) !important; color: var(--cell-orange-fg) !important; font-weight: 600; }
+  td.cell-green { background: var(--cell-green-bg) !important; color: var(--cell-green-fg) !important; font-weight: 600; }
+  .sl-warn { display: inline-flex; vertical-align: middle; margin-left: 5px; cursor: help; }
+  .sl-warn svg { width: 14px; height: 14px; }
   .as-warn { background: var(--warn-bg); color: var(--warn-fg); border: 1px solid var(--warn-rg); border-radius: 9px; padding: 9px 12px; font-size: 13px; margin-bottom: 12px; }
 
   .bp-cards { display: flex; flex-direction: column; gap: 12px; }
@@ -823,6 +833,33 @@
               <label class="field-label">&nbsp;</label>
               <input type="text" id="assetsSearch" class="filter-input" placeholder="Search campaigns…" style="width:220px" oninput="renderAssetsTable()" />
             </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="assetsFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <span class="count" id="assetsFilterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="assetsFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('assets-group-status', event)">
+                    <span class="toggle">−</span>Status
+                  </div>
+                  <div class="filter-group-items" id="assets-group-status">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="assetsStatusEnabled" checked /><label for="assetsStatusEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="assetsStatusPaused" /><label for="assetsStatusPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="assetsStatusRemoved" /><label for="assetsStatusRemoved">Removed</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetAssetsFilters()">Reset</button>
+                    <button class="apply" onclick="applyAssetsFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div id="asWarn" class="as-warn" hidden></div>
@@ -835,7 +872,7 @@
               <thead id="assets-thead"></thead><tbody id="assets-tbody"></tbody><tfoot id="assets-tfoot"></tfoot>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Counts reflect campaign-level assets that are enabled and actually serving (policy-approved). Account-level assets aren't included. Amber cells flag campaigns with none of that asset type.</div>
+          <div class="foot-note" style="margin-top:10px;">Counts reflect campaign-level assets that are enabled and actually serving (policy-approved). Account-level assets aren't included. Cells are red when 0; for Sitelinks, fewer than 2 is red, 2–7 is orange (room to add more), and 8+ is green (optimal).</div>
         </section>
       </section>
 
@@ -1627,7 +1664,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -2969,7 +3006,10 @@ const ASSET_COLUMNS = [
   { key: "callouts",  label: "Callouts",            type: "int",    align: "num" },
   { key: "snippets",  label: "Structured Snippets", type: "int",    align: "num" },
 ];
-const assetsState = { rows: [], account: "", sort: { key: "name", dir: "asc" }, search: "" };
+const assetsState = { rows: [], account: "", sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]) };
+
+const SITELINK_TOOLTIP = "Your ad can show up to 6 sitelinks on desktop and 8 on mobile. Consider adding more Sitelinks to maximise your ad's real estate on the search results page.";
+const WARN_TRI_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
 
 function initAssets() {
   document.getElementById("asSignedOut").hidden = signedIn;
@@ -2982,7 +3022,43 @@ function initAssets() {
     ACCOUNTS.map(a => '<option value="' + a.id + '">' + escapeHtml(a.name || a.formatted) + ' · ' + a.formatted + '</option>').join("");
   if (state.lastAccount) sel.value = state.lastAccount;
   sel.addEventListener("change", () => { if (sel.value) loadAssets(sel.value); });
+
+  const fMenu = document.getElementById("assetsFiltersMenu");
+  document.getElementById("assetsFiltersBtn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = fMenu.hidden;
+    closeAllMenus();
+    if (open) fMenu.hidden = false;
+  });
+  fMenu.addEventListener("click", (e) => e.stopPropagation());
+  updateAssetsFilterCount();
+
   if (sel.value) loadAssets(sel.value);
+}
+
+function applyAssetsFilters() {
+  assetsState.filterStatus = new Set([
+    document.getElementById("assetsStatusEnabled").checked ? "ENABLED" : null,
+    document.getElementById("assetsStatusPaused").checked ? "PAUSED" : null,
+    document.getElementById("assetsStatusRemoved").checked ? "REMOVED" : null,
+  ].filter(Boolean));
+  document.getElementById("assetsFiltersMenu").hidden = true;
+  updateAssetsFilterCount();
+  renderAssetsTable();
+}
+
+function resetAssetsFilters() {
+  document.getElementById("assetsStatusEnabled").checked = true;
+  document.getElementById("assetsStatusPaused").checked = false;
+  document.getElementById("assetsStatusRemoved").checked = false;
+  applyAssetsFilters();
+}
+
+function updateAssetsFilterCount() {
+  const n = assetsState.filterStatus.size;
+  const el = document.getElementById("assetsFilterCount");
+  if (n > 0) { el.textContent = n; el.hidden = false; }
+  else { el.hidden = true; }
 }
 
 async function loadAssets(customerId) {
@@ -3025,7 +3101,10 @@ async function loadAssets(customerId) {
 function renderAssetsTable() {
   assetsState.search = document.getElementById("assetsSearch").value;
   const q = assetsState.search.trim().toLowerCase();
-  const rows = assetsState.rows.filter(r => !q || (r.name || "").toLowerCase().includes(q))
+  const rows = assetsState.rows.filter(r =>
+      (!q || (r.name || "").toLowerCase().includes(q)) &&
+      assetsState.filterStatus.has((r.status || "").toUpperCase())
+    )
     .sort((a, b) => {
       const { key, dir } = assetsState.sort, sign = dir === "asc" ? 1 : -1;
       const av = a[key], bv = b[key];
@@ -3044,9 +3123,7 @@ function renderAssetsTable() {
       const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other";
       return '<td class="txt"><span class="pill ' + cls + '">' + titleCase(r.status) + "</span></td>";
     }
-    const v = r[c.key] || 0;
-    const flag = (v === 0 && (r.status || "").toUpperCase() === "ENABLED") ? " asset-zero" : "";
-    return '<td class="num tabnum' + flag + '">' + fmtInt(v) + "</td>";
+    return assetCellHtml(c.key, r[c.key] || 0);
   }).join("") + "</tr>").join("");
 
   const tot = rows.reduce((a, r) => { a.sitelinks += r.sitelinks || 0; a.images += r.images || 0; a.callouts += r.callouts || 0; a.snippets += r.snippets || 0; return a; }, { sitelinks: 0, images: 0, callouts: 0, snippets: 0 });
@@ -3061,6 +3138,21 @@ function renderAssetsTable() {
     assetsState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
     renderAssetsTable();
   }));
+}
+
+// Conditional cell formatting. Sitelinks: <2 red, 2-7 orange (+warn), 8+ green.
+// Other asset columns: 0 red, otherwise plain.
+function assetCellHtml(key, v) {
+  if (key === "sitelinks") {
+    let cls, warn;
+    if (v >= 8) { cls = "cell-green"; warn = false; }
+    else if (v >= 2) { cls = "cell-orange"; warn = true; }
+    else { cls = "cell-red"; warn = true; } // 0 or 1 sitelinks won't serve
+    const icon = warn ? ' <span class="sl-warn" title="' + SITELINK_TOOLTIP + '">' + WARN_TRI_SVG + "</span>" : "";
+    return '<td class="num tabnum ' + cls + '">' + fmtInt(v) + icon + "</td>";
+  }
+  const cls = v === 0 ? " cell-red" : "";
+  return '<td class="num tabnum' + cls + '">' + fmtInt(v) + "</td>";
 }
 
 function escapeHtml(s) {
