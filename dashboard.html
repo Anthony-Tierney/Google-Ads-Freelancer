@@ -872,7 +872,7 @@
               <thead id="assets-thead"></thead><tbody id="assets-tbody"></tbody><tfoot id="assets-tfoot"></tfoot>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Counts reflect campaign-level assets that are enabled and actually serving (policy-approved). Account-level assets aren't included. Image extensions are split by shape: Landscape (1.91:1) and Square (1:1). Cells are red when 0, orange when below the recommended count, and green when optimal (Sitelinks 8+, Landscape 2+, Square 5+).</div>
+          <div class="foot-note" style="margin-top:10px;">Counts reflect campaign-level assets that are enabled and actually serving (policy-approved). Account-level assets aren't included. Image extensions are split by shape: Landscape (1.91:1) and Square (1:1). Cells are red when 0, orange when below the recommended count, and green when optimal (Sitelinks 8+, Landscape 2+, Square 5+, Callouts 10+, Structured Snippets 1+).</div>
         </section>
       </section>
 
@@ -3012,6 +3012,8 @@ const assetsState = { rows: [], account: "", sort: { key: "name", dir: "asc" }, 
 const SITELINK_TOOLTIP = "Your ad can show up to 6 sitelinks on desktop and 8 on mobile. Consider adding more Sitelinks to maximise your ad's real estate on the search results page.";
 const LANDSCAPE_TOOLTIP = "Your ad can show up to 2 landscape images to desktop users. Consider adding more landscape images to maximise your ad's real estate on the search results page.";
 const SQUARE_TOOLTIP = "Your ad can show up to 5 square images side-by-side to desktop users. Consider adding more square images to maximise your ad's real estate on the search results page.";
+const CALLOUT_TOOLTIP = "Up to 10 Callouts can display at one time alongside your ad. Consider adding 10 or more Callouts to maximise your ad's real estate on the search results page.";
+const SNIPPET_TOOLTIP = "Google Advises: The additional information that appears with your ads can increase your ads' relevance and clickthrough rates.";
 const WARN_TRI_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
 
 function initAssets() {
@@ -3143,11 +3145,12 @@ function renderAssetsTable() {
   }));
 }
 
-// Conditional cell formatting.
-//   Sitelinks: 0 red (+warn), 1-7 orange (+warn), 8+ green.
-//   Landscape: 0 red, 1 orange (+warn), 2+ green.
-//   Square:    0 red, 1-4 orange (+warn), 5+ green.
-//   Callouts/Snippets: 0 red, otherwise plain.
+// Conditional cell formatting (warning icon shown on every red and orange cell).
+//   Sitelinks: 0 red, 1-7 orange, 8+ green.
+//   Landscape: 0 red, 1 orange, 2+ green.
+//   Square:    0 red, 1-4 orange, 5+ green.
+//   Callouts:  0 red, 1-9 orange, 10+ green.
+//   Snippets:  0 red, 1+ green.
 function assetCellHtml(key, v) {
   const warnIcon = tip => ' <span class="sl-warn" title="' + tip + '">' + WARN_TRI_SVG + "</span>";
   const cell = (cls, icon) => '<td class="num tabnum ' + cls + '">' + fmtInt(v) + (icon || "") + "</td>";
@@ -3160,12 +3163,21 @@ function assetCellHtml(key, v) {
   if (key === "landscape") {
     if (v >= 2) return cell("cell-green");
     if (v === 1) return cell("cell-orange", warnIcon(LANDSCAPE_TOOLTIP));
-    return cell("cell-red"); // 0 — no icon (icon only on orange)
+    return cell("cell-red", warnIcon(LANDSCAPE_TOOLTIP)); // 0
   }
   if (key === "square") {
     if (v >= 5) return cell("cell-green");
     if (v >= 1) return cell("cell-orange", warnIcon(SQUARE_TOOLTIP)); // 1-4
-    return cell("cell-red"); // 0 — no icon (icon only on orange)
+    return cell("cell-red", warnIcon(SQUARE_TOOLTIP)); // 0
+  }
+  if (key === "callouts") {
+    if (v >= 10) return cell("cell-green");
+    if (v >= 1) return cell("cell-orange", warnIcon(CALLOUT_TOOLTIP)); // 1-9
+    return cell("cell-red", warnIcon(CALLOUT_TOOLTIP)); // 0
+  }
+  if (key === "snippets") {
+    if (v >= 1) return cell("cell-green");
+    return cell("cell-red", warnIcon(SNIPPET_TOOLTIP)); // 0
   }
   const cls = v === 0 ? "cell-red" : "";
   return '<td class="num tabnum' + (cls ? " " + cls : "") + '">' + fmtInt(v) + "</td>";
