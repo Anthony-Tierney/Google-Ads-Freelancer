@@ -32,10 +32,14 @@ export async function onRequestGet(context) {
     adsRequest(env, accessToken, `customers/${cleanId}/googleAds:search`, { query });
 
   // Run the three independent queries in parallel.
+  // change_event enforces a strict 30-day window measured from "now" (datetime
+  // precision), so DURING LAST_30_DAYS (midnight 30 days ago) is rejected as too old.
+  // Use an explicit UTC bound 29 days back to stay safely inside the window.
+  const changeStart = new Date(Date.now() - 29 * MS_DAY).toISOString().slice(0, 19).replace("T", " ") + "+00:00";
   const [campR, spendR, changeR] = await Promise.allSettled([
     search(`SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, campaign_budget.amount_micros FROM campaign WHERE campaign.status != 'REMOVED'`),
     search(`SELECT campaign.id, segments.date, metrics.cost_micros FROM campaign WHERE segments.date DURING LAST_30_DAYS AND campaign.status != 'REMOVED'`),
-    search(`SELECT change_event.change_date_time, change_event.change_resource_type, change_event.campaign, change_event.changed_fields FROM change_event WHERE change_event.change_date_time DURING LAST_30_DAYS AND change_event.change_resource_type = 'CAMPAIGN_BUDGET' ORDER BY change_event.change_date_time DESC LIMIT 10000`),
+    search(`SELECT change_event.change_date_time, change_event.change_resource_type, change_event.campaign, change_event.changed_fields FROM change_event WHERE change_event.change_date_time >= '${changeStart}' AND change_event.change_resource_type = 'CAMPAIGN_BUDGET' ORDER BY change_event.change_date_time DESC LIMIT 10000`),
   ]);
 
   if (campR.status !== "fulfilled") {
