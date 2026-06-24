@@ -334,6 +334,7 @@
   td.pace-ok { background: var(--cell-green-bg) !important; color: var(--ink) !important; }
   td.pace-low { background: var(--cell-orange-bg) !important; color: var(--ink) !important; }
   td.pace-high { background: var(--cell-red-bg) !important; color: var(--ink) !important; }
+  td.pace-wait { background: var(--off-bg) !important; color: var(--off-fg) !important; }
   .as-warn { background: var(--warn-bg); color: var(--warn-fg); border: 1px solid var(--warn-rg); border-radius: 9px; padding: 9px 12px; font-size: 13px; margin-bottom: 12px; }
 
   .bp-cards { display: flex; flex-direction: column; gap: 12px; }
@@ -426,7 +427,8 @@
     <a href="#" class="nav-item active" data-page="allaccounts">Accounts</a>
     <a href="#" class="nav-item nav-sub" data-page="budgetpacing">Budget Pacing<span class="nav-warn" id="bpNavWarn" hidden title="One or more accounts are off pace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
     <a href="#" class="nav-item" data-page="dashboard">Campaigns</a>
-    <a href="#" class="nav-item nav-sub" data-page="underspend">Underspend Alerts</a>
+    <a href="#" class="nav-item nav-sub" data-page="underspend">Budgeting</a>
+    <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies</a>
     <a href="#" class="nav-item" data-page="audit">Audit</a>
     <a href="#" class="nav-item nav-sub" data-page="assets">Assets</a>
     <a href="#" class="nav-item" data-page="settings">Settings</a>
@@ -809,7 +811,7 @@
           <div class="audit-summary" id="auditSummary"></div>
 
           <div class="panel" style="margin-top:14px;">
-            <div class="scroll"><table id="audTable"><thead id="aud-thead"></thead><tbody id="aud-tbody"></tbody></table></div>
+            <div class="scroll"><table id="audTable"><colgroup id="aud-colgroup"></colgroup><thead id="aud-thead"></thead><tbody id="aud-tbody"></tbody></table></div>
           </div>
         </section>
       </section>
@@ -873,7 +875,7 @@
             <div id="asError" class="state" hidden></div>
             <div id="asEmpty" class="state" hidden><div class="big">No campaigns</div>No campaigns found.</div>
             <div class="scroll"><table id="assetsTable" hidden>
-              <thead id="assets-thead"></thead><tbody id="assets-tbody"></tbody><tfoot id="assets-tfoot"></tfoot>
+              <colgroup id="assets-colgroup"></colgroup><thead id="assets-thead"></thead><tbody id="assets-tbody"></tbody><tfoot id="assets-tfoot"></tfoot>
             </table></div>
           </div>
           <div class="foot-note" style="margin-top:10px;">Counts reflect campaign-level assets that are enabled and actually serving (policy-approved). Account-level assets aren't included. Image extensions are split by shape: Landscape (1.91:1) and Square (1:1). Cells are red when 0, orange when below the recommended count, and green when optimal (Sitelinks 8+, Landscape 2+, Square 5+, Callouts 10+, Structured Snippets 1+).</div>
@@ -970,10 +972,72 @@
             <div id="usError" class="state" hidden></div>
             <div id="usEmpty" class="state" hidden><div class="big">No campaigns</div>No campaigns match the current filter.</div>
             <div class="scroll"><table id="usTable" hidden>
-              <thead id="us-thead"></thead><tbody id="us-tbody"></tbody>
+              <colgroup id="us-colgroup"></colgroup><thead id="us-thead"></thead><tbody id="us-tbody"></tbody>
             </table></div>
           </div>
           <div class="foot-note" style="margin-top:10px;">Budget Pacing compares average daily spend since the last budget change to the daily budget: 90–119% is On Track (green), 120–149% is Overspending – low risk (orange), and 150%+ is Overspending – high risk (red); below 90% shows as Underspending. Change history only spans the last 30 days, so campaigns not adjusted recently use a rolling 30-day window (shown as "30+ days ago").</div>
+        </section>
+      </section>
+
+      <!-- Bidding Strategies Page -->
+      <section id="bidding" class="page">
+        <section id="bidSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to review bidding strategies and CPA performance.</p>
+            <a class="btn-google" href="/api/auth">
+              <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 11v2.8h4.6c-.2 1.2-1.5 3.6-4.6 3.6-2.8 0-5-2.3-5-5.1s2.2-5.1 5-5.1c1.6 0 2.6.7 3.2 1.2l2.2-2.1C17.9 4.9 15.2 4 12 4 6.9 4 2.8 8.1 2.8 13.2S6.9 22.4 12 22.4c5.9 0 9.8-4.1 9.8-9.9 0-.7-.1-1.2-.2-1.7H12z"/></svg>
+              Sign in with Google
+            </a>
+          </div>
+        </section>
+
+        <section id="bidSignedIn" hidden>
+          <div class="controls-row account">
+            <div>
+              <label class="field-label">&nbsp;</label>
+              <input type="text" id="bidSearch" class="filter-input" placeholder="Search campaigns…" style="width:240px" oninput="renderBiddingTable()" />
+            </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="bidFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <span class="count" id="bidFilterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="biddingFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('bid-group-status', event)">
+                    <span class="toggle">−</span>Status
+                  </div>
+                  <div class="filter-group-items" id="bid-group-status">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="bidStatusEnabled" checked /><label for="bidStatusEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="bidStatusPaused" /><label for="bidStatusPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="bidStatusRemoved" /><label for="bidStatusRemoved">Removed</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetBiddingFilters()">Reset</button>
+                    <button class="apply" onclick="applyBiddingFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
+              <button class="filters-btn" id="bidRefreshBtn" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v5h-5"/></svg>Refresh</button>
+            </div>
+          </div>
+
+          <div id="bidWarn" class="as-warn" hidden></div>
+          <div class="panel">
+            <div id="bidLoading" class="state"><div class="spinner"></div>Loading bidding data across all accounts…</div>
+            <div id="bidError" class="state" hidden></div>
+            <div id="bidEmpty" class="state" hidden><div class="big">No campaigns</div>No campaigns match the current filter.</div>
+            <div class="scroll"><table id="bidTable" hidden>
+              <colgroup id="bid-colgroup"></colgroup><thead id="bid-thead"></thead><tbody id="bid-tbody"></tbody>
+            </table></div>
+          </div>
+          <div class="foot-note" style="margin-top:10px;">CPA Achieved is cost ÷ conversions over the last 14 days (excluding today). It's highlighted red with a warning icon when it's more than 20% above or below the campaign's Target CPA. Target CPA is read from the campaign's bid strategy; portfolio-level targets aren't included.</div>
         </section>
       </section>
 
@@ -1096,7 +1160,7 @@ const accState = {
   loaded: false,
 };
 
-const auditState = { rows: [], loaded: false };
+const auditState = { rows: [], loaded: false, columnWidths: {} };
 
 const BUDGETS_KEY = "budget_pacing_monthly_v1";
 const bpState = { rows: [], loaded: false, budgets: {}, editing: null };
@@ -1617,6 +1681,7 @@ function routeFromHash() {
   else if (page === "budgetpacing") initBudgetPacing();
   else if (page === "assets") initAssets();
   else if (page === "underspend") initUnderspend();
+  else if (page === "bidding") initBidding();
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {
@@ -1731,7 +1796,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu", "underspendFiltersMenu"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -1954,14 +2019,13 @@ function measureText(text, font) {
 function autoFitColumn(colKey, ids, widths, onDone) {
   widths = widths || state.columnWidths;
   if (onDone === undefined) onDone = saveViewState;
-  const c = COLUMNS.find(x => x.key === colKey) || ACCOUNT_COLUMNS.find(x => x.key === colKey);
-  if (!c) return;
   const headEl = document.querySelector("#" + ids.thead + " th[data-col='" + colKey + "']");
+  if (!headEl) return;
   const bodyCell = document.querySelector("#" + ids.tbody + " td");
-  const headerFont = headEl ? getComputedStyle(headEl).font : "560 12.5px sans-serif";
+  const headerFont = getComputedStyle(headEl).font || "560 12.5px sans-serif";
   const bodyFont = bodyCell ? getComputedStyle(bodyCell).font : "14px sans-serif";
 
-  let max = measureText(c.label, headerFont) + 22; // header + sort-arrow allowance
+  let max = measureText(headEl.textContent, headerFont) + 22; // header + sort-arrow allowance
   document.querySelectorAll("#" + ids.tbody + " tr").forEach(tr => {
     const cell = tr.querySelector("td[data-col='" + colKey + "']");
     if (cell) max = Math.max(max, measureText(cell.textContent, bodyFont));
@@ -2123,6 +2187,31 @@ function startResize(e, colKey, ids, widths, onDone) {
 function csvEscape(s) {
   s = String(s == null ? "" : s);
   return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+// Generic column resize: builds a colgroup string and wires drag handles + dblclick auto-fit.
+function colgroupHtml(cols, widths) {
+  return cols.map(c => '<col data-col="' + c.key + '" style="width:' + (widths[c.key] || colWidthSimple(c)) + 'px">').join("");
+}
+function colWidthSimple(c) {
+  if (c.width) return c.width;
+  if (c.key === "name" || c.key === "account") return 200;
+  return c.align === "num" ? 130 : 150;
+}
+function wireColumnResize(ids, widths, onSort) {
+  document.querySelectorAll("#" + ids.thead + " th").forEach(th => {
+    const handle = document.createElement("div");
+    handle.className = "resize-handle";
+    handle.addEventListener("mousedown", e => { e.preventDefault(); e.stopPropagation(); startResize(e, th.dataset.col, ids, widths, null); });
+    handle.addEventListener("click", e => e.stopPropagation());
+    handle.addEventListener("dblclick", e => { e.preventDefault(); e.stopPropagation(); autoFitColumn(th.dataset.col, ids, widths, null); });
+    th.appendChild(handle);
+    th.addEventListener("click", e => {
+      if (e.target.classList.contains("resize-handle")) return;
+      if (th.dataset.resizing === "1") { th.dataset.resizing = ""; return; }
+      onSort(th.dataset.col);
+    });
+  });
 }
 
 function csvValue(type, v) {
@@ -2698,17 +2787,24 @@ function statusPill(status) {
 }
 
 function renderAuditTable() {
-  document.getElementById("aud-thead").innerHTML =
-    "<tr><th style='width:30%'>Account</th><th style='width:16%'>Status</th><th style='width:22%'>Policy flags</th><th>Details</th></tr>";
+  const AUDIT_COLS = [
+    { key: "account", label: "Account", align: "txt", width: 280 },
+    { key: "status", label: "Status", align: "txt", width: 150 },
+    { key: "flags", label: "Policy flags", align: "txt", width: 220 },
+    { key: "details", label: "Details", align: "txt", width: 320 },
+  ];
+  document.getElementById("aud-colgroup").innerHTML = colgroupHtml(AUDIT_COLS, auditState.columnWidths);
+  document.getElementById("aud-thead").innerHTML = "<tr>" +
+    AUDIT_COLS.map(c => '<th class="txt" data-col="' + c.key + '">' + c.label + "</th>").join("") + "</tr>";
 
   document.getElementById("aud-tbody").innerHTML = auditState.rows.map(r => {
     if (r.loading) {
-      return "<tr><td><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></td>" +
+      return "<tr><td data-col='account'><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></td>" +
         "<td colspan='3'><span class='aud-spinner'></span> <span style='color:var(--muted)'>Checking…</span></td></tr>";
     }
     if (r.error) {
-      return "<tr><td><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></td>" +
-        "<td>" + statusPill(r.accountStatus) + "</td><td colspan='2' style='color:var(--muted)'>Couldn't audit: " + escapeHtml(r.error) + "</td></tr>";
+      return "<tr><td data-col='account'><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></td>" +
+        "<td data-col='status'>" + statusPill(r.accountStatus) + "</td><td colspan='2' style='color:var(--muted)'>Couldn't audit: " + escapeHtml(r.error) + "</td></tr>";
     }
     const flags = [];
     if ((r.accountStatus || "").toUpperCase() === "SUSPENDED") flags.push('<span class="issue-tag suspended">Account suspended</span>');
@@ -2726,11 +2822,13 @@ function renderAuditTable() {
       details = "<span style='color:var(--muted)'>—</span>";
     }
 
-    return "<tr><td><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></td>" +
-      "<td>" + statusPill(r.accountStatus) + "</td>" +
-      "<td>" + flags.join(" ") + "</td>" +
-      "<td>" + details + "</td></tr>";
+    return "<tr><td data-col='account'><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></td>" +
+      "<td data-col='status'>" + statusPill(r.accountStatus) + "</td>" +
+      "<td data-col='flags'>" + flags.join(" ") + "</td>" +
+      "<td data-col='details'>" + details + "</td></tr>";
   }).join("");
+
+  wireColumnResize({ colgroup: "aud-colgroup", thead: "aud-thead", tbody: "aud-tbody", tfoot: "aud-tfoot" }, auditState.columnWidths, () => {});
 }
 
 function renderAuditSummary() {
@@ -3074,7 +3172,7 @@ const ASSET_COLUMNS = [
   { key: "callouts",  label: "Callouts",            type: "int",    align: "num" },
   { key: "snippets",  label: "Structured Snippets", type: "int",    align: "num" },
 ];
-const assetsState = { rows: [], account: "", sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]) };
+const assetsState = { rows: [], account: "", sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), columnWidths: {} };
 
 const SITELINK_TOOLTIP = "Your ad can show up to 6 sitelinks on desktop and 8 on mobile. Consider adding more Sitelinks to maximise your ad's real estate on the search results page.";
 const LANDSCAPE_TOOLTIP = "Your ad can show up to 2 landscape images to desktop users. Consider adding more landscape images to maximise your ad's real estate on the search results page.";
@@ -3185,31 +3283,32 @@ function renderAssetsTable() {
     });
   const arrow = key => assetsState.sort.key === key ? '<span class="arr">' + (assetsState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
 
+  document.getElementById("assets-colgroup").innerHTML = colgroupHtml(ASSET_COLUMNS, assetsState.columnWidths);
   document.getElementById("assets-thead").innerHTML = "<tr>" + ASSET_COLUMNS.map(c =>
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
   document.getElementById("assets-tbody").innerHTML = rows.map(r => "<tr>" + ASSET_COLUMNS.map(c => {
-    if (c.key === "name") return '<td class="txt name">' + escapeHtml(r.name) + "</td>";
+    if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
     if (c.type === "status") {
       const s = (r.status || "").toLowerCase();
       const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other";
-      return '<td class="txt"><span class="pill ' + cls + '">' + titleCase(r.status) + "</span></td>";
+      return '<td class="txt" data-col="status"><span class="pill ' + cls + '">' + titleCase(r.status) + "</span></td>";
     }
     return assetCellHtml(c.key, r[c.key] || 0);
   }).join("") + "</tr>").join("");
 
   const tot = rows.reduce((a, r) => { a.sitelinks += r.sitelinks || 0; a.landscape += r.landscape || 0; a.square += r.square || 0; a.callouts += r.callouts || 0; a.snippets += r.snippets || 0; return a; }, { sitelinks: 0, landscape: 0, square: 0, callouts: 0, snippets: 0 });
   document.getElementById("assets-tfoot").innerHTML = "<tr>" + ASSET_COLUMNS.map((c, i) => {
-    if (i === 0) return '<td class="txt">Total · ' + rows.length + "</td>";
-    if (c.type === "status") return "<td></td>";
-    return '<td class="num tabnum">' + fmtInt(tot[c.key]) + "</td>";
+    if (i === 0) return '<td class="txt" data-col="name">Total · ' + rows.length + "</td>";
+    if (c.type === "status") return '<td data-col="status"></td>';
+    return '<td class="num tabnum" data-col="' + c.key + '">' + fmtInt(tot[c.key]) + "</td>";
   }).join("") + "</tr>";
 
-  document.querySelectorAll("#assets-thead th").forEach(th => th.addEventListener("click", () => {
-    const k = th.dataset.col, s = assetsState.sort;
+  wireColumnResize({ colgroup: "assets-colgroup", thead: "assets-thead", tbody: "assets-tbody", tfoot: "assets-tfoot" }, assetsState.columnWidths, (k) => {
+    const s = assetsState.sort;
     assetsState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
     renderAssetsTable();
-  }));
+  });
 }
 
 // Conditional cell formatting (warning icon shown on every red and orange cell).
@@ -3220,7 +3319,7 @@ function renderAssetsTable() {
 //   Snippets:  0 red, 1+ green.
 function assetCellHtml(key, v) {
   const warnIcon = tip => ' <span class="sl-warn" title="' + tip + '">' + WARN_TRI_SVG + "</span>";
-  const cell = (cls, icon) => '<td class="num tabnum ' + cls + '">' + fmtInt(v) + (icon || "") + "</td>";
+  const cell = (cls, icon) => '<td class="num tabnum ' + cls + '" data-col="' + key + '">' + fmtInt(v) + (icon || "") + "</td>";
 
   if (key === "sitelinks") {
     if (v >= 8) return cell("cell-green");
@@ -3247,21 +3346,22 @@ function assetCellHtml(key, v) {
     return cell("cell-red", warnIcon(SNIPPET_TOOLTIP)); // 0
   }
   const cls = v === 0 ? "cell-red" : "";
-  return '<td class="num tabnum' + (cls ? " " + cls : "") + '">' + fmtInt(v) + "</td>";
+  return '<td class="num tabnum' + (cls ? " " + cls : "") + '" data-col="' + key + '">' + fmtInt(v) + "</td>";
 }
 
 /* ============================ Underspend Alerts page ============================ */
 
 const US_COLUMNS = [
-  { key: "name",         label: "Campaign",                     align: "txt" },
-  { key: "status",       label: "Status",                       align: "txt" },
-  { key: "type",         label: "Type",                         align: "txt" },
-  { key: "dailyBudget",  label: "Daily Budget",                 align: "num" },
-  { key: "lastAdjusted", label: "Last Adjusted",                align: "txt" },
-  { key: "dailySpend",   label: "Daily Spend (since adjusted)", align: "num" },
-  { key: "pacing",       label: "Budget Pacing",                align: "txt" },
+  { key: "account",      label: "Account",                         align: "txt", width: 170 },
+  { key: "name",         label: "Campaign",                        align: "txt", width: 220 },
+  { key: "status",       label: "Status",                          align: "txt", width: 110 },
+  { key: "type",         label: "Type",                            align: "txt", width: 110 },
+  { key: "dailyBudget",  label: "Daily Budget",                    align: "num", width: 120 },
+  { key: "lastAdjusted", label: "Last Adjusted",                   align: "txt", width: 130 },
+  { key: "dailySpend",   label: "Daily Spend<br>(since adjusted)", align: "num", width: 140 },
+  { key: "pacing",       label: "Budget Pacing",                   align: "txt", width: 200 },
 ];
-const underspendState = { rows: [], loaded: false, sort: { key: "pacing", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), errors: [] };
+const underspendState = { rows: [], loaded: false, sort: { key: "pacing", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), errors: [], columnWidths: {} };
 
 function fmtShortDate(ymd) {
   const d = new Date(ymd + "T00:00:00");
@@ -3334,6 +3434,7 @@ function renderUnderspendTable() {
     .sort((a, b) => {
       const { key, dir } = underspendState.sort, sign = dir === "asc" ? 1 : -1;
       let av = a[key], bv = b[key];
+      if (key === "account") { av = a.accountName || ""; bv = b.accountName || ""; }
       if (key === "pacing") {
         av = a.dailyBudget > 0 ? a.dailySpend / a.dailyBudget : -1;
         bv = b.dailyBudget > 0 ? b.dailySpend / b.dailyBudget : -1;
@@ -3344,39 +3445,43 @@ function renderUnderspendTable() {
     });
   const arrow = key => underspendState.sort.key === key ? '<span class="arr">' + (underspendState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
 
+  document.getElementById("us-colgroup").innerHTML = colgroupHtml(US_COLUMNS, underspendState.columnWidths);
   document.getElementById("us-thead").innerHTML = "<tr>" + US_COLUMNS.map(c =>
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
   document.getElementById("us-tbody").innerHTML = rows.map(r => "<tr>" + US_COLUMNS.map(c => {
-    if (c.key === "name") return '<td class="txt name"><strong>' + escapeHtml(r.name) + '</strong><div class="sub" style="font-size:12px;color:var(--faint)">' + escapeHtml(r.accountName) + "</div></td>";
-    if (c.key === "status") { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<td class="txt"><span class="pill ' + cls + '">' + titleCase(r.status) + "</span></td>"; }
-    if (c.key === "type") return '<td class="txt">' + titleCase((r.type || "").replace(/_/g, " ")) + "</td>";
-    if (c.key === "dailyBudget") return '<td class="num tabnum">' + fmtCurrency(r.dailyBudget) + "</td>";
-    if (c.key === "lastAdjusted") return '<td class="txt">' + (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>') + "</td>";
-    if (c.key === "dailySpend") return '<td class="num tabnum">' + fmtCurrency(r.dailySpend) + "</td>";
+    if (c.key === "account") return '<td class="txt" data-col="account">' + escapeHtml(r.accountName || "") + "</td>";
+    if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
+    if (c.key === "status") { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<td class="txt" data-col="status"><span class="pill ' + cls + '">' + titleCase(r.status) + "</span></td>"; }
+    if (c.key === "type") return '<td class="txt" data-col="type">' + titleCase((r.type || "").replace(/_/g, " ")) + "</td>";
+    if (c.key === "dailyBudget") return '<td class="num tabnum" data-col="dailyBudget">' + fmtCurrency(r.dailyBudget) + "</td>";
+    if (c.key === "lastAdjusted") return '<td class="txt" data-col="lastAdjusted">' + (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>') + "</td>";
+    if (c.key === "dailySpend") return '<td class="num tabnum" data-col="dailySpend">' + fmtCurrency(r.dailySpend) + "</td>";
     if (c.key === "pacing") return pacingCellHtml(r.dailySpend, r.dailyBudget);
     return "<td></td>";
   }).join("") + "</tr>").join("");
 
-  document.querySelectorAll("#us-thead th").forEach(th => th.addEventListener("click", () => {
-    const k = th.dataset.col, s = underspendState.sort;
+  wireColumnResize({ colgroup: "us-colgroup", thead: "us-thead", tbody: "us-tbody", tfoot: "us-tfoot" }, underspendState.columnWidths, (k) => {
+    const s = underspendState.sort;
     underspendState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
     renderUnderspendTable();
-  }));
+  });
 }
 
 // Budget Pacing status from average daily spend vs daily budget.
+//   £0.00 spend -> Check Back Later (data not yet meaningful)
 //   90-119% On Track (green) · 120-149% Overspending low (orange) · 150%+ high (red)
 //   below 90% Underspending (neutral) · no budget shows a dash.
 function pacingCellHtml(dailySpend, dailyBudget) {
-  if (!dailyBudget || dailyBudget <= 0) return '<td class="txt"><span style="color:var(--faint)">—</span></td>';
+  if (Math.round((dailySpend || 0) * 100) === 0) return '<td class="txt pace-wait" data-col="pacing">Check Back Later</td>';
+  if (!dailyBudget || dailyBudget <= 0) return '<td class="txt" data-col="pacing"><span style="color:var(--faint)">—</span></td>';
   const pct = (dailySpend / dailyBudget) * 100;
   let cls, label;
   if (pct > 149) { cls = "pace-high"; label = "Overspending (high risk)"; }
   else if (pct >= 120) { cls = "pace-low"; label = "Overspending (low risk)"; }
   else if (pct >= 90) { cls = "pace-ok"; label = "On Track"; }
   else { cls = ""; label = "Underspending"; }
-  return '<td class="txt' + (cls ? " " + cls : "") + '">' + label + "</td>";
+  return '<td class="txt' + (cls ? " " + cls : "") + '" data-col="pacing">' + label + "</td>";
 }
 
 function applyUnderspendFilters() {
@@ -3400,6 +3505,142 @@ function resetUnderspendFilters() {
 function updateUnderspendFilterCount() {
   const n = underspendState.filterStatus.size;
   const el = document.getElementById("usFilterCount");
+  if (n > 0) { el.textContent = n; el.hidden = false; }
+  else { el.hidden = true; }
+}
+
+/* ============================ Bidding Strategies page ============================ */
+
+const BID_COLUMNS = [
+  { key: "account",         label: "Account",                     align: "txt", width: 170 },
+  { key: "name",            label: "Campaign",                    align: "txt", width: 220 },
+  { key: "type",            label: "Type",                        align: "txt", width: 120 },
+  { key: "biddingStrategy", label: "Bidding Strategy",            align: "txt", width: 180 },
+  { key: "targetCpa",       label: "Target CPA",                  align: "num", width: 120 },
+  { key: "cpaAchieved",     label: "CPA Achieved (Last 14 Days)", align: "num", width: 200 },
+];
+const biddingState = { rows: [], loaded: false, sort: { key: "account", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), errors: [], columnWidths: {} };
+const CPA_TOOLTIP = "CPA achieved is more than 20% above or below the campaign's Target CPA.";
+
+function initBidding() {
+  document.getElementById("bidSignedOut").hidden = signedIn;
+  document.getElementById("bidSignedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  const btn = document.getElementById("bidRefreshBtn");
+  if (!btn.dataset.wired) {
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => loadBidding(true));
+    const fMenu = document.getElementById("biddingFiltersMenu");
+    document.getElementById("bidFiltersBtn").addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
+    fMenu.addEventListener("click", (e) => e.stopPropagation());
+    updateBiddingFilterCount();
+  }
+  if (!biddingState.loaded) loadBidding(false);
+}
+
+async function loadBidding(force) {
+  if (biddingState.loaded && !force) return;
+  biddingState.loaded = true;
+
+  const loading = document.getElementById("bidLoading");
+  loading.hidden = false;
+  document.getElementById("bidError").hidden = true;
+  document.getElementById("bidEmpty").hidden = true;
+  document.getElementById("bidWarn").hidden = true;
+  document.getElementById("bidTable").hidden = true;
+
+  if (!ACCOUNTS.length) { loading.hidden = true; document.getElementById("bidEmpty").hidden = false; return; }
+
+  const rows = [], errors = [];
+  await mapLimit(ACCOUNTS, 4, async (a) => {
+    try {
+      const res = await fetch("/api/bidding?customerId=" + encodeURIComponent(a.id), { credentials: "same-origin" });
+      const data = await res.json().catch(() => ({}));
+      if (data.error) { errors.push((a.name || a.id) + ": " + data.error); return; }
+      (data.campaigns || []).forEach(c => { c.accountName = a.name || a.formatted; rows.push(c); });
+      if (data.metricError) errors.push((a.name || a.id) + " (performance): " + data.metricError);
+    } catch { errors.push((a.name || a.id) + ": request failed"); }
+  });
+
+  biddingState.rows = rows;
+  biddingState.errors = errors;
+  loading.hidden = true;
+
+  if (errors.length) {
+    const w = document.getElementById("bidWarn");
+    w.hidden = false;
+    w.textContent = "Some data couldn't be read — " + errors.slice(0, 3).join(" · ") + (errors.length > 3 ? " …" : "");
+  }
+
+  if (!rows.length) { document.getElementById("bidEmpty").hidden = false; return; }
+  document.getElementById("bidTable").hidden = false;
+  renderBiddingTable();
+}
+
+function renderBiddingTable() {
+  biddingState.search = document.getElementById("bidSearch").value;
+  const q = biddingState.search.trim().toLowerCase();
+  const rows = biddingState.rows.filter(r =>
+      (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
+      biddingState.filterStatus.has((r.status || "").toUpperCase())
+    )
+    .sort((a, b) => {
+      const { key, dir } = biddingState.sort, sign = dir === "asc" ? 1 : -1;
+      let av = a[key], bv = b[key];
+      if (key === "account") { av = a.accountName || ""; bv = b.accountName || ""; }
+      if (key === "targetCpa" || key === "cpaAchieved") { av = av == null ? -1 : av; bv = bv == null ? -1 : bv; }
+      if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
+      return ((av || 0) - (bv || 0)) * sign;
+    });
+  const arrow = key => biddingState.sort.key === key ? '<span class="arr">' + (biddingState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
+
+  document.getElementById("bid-colgroup").innerHTML = colgroupHtml(BID_COLUMNS, biddingState.columnWidths);
+  document.getElementById("bid-thead").innerHTML = "<tr>" + BID_COLUMNS.map(c =>
+    '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
+
+  document.getElementById("bid-tbody").innerHTML = rows.map(r => "<tr>" + BID_COLUMNS.map(c => {
+    if (c.key === "account") return '<td class="txt" data-col="account">' + escapeHtml(r.accountName || "") + "</td>";
+    if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
+    if (c.key === "type") return '<td class="txt" data-col="type">' + titleCase((r.type || "").replace(/_/g, " ")) + "</td>";
+    if (c.key === "biddingStrategy") return '<td class="txt" data-col="biddingStrategy">' + titleCase((r.biddingStrategy || "").replace(/_/g, " ")) + "</td>";
+    if (c.key === "targetCpa") return '<td class="num tabnum" data-col="targetCpa">' + (r.targetCpa != null ? fmtCurrency(r.targetCpa) : '<span style="color:var(--faint)">—</span>') + "</td>";
+    if (c.key === "cpaAchieved") {
+      if (r.cpaAchieved == null) return '<td class="num tabnum" data-col="cpaAchieved"><span style="color:var(--faint)">—</span></td>';
+      const off = r.targetCpa && r.targetCpa > 0 && Math.abs(r.cpaAchieved - r.targetCpa) / r.targetCpa > 0.2;
+      const icon = off ? ' <span class="sl-warn" title="' + CPA_TOOLTIP + '">' + WARN_TRI_SVG + "</span>" : "";
+      return '<td class="num tabnum' + (off ? " cell-red" : "") + '" data-col="cpaAchieved">' + fmtCurrency(r.cpaAchieved) + icon + "</td>";
+    }
+    return "<td></td>";
+  }).join("") + "</tr>").join("");
+
+  wireColumnResize({ colgroup: "bid-colgroup", thead: "bid-thead", tbody: "bid-tbody", tfoot: "bid-tfoot" }, biddingState.columnWidths, (k) => {
+    const s = biddingState.sort;
+    biddingState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
+    renderBiddingTable();
+  });
+}
+
+function applyBiddingFilters() {
+  biddingState.filterStatus = new Set([
+    document.getElementById("bidStatusEnabled").checked ? "ENABLED" : null,
+    document.getElementById("bidStatusPaused").checked ? "PAUSED" : null,
+    document.getElementById("bidStatusRemoved").checked ? "REMOVED" : null,
+  ].filter(Boolean));
+  document.getElementById("biddingFiltersMenu").hidden = true;
+  updateBiddingFilterCount();
+  renderBiddingTable();
+}
+
+function resetBiddingFilters() {
+  document.getElementById("bidStatusEnabled").checked = true;
+  document.getElementById("bidStatusPaused").checked = false;
+  document.getElementById("bidStatusRemoved").checked = false;
+  applyBiddingFilters();
+}
+
+function updateBiddingFilterCount() {
+  const n = biddingState.filterStatus.size;
+  const el = document.getElementById("bidFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
 }
