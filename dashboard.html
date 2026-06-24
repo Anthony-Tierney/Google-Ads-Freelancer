@@ -331,10 +331,9 @@
   td.cell-green { background: var(--cell-green-bg) !important; color: var(--cell-green-fg) !important; font-weight: 600; }
   .sl-warn { display: inline-flex; vertical-align: middle; margin-left: 5px; cursor: help; }
   .sl-warn svg { width: 14px; height: 14px; }
-  .pill.us-yes { background: var(--cell-orange-bg); color: var(--cell-orange-fg); }
-  .pill.us-no { background: var(--cell-green-bg); color: var(--cell-green-fg); }
-  td.bank-amt { font-weight: 600; }
-  td.bank-amt.has-bank { color: var(--cell-orange-fg); }
+  td.pace-ok { background: var(--cell-green-bg) !important; color: var(--ink) !important; }
+  td.pace-low { background: var(--cell-orange-bg) !important; color: var(--ink) !important; }
+  td.pace-high { background: var(--cell-red-bg) !important; color: var(--ink) !important; }
   .as-warn { background: var(--warn-bg); color: var(--warn-fg); border: 1px solid var(--warn-rg); border-radius: 9px; padding: 9px 12px; font-size: 13px; margin-bottom: 12px; }
 
   .bp-cards { display: flex; flex-direction: column; gap: 12px; }
@@ -974,7 +973,7 @@
               <thead id="us-thead"></thead><tbody id="us-tbody"></tbody>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Underspend is measured since each campaign's last budget change. Change history only spans the last 30 days, so campaigns not adjusted recently use a rolling 30-day window (shown as "30+ days ago"). "Bank of Underspend" = daily budget × days since adjusted − actual spend over that period.</div>
+          <div class="foot-note" style="margin-top:10px;">Budget Pacing compares average daily spend since the last budget change to the daily budget: 90–119% is On Track (green), 120–149% is Overspending – low risk (orange), and 150%+ is Overspending – high risk (red); below 90% shows as Underspending. Change history only spans the last 30 days, so campaigns not adjusted recently use a rolling 30-day window (shown as "30+ days ago").</div>
         </section>
       </section>
 
@@ -3260,10 +3259,9 @@ const US_COLUMNS = [
   { key: "dailyBudget",  label: "Daily Budget",                 align: "num" },
   { key: "lastAdjusted", label: "Last Adjusted",                align: "txt" },
   { key: "dailySpend",   label: "Daily Spend (since adjusted)", align: "num" },
-  { key: "underspend",   label: "Underspend Detected",          align: "txt" },
-  { key: "bank",         label: "Bank of Underspend",           align: "num" },
+  { key: "pacing",       label: "Budget Pacing",                align: "txt" },
 ];
-const underspendState = { rows: [], loaded: false, sort: { key: "bank", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), errors: [] };
+const underspendState = { rows: [], loaded: false, sort: { key: "pacing", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), errors: [] };
 
 function fmtShortDate(ymd) {
   const d = new Date(ymd + "T00:00:00");
@@ -3336,7 +3334,10 @@ function renderUnderspendTable() {
     .sort((a, b) => {
       const { key, dir } = underspendState.sort, sign = dir === "asc" ? 1 : -1;
       let av = a[key], bv = b[key];
-      if (key === "underspend") { av = av ? 1 : 0; bv = bv ? 1 : 0; }
+      if (key === "pacing") {
+        av = a.dailyBudget > 0 ? a.dailySpend / a.dailyBudget : -1;
+        bv = b.dailyBudget > 0 ? b.dailySpend / b.dailyBudget : -1;
+      }
       if (key === "lastAdjusted") { av = av || ""; bv = bv || ""; }
       if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
       return ((av || 0) - (bv || 0)) * sign;
@@ -3353,8 +3354,7 @@ function renderUnderspendTable() {
     if (c.key === "dailyBudget") return '<td class="num tabnum">' + fmtCurrency(r.dailyBudget) + "</td>";
     if (c.key === "lastAdjusted") return '<td class="txt">' + (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>') + "</td>";
     if (c.key === "dailySpend") return '<td class="num tabnum">' + fmtCurrency(r.dailySpend) + "</td>";
-    if (c.key === "underspend") return '<td class="txt"><span class="pill ' + (r.underspend ? "us-yes" : "us-no") + '">' + (r.underspend ? "Yes" : "No") + "</span></td>";
-    if (c.key === "bank") return '<td class="num tabnum bank-amt' + (r.underspend ? " has-bank" : "") + '">' + fmtCurrency(r.bank) + "</td>";
+    if (c.key === "pacing") return pacingCellHtml(r.dailySpend, r.dailyBudget);
     return "<td></td>";
   }).join("") + "</tr>").join("");
 
@@ -3363,6 +3363,20 @@ function renderUnderspendTable() {
     underspendState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
     renderUnderspendTable();
   }));
+}
+
+// Budget Pacing status from average daily spend vs daily budget.
+//   90-119% On Track (green) · 120-149% Overspending low (orange) · 150%+ high (red)
+//   below 90% Underspending (neutral) · no budget shows a dash.
+function pacingCellHtml(dailySpend, dailyBudget) {
+  if (!dailyBudget || dailyBudget <= 0) return '<td class="txt"><span style="color:var(--faint)">—</span></td>';
+  const pct = (dailySpend / dailyBudget) * 100;
+  let cls, label;
+  if (pct > 149) { cls = "pace-high"; label = "Overspending (high risk)"; }
+  else if (pct >= 120) { cls = "pace-low"; label = "Overspending (low risk)"; }
+  else if (pct >= 90) { cls = "pace-ok"; label = "On Track"; }
+  else { cls = ""; label = "Underspending"; }
+  return '<td class="txt' + (cls ? " " + cls : "") + '">' + label + "</td>";
 }
 
 function applyUnderspendFilters() {
