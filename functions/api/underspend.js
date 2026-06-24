@@ -32,10 +32,10 @@ export async function onRequestGet(context) {
     adsRequest(env, accessToken, `customers/${cleanId}/googleAds:search`, { query });
 
   // Run the three independent queries in parallel.
-  // change_event enforces a strict 30-day window measured from "now" (datetime
-  // precision), so DURING LAST_30_DAYS (midnight 30 days ago) is rejected as too old.
-  // Use an explicit UTC bound 29 days back to stay safely inside the window.
-  const changeStart = new Date(Date.now() - 29 * MS_DAY).toISOString().slice(0, 19).replace("T", " ") + "+00:00";
+  // change_event enforces a strict 30-day window measured from "now", and its date
+  // condition must be a plain 'YYYY-MM-DD' (not a datetime). Use 28 days back so a
+  // midnight bound can't tip over the 30-day limit late in the day.
+  const changeStart = new Date(Date.now() - 28 * MS_DAY).toISOString().slice(0, 10);
   const [campR, spendR, changeR] = await Promise.allSettled([
     search(`SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, campaign_budget.amount_micros FROM campaign WHERE campaign.status != 'REMOVED'`),
     search(`SELECT campaign.id, segments.date, metrics.cost_micros FROM campaign WHERE segments.date DURING LAST_30_DAYS AND campaign.status != 'REMOVED'`),
