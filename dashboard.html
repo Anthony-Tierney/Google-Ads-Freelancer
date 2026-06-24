@@ -331,6 +331,10 @@
   td.cell-green { background: var(--cell-green-bg) !important; color: var(--cell-green-fg) !important; font-weight: 600; }
   .sl-warn { display: inline-flex; vertical-align: middle; margin-left: 5px; cursor: help; }
   .sl-warn svg { width: 14px; height: 14px; }
+  .pill.us-yes { background: var(--cell-orange-bg); color: var(--cell-orange-fg); }
+  .pill.us-no { background: var(--cell-green-bg); color: var(--cell-green-fg); }
+  td.bank-amt { font-weight: 600; }
+  td.bank-amt.has-bank { color: var(--cell-orange-fg); }
   .as-warn { background: var(--warn-bg); color: var(--warn-fg); border: 1px solid var(--warn-rg); border-radius: 9px; padding: 9px 12px; font-size: 13px; margin-bottom: 12px; }
 
   .bp-cards { display: flex; flex-direction: column; gap: 12px; }
@@ -423,6 +427,7 @@
     <a href="#" class="nav-item active" data-page="allaccounts">Accounts</a>
     <a href="#" class="nav-item nav-sub" data-page="budgetpacing">Budget Pacing<span class="nav-warn" id="bpNavWarn" hidden title="One or more accounts are off pace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
     <a href="#" class="nav-item" data-page="dashboard">Campaigns</a>
+    <a href="#" class="nav-item nav-sub" data-page="underspend">Underspend Alerts</a>
     <a href="#" class="nav-item" data-page="audit">Audit</a>
     <a href="#" class="nav-item nav-sub" data-page="assets">Assets</a>
     <a href="#" class="nav-item" data-page="settings">Settings</a>
@@ -908,6 +913,68 @@
           <div id="bpCards" class="bp-cards" hidden></div>
           <div class="foot-note" style="margin-top:14px;">Budgets are saved to your account and sync across devices. Suggested budget is the sum of enabled daily budgets × days in the month.</div>
           <div id="bpInactive" hidden></div>
+        </section>
+      </section>
+
+      <!-- Underspend Alerts Page -->
+      <section id="underspend" class="page">
+        <section id="usSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to spot campaigns underspending against budget.</p>
+            <a class="btn-google" href="/api/auth">
+              <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 11v2.8h4.6c-.2 1.2-1.5 3.6-4.6 3.6-2.8 0-5-2.3-5-5.1s2.2-5.1 5-5.1c1.6 0 2.6.7 3.2 1.2l2.2-2.1C17.9 4.9 15.2 4 12 4 6.9 4 2.8 8.1 2.8 13.2S6.9 22.4 12 22.4c5.9 0 9.8-4.1 9.8-9.9 0-.7-.1-1.2-.2-1.7H12z"/></svg>
+              Sign in with Google
+            </a>
+          </div>
+        </section>
+
+        <section id="usSignedIn" hidden>
+          <div class="controls-row account">
+            <div>
+              <label class="field-label">&nbsp;</label>
+              <input type="text" id="usSearch" class="filter-input" placeholder="Search campaigns…" style="width:240px" oninput="renderUnderspendTable()" />
+            </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="usFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <span class="count" id="usFilterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="underspendFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('us-group-status', event)">
+                    <span class="toggle">−</span>Status
+                  </div>
+                  <div class="filter-group-items" id="us-group-status">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="usStatusEnabled" checked /><label for="usStatusEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="usStatusPaused" /><label for="usStatusPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="usStatusRemoved" /><label for="usStatusRemoved">Removed</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetUnderspendFilters()">Reset</button>
+                    <button class="apply" onclick="applyUnderspendFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
+              <button class="filters-btn" id="usRefreshBtn" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v5h-5"/></svg>Refresh</button>
+            </div>
+          </div>
+
+          <div id="usWarn" class="as-warn" hidden></div>
+          <div class="panel">
+            <div id="usLoading" class="state"><div class="spinner"></div>Loading campaigns across all accounts…</div>
+            <div id="usError" class="state" hidden></div>
+            <div id="usEmpty" class="state" hidden><div class="big">No campaigns</div>No campaigns match the current filter.</div>
+            <div class="scroll"><table id="usTable" hidden>
+              <thead id="us-thead"></thead><tbody id="us-tbody"></tbody>
+            </table></div>
+          </div>
+          <div class="foot-note" style="margin-top:10px;">Underspend is measured since each campaign's last budget change. Change history only spans the last 30 days, so campaigns not adjusted recently use a rolling 30-day window (shown as "30+ days ago"). "Bank of Underspend" = daily budget × days since adjusted − actual spend over that period.</div>
         </section>
       </section>
 
@@ -1550,6 +1617,7 @@ function routeFromHash() {
   else if (page === "audit") initAudit();
   else if (page === "budgetpacing") initBudgetPacing();
   else if (page === "assets") initAssets();
+  else if (page === "underspend") initUnderspend();
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {
@@ -1664,7 +1732,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu", "underspendFiltersMenu"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -3181,6 +3249,145 @@ function assetCellHtml(key, v) {
   }
   const cls = v === 0 ? "cell-red" : "";
   return '<td class="num tabnum' + (cls ? " " + cls : "") + '">' + fmtInt(v) + "</td>";
+}
+
+/* ============================ Underspend Alerts page ============================ */
+
+const US_COLUMNS = [
+  { key: "name",         label: "Campaign",                     align: "txt" },
+  { key: "status",       label: "Status",                       align: "txt" },
+  { key: "type",         label: "Type",                         align: "txt" },
+  { key: "dailyBudget",  label: "Daily Budget",                 align: "num" },
+  { key: "lastAdjusted", label: "Last Adjusted",                align: "txt" },
+  { key: "dailySpend",   label: "Daily Spend (since adjusted)", align: "num" },
+  { key: "underspend",   label: "Underspend Detected",          align: "txt" },
+  { key: "bank",         label: "Bank of Underspend",           align: "num" },
+];
+const underspendState = { rows: [], loaded: false, sort: { key: "bank", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), errors: [] };
+
+function fmtShortDate(ymd) {
+  const d = new Date(ymd + "T00:00:00");
+  if (isNaN(d.getTime())) return ymd;
+  return d.toLocaleDateString(LOCALE, { day: "numeric", month: "short", year: "numeric" });
+}
+
+function initUnderspend() {
+  document.getElementById("usSignedOut").hidden = signedIn;
+  document.getElementById("usSignedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  const btn = document.getElementById("usRefreshBtn");
+  if (!btn.dataset.wired) {
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => loadUnderspend(true));
+    const fMenu = document.getElementById("underspendFiltersMenu");
+    document.getElementById("usFiltersBtn").addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
+    fMenu.addEventListener("click", (e) => e.stopPropagation());
+    updateUnderspendFilterCount();
+  }
+  if (!underspendState.loaded) loadUnderspend(false);
+}
+
+async function loadUnderspend(force) {
+  if (underspendState.loaded && !force) return;
+  underspendState.loaded = true;
+
+  const loading = document.getElementById("usLoading");
+  loading.hidden = false;
+  document.getElementById("usError").hidden = true;
+  document.getElementById("usEmpty").hidden = true;
+  document.getElementById("usWarn").hidden = true;
+  document.getElementById("usTable").hidden = true;
+
+  if (!ACCOUNTS.length) { loading.hidden = true; document.getElementById("usEmpty").hidden = false; return; }
+
+  const rows = [], errors = [];
+  await mapLimit(ACCOUNTS, 4, async (a) => {
+    try {
+      const res = await fetch("/api/underspend?customerId=" + encodeURIComponent(a.id), { credentials: "same-origin" });
+      const data = await res.json().catch(() => ({}));
+      if (data.error) { errors.push((a.name || a.id) + ": " + data.error); return; }
+      (data.campaigns || []).forEach(c => { c.accountName = a.name || a.formatted; c.accountId = a.formatted; rows.push(c); });
+      if (data.changeError) errors.push((a.name || a.id) + " (history): " + data.changeError);
+    } catch { errors.push((a.name || a.id) + ": request failed"); }
+  });
+
+  underspendState.rows = rows;
+  underspendState.errors = errors;
+  loading.hidden = true;
+
+  if (errors.length) {
+    const w = document.getElementById("usWarn");
+    w.hidden = false;
+    w.textContent = "Some data couldn't be read — " + errors.slice(0, 3).join(" · ") + (errors.length > 3 ? " …" : "");
+  }
+
+  if (!rows.length) { document.getElementById("usEmpty").hidden = false; return; }
+  document.getElementById("usTable").hidden = false;
+  renderUnderspendTable();
+}
+
+function renderUnderspendTable() {
+  underspendState.search = document.getElementById("usSearch").value;
+  const q = underspendState.search.trim().toLowerCase();
+  const rows = underspendState.rows.filter(r =>
+      (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
+      underspendState.filterStatus.has((r.status || "").toUpperCase())
+    )
+    .sort((a, b) => {
+      const { key, dir } = underspendState.sort, sign = dir === "asc" ? 1 : -1;
+      let av = a[key], bv = b[key];
+      if (key === "underspend") { av = av ? 1 : 0; bv = bv ? 1 : 0; }
+      if (key === "lastAdjusted") { av = av || ""; bv = bv || ""; }
+      if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
+      return ((av || 0) - (bv || 0)) * sign;
+    });
+  const arrow = key => underspendState.sort.key === key ? '<span class="arr">' + (underspendState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
+
+  document.getElementById("us-thead").innerHTML = "<tr>" + US_COLUMNS.map(c =>
+    '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
+
+  document.getElementById("us-tbody").innerHTML = rows.map(r => "<tr>" + US_COLUMNS.map(c => {
+    if (c.key === "name") return '<td class="txt name"><strong>' + escapeHtml(r.name) + '</strong><div class="sub" style="font-size:12px;color:var(--faint)">' + escapeHtml(r.accountName) + "</div></td>";
+    if (c.key === "status") { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<td class="txt"><span class="pill ' + cls + '">' + titleCase(r.status) + "</span></td>"; }
+    if (c.key === "type") return '<td class="txt">' + titleCase((r.type || "").replace(/_/g, " ")) + "</td>";
+    if (c.key === "dailyBudget") return '<td class="num tabnum">' + fmtCurrency(r.dailyBudget) + "</td>";
+    if (c.key === "lastAdjusted") return '<td class="txt">' + (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>') + "</td>";
+    if (c.key === "dailySpend") return '<td class="num tabnum">' + fmtCurrency(r.dailySpend) + "</td>";
+    if (c.key === "underspend") return '<td class="txt"><span class="pill ' + (r.underspend ? "us-yes" : "us-no") + '">' + (r.underspend ? "Yes" : "No") + "</span></td>";
+    if (c.key === "bank") return '<td class="num tabnum bank-amt' + (r.bank > 0 ? " has-bank" : "") + '">' + fmtCurrency(r.bank) + "</td>";
+    return "<td></td>";
+  }).join("") + "</tr>").join("");
+
+  document.querySelectorAll("#us-thead th").forEach(th => th.addEventListener("click", () => {
+    const k = th.dataset.col, s = underspendState.sort;
+    underspendState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
+    renderUnderspendTable();
+  }));
+}
+
+function applyUnderspendFilters() {
+  underspendState.filterStatus = new Set([
+    document.getElementById("usStatusEnabled").checked ? "ENABLED" : null,
+    document.getElementById("usStatusPaused").checked ? "PAUSED" : null,
+    document.getElementById("usStatusRemoved").checked ? "REMOVED" : null,
+  ].filter(Boolean));
+  document.getElementById("underspendFiltersMenu").hidden = true;
+  updateUnderspendFilterCount();
+  renderUnderspendTable();
+}
+
+function resetUnderspendFilters() {
+  document.getElementById("usStatusEnabled").checked = true;
+  document.getElementById("usStatusPaused").checked = false;
+  document.getElementById("usStatusRemoved").checked = false;
+  applyUnderspendFilters();
+}
+
+function updateUnderspendFilterCount() {
+  const n = underspendState.filterStatus.size;
+  const el = document.getElementById("usFilterCount");
+  if (n > 0) { el.textContent = n; el.hidden = false; }
+  else { el.hidden = true; }
 }
 
 function escapeHtml(s) {
