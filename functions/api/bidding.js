@@ -63,8 +63,9 @@ export async function onRequestGet(context) {
       c.conversions = Number(r.metrics?.conversions || 0);
     });
   } else {
-    const e = metricR.reason;
-    metricError = (e && e.message) ? e.message : "Could not load performance";
+    const msg = (metricR.reason && metricR.reason.message) ? metricR.reason.message : "Could not load performance";
+    // Manager (MCC) accounts have no campaign metrics — that's expected, not an error.
+    if (!/REQUESTED_METRICS_FOR_MANAGER/.test(msg)) metricError = msg;
   }
 
   const out = Object.values(campaigns).map((c) => ({
