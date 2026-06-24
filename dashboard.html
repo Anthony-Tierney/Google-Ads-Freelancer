@@ -3354,7 +3354,7 @@ function renderUnderspendTable() {
     if (c.key === "lastAdjusted") return '<td class="txt">' + (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>') + "</td>";
     if (c.key === "dailySpend") return '<td class="num tabnum">' + fmtCurrency(r.dailySpend) + "</td>";
     if (c.key === "underspend") return '<td class="txt"><span class="pill ' + (r.underspend ? "us-yes" : "us-no") + '">' + (r.underspend ? "Yes" : "No") + "</span></td>";
-    if (c.key === "bank") return '<td class="num tabnum bank-amt' + (r.bank > 0 ? " has-bank" : "") + '">' + fmtCurrency(r.bank) + "</td>";
+    if (c.key === "bank") return '<td class="num tabnum bank-amt' + (r.underspend ? " has-bank" : "") + '">' + fmtCurrency(r.bank) + "</td>";
     return "<td></td>";
   }).join("") + "</tr>").join("");
 
