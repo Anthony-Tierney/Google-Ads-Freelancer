@@ -15,7 +15,6 @@ import {
 } from "../../shared/google.js";
 
 const MS_DAY = 86400000;
-const UNDERSPEND_THRESHOLD = 0.9; // avg daily spend below 90% of budget = underspend
 
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -110,13 +109,6 @@ export async function onRequestGet(context) {
     }
 
     const dailySpend = totalSpend / daysSince;
-    const expected = c.dailyBudget * daysSince;
-    let bank = Math.max(0, expected - totalSpend);
-    let underspend = c.dailyBudget > 0 && dailySpend < c.dailyBudget * UNDERSPEND_THRESHOLD;
-
-    // If average daily spend rounds to £0.00, treat the campaign as inactive rather
-    // than underspending: no alert, no banked underspend.
-    if (Math.round(dailySpend * 100) === 0) { underspend = false; bank = 0; }
 
     return {
       id: c.id,
@@ -128,8 +120,6 @@ export async function onRequestGet(context) {
       daysSince,
       dailySpend,
       totalSpend,
-      underspend,
-      bank,
     };
   });
 
