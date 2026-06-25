@@ -113,6 +113,9 @@
   .refresh-wrap { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 3px; }
   .last-refresh { font-size: 10.5px; color: var(--faint); white-space: nowrap; }
   .cpa-delta { color: var(--muted); font-size: 12px; }
+  .acc-logo-wrap { position: relative; display: inline-block; width: 22px; height: 22px; margin-right: 9px; vertical-align: middle; border-radius: 5px; overflow: hidden; flex: none; }
+  .acc-logo-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700; color: var(--muted); background: var(--off-bg); border: 1px solid var(--line); border-radius: 5px; }
+  .acc-logo-img { position: absolute; inset: 0; width: 22px; height: 22px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 5px; }
 
   .logout-btn {
     display: inline-flex; align-items: center; gap: 7px;
@@ -2663,21 +2666,23 @@ async function loadAllAccounts() {
   const range = rangeToGAQL(accState.dateRange);
   const rows = [];
   await mapLimit(ACCOUNTS, 4, async (a) => {
+    let row;
     try {
-      const res = await fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(range), { credentials: "same-origin" });
-      const data = await res.json().catch(() => ({}));
-      const campaigns = (data.campaigns || []).map(withMetrics);
-      const row = aggregateCampaigns(campaigns);
+      const [campData, logoData] = await Promise.all([
+        fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(range), { credentials: "same-origin" }).then(r => r.json()).catch(() => ({})),
+        fetch("/api/logo?customerId=" + encodeURIComponent(a.id), { credentials: "same-origin" }).then(r => r.json()).catch(() => ({})),
+      ]);
+      const campaigns = (campData.campaigns || []).map(withMetrics);
+      row = aggregateCampaigns(campaigns);
       row.enabledCount = campaigns.filter(c => (c.status || "").toUpperCase() === "ENABLED").length;
       row.hasEnabled = row.enabledCount > 0;
-      row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
-      rows.push(row);
+      row.logoUrl = logoData.logoUrl || null;
     } catch {
-      const row = aggregateCampaigns([]);
-      row.enabledCount = 0; row.hasEnabled = false;
-      row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
-      rows.push(row);
+      row = aggregateCampaigns([]);
+      row.enabledCount = 0; row.hasEnabled = false; row.logoUrl = null;
     }
+    row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
+    rows.push(row);
   });
 
   accState.rows = rows;
@@ -2709,6 +2714,14 @@ function accSortedFiltered() {
 
 function accTotals(rows) { return aggregateCampaigns(rows); }
 
+// Small account logo with an initials fallback behind it (logo, if any, layers on top).
+function accLogoHtml(r) {
+  const initials = (r.name || "?").trim().split(/\s+/).map(w => w[0] || "").slice(0, 2).join("").toUpperCase() || "?";
+  const fallback = '<span class="acc-logo-fallback">' + escapeHtml(initials) + "</span>";
+  const img = r.logoUrl ? '<img class="acc-logo-img" src="' + escapeHtml(r.logoUrl) + '" alt="" loading="lazy" onerror="this.remove()">' : "";
+  return '<span class="acc-logo-wrap">' + fallback + img + "</span>";
+}
+
 function renderAccountsTable() {
   accState.search = document.getElementById("accSearch").value;
   const cols = accShownColumns();
@@ -2725,7 +2738,7 @@ function renderAccountsTable() {
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
   document.getElementById("acc-tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
-    if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
+    if (c.key === "name") return '<td class="txt name" data-col="name">' + accLogoHtml(r) + escapeHtml(r.name) + "</td>";
     const cls = c.align === "num" ? "num tabnum" : "txt";
     return '<td class="' + cls + '" data-col="' + c.key + '">' + formatCell(c.type, r[c.key]) + "</td>";
   }).join("") + "</tr>").join("");
