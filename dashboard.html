@@ -194,7 +194,7 @@
   .pop[hidden] { display: none; }
 
   .filters-menu { width: 320px; padding: 0; max-height: 480px; }
-  .filter-group-header { background: var(--line-soft); padding: 8px 12px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
+  .filter-group-header.has-filter::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: auto; flex: none; }
   .filter-group-header:hover { background: #f1f5f9; }
   .filter-group-header .toggle { display: inline-block; width: 12px; text-align: center; font-size: 9px; }
   .filter-group-items { padding: 0; }
@@ -1512,6 +1512,20 @@ function updateFilterCount() {
   } else {
     countEl.hidden = true;
   }
+  updateFilterGroupIndicators();
+}
+
+// Light an accent dot on each filter category that currently has a filter applied.
+function updateFilterGroupIndicators() {
+  const mark = (itemsId, active) => {
+    const items = document.getElementById(itemsId);
+    if (items && items.previousElementSibling) items.previousElementSibling.classList.toggle("has-filter", !!active);
+  };
+  mark("group-name", !!state.filterName);
+  mark("group-type", state.filterChannelType.size > 0);
+  mark("group-impr", state.filterImpValue > 0);
+  mark("group-cost", state.filterCostValue > 0);
+  mark("group-status", state.filterStatus.size > 0);
 }
 
 function applyFilters() {
@@ -3287,16 +3301,20 @@ function renderInactiveAccounts(inactive) {
 /* ============================ Assets page ============================ */
 
 const ASSET_COLUMNS = [
-  { key: "name",      label: "Campaign",            type: "text",   align: "txt" },
-  { key: "status",    label: "Status",              type: "status", align: "txt" },
-  { key: "sitelinks", label: "Sitelinks",           type: "int",    align: "num" },
-  { key: "landscape", label: "Landscape (1.91:1)",  type: "int",    align: "num" },
-  { key: "square",    label: "Square (1:1)",        type: "int",    align: "num" },
-  { key: "callouts",  label: "Callouts",            type: "int",    align: "num" },
-  { key: "snippets",  label: "Structured Snippets", type: "int",    align: "num" },
+  { key: "name",         label: "Campaign",            type: "text",   align: "txt" },
+  { key: "status",       label: "Status",              type: "status", align: "txt" },
+  { key: "businessLogo", label: "Business Logo",       type: "int",    align: "num" },
+  { key: "businessName", label: "Business Name",       type: "int",    align: "num" },
+  { key: "sitelinks",    label: "Sitelinks",           type: "int",    align: "num" },
+  { key: "landscape",    label: "Landscape (1.91:1)",  type: "int",    align: "num" },
+  { key: "square",       label: "Square (1:1)",        type: "int",    align: "num" },
+  { key: "callouts",     label: "Callouts",            type: "int",    align: "num" },
+  { key: "snippets",     label: "Structured Snippets", type: "int",    align: "num" },
 ];
 const assetsState = { rows: [], account: "", loadedAccount: null, sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), columnWidths: {} };
 
+const BUSINESS_LOGO_TOOLTIP = "Each campaign should have exactly one business logo. A value other than 1 means a logo is missing or duplicated.";
+const BUSINESS_NAME_TOOLTIP = "Each campaign should have exactly one business name. A value other than 1 means a name is missing or duplicated.";
 const SITELINK_TOOLTIP = "Your ad can show up to 6 sitelinks on desktop and 8 on mobile. Consider adding more Sitelinks to maximise your ad's real estate on the search results page.";
 const LANDSCAPE_TOOLTIP = "Your ad can show up to 2 landscape images to desktop users. Consider adding more landscape images to maximise your ad's real estate on the search results page.";
 const SQUARE_TOOLTIP = "Your ad can show up to 5 square images side-by-side to desktop users. Consider adding more square images to maximise your ad's real estate on the search results page.";
@@ -3456,7 +3474,7 @@ function renderAssetsTable() {
     return assetCellHtml(c.key, r[c.key] || 0);
   }).join("") + "</tr>").join("");
 
-  const tot = rows.reduce((a, r) => { a.sitelinks += r.sitelinks || 0; a.landscape += r.landscape || 0; a.square += r.square || 0; a.callouts += r.callouts || 0; a.snippets += r.snippets || 0; return a; }, { sitelinks: 0, landscape: 0, square: 0, callouts: 0, snippets: 0 });
+  const tot = rows.reduce((a, r) => { a.businessLogo += r.businessLogo || 0; a.businessName += r.businessName || 0; a.sitelinks += r.sitelinks || 0; a.landscape += r.landscape || 0; a.square += r.square || 0; a.callouts += r.callouts || 0; a.snippets += r.snippets || 0; return a; }, { businessLogo: 0, businessName: 0, sitelinks: 0, landscape: 0, square: 0, callouts: 0, snippets: 0 });
   document.getElementById("assets-tfoot").innerHTML = "<tr>" + cols.map((c, i) => {
     if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total · ' + rows.length + "</td>";
     if (c.type === "status" || c.align === "txt") return '<td data-col="' + c.key + '"></td>';
@@ -3480,6 +3498,14 @@ function assetCellHtml(key, v) {
   const warnIcon = tip => ' <span class="sl-warn" title="' + tip + '">' + WARN_TRI_SVG + "</span>";
   const cell = (cls, icon) => '<td class="num tabnum ' + cls + '" data-col="' + key + '">' + fmtInt(v) + (icon || "") + "</td>";
 
+  if (key === "businessLogo") {
+    if (v === 1) return cell("cell-green");
+    return cell("cell-red", warnIcon(BUSINESS_LOGO_TOOLTIP)); // 0 or 2+
+  }
+  if (key === "businessName") {
+    if (v === 1) return cell("cell-green");
+    return cell("cell-red", warnIcon(BUSINESS_NAME_TOOLTIP)); // 0 or 2+
+  }
   if (key === "sitelinks") {
     if (v >= 8) return cell("cell-green");
     if (v >= 1) return cell("cell-orange", warnIcon(SITELINK_TOOLTIP)); // 1-7
@@ -3618,11 +3644,12 @@ function renderUnderspendTable() {
     });
   const arrow = key => underspendState.sort.key === key ? '<span class="arr">' + (underspendState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
 
-  document.getElementById("us-colgroup").innerHTML = colgroupHtml(US_COLUMNS, underspendState.columnWidths);
-  document.getElementById("us-thead").innerHTML = "<tr>" + US_COLUMNS.map(c =>
+  const cols = GLOBAL_ACCOUNT === "ALL" ? US_COLUMNS : US_COLUMNS.filter(c => c.key !== "account");
+  document.getElementById("us-colgroup").innerHTML = colgroupHtml(cols, underspendState.columnWidths);
+  document.getElementById("us-thead").innerHTML = "<tr>" + cols.map(c =>
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
-  document.getElementById("us-tbody").innerHTML = rows.map(r => "<tr>" + US_COLUMNS.map(c => {
+  document.getElementById("us-tbody").innerHTML = rows.map(r => "<tr>" + cols.map(c => {
     if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
     if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
     if (c.key === "status") { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<td class="txt" data-col="status"><span class="pill ' + cls + '">' + titleCase(r.status) + "</span></td>"; }
@@ -3653,7 +3680,7 @@ function pacingCellHtml(dailySpend, dailyBudget) {
   if (pct > 149) { cls = "pace-high"; label = "Overspending (high risk)"; }
   else if (pct >= 120) { cls = "pace-low"; label = "Overspending (low risk)"; }
   else if (pct >= 90) { cls = "pace-ok"; label = "On Track"; }
-  else { cls = ""; label = "Underspending"; }
+  else { cls = ""; label = "Underspending (" + (100 - pct).toFixed(1) + "%)"; }
   return '<td class="txt' + (cls ? " " + cls : "") + '" data-col="pacing">' + label + "</td>";
 }
 
@@ -3788,11 +3815,12 @@ function renderBiddingTable() {
     });
   const arrow = key => biddingState.sort.key === key ? '<span class="arr">' + (biddingState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
 
-  document.getElementById("bid-colgroup").innerHTML = colgroupHtml(BID_COLUMNS, biddingState.columnWidths);
-  document.getElementById("bid-thead").innerHTML = "<tr>" + BID_COLUMNS.map(c =>
+  const cols = GLOBAL_ACCOUNT === "ALL" ? BID_COLUMNS : BID_COLUMNS.filter(c => c.key !== "account");
+  document.getElementById("bid-colgroup").innerHTML = colgroupHtml(cols, biddingState.columnWidths);
+  document.getElementById("bid-thead").innerHTML = "<tr>" + cols.map(c =>
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
-  document.getElementById("bid-tbody").innerHTML = rows.map(r => "<tr>" + BID_COLUMNS.map(c => {
+  document.getElementById("bid-tbody").innerHTML = rows.map(r => "<tr>" + cols.map(c => {
     if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
     if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
     if (c.key === "type") return '<td class="txt" data-col="type">' + titleCase((r.type || "").replace(/_/g, " ")) + "</td>";
