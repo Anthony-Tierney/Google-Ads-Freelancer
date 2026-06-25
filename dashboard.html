@@ -1878,10 +1878,10 @@ async function loadCampaigns() {
     if (account === "ALL") {
       if (!ACCOUNTS.length) { document.getElementById("loading").hidden = true; document.getElementById("empty").hidden = false; return; }
       const errors = [];
-      const chunks = await mapLimit(ACCOUNTS, 4, async (a) => {
-        try { return await fetchAccount(a); } catch (e) { errors.push((a.name || a.id) + ": " + e.message); return []; }
+      await mapLimit(ACCOUNTS, 4, async (a) => {
+        try { const rows = await fetchAccount(a); campaigns.push(...rows); }
+        catch (e) { errors.push((a.name || a.id) + ": " + e.message); }
       });
-      campaigns = chunks.flat();
       if (!campaigns.length) {
         document.getElementById("loading").hidden = true;
         if (errors.length) { document.getElementById("error").hidden = false; document.getElementById("error").innerHTML = '<div class="big">Couldn\'t load campaigns</div>' + escapeHtml(errors.slice(0, 3).join(" · ")); }
