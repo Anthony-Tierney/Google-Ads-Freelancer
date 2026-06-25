@@ -593,7 +593,7 @@
                   </div>
 
                   <div class="filter-group-header" onclick="toggleFilterGroup('group-status', event)">
-                    <span class="toggle">+</span>Status
+                    <span class="toggle">+</span>Campaign Status
                   </div>
                   <div class="filter-group-items" id="group-status" hidden>
                     <div class="filter-section">
@@ -732,7 +732,7 @@
                 </button>
                 <div class="pop filters-menu" id="accFiltersMenu" hidden>
                   <div class="filter-group-header" onclick="toggleFilterGroup('acc-group-status', event)">
-                    <span class="toggle">−</span>Status
+                    <span class="toggle">−</span>Account Status
                   </div>
                   <div class="filter-group-items" id="acc-group-status">
                     <div class="filter-section">
@@ -848,7 +848,7 @@
                 </button>
                 <div class="pop filters-menu" id="assetsFiltersMenu" hidden>
                   <div class="filter-group-header" onclick="toggleFilterGroup('assets-group-status', event)">
-                    <span class="toggle">−</span>Status
+                    <span class="toggle">−</span>Campaign Status
                   </div>
                   <div class="filter-group-items" id="assets-group-status">
                     <div class="filter-section">
@@ -945,7 +945,7 @@
                 </button>
                 <div class="pop filters-menu" id="underspendFiltersMenu" hidden>
                   <div class="filter-group-header" onclick="toggleFilterGroup('us-group-status', event)">
-                    <span class="toggle">−</span>Status
+                    <span class="toggle">−</span>Campaign Status
                   </div>
                   <div class="filter-group-items" id="us-group-status">
                     <div class="filter-section">
@@ -1007,7 +1007,7 @@
                 </button>
                 <div class="pop filters-menu" id="biddingFiltersMenu" hidden>
                   <div class="filter-group-header" onclick="toggleFilterGroup('bid-group-status', event)">
-                    <span class="toggle">−</span>Status
+                    <span class="toggle">−</span>Campaign Status
                   </div>
                   <div class="filter-group-items" id="bid-group-status">
                     <div class="filter-section">
@@ -1016,6 +1016,14 @@
                         <div class="check-row"><input type="checkbox" id="bidStatusPaused" /><label for="bidStatusPaused">Paused</label></div>
                         <div class="check-row"><input type="checkbox" id="bidStatusRemoved" /><label for="bidStatusRemoved">Removed</label></div>
                       </div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('bid-group-account', event)">
+                    <span class="toggle">−</span>Account
+                  </div>
+                  <div class="filter-group-items" id="bid-group-account">
+                    <div class="filter-section">
+                      <div class="status-checks" id="bidAccountChecks"></div>
                     </div>
                   </div>
                   <div class="filter-buttons">
@@ -1037,7 +1045,7 @@
               <colgroup id="bid-colgroup"></colgroup><thead id="bid-thead"></thead><tbody id="bid-tbody"></tbody>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">CPA Achieved is cost ÷ conversions over the last 14 days (excluding today). It's highlighted red with a warning icon when it's more than 20% above or below the campaign's Target CPA. Target CPA is read from the campaign's bid strategy; portfolio-level targets aren't included.</div>
+          <div class="foot-note" style="margin-top:10px;">CPA Achieved is cost ÷ conversions over the last 14 days (excluding today). It's highlighted red with a warning icon when it's 20% or more below the campaign's Target CPA. Last Adjusted shows when the Target CPA was last changed — Google's change history only covers the last 30 days, so older changes show as "30+ days ago". Target CPA is read from the campaign's bid strategy; portfolio-level targets aren't included.</div>
         </section>
       </section>
 
@@ -3517,10 +3525,11 @@ const BID_COLUMNS = [
   { key: "type",            label: "Type",                        align: "txt", width: 120 },
   { key: "biddingStrategy", label: "Bidding Strategy",            align: "txt", width: 180 },
   { key: "targetCpa",       label: "Target CPA",                  align: "num", width: 120 },
+  { key: "lastAdjusted",    label: "Last Adjusted",               align: "txt", width: 130 },
   { key: "cpaAchieved",     label: "CPA Achieved (Last 14 Days)", align: "num", width: 200 },
 ];
-const biddingState = { rows: [], loaded: false, sort: { key: "account", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), errors: [], columnWidths: {} };
-const CPA_TOOLTIP = "CPA achieved is more than 20% above or below the campaign's Target CPA.";
+const biddingState = { rows: [], loaded: false, sort: { key: "account", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), filterAccounts: new Set(), errors: [], columnWidths: {} };
+const CPA_TOOLTIP = "CPA achieved is 20% or more below the campaign's Target CPA.";
 
 function initBidding() {
   document.getElementById("bidSignedOut").hidden = signedIn;
@@ -3533,9 +3542,20 @@ function initBidding() {
     const fMenu = document.getElementById("biddingFiltersMenu");
     document.getElementById("bidFiltersBtn").addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
+    buildBiddingAccountChecks();
     updateBiddingFilterCount();
   }
   if (!biddingState.loaded) loadBidding(false);
+}
+
+// Build one checkbox per account (all selected by default) for the Account filter group.
+function buildBiddingAccountChecks() {
+  const host = document.getElementById("bidAccountChecks");
+  if (!host) return;
+  biddingState.filterAccounts = new Set(ACCOUNTS.map(a => a.id));
+  host.innerHTML = ACCOUNTS.map(a =>
+    '<div class="check-row"><input type="checkbox" class="bid-acc-check" value="' + a.id + '" checked id="bidAcc-' + a.id + '" /><label for="bidAcc-' + a.id + '">' + escapeHtml(a.name || a.formatted) + "</label></div>"
+  ).join("");
 }
 
 async function loadBidding(force) {
@@ -3550,6 +3570,7 @@ async function loadBidding(force) {
   document.getElementById("bidTable").hidden = true;
 
   if (!ACCOUNTS.length) { loading.hidden = true; document.getElementById("bidEmpty").hidden = false; return; }
+  if (!document.getElementById("bidAccountChecks").children.length) buildBiddingAccountChecks();
 
   const rows = [], errors = [];
   await mapLimit(ACCOUNTS, 4, async (a) => {
@@ -3557,7 +3578,7 @@ async function loadBidding(force) {
       const res = await fetch("/api/bidding?customerId=" + encodeURIComponent(a.id), { credentials: "same-origin" });
       const data = await res.json().catch(() => ({}));
       if (data.error) { errors.push((a.name || a.id) + ": " + data.error); return; }
-      (data.campaigns || []).forEach(c => { c.accountName = a.name || a.formatted; rows.push(c); });
+      (data.campaigns || []).forEach(c => { c.accountName = a.name || a.formatted; c.accountId = a.id; rows.push(c); });
       if (data.metricError) errors.push((a.name || a.id) + " (performance): " + data.metricError);
     } catch { errors.push((a.name || a.id) + ": request failed"); }
   });
@@ -3582,12 +3603,14 @@ function renderBiddingTable() {
   const q = biddingState.search.trim().toLowerCase();
   const rows = biddingState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
-      biddingState.filterStatus.has((r.status || "").toUpperCase())
+      biddingState.filterStatus.has((r.status || "").toUpperCase()) &&
+      biddingState.filterAccounts.has(r.accountId)
     )
     .sort((a, b) => {
       const { key, dir } = biddingState.sort, sign = dir === "asc" ? 1 : -1;
       let av = a[key], bv = b[key];
       if (key === "account") { av = a.accountName || ""; bv = b.accountName || ""; }
+      if (key === "lastAdjusted") { av = av || ""; bv = bv || ""; }
       if (key === "targetCpa" || key === "cpaAchieved") { av = av == null ? -1 : av; bv = bv == null ? -1 : bv; }
       if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
       return ((av || 0) - (bv || 0)) * sign;
@@ -3604,9 +3627,13 @@ function renderBiddingTable() {
     if (c.key === "type") return '<td class="txt" data-col="type">' + titleCase((r.type || "").replace(/_/g, " ")) + "</td>";
     if (c.key === "biddingStrategy") return '<td class="txt" data-col="biddingStrategy">' + titleCase((r.biddingStrategy || "").replace(/_/g, " ")) + "</td>";
     if (c.key === "targetCpa") return '<td class="num tabnum" data-col="targetCpa">' + (r.targetCpa != null ? fmtCurrency(r.targetCpa) : '<span style="color:var(--faint)">—</span>') + "</td>";
+    if (c.key === "lastAdjusted") {
+      if (r.targetCpa == null) return '<td class="txt" data-col="lastAdjusted"><span style="color:var(--faint)">—</span></td>';
+      return '<td class="txt" data-col="lastAdjusted">' + (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>') + "</td>";
+    }
     if (c.key === "cpaAchieved") {
       if (r.cpaAchieved == null) return '<td class="num tabnum" data-col="cpaAchieved"><span style="color:var(--faint)">—</span></td>';
-      const off = r.targetCpa && r.targetCpa > 0 && Math.abs(r.cpaAchieved - r.targetCpa) / r.targetCpa > 0.2;
+      const off = r.targetCpa && r.targetCpa > 0 && r.cpaAchieved <= r.targetCpa * 0.8;
       const icon = off ? ' <span class="sl-warn" title="' + CPA_TOOLTIP + '">' + WARN_TRI_SVG + "</span>" : "";
       return '<td class="num tabnum' + (off ? " cell-red" : "") + '" data-col="cpaAchieved">' + fmtCurrency(r.cpaAchieved) + icon + "</td>";
     }
@@ -3626,6 +3653,9 @@ function applyBiddingFilters() {
     document.getElementById("bidStatusPaused").checked ? "PAUSED" : null,
     document.getElementById("bidStatusRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
+  biddingState.filterAccounts = new Set(
+    Array.from(document.querySelectorAll(".bid-acc-check")).filter(c => c.checked).map(c => c.value)
+  );
   document.getElementById("biddingFiltersMenu").hidden = true;
   updateBiddingFilterCount();
   renderBiddingTable();
@@ -3635,11 +3665,14 @@ function resetBiddingFilters() {
   document.getElementById("bidStatusEnabled").checked = true;
   document.getElementById("bidStatusPaused").checked = false;
   document.getElementById("bidStatusRemoved").checked = false;
+  document.querySelectorAll(".bid-acc-check").forEach(c => { c.checked = true; });
   applyBiddingFilters();
 }
 
 function updateBiddingFilterCount() {
-  const n = biddingState.filterStatus.size;
+  const total = document.querySelectorAll(".bid-acc-check").length;
+  const accountsNarrowed = total > 0 && biddingState.filterAccounts.size < total;
+  const n = biddingState.filterStatus.size + (accountsNarrowed ? 1 : 0);
   const el = document.getElementById("bidFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
