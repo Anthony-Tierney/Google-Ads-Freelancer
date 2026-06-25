@@ -24,10 +24,17 @@ export async function onRequestGet(context) {
   const search = (query) =>
     adsRequest(env, accessToken, `customers/${cleanId}/googleAds:search`, { query });
 
-  const [campR, metricR] = await Promise.allSettled([
+  // change_event needs a finite YYYY-MM-DD range with start within 30 days (28 back for buffer).
+  const MS_DAY = 86400000;
+  const changeStart = new Date(Date.now() - 28 * MS_DAY).toISOString().slice(0, 10);
+  const changeEnd = new Date(Date.now() + MS_DAY).toISOString().slice(0, 10);
+
+  const [campR, metricR, changeR] = await Promise.allSettled([
     search(`SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, campaign.bidding_strategy_type, campaign.target_cpa.target_cpa_micros, campaign.maximize_conversions.target_cpa_micros FROM campaign WHERE campaign.status != 'REMOVED'`),
     // LAST_14_DAYS excludes today; aggregated (no segments.date) gives 14-day totals.
     search(`SELECT campaign.id, metrics.cost_micros, metrics.conversions FROM campaign WHERE segments.date DURING LAST_14_DAYS AND campaign.status != 'REMOVED'`),
+    // Campaign-level changes; we keep the most recent that touched a target CPA field.
+    search(`SELECT change_event.change_date_time, change_event.change_resource_type, change_event.campaign, change_event.changed_fields FROM change_event WHERE change_event.change_date_time >= '${changeStart}' AND change_event.change_date_time <= '${changeEnd}' AND change_event.change_resource_type = 'CAMPAIGN' ORDER BY change_event.change_date_time DESC LIMIT 10000`),
   ]);
 
   if (campR.status !== "fulfilled") {
@@ -49,10 +56,28 @@ export async function onRequestGet(context) {
       type: r.campaign?.advertisingChannelType,
       biddingStrategy: r.campaign?.biddingStrategyType,
       targetCpa: targetMicros != null ? Number(targetMicros) / 1e6 : null,
+      lastAdjusted: null,
       cost: 0,
       conversions: 0,
     };
   });
+
+  // Last Target-CPA change per campaign (change history spans ~30 days only)
+  let changeError = null;
+  if (changeR.status === "fulfilled") {
+    (changeR.value.results || []).forEach((r) => {
+      const camp = r.changeEvent?.campaign;
+      if (!camp) return;
+      const c = campaigns[camp.split("/").pop()];
+      if (!c || c.lastAdjusted) return;
+      const fields = (r.changeEvent?.changedFields || "").toLowerCase();
+      if (!fields.includes("targetcpa")) return; // only target CPA changes
+      c.lastAdjusted = (r.changeEvent?.changeDateTime || "").slice(0, 10);
+    });
+  } else {
+    const e = changeR.reason;
+    changeError = (e && e.message) ? e.message : "Could not load change history";
+  }
 
   let metricError = null;
   if (metricR.status === "fulfilled") {
@@ -75,8 +100,9 @@ export async function onRequestGet(context) {
     type: c.type,
     biddingStrategy: c.biddingStrategy,
     targetCpa: c.targetCpa,
+    lastAdjusted: c.lastAdjusted,
     cpaAchieved: c.conversions > 0 ? c.cost / c.conversions : null,
   }));
 
-  return json({ campaigns: out, metricError });
+  return json({ campaigns: out, metricError, changeError });
 }
