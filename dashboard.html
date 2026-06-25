@@ -70,6 +70,13 @@
   .nav-item:hover { background: var(--line-soft); }
   .nav-item.active { border-left-color: var(--accent); background: var(--accent-soft); font-weight: 560; }
   .nav-sub { padding-left: 32px; font-size: 13px; color: var(--muted); }
+  .app-logo { display: flex; align-items: center; gap: 10px; padding: 2px 16px 14px; margin-bottom: 2px; border-bottom: 1px solid var(--line); }
+  .app-logo-mark { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), #7c5cff); display: flex; align-items: center; justify-content: center; color: #fff; flex: none; }
+  .app-logo-mark svg { width: 17px; height: 17px; }
+  .app-logo-text { font-size: 16.5px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+  .app-logo-text b { color: var(--accent); font-weight: 700; }
+  .nav-settings { margin-top: auto; display: flex; align-items: center; gap: 9px; }
+  .nav-ico { width: 17px; height: 17px; flex: none; }
   .nav-sub::before { content: "└ "; color: var(--faint); margin-right: 2px; }
   .nav-warn { display: inline-flex; vertical-align: middle; color: #d97706; margin-left: 5px; }
   .nav-warn svg { width: 15px; height: 15px; }
@@ -194,7 +201,7 @@
   .pop[hidden] { display: none; }
 
   .filters-menu { width: 320px; padding: 0; max-height: 480px; }
-  .filter-group-header.has-filter::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: auto; flex: none; }
+  .filter-group-header .cat-count { margin-left: auto; background: var(--accent); color: #fff; border-radius: 999px; min-width: 18px; height: 18px; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; line-height: 1; }
   .filter-group-header:hover { background: #f1f5f9; }
   .filter-group-header .toggle { display: inline-block; width: 12px; text-align: center; font-size: 9px; }
   .filter-group-items { padding: 0; }
@@ -345,6 +352,7 @@
   td.pace-low { background: var(--cell-orange-bg) !important; color: var(--ink) !important; }
   td.pace-high { background: var(--cell-red-bg) !important; color: var(--ink) !important; }
   td.pace-wait { background: var(--off-bg) !important; color: var(--off-fg) !important; }
+  #usTable th[data-col="pacing"], #usTable td[data-col="pacing"] { text-align: center; }
   .as-warn { background: var(--warn-bg); color: var(--warn-fg); border: 1px solid var(--warn-rg); border-radius: 9px; padding: 9px 12px; font-size: 13px; margin-bottom: 12px; }
 
   .bp-cards { display: flex; flex-direction: column; gap: 12px; }
@@ -434,6 +442,10 @@
 </head>
 <body>
   <aside class="sidebar">
+    <div class="app-logo">
+      <span class="app-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg></span>
+      <span class="app-logo-text">Ad<b>Lytics</b></span>
+    </div>
     <a href="#" class="nav-item active" data-page="allaccounts">Accounts</a>
     <a href="#" class="nav-item nav-sub" data-page="budgetpacing">Budget Pacing<span class="nav-warn" id="bpNavWarn" hidden title="One or more accounts are off pace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
     <a href="#" class="nav-item" data-page="dashboard">Campaigns</a>
@@ -441,7 +453,7 @@
     <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies</a>
     <a href="#" class="nav-item" data-page="audit">Audit</a>
     <a href="#" class="nav-item nav-sub" data-page="assets">Assets</a>
-    <a href="#" class="nav-item" data-page="settings">Settings</a>
+    <a href="#" class="nav-item nav-settings" data-page="settings"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
   </aside>
 
   <div class="main-content">
@@ -866,6 +878,7 @@
                   </div>
                 </div>
               </div>
+              <button class="filters-btn" id="assetsExportBtn" title="Export CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
             </div>
           </div>
 
@@ -963,6 +976,7 @@
                   </div>
                 </div>
               </div>
+              <button class="filters-btn" id="usExportBtn" title="Export CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
               <div class="refresh-wrap"><button class="filters-btn" id="usRefreshBtn" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v5h-5"/></svg>Refresh</button><div class="last-refresh" id="usLastRefresh"></div></div>
             </div>
           </div>
@@ -1025,6 +1039,7 @@
                   </div>
                 </div>
               </div>
+              <button class="filters-btn" id="bidExportBtn" title="Export CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
               <div class="refresh-wrap"><button class="filters-btn" id="bidRefreshBtn" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v5h-5"/></svg>Refresh</button><div class="last-refresh" id="bidLastRefresh"></div></div>
             </div>
           </div>
@@ -1038,7 +1053,7 @@
               <colgroup id="bid-colgroup"></colgroup><thead id="bid-thead"></thead><tbody id="bid-tbody"></tbody>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">CPA Achieved is cost ÷ conversions over the last 14 days (excluding today). It's highlighted red with a warning icon when it's 20% or more below the campaign's Target CPA. Last Adjusted shows when the Target CPA was last changed — Google's change history only covers the last 30 days, so older changes show as "30+ days ago". Target CPA is read from the campaign's bid strategy; portfolio-level targets aren't included.</div>
+          <div class="foot-note" style="margin-top:10px;">CPA Achieved is cost ÷ conversions measured from the date the Target CPA was last changed up to yesterday. If the last change predates the available 30-day history (or there's no target), it's measured across the last 30 days. It's highlighted red with a warning icon when it's 20% or more below the campaign's Target CPA. Last Adjusted shows when the Target CPA was last changed — Google's change history only covers the last 30 days, so older changes show as "30+ days ago". Target CPA is read from the campaign's bid strategy; portfolio-level targets aren't included.</div>
         </section>
       </section>
 
@@ -1515,17 +1530,26 @@ function updateFilterCount() {
   updateFilterGroupIndicators();
 }
 
-// Light an accent dot on each filter category that currently has a filter applied.
+// Show a count badge on each filter category that currently has a filter applied.
 function updateFilterGroupIndicators() {
-  const mark = (itemsId, active) => {
+  const mark = (itemsId, count) => {
     const items = document.getElementById(itemsId);
-    if (items && items.previousElementSibling) items.previousElementSibling.classList.toggle("has-filter", !!active);
+    if (!items || !items.previousElementSibling) return;
+    const header = items.previousElementSibling;
+    let badge = header.querySelector(".cat-count");
+    if (count > 0) {
+      if (!badge) { badge = document.createElement("span"); badge.className = "cat-count"; header.appendChild(badge); }
+      badge.textContent = count;
+      badge.hidden = false;
+    } else if (badge) {
+      badge.hidden = true;
+    }
   };
-  mark("group-name", !!state.filterName);
-  mark("group-type", state.filterChannelType.size > 0);
-  mark("group-impr", state.filterImpValue > 0);
-  mark("group-cost", state.filterCostValue > 0);
-  mark("group-status", state.filterStatus.size > 0);
+  mark("group-name", state.filterName ? 1 : 0);
+  mark("group-type", state.filterChannelType.size);
+  mark("group-impr", state.filterImpValue > 0 ? 1 : 0);
+  mark("group-cost", state.filterCostValue > 0 ? 1 : 0);
+  mark("group-status", state.filterStatus.size);
 }
 
 function applyFilters() {
@@ -1718,7 +1742,7 @@ function routeFromHash() {
   const page = currentHashPage();
   showPage(page);
   // The global account selector drives only the Campaigns + Audit menu pages.
-  const usesGlobal = signedIn && page !== "allaccounts" && page !== "budgetpacing";
+  const usesGlobal = signedIn && page !== "allaccounts" && page !== "budgetpacing" && page !== "settings";
   document.getElementById("globalAccountWrap").hidden = !usesGlobal;
   if (page === "dashboard") initDashboard();
   else if (page === "allaccounts") initAllAccounts();
@@ -3332,6 +3356,7 @@ function initAssets() {
     const fMenu = document.getElementById("assetsFiltersMenu");
     fBtn.addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
+    document.getElementById("assetsExportBtn").addEventListener("click", exportAssets);
     restoreAssetsFilters();
     updateAssetsFilterCount();
   }
@@ -3446,6 +3471,8 @@ function renderAssetsTable() {
   const q = assetsState.search.trim().toLowerCase();
   const inAll = assetsState.account === "ALL";
   const cols = inAll ? [{ key: "account", label: "Account", align: "txt", width: 180 }, ...ASSET_COLUMNS] : ASSET_COLUMNS;
+  assetsState.viewRows = rows;
+  assetsState.viewCols = cols;
   const rows = assetsState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
       assetsState.filterStatus.has((r.status || "").toUpperCase())
@@ -3562,6 +3589,7 @@ function initUnderspend() {
   if (!btn.dataset.wired) {
     btn.dataset.wired = "1";
     btn.addEventListener("click", () => loadUnderspend(true));
+    document.getElementById("usExportBtn").addEventListener("click", exportUnderspend);
     const fMenu = document.getElementById("underspendFiltersMenu");
     document.getElementById("usFiltersBtn").addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
@@ -3645,6 +3673,7 @@ function renderUnderspendTable() {
   const arrow = key => underspendState.sort.key === key ? '<span class="arr">' + (underspendState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
 
   const cols = GLOBAL_ACCOUNT === "ALL" ? US_COLUMNS : US_COLUMNS.filter(c => c.key !== "account");
+  underspendState.viewRows = rows;
   document.getElementById("us-colgroup").innerHTML = colgroupHtml(cols, underspendState.columnWidths);
   document.getElementById("us-thead").innerHTML = "<tr>" + cols.map(c =>
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
@@ -3672,16 +3701,88 @@ function renderUnderspendTable() {
 //   £0.00 spend -> Check Back Later (data not yet meaningful)
 //   90-119% On Track (green) · 120-149% Overspending low (orange) · 150%+ high (red)
 //   below 90% Underspending (neutral) · no budget shows a dash.
-function pacingCellHtml(dailySpend, dailyBudget) {
-  if (Math.round((dailySpend || 0) * 100) === 0) return '<td class="txt pace-wait" data-col="pacing">Check Back Later</td>';
-  if (!dailyBudget || dailyBudget <= 0) return '<td class="txt" data-col="pacing"><span style="color:var(--faint)">—</span></td>';
+// Plain-text Budget Pacing label (also used by CSV export).
+function pacingLabel(dailySpend, dailyBudget) {
+  if (Math.round((dailySpend || 0) * 100) === 0) return { label: "Check Back Later", cls: "pace-wait" };
+  if (!dailyBudget || dailyBudget <= 0) return { label: "—", cls: "" };
   const pct = (dailySpend / dailyBudget) * 100;
-  let cls, label;
-  if (pct > 149) { cls = "pace-high"; label = "Overspending (high risk)"; }
-  else if (pct >= 120) { cls = "pace-low"; label = "Overspending (low risk)"; }
-  else if (pct >= 90) { cls = "pace-ok"; label = "On Track"; }
-  else { cls = ""; label = "Underspending (" + (100 - pct).toFixed(1) + "%)"; }
+  if (pct > 149) return { label: "Overspending (high risk)", cls: "pace-high" };
+  if (pct >= 120) return { label: "Overspending (low risk)", cls: "pace-low" };
+  if (pct >= 90) return { label: "On Track", cls: "pace-ok" };
+  const under = 100 - pct;
+  return { label: "Underspending (" + under.toFixed(1) + "%)", cls: under >= 20 ? "pace-high" : "" };
+}
+
+// Download an array-of-arrays as a CSV file.
+function downloadCsv(fileBase, header, rows) {
+  const lines = [header.map(csvEscape).join(",")];
+  rows.forEach(r => lines.push(r.map(csvEscape).join(",")));
+  downloadBlob("\uFEFF" + lines.join("\r\n"), fileBase + ".csv", "text/csv;charset=utf-8;");
+}
+
+function pacingCellHtml(dailySpend, dailyBudget) {
+  const { label, cls } = pacingLabel(dailySpend, dailyBudget);
   return '<td class="txt' + (cls ? " " + cls : "") + '" data-col="pacing">' + label + "</td>";
+}
+
+function exportUnderspend() {
+  const rows = underspendState.viewRows || [];
+  if (!rows.length) { showToast("Nothing to export."); return; }
+  const cols = GLOBAL_ACCOUNT === "ALL" ? US_COLUMNS : US_COLUMNS.filter(c => c.key !== "account");
+  const header = cols.map(c => c.label.replace(/<br>/g, " "));
+  const data = rows.map(r => cols.map(c => {
+    switch (c.key) {
+      case "account": return r.accountName || "";
+      case "name": return r.name || "";
+      case "status": return titleCase(r.status || "");
+      case "type": return titleCase((r.type || "").replace(/_/g, " "));
+      case "dailyBudget": return fmtCurrency(r.dailyBudget);
+      case "lastAdjusted": return r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : "30+ days ago";
+      case "dailySpend": return fmtCurrency(r.dailySpend);
+      case "pacing": return pacingLabel(r.dailySpend, r.dailyBudget).label;
+      default: return "";
+    }
+  }));
+  downloadCsv("budgeting-" + new Date().toISOString().slice(0, 10), header, data);
+}
+
+function exportBidding() {
+  const rows = biddingState.viewRows || [];
+  if (!rows.length) { showToast("Nothing to export."); return; }
+  const cols = GLOBAL_ACCOUNT === "ALL" ? BID_COLUMNS : BID_COLUMNS.filter(c => c.key !== "account");
+  const header = cols.map(c => c.label);
+  const data = rows.map(r => cols.map(c => {
+    switch (c.key) {
+      case "account": return r.accountName || "";
+      case "name": return r.name || "";
+      case "type": return titleCase((r.type || "").replace(/_/g, " "));
+      case "biddingStrategy": return titleCase((r.biddingStrategy || "").replace(/_/g, " "));
+      case "targetCpa": return r.targetCpa != null ? fmtCurrency(r.targetCpa) : "—";
+      case "lastAdjusted": return r.targetCpa == null ? "—" : (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : "30+ days ago");
+      case "cpaAchieved": {
+        if (r.cpaAchieved == null) return "—";
+        let s = fmtCurrency(r.cpaAchieved);
+        if (r.targetCpa && r.targetCpa > 0) { const pct = (r.cpaAchieved - r.targetCpa) / r.targetCpa * 100; s += " (" + (pct >= 0 ? "+" : "") + pct.toFixed(1) + "%)"; }
+        return s;
+      }
+      default: return "";
+    }
+  }));
+  downloadCsv("bidding-strategies-" + new Date().toISOString().slice(0, 10), header, data);
+}
+
+function exportAssets() {
+  const rows = assetsState.viewRows || [];
+  const cols = assetsState.viewCols || ASSET_COLUMNS;
+  if (!rows.length) { showToast("Nothing to export."); return; }
+  const header = cols.map(c => c.label);
+  const data = rows.map(r => cols.map(c => {
+    if (c.key === "account") return r.accountName || "";
+    if (c.key === "name") return r.name || "";
+    if (c.key === "status") return titleCase(r.status || "");
+    return String(r[c.key] != null ? r[c.key] : 0);
+  }));
+  downloadCsv("assets-" + new Date().toISOString().slice(0, 10), header, data);
 }
 
 function applyUnderspendFilters() {
@@ -3723,7 +3824,7 @@ const BID_COLUMNS = [
   { key: "biddingStrategy", label: "Bidding Strategy",            align: "txt", width: 180 },
   { key: "targetCpa",       label: "Target CPA",                  align: "num", width: 120 },
   { key: "lastAdjusted",    label: "Last Adjusted",               align: "txt", width: 130 },
-  { key: "cpaAchieved",     label: "CPA Achieved (Last 14 Days)", align: "num", width: 200 },
+  { key: "cpaAchieved",     label: "CPA Achieved (since last adjustment)", align: "num", width: 240 },
 ];
 const biddingState = { rows: [], loaded: false, sort: { key: "account", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), errors: [], columnWidths: {} };
 const CPA_TOOLTIP = "CPA achieved is 20% or more below the campaign's Target CPA.";
@@ -3736,6 +3837,7 @@ function initBidding() {
   if (!btn.dataset.wired) {
     btn.dataset.wired = "1";
     btn.addEventListener("click", () => loadBidding(true));
+    document.getElementById("bidExportBtn").addEventListener("click", exportBidding);
     const fMenu = document.getElementById("biddingFiltersMenu");
     document.getElementById("bidFiltersBtn").addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
@@ -3816,6 +3918,7 @@ function renderBiddingTable() {
   const arrow = key => biddingState.sort.key === key ? '<span class="arr">' + (biddingState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
 
   const cols = GLOBAL_ACCOUNT === "ALL" ? BID_COLUMNS : BID_COLUMNS.filter(c => c.key !== "account");
+  biddingState.viewRows = rows;
   document.getElementById("bid-colgroup").innerHTML = colgroupHtml(cols, biddingState.columnWidths);
   document.getElementById("bid-thead").innerHTML = "<tr>" + cols.map(c =>
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
