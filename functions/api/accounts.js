@@ -25,9 +25,9 @@ export async function onRequestGet(context) {
   );
   const resourceNames = list.resourceNames || [];
 
-  // Best-effort: look up each account's name so the picker is readable.
-  // If a name lookup fails, fall back to just the formatted id.
-  const accounts = await Promise.all(
+  // Best-effort: look up each account's name so the picker is readable, and skip
+  // manager (MCC) accounts, which have no campaigns or metrics of their own.
+  const accounts = (await Promise.all(
     resourceNames.map(async (rn) => {
       const id = rn.split("/")[1];
       try {
@@ -35,15 +35,16 @@ export async function onRequestGet(context) {
           env,
           accessToken,
           `customers/${id}/googleAds:search`,
-          { query: "SELECT customer.descriptive_name FROM customer LIMIT 1" }
+          { query: "SELECT customer.descriptive_name, customer.manager FROM customer LIMIT 1" }
         );
-        const name = result.results?.[0]?.customer?.descriptiveName || null;
-        return { id, formatted: formatId(id), name };
+        const cust = result.results?.[0]?.customer || {};
+        if (cust.manager) return null; // hide manager accounts entirely
+        return { id, formatted: formatId(id), name: cust.descriptiveName || null };
       } catch {
         return { id, formatted: formatId(id), name: null };
       }
     })
-  );
+  )).filter(Boolean);
 
   return json({ accounts });
 }
