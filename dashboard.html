@@ -936,6 +936,10 @@
         <section id="usSignedIn" hidden>
           <div class="controls-row account">
             <div>
+              <label class="field-label" for="usAccountSelect">Account</label>
+              <select id="usAccountSelect"></select>
+            </div>
+            <div>
               <label class="field-label">&nbsp;</label>
               <input type="text" id="usSearch" class="filter-input" placeholder="Search campaigns…" style="width:240px" oninput="renderUnderspendTable()" />
             </div>
@@ -957,14 +961,6 @@
                         <div class="check-row"><input type="checkbox" id="usStatusPaused" /><label for="usStatusPaused">Paused</label></div>
                         <div class="check-row"><input type="checkbox" id="usStatusRemoved" /><label for="usStatusRemoved">Removed</label></div>
                       </div>
-                    </div>
-                  </div>
-                  <div class="filter-group-header" onclick="toggleFilterGroup('us-group-account', event)">
-                    <span class="toggle">−</span>Account
-                  </div>
-                  <div class="filter-group-items" id="us-group-account">
-                    <div class="filter-section">
-                      <div class="status-checks" id="usAccountChecks"></div>
                     </div>
                   </div>
                   <div class="filter-buttons">
@@ -1006,6 +1002,10 @@
         <section id="bidSignedIn" hidden>
           <div class="controls-row account">
             <div>
+              <label class="field-label" for="bidAccountSelect">Account</label>
+              <select id="bidAccountSelect"></select>
+            </div>
+            <div>
               <label class="field-label">&nbsp;</label>
               <input type="text" id="bidSearch" class="filter-input" placeholder="Search campaigns…" style="width:240px" oninput="renderBiddingTable()" />
             </div>
@@ -1027,14 +1027,6 @@
                         <div class="check-row"><input type="checkbox" id="bidStatusPaused" /><label for="bidStatusPaused">Paused</label></div>
                         <div class="check-row"><input type="checkbox" id="bidStatusRemoved" /><label for="bidStatusRemoved">Removed</label></div>
                       </div>
-                    </div>
-                  </div>
-                  <div class="filter-group-header" onclick="toggleFilterGroup('bid-group-account', event)">
-                    <span class="toggle">−</span>Account
-                  </div>
-                  <div class="filter-group-items" id="bid-group-account">
-                    <div class="filter-section">
-                      <div class="status-checks" id="bidAccountChecks"></div>
                     </div>
                   </div>
                   <div class="filter-buttons">
@@ -3467,7 +3459,7 @@ const US_COLUMNS = [
   { key: "dailySpend",   label: "Daily Spend<br>(since adjusted)", align: "num", width: 140 },
   { key: "pacing",       label: "Budget Pacing",                   align: "txt", width: 200 },
 ];
-const underspendState = { rows: [], loaded: false, sort: { key: "pacing", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), filterAccounts: new Set(), errors: [], columnWidths: {} };
+const underspendState = { rows: [], loaded: false, sort: { key: "pacing", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), selectedAccount: "ALL", errors: [], columnWidths: {} };
 
 function fmtShortDate(ymd) {
   const d = new Date(ymd + "T00:00:00");
@@ -3486,24 +3478,25 @@ function initUnderspend() {
     const fMenu = document.getElementById("underspendFiltersMenu");
     document.getElementById("usFiltersBtn").addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
-    buildUnderspendAccountChecks();
+    buildUnderspendAccountSelect();
     restoreUnderspendFilters();
+    const sel = document.getElementById("usAccountSelect");
+    sel.addEventListener("change", () => { underspendState.selectedAccount = sel.value; persistUnderspendFilters(); renderUnderspendTable(); });
     updateUnderspendFilterCount();
   }
   if (!underspendState.loaded) loadUnderspend(false);
 }
 
-// One checkbox per account (all selected by default) for the Account filter group.
-function buildUnderspendAccountChecks() {
-  const host = document.getElementById("usAccountChecks");
-  if (!host) return;
-  underspendState.filterAccounts = new Set(ACCOUNTS.map(a => a.id));
-  host.innerHTML = ACCOUNTS.map(a =>
-    '<div class="check-row"><input type="checkbox" class="us-acc-check" value="' + a.id + '" checked id="usAcc-' + a.id + '" /><label for="usAcc-' + a.id + '">' + escapeHtml(a.name || a.formatted) + "</label></div>"
-  ).join("");
+// Populate the Account dropdown (All Accounts + one option per account).
+function buildUnderspendAccountSelect() {
+  const sel = document.getElementById("usAccountSelect");
+  if (!sel) return;
+  sel.innerHTML = '<option value="ALL">All Accounts</option>' +
+    ACCOUNTS.map(a => '<option value="' + a.id + '">' + escapeHtml(a.name || a.formatted) + " · " + a.formatted + "</option>").join("");
+  sel.value = underspendState.selectedAccount;
 }
 
-// Restore saved Budgeting filter selections (status + excluded accounts) into the DOM + state.
+// Restore saved Budgeting filter selections (status + selected account).
 function restoreUnderspendFilters() {
   const saved = loadPageFilters("budgeting");
   if (!saved) return;
@@ -3513,9 +3506,11 @@ function restoreUnderspendFilters() {
     document.getElementById("usStatusPaused").checked = saved.status.includes("PAUSED");
     document.getElementById("usStatusRemoved").checked = saved.status.includes("REMOVED");
   }
-  const excluded = new Set(saved.excludedAccounts || []);
-  document.querySelectorAll(".us-acc-check").forEach(c => { c.checked = !excluded.has(c.value); });
-  underspendState.filterAccounts = new Set(Array.from(document.querySelectorAll(".us-acc-check")).filter(c => c.checked).map(c => c.value));
+  const sel = document.getElementById("usAccountSelect");
+  if (saved.account && [...sel.options].some(o => o.value === saved.account)) {
+    underspendState.selectedAccount = saved.account;
+    sel.value = saved.account;
+  }
 }
 
 async function loadUnderspend(force) {
@@ -3530,7 +3525,7 @@ async function loadUnderspend(force) {
   document.getElementById("usTable").hidden = true;
 
   if (!ACCOUNTS.length) { loading.hidden = true; document.getElementById("usEmpty").hidden = false; return; }
-  if (!document.getElementById("usAccountChecks").children.length) { buildUnderspendAccountChecks(); restoreUnderspendFilters(); }
+  if (!document.getElementById("usAccountSelect").options.length) { buildUnderspendAccountSelect(); restoreUnderspendFilters(); }
 
   const rows = [], errors = [];
   await mapLimit(ACCOUNTS, 4, async (a) => {
@@ -3565,7 +3560,7 @@ function renderUnderspendTable() {
   const rows = underspendState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
       underspendState.filterStatus.has((r.status || "").toUpperCase()) &&
-      underspendState.filterAccounts.has(r.accountId)
+      (underspendState.selectedAccount === "ALL" || r.accountId === underspendState.selectedAccount)
     )
     .sort((a, b) => {
       const { key, dir } = underspendState.sort, sign = dir === "asc" ? 1 : -1;
@@ -3626,9 +3621,6 @@ function applyUnderspendFilters() {
     document.getElementById("usStatusPaused").checked ? "PAUSED" : null,
     document.getElementById("usStatusRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
-  underspendState.filterAccounts = new Set(
-    Array.from(document.querySelectorAll(".us-acc-check")).filter(c => c.checked).map(c => c.value)
-  );
   document.getElementById("underspendFiltersMenu").hidden = true;
   persistUnderspendFilters();
   updateUnderspendFilterCount();
@@ -3639,20 +3631,15 @@ function resetUnderspendFilters() {
   document.getElementById("usStatusEnabled").checked = true;
   document.getElementById("usStatusPaused").checked = false;
   document.getElementById("usStatusRemoved").checked = false;
-  document.querySelectorAll(".us-acc-check").forEach(c => { c.checked = true; });
   applyUnderspendFilters();
 }
 
 function persistUnderspendFilters() {
-  const allIds = ACCOUNTS.map(a => a.id);
-  const excluded = allIds.filter(id => !underspendState.filterAccounts.has(id));
-  savePageFilters("budgeting", { status: [...underspendState.filterStatus], excludedAccounts: excluded });
+  savePageFilters("budgeting", { status: [...underspendState.filterStatus], account: underspendState.selectedAccount });
 }
 
 function updateUnderspendFilterCount() {
-  const total = document.querySelectorAll(".us-acc-check").length;
-  const accountsNarrowed = total > 0 && underspendState.filterAccounts.size < total;
-  const n = underspendState.filterStatus.size + (accountsNarrowed ? 1 : 0);
+  const n = underspendState.filterStatus.size;
   const el = document.getElementById("usFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
@@ -3669,7 +3656,7 @@ const BID_COLUMNS = [
   { key: "lastAdjusted",    label: "Last Adjusted",               align: "txt", width: 130 },
   { key: "cpaAchieved",     label: "CPA Achieved (Last 14 Days)", align: "num", width: 200 },
 ];
-const biddingState = { rows: [], loaded: false, sort: { key: "account", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), filterAccounts: new Set(), errors: [], columnWidths: {} };
+const biddingState = { rows: [], loaded: false, sort: { key: "account", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), selectedAccount: "ALL", errors: [], columnWidths: {} };
 const CPA_TOOLTIP = "CPA achieved is 20% or more below the campaign's Target CPA.";
 
 function initBidding() {
@@ -3683,14 +3670,25 @@ function initBidding() {
     const fMenu = document.getElementById("biddingFiltersMenu");
     document.getElementById("bidFiltersBtn").addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
-    buildBiddingAccountChecks();
+    buildBiddingAccountSelect();
     restoreBiddingFilters();
+    const sel = document.getElementById("bidAccountSelect");
+    sel.addEventListener("change", () => { biddingState.selectedAccount = sel.value; persistBiddingFilters(); renderBiddingTable(); });
     updateBiddingFilterCount();
   }
   if (!biddingState.loaded) loadBidding(false);
 }
 
-// Restore saved Bidding filter selections (status + excluded accounts).
+// Populate the Account dropdown (All Accounts + one option per account).
+function buildBiddingAccountSelect() {
+  const sel = document.getElementById("bidAccountSelect");
+  if (!sel) return;
+  sel.innerHTML = '<option value="ALL">All Accounts</option>' +
+    ACCOUNTS.map(a => '<option value="' + a.id + '">' + escapeHtml(a.name || a.formatted) + " · " + a.formatted + "</option>").join("");
+  sel.value = biddingState.selectedAccount;
+}
+
+// Restore saved Bidding filter selections (status + selected account).
 function restoreBiddingFilters() {
   const saved = loadPageFilters("bidding");
   if (!saved) return;
@@ -3700,19 +3698,11 @@ function restoreBiddingFilters() {
     document.getElementById("bidStatusPaused").checked = saved.status.includes("PAUSED");
     document.getElementById("bidStatusRemoved").checked = saved.status.includes("REMOVED");
   }
-  const excluded = new Set(saved.excludedAccounts || []);
-  document.querySelectorAll(".bid-acc-check").forEach(c => { c.checked = !excluded.has(c.value); });
-  biddingState.filterAccounts = new Set(Array.from(document.querySelectorAll(".bid-acc-check")).filter(c => c.checked).map(c => c.value));
-}
-
-// Build one checkbox per account (all selected by default) for the Account filter group.
-function buildBiddingAccountChecks() {
-  const host = document.getElementById("bidAccountChecks");
-  if (!host) return;
-  biddingState.filterAccounts = new Set(ACCOUNTS.map(a => a.id));
-  host.innerHTML = ACCOUNTS.map(a =>
-    '<div class="check-row"><input type="checkbox" class="bid-acc-check" value="' + a.id + '" checked id="bidAcc-' + a.id + '" /><label for="bidAcc-' + a.id + '">' + escapeHtml(a.name || a.formatted) + "</label></div>"
-  ).join("");
+  const sel = document.getElementById("bidAccountSelect");
+  if (saved.account && [...sel.options].some(o => o.value === saved.account)) {
+    biddingState.selectedAccount = saved.account;
+    sel.value = saved.account;
+  }
 }
 
 async function loadBidding(force) {
@@ -3727,7 +3717,7 @@ async function loadBidding(force) {
   document.getElementById("bidTable").hidden = true;
 
   if (!ACCOUNTS.length) { loading.hidden = true; document.getElementById("bidEmpty").hidden = false; return; }
-  if (!document.getElementById("bidAccountChecks").children.length) { buildBiddingAccountChecks(); restoreBiddingFilters(); }
+  if (!document.getElementById("bidAccountSelect").options.length) { buildBiddingAccountSelect(); restoreBiddingFilters(); }
 
   const rows = [], errors = [];
   await mapLimit(ACCOUNTS, 4, async (a) => {
@@ -3762,7 +3752,7 @@ function renderBiddingTable() {
   const rows = biddingState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
       biddingState.filterStatus.has((r.status || "").toUpperCase()) &&
-      biddingState.filterAccounts.has(r.accountId)
+      (biddingState.selectedAccount === "ALL" || r.accountId === biddingState.selectedAccount)
     )
     .sort((a, b) => {
       const { key, dir } = biddingState.sort, sign = dir === "asc" ? 1 : -1;
@@ -3817,9 +3807,6 @@ function applyBiddingFilters() {
     document.getElementById("bidStatusPaused").checked ? "PAUSED" : null,
     document.getElementById("bidStatusRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
-  biddingState.filterAccounts = new Set(
-    Array.from(document.querySelectorAll(".bid-acc-check")).filter(c => c.checked).map(c => c.value)
-  );
   document.getElementById("biddingFiltersMenu").hidden = true;
   persistBiddingFilters();
   updateBiddingFilterCount();
@@ -3830,20 +3817,15 @@ function resetBiddingFilters() {
   document.getElementById("bidStatusEnabled").checked = true;
   document.getElementById("bidStatusPaused").checked = false;
   document.getElementById("bidStatusRemoved").checked = false;
-  document.querySelectorAll(".bid-acc-check").forEach(c => { c.checked = true; });
   applyBiddingFilters();
 }
 
 function persistBiddingFilters() {
-  const allIds = ACCOUNTS.map(a => a.id);
-  const excluded = allIds.filter(id => !biddingState.filterAccounts.has(id));
-  savePageFilters("bidding", { status: [...biddingState.filterStatus], excludedAccounts: excluded });
+  savePageFilters("bidding", { status: [...biddingState.filterStatus], account: biddingState.selectedAccount });
 }
 
 function updateBiddingFilterCount() {
-  const total = document.querySelectorAll(".bid-acc-check").length;
-  const accountsNarrowed = total > 0 && biddingState.filterAccounts.size < total;
-  const n = biddingState.filterStatus.size + (accountsNarrowed ? 1 : 0);
+  const n = biddingState.filterStatus.size;
   const el = document.getElementById("bidFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
