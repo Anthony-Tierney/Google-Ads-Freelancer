@@ -1170,6 +1170,8 @@ const ACCOUNT_GROUPS = ["Account", "Performance", "Conversions", "Efficiency", "
 const ACCOUNT_DEFAULT_VISIBLE = ["name","clicks","cost","conversions","convRate","cpa","convValue","roas"];
 
 let ACCOUNTS = [];
+let ACCOUNT_LOGOS = {};
+let logosLoaded = false;
 let GLOBAL_ACCOUNT = localStorage.getItem("globalAccount") || "ALL";
 let signedIn = false;
 
@@ -1759,6 +1761,7 @@ async function init() {
     showApp(data.accounts);
     routeFromHash();
     loadBudgetPacing(false); // background load so the side-nav pace warning is accurate
+    loadLogos(); // background load of account logos for use across pages
   } catch {
     signedIn = false;
     showSignedOut();
@@ -2006,7 +2009,7 @@ function renderTable() {
   }).join("") + "</tr>";
 
   document.getElementById("tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
-    if (c.key === "account") return '<td class="txt" data-col="account">' + escapeHtml(r.account || "") + '</td>';
+    if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.account) + escapeHtml(r.account || "") + '</td>';
     if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + '</td>';
     if (c.type === "status") {
       const s = (r.status || "").toLowerCase();
@@ -2666,23 +2669,21 @@ async function loadAllAccounts() {
   const range = rangeToGAQL(accState.dateRange);
   const rows = [];
   await mapLimit(ACCOUNTS, 4, async (a) => {
-    let row;
     try {
-      const [campData, logoData] = await Promise.all([
-        fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(range), { credentials: "same-origin" }).then(r => r.json()).catch(() => ({})),
-        fetch("/api/logo?customerId=" + encodeURIComponent(a.id), { credentials: "same-origin" }).then(r => r.json()).catch(() => ({})),
-      ]);
-      const campaigns = (campData.campaigns || []).map(withMetrics);
-      row = aggregateCampaigns(campaigns);
+      const res = await fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(range), { credentials: "same-origin" });
+      const data = await res.json().catch(() => ({}));
+      const campaigns = (data.campaigns || []).map(withMetrics);
+      const row = aggregateCampaigns(campaigns);
       row.enabledCount = campaigns.filter(c => (c.status || "").toUpperCase() === "ENABLED").length;
       row.hasEnabled = row.enabledCount > 0;
-      row.logoUrl = logoData.logoUrl || null;
+      row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
+      rows.push(row);
     } catch {
-      row = aggregateCampaigns([]);
-      row.enabledCount = 0; row.hasEnabled = false; row.logoUrl = null;
+      const row = aggregateCampaigns([]);
+      row.enabledCount = 0; row.hasEnabled = false;
+      row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
+      rows.push(row);
     }
-    row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
-    rows.push(row);
   });
 
   accState.rows = rows;
@@ -2714,12 +2715,38 @@ function accSortedFiltered() {
 
 function accTotals(rows) { return aggregateCampaigns(rows); }
 
-// Small account logo with an initials fallback behind it (logo, if any, layers on top).
-function accLogoHtml(r) {
-  const initials = (r.name || "?").trim().split(/\s+/).map(w => w[0] || "").slice(0, 2).join("").toUpperCase() || "?";
+// Shared account-logo cache (id -> url|null), fetched once in the background after login.
+async function loadLogos() {
+  if (logosLoaded || !ACCOUNTS.length) return;
+  logosLoaded = true;
+  await mapLimit(ACCOUNTS, 4, async (a) => {
+    try {
+      const data = await fetch("/api/logo?customerId=" + encodeURIComponent(a.id), { credentials: "same-origin" }).then(r => r.json()).catch(() => ({}));
+      ACCOUNT_LOGOS[a.id] = data.logoUrl || null;
+    } catch { ACCOUNT_LOGOS[a.id] = null; }
+  });
+  refreshLogosInView();
+}
+
+// Small account logo with an initials fallback layered behind (logo, if any, on top).
+function logoHtml(accountId, name) {
+  const url = ACCOUNT_LOGOS[accountId] || null;
+  const initials = (name || "?").trim().split(/\s+/).map(w => w[0] || "").slice(0, 2).join("").toUpperCase() || "?";
   const fallback = '<span class="acc-logo-fallback">' + escapeHtml(initials) + "</span>";
-  const img = r.logoUrl ? '<img class="acc-logo-img" src="' + escapeHtml(r.logoUrl) + '" alt="" loading="lazy" onerror="this.remove()">' : "";
+  const img = url ? '<img class="acc-logo-img" src="' + escapeHtml(url) + '" alt="" loading="lazy" onerror="this.remove()">' : "";
   return '<span class="acc-logo-wrap">' + fallback + img + "</span>";
+}
+
+// Once logos arrive, re-render whichever account-bearing view is currently showing.
+function refreshLogosInView() {
+  const page = currentHashPage();
+  if (page === "allaccounts" && accState.rows && accState.rows.length) renderAccountsTable();
+  else if (page === "budgetpacing" && bpState.rows && bpState.rows.length) renderBudgetPacing();
+  else if (page === "dashboard" && state.campaigns && state.campaigns.length) renderTable();
+  else if (page === "underspend" && underspendState.loaded) renderUnderspendTable();
+  else if (page === "bidding" && biddingState.loaded) renderBiddingTable();
+  else if (page === "assets" && assetsState.rows && assetsState.rows.length) renderAssetsTable();
+  else if (page === "audit" && auditState.rows && auditState.rows.length) renderAuditTable();
 }
 
 function renderAccountsTable() {
@@ -2738,7 +2765,7 @@ function renderAccountsTable() {
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
   document.getElementById("acc-tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
-    if (c.key === "name") return '<td class="txt name" data-col="name">' + accLogoHtml(r) + escapeHtml(r.name) + "</td>";
+    if (c.key === "name") return '<td class="txt name" data-col="name">' + logoHtml(r.id, r.name) + escapeHtml(r.name) + "</td>";
     const cls = c.align === "num" ? "num tabnum" : "txt";
     return '<td class="' + cls + '" data-col="' + c.key + '">' + formatCell(c.type, r[c.key]) + "</td>";
   }).join("") + "</tr>").join("");
@@ -2894,11 +2921,11 @@ function renderAuditTable() {
 
   document.getElementById("aud-tbody").innerHTML = auditState.rows.map(r => {
     if (r.loading) {
-      return "<tr><td data-col='account'><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></td>" +
+      return "<tr><td data-col='account'><div style='display:flex;align-items:center;gap:9px'>" + logoHtml(r.id, r.name) + "<div><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></div></div></td>" +
         "<td colspan='3'><span class='aud-spinner'></span> <span style='color:var(--muted)'>Checking…</span></td></tr>";
     }
     if (r.error) {
-      return "<tr><td data-col='account'><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></td>" +
+      return "<tr><td data-col='account'><div style='display:flex;align-items:center;gap:9px'>" + logoHtml(r.id, r.name) + "<div><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></div></div></td>" +
         "<td data-col='status'>" + statusPill(r.accountStatus) + "</td><td colspan='2' style='color:var(--muted)'>Couldn't audit: " + escapeHtml(r.error) + "</td></tr>";
     }
     const flags = [];
@@ -2917,7 +2944,7 @@ function renderAuditTable() {
       details = "<span style='color:var(--muted)'>—</span>";
     }
 
-    return "<tr><td data-col='account'><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></td>" +
+    return "<tr><td data-col='account'><div style='display:flex;align-items:center;gap:9px'>" + logoHtml(r.id, r.name) + "<div><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></div></div></td>" +
       "<td data-col='status'>" + statusPill(r.accountStatus) + "</td>" +
       "<td data-col='flags'>" + flags.join(" ") + "</td>" +
       "<td data-col='details'>" + details + "</td></tr>";
@@ -3143,7 +3170,7 @@ function renderBudgetPacing() {
 
     return '<div class="bp-card">' +
         '<div class="bp-card-head">' +
-          '<div class="bp-acct"><strong>' + escapeHtml(r.name) + '</strong><span class="sub">' + escapeHtml(r.formatted) + '</span></div>' +
+          '<div style="display:flex;align-items:center;gap:10px">' + logoHtml(r.id, r.name) + '<div class="bp-acct"><strong>' + escapeHtml(r.name) + '</strong><span class="sub">' + escapeHtml(r.formatted) + '</span></div></div>' +
           budgetControl +
         '</div>' +
         bar +
@@ -3249,7 +3276,7 @@ function renderInactiveAccounts(inactive) {
   if (!inactive.length) { el.hidden = true; el.innerHTML = ""; return; }
   el.hidden = false;
   const rows = inactive.slice().sort((a, b) => (a.name || "").localeCompare(b.name || "")).map(r =>
-    '<tr><td><strong>' + escapeHtml(r.name) + '</strong></td><td class="sub">' + escapeHtml(r.formatted) + '</td><td class="num">' + fmtCurrency(r.spend) + '</td></tr>'
+    '<tr><td><div style="display:flex;align-items:center;gap:9px">' + logoHtml(r.id, r.name) + '<strong>' + escapeHtml(r.name) + '</strong></div></td><td class="sub">' + escapeHtml(r.formatted) + '</td><td class="num">' + fmtCurrency(r.spend) + '</td></tr>'
   ).join("");
   el.innerHTML =
     '<div class="bp-inactive-head"><h2>Inactive accounts (' + inactive.length + ')</h2>' +
@@ -3419,7 +3446,7 @@ function renderAssetsTable() {
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
   document.getElementById("assets-tbody").innerHTML = rows.map(r => "<tr>" + cols.map(c => {
-    if (c.key === "account") return '<td class="txt" data-col="account">' + escapeHtml(r.accountName || "") + "</td>";
+    if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
     if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
     if (c.type === "status") {
       const s = (r.status || "").toLowerCase();
@@ -3596,7 +3623,7 @@ function renderUnderspendTable() {
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
   document.getElementById("us-tbody").innerHTML = rows.map(r => "<tr>" + US_COLUMNS.map(c => {
-    if (c.key === "account") return '<td class="txt" data-col="account">' + escapeHtml(r.accountName || "") + "</td>";
+    if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
     if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
     if (c.key === "status") { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<td class="txt" data-col="status"><span class="pill ' + cls + '">' + titleCase(r.status) + "</span></td>"; }
     if (c.key === "type") return '<td class="txt" data-col="type">' + titleCase((r.type || "").replace(/_/g, " ")) + "</td>";
@@ -3766,7 +3793,7 @@ function renderBiddingTable() {
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
   document.getElementById("bid-tbody").innerHTML = rows.map(r => "<tr>" + BID_COLUMNS.map(c => {
-    if (c.key === "account") return '<td class="txt" data-col="account">' + escapeHtml(r.accountName || "") + "</td>";
+    if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
     if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
     if (c.key === "type") return '<td class="txt" data-col="type">' + titleCase((r.type || "").replace(/_/g, " ")) + "</td>";
     if (c.key === "biddingStrategy") return '<td class="txt" data-col="biddingStrategy">' + titleCase((r.biddingStrategy || "").replace(/_/g, " ")) + "</td>";
