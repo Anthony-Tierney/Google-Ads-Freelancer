@@ -37,6 +37,8 @@ export async function onRequestGet(context) {
         id,
         name: r.campaign?.name,
         status: r.campaign?.status,
+        businessLogo: 0,
+        businessName: 0,
         sitelinks: 0,
         landscape: 0,
         square: 0,
@@ -103,6 +105,43 @@ export async function onRequestGet(context) {
     });
   } catch (e) {
     assetError = (e && e.message) ? e.message : "Could not load assets";
+  }
+
+  // 3) Business name + logo assets — at the campaign level and (for Performance Max /
+  //    Demand Gen) the asset-group level. Counted per campaign, queried separately so a
+  //    failure here doesn't wipe the asset counts above.
+  try {
+    const [campBiz, agBiz] = await Promise.allSettled([
+      adsRequest(env, accessToken, `customers/${cleanId}/googleAds:search`, {
+        query: `SELECT campaign.id, campaign_asset.field_type, campaign_asset.status FROM campaign_asset WHERE campaign_asset.status = 'ENABLED' AND campaign_asset.field_type IN ('BUSINESS_NAME','BUSINESS_LOGO') AND campaign.status != 'REMOVED'`,
+      }),
+      adsRequest(env, accessToken, `customers/${cleanId}/googleAds:search`, {
+        query: `SELECT asset_group.campaign, asset_group_asset.field_type, asset_group_asset.status FROM asset_group_asset WHERE asset_group_asset.status = 'ENABLED' AND asset_group_asset.field_type IN ('BUSINESS_NAME','BUSINESS_LOGO')`,
+      }),
+    ]);
+
+    const bump = (c, ft) => {
+      if (ft === "BUSINESS_NAME") c.businessName++;
+      else if (ft === "BUSINESS_LOGO") c.businessLogo++;
+    };
+    if (campBiz.status === "fulfilled") {
+      (campBiz.value.results || []).forEach((r) => {
+        const c = campaigns[String(r.campaign?.id)];
+        if (c) bump(c, r.campaignAsset?.fieldType);
+      });
+    }
+    if (agBiz.status === "fulfilled") {
+      (agBiz.value.results || []).forEach((r) => {
+        const cid = (r.assetGroup?.campaign || "").split("/").pop();
+        const c = campaigns[cid];
+        if (c) bump(c, r.assetGroupAsset?.fieldType);
+      });
+    }
+    if (!assetError && campBiz.status !== "fulfilled" && agBiz.status !== "fulfilled") {
+      assetError = (campBiz.reason && campBiz.reason.message) ? campBiz.reason.message : "Could not load business assets";
+    }
+  } catch (e) {
+    if (!assetError) assetError = (e && e.message) ? e.message : "Could not load business assets";
   }
 
   return json({ campaigns: Object.values(campaigns), assetError });
