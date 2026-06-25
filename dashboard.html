@@ -86,6 +86,10 @@
   .wordmark .mark { font-weight: 650; letter-spacing: -.02em; font-size: 15px; }
   .wordmark .mark b { color: var(--accent); }
   .wordmark .sub { color: var(--faint); font-size: 12.5px; }
+  .topbar-account { margin: 0 !important; }
+  .topbar-account > div { display: flex; align-items: center; gap: 8px; }
+  .topbar-account .field-label { margin: 0; white-space: nowrap; }
+  .topbar-account select { min-width: 230px; }
   .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
   .theme-switch { background: none; border: none; padding: 0; cursor: pointer; display: inline-flex; }
   .ts-track {
@@ -439,9 +443,11 @@
 
   <div class="main-content">
     <header class="topbar">
-      <div class="wordmark">
-        <span class="mark">Campaign<b>·</b>Reporting</span>
-        <span class="sub">Google Ads</span>
+      <div class="controls-row account topbar-account" id="globalAccountWrap" hidden>
+        <div>
+          <label class="field-label" for="globalAccountSelect">Account</label>
+          <select id="globalAccountSelect"></select>
+        </div>
       </div>
       <div class="right">
         <button class="theme-switch" id="themeSwitch" onclick="toggleTheme()" role="switch" aria-checked="false" title="Toggle light / dark mode">
@@ -473,13 +479,6 @@
         </section>
 
         <section id="signedIn" hidden>
-          <div class="controls-row account">
-            <div>
-              <label class="field-label" for="accountSelect">Account</label>
-              <select id="accountSelect"></select>
-            </div>
-          </div>
-
           <div class="controls-row">
             <div>
               <label class="field-label" for="dateSelect">Date range</label>
@@ -835,10 +834,6 @@
         <section id="asSignedIn" hidden>
           <div class="controls-row account">
             <div>
-              <label class="field-label" for="assetsAccountSelect">Account</label>
-              <select id="assetsAccountSelect"></select>
-            </div>
-            <div>
               <label class="field-label">&nbsp;</label>
               <input type="text" id="assetsSearch" class="filter-input" placeholder="Search campaigns…" style="width:220px" oninput="renderAssetsTable()" />
             </div>
@@ -936,10 +931,6 @@
         <section id="usSignedIn" hidden>
           <div class="controls-row account">
             <div>
-              <label class="field-label" for="usAccountSelect">Account</label>
-              <select id="usAccountSelect"></select>
-            </div>
-            <div>
               <label class="field-label">&nbsp;</label>
               <input type="text" id="usSearch" class="filter-input" placeholder="Search campaigns…" style="width:240px" oninput="renderUnderspendTable()" />
             </div>
@@ -1001,10 +992,6 @@
 
         <section id="bidSignedIn" hidden>
           <div class="controls-row account">
-            <div>
-              <label class="field-label" for="bidAccountSelect">Account</label>
-              <select id="bidAccountSelect"></select>
-            </div>
             <div>
               <label class="field-label">&nbsp;</label>
               <input type="text" id="bidSearch" class="filter-input" placeholder="Search campaigns…" style="width:240px" oninput="renderBiddingTable()" />
@@ -1180,6 +1167,7 @@ const ACCOUNT_GROUPS = ["Account", "Performance", "Conversions", "Efficiency", "
 const ACCOUNT_DEFAULT_VISIBLE = ["name","clicks","cost","conversions","convRate","cpa","convValue","roas"];
 
 let ACCOUNTS = [];
+let GLOBAL_ACCOUNT = localStorage.getItem("globalAccount") || "ALL";
 let signedIn = false;
 
 const accState = {
@@ -1367,8 +1355,7 @@ function onDateRangeChange() {
     state.dateRange = map[val];
     state.currentPage = 1;
     if (state.compareEnabled) updateCompareUI();
-    const sel = document.getElementById("accountSelect");
-    if (sel.value) loadCampaigns(sel.value);
+    loadCampaigns();
   }
 }
 
@@ -1468,7 +1455,6 @@ function cancelCustomDate() {
 function applyCustomDate() {
   const from = formatDateForGAQL(state.calendarFromDate);
   const to = formatDateForGAQL(state.calendarToDate);
-  const sel = document.getElementById("accountSelect");
 
   if (state.calendarTarget === "compare") {
     state.compareCustom = { from, to };
@@ -1477,7 +1463,7 @@ function applyCustomDate() {
     closeCustomDateModal();
     saveFilters();
     updateCompareUI();
-    if (sel.value) loadCampaigns(sel.value);
+    loadCampaigns();
     return;
   }
 
@@ -1486,7 +1472,7 @@ function applyCustomDate() {
   closeCustomDateModal();
   syncDateSelect();
   if (state.compareEnabled) updateCompareUI();
-  if (sel.value) loadCampaigns(sel.value);
+  loadCampaigns();
 }
 
 function toggleFilterGroup(id, event) {
@@ -1712,12 +1698,39 @@ function showPage(page) {
 function routeFromHash() {
   const page = currentHashPage();
   showPage(page);
-  if (page === "allaccounts") initAllAccounts();
+  // The global account selector drives only the Campaigns + Audit menu pages.
+  const usesGlobal = signedIn && page !== "allaccounts" && page !== "budgetpacing";
+  document.getElementById("globalAccountWrap").hidden = !usesGlobal;
+  if (page === "dashboard") initDashboard();
+  else if (page === "allaccounts") initAllAccounts();
   else if (page === "audit") initAudit();
   else if (page === "budgetpacing") initBudgetPacing();
   else if (page === "assets") initAssets();
   else if (page === "underspend") initUnderspend();
   else if (page === "bidding") initBidding();
+}
+
+function initDashboard() {
+  document.getElementById("signedOut").hidden = signedIn;
+  document.getElementById("signedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  if (state.loadedAccount !== GLOBAL_ACCOUNT) loadCampaigns();
+}
+
+// Global account selection changed — refresh whatever the user is currently looking at,
+// and mark account-dependent pages stale so they refetch when next opened.
+function onGlobalAccountChange(val) {
+  GLOBAL_ACCOUNT = val;
+  try { localStorage.setItem("globalAccount", val); } catch {}
+  state.loadedAccount = "__stale__";
+  assetsState.loadedAccount = "__stale__";
+  auditState.loaded = false;
+  const page = currentHashPage();
+  if (page === "dashboard") initDashboard();
+  else if (page === "audit") initAudit();
+  else if (page === "assets") initAssets();
+  else if (page === "underspend") { if (underspendState.loaded) renderUnderspendTable(); else initUnderspend(); }
+  else if (page === "bidding") { if (biddingState.loaded) renderBiddingTable(); else initBidding(); }
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {
@@ -1771,23 +1784,13 @@ function showApp(accounts) {
   renderViewsLabel();
   updateCompareUI();
 
-  const sel = document.getElementById("accountSelect");
-  sel.innerHTML = '<option value="">Select an account…</option>' +
+  // Global top-bar account selector — drives Campaigns + Audit menu pages.
+  const gsel = document.getElementById("globalAccountSelect");
+  gsel.innerHTML = '<option value="ALL">All Accounts</option>' +
     accounts.map(a => '<option value="' + a.id + '">' + escapeHtml(a.name || a.formatted) + ' · ' + a.formatted + '</option>').join("");
-  
-  if (state.lastAccount) {
-    sel.value = state.lastAccount;
-    loadCampaigns(state.lastAccount);
-  }
-  
-  sel.addEventListener("change", () => { 
-    if (sel.value) { 
-      state.lastAccount = sel.value;
-      localStorage.setItem("lastSelectedAccount", sel.value);
-      state.currentPage = 1; 
-      loadCampaigns(sel.value); 
-    } 
-  });
+  if (![...gsel.options].some(o => o.value === GLOBAL_ACCOUNT)) GLOBAL_ACCOUNT = "ALL";
+  gsel.value = GLOBAL_ACCOUNT;
+  if (!gsel.dataset.wired) { gsel.dataset.wired = "1"; gsel.addEventListener("change", () => onGlobalAccountChange(gsel.value)); }
 
   document.getElementById("pageSize").addEventListener("change", e => { state.pageSize = parseInt(e.target.value); state.currentPage = 1; saveViewState(); renderTable(); });
   document.getElementById("filtersBtn").addEventListener("click", e => { e.stopPropagation(); closeAllMenus(); document.getElementById("filtersMenu").hidden = !document.getElementById("filtersMenu").hidden; });
@@ -1804,11 +1807,11 @@ function showApp(accounts) {
     if (mode === "off") {
       state.compareEnabled = false; state.compareMode = "previous";
       saveFilters(); updateCompareUI();
-      const a = document.getElementById("accountSelect"); if (a.value) loadCampaigns(a.value);
+      loadCampaigns();
     } else if (mode === "previous") {
       state.compareEnabled = true; state.compareMode = "previous";
       saveFilters(); updateCompareUI();
-      const a = document.getElementById("accountSelect"); if (a.value) loadCampaigns(a.value);
+      loadCampaigns();
     } else if (mode === "custom") {
       openCompareCustom();
     }
@@ -1838,7 +1841,9 @@ function closeAllMenus() {
   });
 }
 
-async function loadCampaigns(customerId) {
+async function loadCampaigns() {
+  const account = GLOBAL_ACCOUNT;
+  state.loadedAccount = account;
   document.getElementById("loading").hidden = false;
   document.getElementById("prompt").hidden = true;
   document.getElementById("error").hidden = true;
@@ -1846,35 +1851,56 @@ async function loadCampaigns(customerId) {
   document.getElementById("table").hidden = true;
   document.getElementById("pagination").hidden = true;
 
-  try {
-    const res = await fetch("/api/campaigns?customerId=" + encodeURIComponent(customerId) + "&dateRange=" + encodeURIComponent(getDateRange()), { credentials: "same-origin" });
+  const dateRange = getDateRange();
+  const cmpRange = state.compareEnabled ? getCompareDateRange() : null;
+
+  // Fetch one account's campaigns (+ optional comparison period), tagged with account name.
+  const fetchAccount = async (a) => {
+    const res = await fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(dateRange), { credentials: "same-origin" });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.error) {
-      document.getElementById("loading").hidden = true;
-      document.getElementById("error").hidden = false;
-      document.getElementById("error").innerHTML = '<div class="big">Couldn\'t load campaigns</div>' + escapeHtml(data.error || ("Request failed"));
-      return;
-    }
-    state.campaigns = (data.campaigns || []).map(withMetrics);
-    if (state.campaigns.length === 0) {
-      document.getElementById("loading").hidden = true;
-      document.getElementById("empty").hidden = false;
-      return;
-    }
-
-    // Period-over-period comparison: fetch the comparison period and match by campaign id
-    if (state.compareEnabled) {
+    if (!res.ok || data.error) throw new Error(data.error || "Request failed");
+    const rows = (data.campaigns || []).map(withMetrics);
+    rows.forEach(c => { c.account = a.name || a.formatted; c.accountId = a.id; });
+    let prevById = {};
+    if (cmpRange) {
       try {
-        const res2 = await fetch("/api/campaigns?customerId=" + encodeURIComponent(customerId) + "&dateRange=" + encodeURIComponent(getCompareDateRange()), { credentials: "same-origin" });
+        const res2 = await fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(cmpRange), { credentials: "same-origin" });
         const prevData = await res2.json().catch(() => ({}));
-        const prevById = {};
         (prevData.campaigns || []).map(withMetrics).forEach(c => { prevById[c.id] = c; });
-        state.campaigns.forEach(c => { c._prev = prevById[c.id] || null; });
-      } catch { state.campaigns.forEach(c => { c._prev = null; }); }
+      } catch {}
+    }
+    rows.forEach(c => { c._prev = cmpRange ? (prevById[c.id] || null) : null; });
+    return rows;
+  };
+
+  try {
+    let campaigns = [];
+    if (account === "ALL") {
+      if (!ACCOUNTS.length) { document.getElementById("loading").hidden = true; document.getElementById("empty").hidden = false; return; }
+      const errors = [];
+      const chunks = await mapLimit(ACCOUNTS, 4, async (a) => {
+        try { return await fetchAccount(a); } catch (e) { errors.push((a.name || a.id) + ": " + e.message); return []; }
+      });
+      campaigns = chunks.flat();
+      if (!campaigns.length) {
+        document.getElementById("loading").hidden = true;
+        if (errors.length) { document.getElementById("error").hidden = false; document.getElementById("error").innerHTML = '<div class="big">Couldn\'t load campaigns</div>' + escapeHtml(errors.slice(0, 3).join(" · ")); }
+        else document.getElementById("empty").hidden = false;
+        return;
+      }
     } else {
-      state.campaigns.forEach(c => { c._prev = null; });
+      const a = ACCOUNTS.find(x => x.id === account) || { id: account, name: "", formatted: account };
+      try { campaigns = await fetchAccount(a); }
+      catch (e) {
+        document.getElementById("loading").hidden = true;
+        document.getElementById("error").hidden = false;
+        document.getElementById("error").innerHTML = '<div class="big">Couldn\'t load campaigns</div>' + escapeHtml(e.message);
+        return;
+      }
+      if (!campaigns.length) { document.getElementById("loading").hidden = true; document.getElementById("empty").hidden = false; return; }
     }
 
+    state.campaigns = campaigns;
     document.getElementById("loading").hidden = true;
     document.getElementById("table").hidden = false;
     document.getElementById("pagination").hidden = false;
@@ -1882,15 +1908,20 @@ async function loadCampaigns(customerId) {
   } catch (e) {
     document.getElementById("loading").hidden = true;
     document.getElementById("error").hidden = false;
+    document.getElementById("error").innerHTML = '<div class="big">Couldn\'t load campaigns</div>' + escapeHtml(e.message || "Request failed");
   }
 }
 
-function shownColumns() { return COLUMNS.filter(c => state.visible.has(c.key)); }
+const ACCOUNT_COL = { key: "account", label: "Account", type: "text", align: "txt", locked: true, group: "Settings" };
+function shownColumns() {
+  const base = COLUMNS.filter(c => state.visible.has(c.key));
+  return GLOBAL_ACCOUNT === "ALL" ? [ACCOUNT_COL, ...base] : base;
+}
 
 function sortedAndFiltered() {
   const nameQ = state.filterName.toLowerCase();
   return state.campaigns.filter(c => {
-    const nameMatch = (c.name || "").toLowerCase().includes(nameQ);
+    const nameMatch = (c.name || "").toLowerCase().includes(nameQ) || (GLOBAL_ACCOUNT === "ALL" && (c.account || "").toLowerCase().includes(nameQ));
     const typeMatch = state.filterChannelType.size === 0 || state.filterChannelType.has(c.channelType);
     const statusMatch = state.filterStatus.has(c.status);
     
@@ -1972,6 +2003,7 @@ function renderTable() {
   }).join("") + "</tr>";
 
   document.getElementById("tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
+    if (c.key === "account") return '<td class="txt" data-col="account">' + escapeHtml(r.account || "") + '</td>';
     if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + '</td>';
     if (c.type === "status") {
       const s = (r.status || "").toLowerCase();
@@ -2035,6 +2067,7 @@ function colWidth(c, widths) {
   widths = widths || state.columnWidths;
   if (widths[c.key]) return widths[c.key];
   if (c.key === "name") return 260;
+  if (c.key === "account") return 180;
   const byType = { status: 110, channel: 140, currency: 120, percent: 130, int: 110, decimal: 110, roas: 100 };
   return byType[c.type] || 120;
 }
@@ -2164,7 +2197,7 @@ function showNameInput() {
   const save = () => {
     const name = input.value.trim(); if (!name) return;
     const id = "v_" + Date.now();
-    state.views.push({ id, name, columns: shownColumns().map(c => c.key) });
+    state.views.push({ id, name, columns: shownColumns().filter(c => c.key !== "account").map(c => c.key) });
     state.activeView = id; saveCustomViews(); saveViewState();
     renderViewsLabel(); renderViewsPop();
   };
@@ -2314,8 +2347,7 @@ function exportCSV() {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const sel = document.getElementById("accountSelect");
-  const acctName = (sel.selectedOptions[0] ? sel.selectedOptions[0].text.split(" · ")[0] : "account");
+  const acctName = currentAccountName();
   const slug = s => s.replace(/[^a-z0-9]+/gi, "-").toLowerCase().replace(/^-|-$/g, "");
   a.href = url;
   a.download = "campaigns-" + slug(acctName) + "-" + slug(state.dateRange.label) + ".csv";
@@ -2343,8 +2375,8 @@ async function ensurePdfLibs() {
 }
 
 function currentAccountName() {
-  const sel = document.getElementById("accountSelect");
-  return sel.selectedOptions[0] ? sel.selectedOptions[0].text.split(" · ")[0] : "account";
+  const sel = document.getElementById("globalAccountSelect");
+  return sel && sel.selectedOptions[0] ? sel.selectedOptions[0].text.split(" · ")[0] : "all-accounts";
 }
 
 async function exportPDF() {
@@ -2804,7 +2836,8 @@ function initAudit() {
 async function loadAudit(force) {
   if (auditState.loaded && !force) return;
   auditState.loaded = true;
-  auditState.rows = ACCOUNTS.map(a => ({ id: a.id, name: a.name || a.formatted, formatted: a.formatted, loading: true }));
+  const accts = GLOBAL_ACCOUNT === "ALL" ? ACCOUNTS : ACCOUNTS.filter(a => a.id === GLOBAL_ACCOUNT);
+  auditState.rows = accts.map(a => ({ id: a.id, name: a.name || a.formatted, formatted: a.formatted, loading: true }));
   renderAuditTable();
   renderAuditSummary();
 
@@ -3222,7 +3255,7 @@ const ASSET_COLUMNS = [
   { key: "callouts",  label: "Callouts",            type: "int",    align: "num" },
   { key: "snippets",  label: "Structured Snippets", type: "int",    align: "num" },
 ];
-const assetsState = { rows: [], account: "", sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), columnWidths: {} };
+const assetsState = { rows: [], account: "", loadedAccount: null, sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), columnWidths: {} };
 
 const SITELINK_TOOLTIP = "Your ad can show up to 6 sitelinks on desktop and 8 on mobile. Consider adding more Sitelinks to maximise your ad's real estate on the search results page.";
 const LANDSCAPE_TOOLTIP = "Your ad can show up to 2 landscape images to desktop users. Consider adding more landscape images to maximise your ad's real estate on the search results page.";
@@ -3235,43 +3268,30 @@ function initAssets() {
   document.getElementById("asSignedOut").hidden = signedIn;
   document.getElementById("asSignedIn").hidden = !signedIn;
   if (!signedIn) return;
-  const sel = document.getElementById("assetsAccountSelect");
-  if (sel.dataset.wired) return;
-  sel.dataset.wired = "1";
-  sel.innerHTML = '<option value="ALL">All Accounts</option>' +
-    ACCOUNTS.map(a => '<option value="' + a.id + '">' + escapeHtml(a.name || a.formatted) + ' · ' + a.formatted + '</option>').join("");
-  restoreAssetsFilters();
-  sel.addEventListener("change", () => { assetsState.account = sel.value; persistAssetsFilters(); if (sel.value) loadAssets(sel.value); });
-
-  const fMenu = document.getElementById("assetsFiltersMenu");
-  document.getElementById("assetsFiltersBtn").addEventListener("click", (e) => {
-    e.stopPropagation();
-    const open = fMenu.hidden;
-    closeAllMenus();
-    if (open) fMenu.hidden = false;
-  });
-  fMenu.addEventListener("click", (e) => e.stopPropagation());
-  updateAssetsFilterCount();
-
-  loadAssets(sel.value || "ALL");
+  const fBtn = document.getElementById("assetsFiltersBtn");
+  if (!fBtn.dataset.wired) {
+    fBtn.dataset.wired = "1";
+    const fMenu = document.getElementById("assetsFiltersMenu");
+    fBtn.addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
+    fMenu.addEventListener("click", (e) => e.stopPropagation());
+    restoreAssetsFilters();
+    updateAssetsFilterCount();
+  }
+  if (assetsState.loadedAccount !== GLOBAL_ACCOUNT) loadAssets(GLOBAL_ACCOUNT);
 }
 
-// Restore saved Assets account selection + status filter.
+// Restore saved Assets status filter.
 function restoreAssetsFilters() {
-  const sel = document.getElementById("assetsAccountSelect");
   const saved = loadPageFilters("assets");
-  if (saved && saved.account && [...sel.options].some(o => o.value === saved.account)) sel.value = saved.account;
-  assetsState.account = sel.value || "ALL";
-  if (saved && saved.status) {
-    assetsState.filterStatus = new Set(saved.status);
-    document.getElementById("assetsStatusEnabled").checked = saved.status.includes("ENABLED");
-    document.getElementById("assetsStatusPaused").checked = saved.status.includes("PAUSED");
-    document.getElementById("assetsStatusRemoved").checked = saved.status.includes("REMOVED");
-  }
+  if (!saved || !saved.status) return;
+  assetsState.filterStatus = new Set(saved.status);
+  document.getElementById("assetsStatusEnabled").checked = saved.status.includes("ENABLED");
+  document.getElementById("assetsStatusPaused").checked = saved.status.includes("PAUSED");
+  document.getElementById("assetsStatusRemoved").checked = saved.status.includes("REMOVED");
 }
 
 function persistAssetsFilters() {
-  savePageFilters("assets", { status: [...assetsState.filterStatus], account: assetsState.account });
+  savePageFilters("assets", { status: [...assetsState.filterStatus] });
 }
 
 function applyAssetsFilters() {
@@ -3302,6 +3322,7 @@ function updateAssetsFilterCount() {
 
 async function loadAssets(customerId) {
   assetsState.account = customerId;
+  assetsState.loadedAccount = customerId;
   document.getElementById("asLoading").hidden = false;
   document.getElementById("asPrompt").hidden = true;
   document.getElementById("asError").hidden = true;
@@ -3459,7 +3480,7 @@ const US_COLUMNS = [
   { key: "dailySpend",   label: "Daily Spend<br>(since adjusted)", align: "num", width: 140 },
   { key: "pacing",       label: "Budget Pacing",                   align: "txt", width: 200 },
 ];
-const underspendState = { rows: [], loaded: false, sort: { key: "pacing", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), selectedAccount: "ALL", errors: [], columnWidths: {} };
+const underspendState = { rows: [], loaded: false, sort: { key: "pacing", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), errors: [], columnWidths: {} };
 
 function fmtShortDate(ymd) {
   const d = new Date(ymd + "T00:00:00");
@@ -3478,39 +3499,21 @@ function initUnderspend() {
     const fMenu = document.getElementById("underspendFiltersMenu");
     document.getElementById("usFiltersBtn").addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
-    buildUnderspendAccountSelect();
     restoreUnderspendFilters();
-    const sel = document.getElementById("usAccountSelect");
-    sel.addEventListener("change", () => { underspendState.selectedAccount = sel.value; persistUnderspendFilters(); renderUnderspendTable(); });
     updateUnderspendFilterCount();
   }
   if (!underspendState.loaded) loadUnderspend(false);
+  else renderUnderspendTable();
 }
 
-// Populate the Account dropdown (All Accounts + one option per account).
-function buildUnderspendAccountSelect() {
-  const sel = document.getElementById("usAccountSelect");
-  if (!sel) return;
-  sel.innerHTML = '<option value="ALL">All Accounts</option>' +
-    ACCOUNTS.map(a => '<option value="' + a.id + '">' + escapeHtml(a.name || a.formatted) + " · " + a.formatted + "</option>").join("");
-  sel.value = underspendState.selectedAccount;
-}
-
-// Restore saved Budgeting filter selections (status + selected account).
+// Restore saved Budgeting status filter.
 function restoreUnderspendFilters() {
   const saved = loadPageFilters("budgeting");
-  if (!saved) return;
-  if (saved.status) {
-    underspendState.filterStatus = new Set(saved.status);
-    document.getElementById("usStatusEnabled").checked = saved.status.includes("ENABLED");
-    document.getElementById("usStatusPaused").checked = saved.status.includes("PAUSED");
-    document.getElementById("usStatusRemoved").checked = saved.status.includes("REMOVED");
-  }
-  const sel = document.getElementById("usAccountSelect");
-  if (saved.account && [...sel.options].some(o => o.value === saved.account)) {
-    underspendState.selectedAccount = saved.account;
-    sel.value = saved.account;
-  }
+  if (!saved || !saved.status) return;
+  underspendState.filterStatus = new Set(saved.status);
+  document.getElementById("usStatusEnabled").checked = saved.status.includes("ENABLED");
+  document.getElementById("usStatusPaused").checked = saved.status.includes("PAUSED");
+  document.getElementById("usStatusRemoved").checked = saved.status.includes("REMOVED");
 }
 
 async function loadUnderspend(force) {
@@ -3525,7 +3528,6 @@ async function loadUnderspend(force) {
   document.getElementById("usTable").hidden = true;
 
   if (!ACCOUNTS.length) { loading.hidden = true; document.getElementById("usEmpty").hidden = false; return; }
-  if (!document.getElementById("usAccountSelect").options.length) { buildUnderspendAccountSelect(); restoreUnderspendFilters(); }
 
   const rows = [], errors = [];
   await mapLimit(ACCOUNTS, 4, async (a) => {
@@ -3560,7 +3562,7 @@ function renderUnderspendTable() {
   const rows = underspendState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
       underspendState.filterStatus.has((r.status || "").toUpperCase()) &&
-      (underspendState.selectedAccount === "ALL" || r.accountId === underspendState.selectedAccount)
+      (GLOBAL_ACCOUNT === "ALL" || r.accountId === GLOBAL_ACCOUNT)
     )
     .sort((a, b) => {
       const { key, dir } = underspendState.sort, sign = dir === "asc" ? 1 : -1;
@@ -3635,7 +3637,7 @@ function resetUnderspendFilters() {
 }
 
 function persistUnderspendFilters() {
-  savePageFilters("budgeting", { status: [...underspendState.filterStatus], account: underspendState.selectedAccount });
+  savePageFilters("budgeting", { status: [...underspendState.filterStatus] });
 }
 
 function updateUnderspendFilterCount() {
@@ -3656,7 +3658,7 @@ const BID_COLUMNS = [
   { key: "lastAdjusted",    label: "Last Adjusted",               align: "txt", width: 130 },
   { key: "cpaAchieved",     label: "CPA Achieved (Last 14 Days)", align: "num", width: 200 },
 ];
-const biddingState = { rows: [], loaded: false, sort: { key: "account", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), selectedAccount: "ALL", errors: [], columnWidths: {} };
+const biddingState = { rows: [], loaded: false, sort: { key: "account", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), errors: [], columnWidths: {} };
 const CPA_TOOLTIP = "CPA achieved is 20% or more below the campaign's Target CPA.";
 
 function initBidding() {
@@ -3670,39 +3672,21 @@ function initBidding() {
     const fMenu = document.getElementById("biddingFiltersMenu");
     document.getElementById("bidFiltersBtn").addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
-    buildBiddingAccountSelect();
     restoreBiddingFilters();
-    const sel = document.getElementById("bidAccountSelect");
-    sel.addEventListener("change", () => { biddingState.selectedAccount = sel.value; persistBiddingFilters(); renderBiddingTable(); });
     updateBiddingFilterCount();
   }
   if (!biddingState.loaded) loadBidding(false);
+  else renderBiddingTable();
 }
 
-// Populate the Account dropdown (All Accounts + one option per account).
-function buildBiddingAccountSelect() {
-  const sel = document.getElementById("bidAccountSelect");
-  if (!sel) return;
-  sel.innerHTML = '<option value="ALL">All Accounts</option>' +
-    ACCOUNTS.map(a => '<option value="' + a.id + '">' + escapeHtml(a.name || a.formatted) + " · " + a.formatted + "</option>").join("");
-  sel.value = biddingState.selectedAccount;
-}
-
-// Restore saved Bidding filter selections (status + selected account).
+// Restore saved Bidding status filter.
 function restoreBiddingFilters() {
   const saved = loadPageFilters("bidding");
-  if (!saved) return;
-  if (saved.status) {
-    biddingState.filterStatus = new Set(saved.status);
-    document.getElementById("bidStatusEnabled").checked = saved.status.includes("ENABLED");
-    document.getElementById("bidStatusPaused").checked = saved.status.includes("PAUSED");
-    document.getElementById("bidStatusRemoved").checked = saved.status.includes("REMOVED");
-  }
-  const sel = document.getElementById("bidAccountSelect");
-  if (saved.account && [...sel.options].some(o => o.value === saved.account)) {
-    biddingState.selectedAccount = saved.account;
-    sel.value = saved.account;
-  }
+  if (!saved || !saved.status) return;
+  biddingState.filterStatus = new Set(saved.status);
+  document.getElementById("bidStatusEnabled").checked = saved.status.includes("ENABLED");
+  document.getElementById("bidStatusPaused").checked = saved.status.includes("PAUSED");
+  document.getElementById("bidStatusRemoved").checked = saved.status.includes("REMOVED");
 }
 
 async function loadBidding(force) {
@@ -3717,7 +3701,6 @@ async function loadBidding(force) {
   document.getElementById("bidTable").hidden = true;
 
   if (!ACCOUNTS.length) { loading.hidden = true; document.getElementById("bidEmpty").hidden = false; return; }
-  if (!document.getElementById("bidAccountSelect").options.length) { buildBiddingAccountSelect(); restoreBiddingFilters(); }
 
   const rows = [], errors = [];
   await mapLimit(ACCOUNTS, 4, async (a) => {
@@ -3752,7 +3735,7 @@ function renderBiddingTable() {
   const rows = biddingState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
       biddingState.filterStatus.has((r.status || "").toUpperCase()) &&
-      (biddingState.selectedAccount === "ALL" || r.accountId === biddingState.selectedAccount)
+      (GLOBAL_ACCOUNT === "ALL" || r.accountId === GLOBAL_ACCOUNT)
     )
     .sort((a, b) => {
       const { key, dir } = biddingState.sort, sign = dir === "asc" ? 1 : -1;
@@ -3821,7 +3804,7 @@ function resetBiddingFilters() {
 }
 
 function persistBiddingFilters() {
-  savePageFilters("bidding", { status: [...biddingState.filterStatus], account: biddingState.selectedAccount });
+  savePageFilters("bidding", { status: [...biddingState.filterStatus] });
 }
 
 function updateBiddingFilterCount() {
