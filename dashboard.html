@@ -530,21 +530,6 @@
                 </div>
               </div>
             </div>
-            <div>
-              <label class="field-label">&nbsp;</label>
-              <div class="filters">
-                <button class="filters-btn" id="exportBtn" title="Export current view">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-                  Export
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
-                </button>
-                <div class="pop col-pop" id="exportPop" hidden>
-                  <button class="pop-row" data-fmt="csv">Download CSV</button>
-                  <button class="pop-row" data-fmt="pdf">Download PDF</button>
-                  <button class="pop-row" data-fmt="sheets">Copy for Google Sheets</button>
-                </div>
-              </div>
-            </div>
             <div class="grow"></div>
             <div class="toolset">
               <div class="filters" id="campaignsFilterGroup">
@@ -643,6 +628,18 @@
                     <button onclick="resetFilters()">Reset</button>
                     <button class="apply" onclick="applyFilters()">Apply</button>
                   </div>
+                </div>
+              </div>
+              <div class="filters" id="campaignsExportGroup">
+                <button class="filters-btn" id="exportBtn" title="Export current view">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+                  Export
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+                </button>
+                <div class="pop col-pop" id="exportPop" hidden>
+                  <button class="pop-row" data-fmt="csv">Download CSV</button>
+                  <button class="pop-row" data-fmt="pdf">Download PDF</button>
+                  <button class="pop-row" data-fmt="sheets">Copy for Google Sheets</button>
                 </div>
               </div>
               <div class="filters" id="campaignsViewsGroup">
