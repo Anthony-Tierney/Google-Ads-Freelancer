@@ -981,12 +981,12 @@
             <div id="lpLoading" class="state" hidden><div class="spinner"></div>Loading landing pages…</div>
             <div id="lpPrompt" class="state"><div class="big">Choose an account</div>Select an account above to list its live final URLs.</div>
             <div id="lpError" class="state" hidden></div>
-            <div id="lpEmpty" class="state" hidden><div class="big">No landing pages</div>No live final URLs found in the last 30 days.</div>
+            <div id="lpEmpty" class="state" hidden><div class="big">No landing pages</div>No final URLs found on enabled ads in enabled campaigns.</div>
             <div class="scroll"><table id="lpTable" hidden>
               <colgroup id="lp-colgroup"></colgroup><thead id="lp-thead"></thead><tbody id="lp-tbody"></tbody><tfoot id="lp-tfoot"></tfoot>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Final URLs that served (received impressions) in the last 30 days, grouped by campaign. Clicks, CTR and conversion rate are for that URL over the period. A campaign can appear more than once if its ads point to multiple landing pages.</div>
+          <div class="foot-note" style="margin-top:10px;">Lists the final URLs set on enabled ads within enabled campaigns, whether or not they've served recently. Clicks, CTR and conversion rate are a best-effort overlay for the last 30 days (0 when a URL hasn't served in that window). A campaign appears once per distinct final URL. Asset-based campaign types (Performance Max, Demand Gen) aren't covered by this ad-level rule.</div>
         </section>
       </section>
 
