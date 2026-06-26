@@ -99,6 +99,8 @@
   .topbar-account .field-label { margin: 0; white-space: nowrap; }
   .topbar-account select { min-width: 230px; }
   .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .topbar-refresh { align-items: flex-start; }
+  .topbar-refresh .last-refresh { white-space: nowrap; }
   .theme-switch { background: none; border: none; padding: 0; cursor: pointer; display: inline-flex; }
   .ts-track {
     position: relative; display: inline-flex; align-items: center;
@@ -203,7 +205,7 @@
 
   .filters-menu { width: 320px; padding: 0; max-height: 480px; }
   .filter-group-header { background: var(--line-soft); padding: 8px 12px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
-  .filter-group-header .cat-count { margin-left: auto; background: var(--accent); color: #fff; border-radius: 999px; min-width: 18px; height: 18px; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; line-height: 1; }
+  .filter-group-header .cat-count, .group-header .cat-count { margin-left: auto; background: var(--accent); color: #fff; border-radius: 999px; min-width: 18px; height: 18px; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; line-height: 1; }
   .filter-group-header:hover { background: #f1f5f9; }
   .filter-group-header .toggle { display: inline-block; width: 12px; text-align: center; font-size: 9px; }
   .filter-group-items { padding: 0; }
@@ -465,6 +467,10 @@
           <label class="field-label" for="globalAccountSelect">Account</label>
           <select id="globalAccountSelect"></select>
         </div>
+      </div>
+      <div class="refresh-wrap topbar-refresh" id="topbarRefreshWrap" hidden>
+        <button class="filters-btn" id="topbarRefreshBtn" title="Refresh data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v5h-5"/></svg>Refresh</button>
+        <div class="last-refresh" id="topbarLastRefresh"></div>
       </div>
       <div class="right">
         <button class="theme-switch" id="themeSwitch" onclick="toggleTheme()" role="switch" aria-checked="false" title="Toggle light / dark mode">
@@ -824,7 +830,6 @@
             <h1 style="margin:0;font-size:19px;">Account Audit</h1>
             <span class="foot-note" style="margin:0;">Checks each account for suspension and disapproved or limited ads.</span>
             <div class="grow"></div>
-            <div class="refresh-wrap"><button class="filters-btn" id="audRefreshBtn" title="Re-run audit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v5h-5"/></svg>Re-run</button><div class="last-refresh" id="audLastRefresh"></div></div>
           </div>
 
           <div class="audit-summary" id="auditSummary"></div>
@@ -914,7 +919,6 @@
         <section id="bpSignedIn" hidden>
           <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
             <h1 style="margin:0;font-size:19px;">Budget Pacing</h1>
-            <div class="refresh-wrap" style="margin-left:auto;"><button class="filters-btn" id="bpRefreshBtn" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v5h-5"/></svg>Refresh</button><div class="last-refresh" id="bpLastRefresh"></div></div>
           </div>
           <div class="bp-meta" id="bpMeta">
             <span id="bpPeriodText"></span>
@@ -979,7 +983,6 @@
                 </div>
               </div>
               <button class="filters-btn" id="usExportBtn" title="Export CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
-              <div class="refresh-wrap"><button class="filters-btn" id="usRefreshBtn" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v5h-5"/></svg>Refresh</button><div class="last-refresh" id="usLastRefresh"></div></div>
             </div>
           </div>
 
@@ -1042,7 +1045,6 @@
                 </div>
               </div>
               <button class="filters-btn" id="bidExportBtn" title="Export CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
-              <div class="refresh-wrap"><button class="filters-btn" id="bidRefreshBtn" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v5h-5"/></svg>Refresh</button><div class="last-refresh" id="bidLastRefresh"></div></div>
             </div>
           </div>
 
@@ -1103,13 +1105,32 @@ function loadPageFilters(page) {
   } catch { return null; }
 }
 // Stamp a "Last refresh" caption under a refresh button.
-function setLastRefresh(elId) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  const d = new Date();
+// Per-page "last fetched" timestamps; the topbar caption shows the current page's.
+const pageRefreshTimes = {};
+function setLastRefresh(page) {
+  pageRefreshTimes[page] = new Date();
+  renderTopbarRefresh();
+}
+function renderTopbarRefresh() {
+  const cap = document.getElementById("topbarLastRefresh");
+  if (!cap) return;
+  const d = pageRefreshTimes[currentHashPage()];
+  if (!d) { cap.textContent = ""; return; }
   const date = fmtShortDate(d.toISOString().slice(0, 10));
   const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-  el.textContent = "Last refresh: " + date + ", " + time;
+  cap.textContent = "Last fetched: " + date + ", " + time;
+}
+// Force-reload the data for whichever page is currently showing.
+function globalRefresh() {
+  switch (currentHashPage()) {
+    case "allaccounts": loadAllAccounts(); break;
+    case "budgetpacing": loadBudgetPacing(true); break;
+    case "dashboard": loadCampaigns(); break;
+    case "audit": loadAudit(true); break;
+    case "assets": loadAssets(GLOBAL_ACCOUNT); break;
+    case "underspend": loadUnderspend(true); break;
+    case "bidding": loadBidding(true); break;
+  }
 }
 const TYPE_CHECKBOXES = [
   ["typeSearch", "SEARCH"], ["typeDisplay", "DISPLAY"], ["typeShopping", "SHOPPING"],
@@ -1746,6 +1767,8 @@ function routeFromHash() {
   // The global account selector drives only the Campaigns + Audit menu pages.
   const usesGlobal = signedIn && page !== "allaccounts" && page !== "budgetpacing" && page !== "settings";
   document.getElementById("globalAccountWrap").hidden = !usesGlobal;
+  document.getElementById("topbarRefreshWrap").hidden = !(signedIn && page !== "settings");
+  renderTopbarRefresh();
   if (page === "dashboard") initDashboard();
   else if (page === "allaccounts") initAllAccounts();
   else if (page === "audit") initAudit();
@@ -1837,6 +1860,9 @@ function showApp(accounts) {
   if (![...gsel.options].some(o => o.value === GLOBAL_ACCOUNT)) GLOBAL_ACCOUNT = "ALL";
   gsel.value = GLOBAL_ACCOUNT;
   if (!gsel.dataset.wired) { gsel.dataset.wired = "1"; gsel.addEventListener("change", () => onGlobalAccountChange(gsel.value)); }
+
+  const trBtn = document.getElementById("topbarRefreshBtn");
+  if (!trBtn.dataset.wired) { trBtn.dataset.wired = "1"; trBtn.addEventListener("click", globalRefresh); }
 
   document.getElementById("pageSize").addEventListener("change", e => { state.pageSize = parseInt(e.target.value); state.currentPage = 1; saveViewState(); renderTable(); });
   document.getElementById("filtersBtn").addEventListener("click", e => { e.stopPropagation(); closeAllMenus(); document.getElementById("filtersMenu").hidden = !document.getElementById("filtersMenu").hidden; });
@@ -1951,6 +1977,7 @@ async function loadCampaigns() {
     document.getElementById("table").hidden = false;
     document.getElementById("pagination").hidden = false;
     renderTable();
+    setLastRefresh("dashboard");
   } catch (e) {
     document.getElementById("loading").hidden = true;
     document.getElementById("error").hidden = false;
@@ -2182,8 +2209,10 @@ function renderColsPop() {
     
     const id = "col_group_" + i;
     const isOpen = state.openColGroups.has(id);
+    const activeCount = cols.filter(c => state.visible.has(c.key)).length;
+    const badge = activeCount > 0 ? '<span class="cat-count">' + activeCount + '</span>' : '';
     html += '<div class="group-header" onclick="toggleColGroup(\'' + id + '\', event)">' +
-      '<span class="toggle">' + (isOpen ? '−' : '+') + '</span>' + group + '</div>' +
+      '<span class="toggle">' + (isOpen ? '−' : '+') + '</span>' + group + badge + '</div>' +
       '<div class="group-items" id="' + id + '" ' + (isOpen ? '' : 'hidden') + '>';
     
     cols.forEach(c => {
@@ -2731,6 +2760,7 @@ async function loadAllAccounts() {
   document.getElementById("accTable").hidden = false;
   document.getElementById("accPagination").hidden = false;
   renderAccountsTable();
+  setLastRefresh("allaccounts");
 }
 
 function accShownColumns() { return ACCOUNT_COLUMNS.filter(c => accState.visible.has(c.key)); }
@@ -2908,8 +2938,6 @@ function initAudit() {
   document.getElementById("audSignedOut").hidden = signedIn;
   document.getElementById("audSignedIn").hidden = !signedIn;
   if (!signedIn) return;
-  const btn = document.getElementById("audRefreshBtn");
-  if (!btn.dataset.wired) { btn.dataset.wired = "1"; btn.addEventListener("click", () => loadAudit(true)); }
   if (!auditState.loaded) loadAudit(false);
 }
 
@@ -2937,7 +2965,7 @@ async function loadAudit(force) {
     renderAuditTable();
     renderAuditSummary();
   });
-  setLastRefresh("audLastRefresh");
+  setLastRefresh("audit");
 }
 
 function statusPill(status) {
@@ -3057,8 +3085,6 @@ function initBudgetPacing() {
   document.getElementById("bpSignedOut").hidden = signedIn;
   document.getElementById("bpSignedIn").hidden = !signedIn;
   if (!signedIn) return;
-  const btn = document.getElementById("bpRefreshBtn");
-  if (!btn.dataset.wired) { btn.dataset.wired = "1"; btn.addEventListener("click", () => loadBudgetPacing(true)); }
   if (!bpState.loaded) loadBudgetPacing(false);
 }
 
@@ -3114,7 +3140,7 @@ async function loadBudgetPacing(force) {
   loading.hidden = true;
   document.getElementById("bpCards").hidden = false;
   renderBudgetPacing();
-  setLastRefresh("bpLastRefresh");
+  setLastRefresh("budgetpacing");
 }
 
 const PENCIL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
@@ -3437,6 +3463,7 @@ async function loadAssets(customerId) {
     if (!rows.length) { document.getElementById("asEmpty").hidden = false; return; }
     document.getElementById("assetsTable").hidden = false;
     renderAssetsTable();
+    setLastRefresh("assets");
     return;
   }
 
@@ -3461,6 +3488,7 @@ async function loadAssets(customerId) {
     if (!assetsState.rows.length) { document.getElementById("asEmpty").hidden = false; return; }
     document.getElementById("assetsTable").hidden = false;
     renderAssetsTable();
+    setLastRefresh("assets");
   } catch {
     document.getElementById("asLoading").hidden = true;
     document.getElementById("asError").hidden = false;
@@ -3473,8 +3501,6 @@ function renderAssetsTable() {
   const q = assetsState.search.trim().toLowerCase();
   const inAll = assetsState.account === "ALL";
   const cols = inAll ? [{ key: "account", label: "Account", align: "txt", width: 180 }, ...ASSET_COLUMNS] : ASSET_COLUMNS;
-  assetsState.viewRows = rows;
-  assetsState.viewCols = cols;
   const rows = assetsState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
       assetsState.filterStatus.has((r.status || "").toUpperCase())
@@ -3486,6 +3512,8 @@ function renderAssetsTable() {
       if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
       return ((av || 0) - (bv || 0)) * sign;
     });
+  assetsState.viewRows = rows;
+  assetsState.viewCols = cols;
   const arrow = key => assetsState.sort.key === key ? '<span class="arr">' + (assetsState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
 
   document.getElementById("assets-colgroup").innerHTML = colgroupHtml(cols, assetsState.columnWidths);
@@ -3587,11 +3615,10 @@ function initUnderspend() {
   document.getElementById("usSignedOut").hidden = signedIn;
   document.getElementById("usSignedIn").hidden = !signedIn;
   if (!signedIn) return;
-  const btn = document.getElementById("usRefreshBtn");
-  if (!btn.dataset.wired) {
-    btn.dataset.wired = "1";
-    btn.addEventListener("click", () => loadUnderspend(true));
-    document.getElementById("usExportBtn").addEventListener("click", exportUnderspend);
+  const exp = document.getElementById("usExportBtn");
+  if (!exp.dataset.wired) {
+    exp.dataset.wired = "1";
+    exp.addEventListener("click", exportUnderspend);
     const fMenu = document.getElementById("underspendFiltersMenu");
     document.getElementById("usFiltersBtn").addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
@@ -3639,7 +3666,7 @@ async function loadUnderspend(force) {
   underspendState.rows = rows;
   underspendState.errors = errors;
   loading.hidden = true;
-  setLastRefresh("usLastRefresh");
+  setLastRefresh("underspend");
 
   if (errors.length) {
     const w = document.getElementById("usWarn");
@@ -3838,11 +3865,10 @@ function initBidding() {
   document.getElementById("bidSignedOut").hidden = signedIn;
   document.getElementById("bidSignedIn").hidden = !signedIn;
   if (!signedIn) return;
-  const btn = document.getElementById("bidRefreshBtn");
-  if (!btn.dataset.wired) {
-    btn.dataset.wired = "1";
-    btn.addEventListener("click", () => loadBidding(true));
-    document.getElementById("bidExportBtn").addEventListener("click", exportBidding);
+  const exp = document.getElementById("bidExportBtn");
+  if (!exp.dataset.wired) {
+    exp.dataset.wired = "1";
+    exp.addEventListener("click", exportBidding);
     const fMenu = document.getElementById("biddingFiltersMenu");
     document.getElementById("bidFiltersBtn").addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
@@ -3890,7 +3916,7 @@ async function loadBidding(force) {
   biddingState.rows = rows;
   biddingState.errors = errors;
   loading.hidden = true;
-  setLastRefresh("bidLastRefresh");
+  setLastRefresh("bidding");
 
   if (errors.length) {
     const w = document.getElementById("bidWarn");
