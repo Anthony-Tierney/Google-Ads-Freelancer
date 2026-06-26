@@ -1167,21 +1167,22 @@ function saveDataCache() {
   } catch {}
 }
 function restoreDataCache() {
-  let blob;
-  try { blob = JSON.parse(sessionStorage.getItem(DATA_CACHE_KEY) || "null"); } catch { blob = null; }
-  if (!blob || blob.v !== 1 || !Array.isArray(blob.accounts) || !blob.accounts.length) return false;
-  ACCOUNTS = blob.accounts;
-  ACCOUNT_LOGOS = blob.logos || {};
-  logosLoaded = !!blob.logosLoaded;
-  if (blob.campaigns) { state.campaigns = blob.campaigns.data || []; state.loadedAccount = blob.campaigns.loadedAccount; }
-  if (blob.acc) { accState.rows = blob.acc.rows || []; accState.loaded = !!blob.acc.loaded; if (blob.acc.dateRange) accState.dateRange = blob.acc.dateRange; }
-  if (blob.bp) { bpState.rows = blob.bp.rows || []; bpState.loaded = !!blob.bp.loaded; if (blob.bp.budgets) bpState.budgets = blob.bp.budgets; }
-  if (blob.audit) { auditState.rows = blob.audit.rows || []; auditState.loaded = !!blob.audit.loaded; }
-  if (blob.assets) { assetsState.rows = blob.assets.rows || []; assetsState.account = blob.assets.account || ""; assetsState.loadedAccount = blob.assets.loadedAccount; }
-  if (blob.underspend) { underspendState.rows = blob.underspend.rows || []; underspendState.loaded = !!blob.underspend.loaded; }
-  if (blob.bidding) { biddingState.rows = blob.bidding.rows || []; biddingState.loaded = !!blob.bidding.loaded; }
-  if (blob.refreshTimes) { for (const k in blob.refreshTimes) { if (blob.refreshTimes[k]) pageRefreshTimes[k] = new Date(blob.refreshTimes[k]); } }
-  return true;
+  try {
+    const blob = JSON.parse(sessionStorage.getItem(DATA_CACHE_KEY) || "null");
+    if (!blob || blob.v !== 1 || !Array.isArray(blob.accounts) || !blob.accounts.length) return false;
+    ACCOUNTS = blob.accounts;
+    ACCOUNT_LOGOS = blob.logos || {};
+    logosLoaded = !!blob.logosLoaded;
+    if (blob.campaigns) { state.campaigns = blob.campaigns.data || []; state.loadedAccount = blob.campaigns.loadedAccount; }
+    if (blob.acc) { accState.rows = blob.acc.rows || []; accState.loaded = !!blob.acc.loaded; if (blob.acc.dateRange) accState.dateRange = blob.acc.dateRange; }
+    if (blob.bp) { bpState.rows = blob.bp.rows || []; bpState.loaded = !!blob.bp.loaded; if (blob.bp.budgets) bpState.budgets = blob.bp.budgets; }
+    if (blob.audit) { auditState.rows = blob.audit.rows || []; auditState.loaded = !!blob.audit.loaded; }
+    if (blob.assets) { assetsState.rows = blob.assets.rows || []; assetsState.account = blob.assets.account || ""; assetsState.loadedAccount = blob.assets.loadedAccount; }
+    if (blob.underspend) { underspendState.rows = blob.underspend.rows || []; underspendState.loaded = !!blob.underspend.loaded; }
+    if (blob.bidding) { biddingState.rows = blob.bidding.rows || []; biddingState.loaded = !!blob.bidding.loaded; }
+    if (blob.refreshTimes) { for (const k in blob.refreshTimes) { if (blob.refreshTimes[k]) pageRefreshTimes[k] = new Date(blob.refreshTimes[k]); } }
+    return true;
+  } catch { return false; }
 }
 function renderTopbarRefresh() {
   const cap = document.getElementById("topbarLastRefresh");
@@ -1890,14 +1891,29 @@ init();
 async function init() {
   initTheme();
   showPage(currentHashPage()); // set the visible page immediately to avoid a flash on refresh
-  // A normal browser refresh restores the last session's data from cache — no API call.
-  if (restoreDataCache()) {
-    signedIn = true;
-    showApp(ACCOUNTS);
-    routeFromHash();
-    updateBpNavWarning(); // restore the side-nav pace warning from cached data
-    return;
+
+  // If a data cache exists (i.e. this is a browser refresh within an active session),
+  // confirm the session is still live with a lightweight check that makes NO Google Ads
+  // API call, then restore everything from cache. On any problem we fall through to the
+  // full sign-in flow below, so a stale cache or dead session can never strand the user.
+  let hasCache = false;
+  try { hasCache = !!sessionStorage.getItem(DATA_CACHE_KEY); } catch {}
+  if (hasCache) {
+    try {
+      const sres = await fetch("/api/session", { credentials: "same-origin" });
+      if (sres.ok && restoreDataCache()) {
+        signedIn = true;
+        showApp(ACCOUNTS);
+        routeFromHash();
+        updateBpNavWarning();
+        if (!logosLoaded) loadLogos();
+        return;
+      }
+    } catch {}
+    // Session not valid, or cache unusable — drop the stale cache and sign in normally.
+    try { sessionStorage.removeItem(DATA_CACHE_KEY); } catch {}
   }
+
   try {
     const res = await fetch("/api/accounts", { credentials: "same-origin" });
     const data = await res.json().catch(() => ({}));
