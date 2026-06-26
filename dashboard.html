@@ -61,6 +61,7 @@
   .sidebar {
     width: 200px; background: var(--panel); border-right: 1px solid var(--line);
     padding: 16px 0; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;
+    position: sticky; top: 0; height: 100vh; align-self: flex-start; overflow-y: auto;
   }
   .nav-item {
     display: block; padding: 10px 16px; color: var(--ink); text-decoration: none;
@@ -201,6 +202,7 @@
   .pop[hidden] { display: none; }
 
   .filters-menu { width: 320px; padding: 0; max-height: 480px; }
+  .filter-group-header { background: var(--line-soft); padding: 8px 12px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
   .filter-group-header .cat-count { margin-left: auto; background: var(--accent); color: #fff; border-radius: 999px; min-width: 18px; height: 18px; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; line-height: 1; }
   .filter-group-header:hover { background: #f1f5f9; }
   .filter-group-header .toggle { display: inline-block; width: 12px; text-align: center; font-size: 9px; }
@@ -432,7 +434,7 @@
   @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } * { transition: none !important; } }
   @media (max-width: 640px) {
     body { flex-direction: column; }
-    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); flex-direction: row; padding: 8px; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); flex-direction: row; padding: 8px; position: static; height: auto; overflow: visible; }
     .nav-item { padding: 8px 12px; flex: 1; }
     main { padding: 14px; }
     select { min-width: 0; width: 100%; }
@@ -539,7 +541,7 @@
             </div>
             <div class="grow"></div>
             <div class="toolset">
-              <div class="filters">
+              <div class="filters" id="campaignsFilterGroup">
                 <button class="filters-btn" id="filtersBtn" aria-haspopup="true" title="Filters">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                   <span class="count" id="filterCount" hidden>0</span>
@@ -637,14 +639,14 @@
                   </div>
                 </div>
               </div>
-              <div class="filters">
+              <div class="filters" id="campaignsViewsGroup">
                 <button class="filters-btn" id="viewsBtn" aria-haspopup="true">
                   <span id="viewsLabel">Views</span>
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
                 </button>
                 <div class="pop col-pop" id="viewsPop" hidden></div>
               </div>
-              <div class="filters">
+              <div class="filters" id="campaignsColsGroup">
                 <button class="filters-btn" id="colsBtn" aria-haspopup="true">
                   Columns <span class="count" id="colsCount">0</span>
                 </button>
@@ -742,7 +744,7 @@
             </div>
             <div class="grow"></div>
             <div class="toolset">
-              <div class="filters">
+              <div class="filters" id="accountsFilterGroup">
                 <button class="filters-btn" id="accFiltersBtn" aria-haspopup="true" title="Filters">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                   <span class="count" id="accFilterCount" hidden>0</span>
@@ -766,7 +768,7 @@
                   </div>
                 </div>
               </div>
-              <div class="filters">
+              <div class="filters" id="accountsExportGroup">
                 <button class="filters-btn" id="accExportBtn" title="Export current view">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
                   Export
@@ -778,7 +780,7 @@
                   <button class="pop-row" data-accfmt="sheets">Copy for Google Sheets</button>
                 </div>
               </div>
-              <div class="filters">
+              <div class="filters" id="accountsColsGroup">
                 <button class="filters-btn" id="accColsBtn" aria-haspopup="true">
                   Columns <span class="count" id="accColsCount">0</span>
                 </button>
@@ -854,7 +856,7 @@
             </div>
             <div class="grow"></div>
             <div class="toolset">
-              <div class="filters">
+              <div class="filters" id="assetsFilterGroup">
                 <button class="filters-btn" id="assetsFiltersBtn" aria-haspopup="true" title="Filters">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                   <span class="count" id="assetsFilterCount" hidden>0</span>
@@ -952,7 +954,7 @@
             </div>
             <div class="grow"></div>
             <div class="toolset">
-              <div class="filters">
+              <div class="filters" id="budgetingFilterGroup">
                 <button class="filters-btn" id="usFiltersBtn" aria-haspopup="true" title="Filters">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                   <span class="count" id="usFilterCount" hidden>0</span>
@@ -1015,7 +1017,7 @@
             </div>
             <div class="grow"></div>
             <div class="toolset">
-              <div class="filters">
+              <div class="filters" id="biddingFilterGroup">
                 <button class="filters-btn" id="bidFiltersBtn" aria-haspopup="true" title="Filters">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                   <span class="count" id="bidFilterCount" hidden>0</span>
@@ -3710,7 +3712,10 @@ function pacingLabel(dailySpend, dailyBudget) {
   if (pct >= 120) return { label: "Overspending (low risk)", cls: "pace-low" };
   if (pct >= 90) return { label: "On Track", cls: "pace-ok" };
   const under = 100 - pct;
-  return { label: "Underspending (" + under.toFixed(1) + "%)", cls: under >= 20 ? "pace-high" : "" };
+  let underCls = "";
+  if (under >= 20) underCls = "pace-high";
+  else if (under >= 10) underCls = "pace-low";
+  return { label: "Underspending (" + under.toFixed(1) + "%)", cls: underCls };
 }
 
 // Download an array-of-arrays as a CSV file.
