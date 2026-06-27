@@ -125,6 +125,10 @@
   .cpa-delta { color: var(--muted); font-size: 12px; }
   .lp-link { color: var(--accent); text-decoration: none; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
   .lp-link:hover { text-decoration: underline; }
+  .src-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--line-soft); color: var(--muted); }
+  .src-tag.srcad { background: rgba(67,56,202,.12); color: var(--accent); }
+  .src-tag.srcsitelink { background: rgba(16,185,129,.14); color: #047857; }
+  .src-tag.srcassetgroup { background: rgba(234,88,12,.14); color: #c2410c; }
   .acc-logo-wrap { position: relative; display: inline-block; width: 22px; height: 22px; margin-right: 9px; vertical-align: middle; border-radius: 5px; overflow: hidden; flex: none; }
   .acc-logo-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700; color: var(--muted); background: var(--off-bg); border: 1px solid var(--line); border-radius: 5px; }
   .acc-logo-img { position: absolute; inset: 0; width: 22px; height: 22px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 5px; }
@@ -931,36 +935,8 @@
 
         <section id="lpSignedIn" hidden>
           <div class="controls-row account">
-            <div>
-              <label class="field-label">&nbsp;</label>
-              <input type="text" id="lpSearch" class="filter-input" placeholder="Search campaigns or URLs…" style="width:240px" oninput="renderLandingPagesTable()" />
-            </div>
             <div class="grow"></div>
             <div class="toolset">
-              <div class="filters" id="lpFilterGroup">
-                <button class="filters-btn" id="lpFiltersBtn" aria-haspopup="true" title="Filters">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                  <span class="count" id="lpFilterCount" hidden>0</span>
-                </button>
-                <div class="pop filters-menu" id="lpFiltersMenu" hidden>
-                  <div class="filter-group-header" onclick="toggleFilterGroup('lp-group-status', event)">
-                    <span class="toggle">−</span>Campaign Status
-                  </div>
-                  <div class="filter-group-items" id="lp-group-status">
-                    <div class="filter-section">
-                      <div class="status-checks">
-                        <div class="check-row"><input type="checkbox" id="lpStatusEnabled" checked /><label for="lpStatusEnabled">Enabled</label></div>
-                        <div class="check-row"><input type="checkbox" id="lpStatusPaused" /><label for="lpStatusPaused">Paused</label></div>
-                        <div class="check-row"><input type="checkbox" id="lpStatusRemoved" /><label for="lpStatusRemoved">Removed</label></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="filter-buttons">
-                    <button onclick="resetLpFilters()">Reset</button>
-                    <button class="apply" onclick="applyLpFilters()">Apply</button>
-                  </div>
-                </div>
-              </div>
               <div class="filters" id="lpExportGroup">
                 <button class="filters-btn" id="lpExportBtn" title="Export current view">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
@@ -986,7 +962,7 @@
               <colgroup id="lp-colgroup"></colgroup><thead id="lp-thead"></thead><tbody id="lp-tbody"></tbody><tfoot id="lp-tfoot"></tfoot>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Lists final URLs on enabled ads in enabled ad groups within enabled campaigns (Search, Display, Shopping, Video, App and Demand Gen), plus enabled asset groups in enabled Performance Max campaigns — whether or not a URL has served recently. Clicks, CTR and conversion rate are a best-effort overlay for the last 30 days (0 when a URL hasn't served in that window). A campaign appears once per distinct final URL.</div>
+          <div class="foot-note" style="margin-top:10px;">Final URLs from enabled placements, whether or not they've served recently: ads in enabled ad groups/campaigns (Search, Display, Shopping, Video, App, Demand Gen), enabled asset groups in Performance Max, and enabled account-level sitelinks (shown once as "All Campaigns"). The Source column shows where each URL comes from. Clicks, CTR and conversion rate are a best-effort overlay for the last 30 days (0 when a placement hasn't served in that window); sitelink metrics count interactions with the sitelink, so they aren't directly comparable to ad metrics.</div>
         </section>
       </section>
 
@@ -2092,7 +2068,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpExportPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -3784,67 +3760,31 @@ function assetCellHtml(key, v) {
 /* ============================ Landing Pages page ============================ */
 
 const LP_COLUMNS = [
-  { key: "name",     label: "Campaign",                 align: "txt", width: 220 },
-  { key: "status",   label: "Status",                   align: "txt", width: 110 },
-  { key: "finalUrl", label: "Final URL / Landing Page", align: "txt", width: 380 },
-  { key: "clicks",   label: "Clicks",                   align: "num", width: 100 },
-  { key: "ctr",      label: "CTR",                      align: "num", width: 100 },
+  { key: "name",     label: "Campaign",                 align: "txt", width: 200 },
+  { key: "adGroup",  label: "Ad Group",                 align: "txt", width: 180 },
+  { key: "source",   label: "Source",                   align: "txt", width: 110 },
+  { key: "finalUrl", label: "Final URL / Landing Page", align: "txt", width: 360 },
+  { key: "clicks",   label: "Clicks",                   align: "num", width: 90 },
+  { key: "ctr",      label: "CTR",                      align: "num", width: 90 },
   { key: "convRate", label: "Conv. Rate",               align: "num", width: 110 },
 ];
-const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), columnWidths: {} };
+const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, columnWidths: {} };
 
 function initLandingPages() {
   document.getElementById("lpSignedOut").hidden = signedIn;
   document.getElementById("lpSignedIn").hidden = !signedIn;
   if (!signedIn) return;
-  const fBtn = document.getElementById("lpFiltersBtn");
-  if (!fBtn.dataset.wired) {
-    fBtn.dataset.wired = "1";
-    const fMenu = document.getElementById("lpFiltersMenu");
-    fBtn.addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
-    fMenu.addEventListener("click", (e) => e.stopPropagation());
+  const exp = document.getElementById("lpExportBtn");
+  if (!exp.dataset.wired) {
+    exp.dataset.wired = "1";
     const lpExportPop = document.getElementById("lpExportPop");
-    document.getElementById("lpExportBtn").addEventListener("click", e => { e.stopPropagation(); const open = lpExportPop.hidden; closeAllMenus(); if (open) lpExportPop.hidden = false; });
+    exp.addEventListener("click", e => { e.stopPropagation(); const open = lpExportPop.hidden; closeAllMenus(); if (open) lpExportPop.hidden = false; });
     lpExportPop.addEventListener("click", e => e.stopPropagation());
     lpExportPop.querySelectorAll("[data-lpfmt]").forEach(b => b.addEventListener("click", () => { lpExportPop.hidden = true; exportLandingPages(b.dataset.lpfmt); }));
-    restoreLpFilters();
-    updateLpFilterCount();
   }
   if (lpState.loadedAccount !== GLOBAL_ACCOUNT) loadLandingPages(GLOBAL_ACCOUNT);
   else if (lpState.rows.length) { showEl("lpLoading", false); showEl("lpPrompt", false); showEl("lpTable", true); renderLandingPagesTable(); }
   else { showEl("lpLoading", false); showEl("lpEmpty", true); }
-}
-
-function restoreLpFilters() {
-  const saved = loadPageFilters("landingpages");
-  if (!saved || !saved.status) return;
-  lpState.filterStatus = new Set(saved.status);
-  document.getElementById("lpStatusEnabled").checked = saved.status.includes("ENABLED");
-  document.getElementById("lpStatusPaused").checked = saved.status.includes("PAUSED");
-  document.getElementById("lpStatusRemoved").checked = saved.status.includes("REMOVED");
-}
-function persistLpFilters() { savePageFilters("landingpages", { status: [...lpState.filterStatus] }); }
-function applyLpFilters() {
-  lpState.filterStatus = new Set([
-    document.getElementById("lpStatusEnabled").checked ? "ENABLED" : null,
-    document.getElementById("lpStatusPaused").checked ? "PAUSED" : null,
-    document.getElementById("lpStatusRemoved").checked ? "REMOVED" : null,
-  ].filter(Boolean));
-  document.getElementById("lpFiltersMenu").hidden = true;
-  persistLpFilters();
-  updateLpFilterCount();
-  renderLandingPagesTable();
-}
-function resetLpFilters() {
-  document.getElementById("lpStatusEnabled").checked = true;
-  document.getElementById("lpStatusPaused").checked = false;
-  document.getElementById("lpStatusRemoved").checked = false;
-  applyLpFilters();
-}
-function updateLpFilterCount() {
-  const n = lpState.filterStatus.size;
-  const el = document.getElementById("lpFilterCount");
-  if (n > 0) { el.textContent = n; el.hidden = false; } else { el.hidden = true; }
 }
 
 async function loadLandingPages(customerId) {
@@ -3901,14 +3841,9 @@ async function loadLandingPages(customerId) {
 }
 
 function renderLandingPagesTable() {
-  lpState.search = document.getElementById("lpSearch").value;
-  const q = lpState.search.trim().toLowerCase();
   const inAll = lpState.account === "ALL";
   const cols = inAll ? [{ key: "account", label: "Account", align: "txt", width: 170 }, ...LP_COLUMNS] : LP_COLUMNS;
-  const rows = lpState.rows.filter(r =>
-      (!q || (r.name || "").toLowerCase().includes(q) || (r.finalUrl || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
-      lpState.filterStatus.has((r.status || "").toUpperCase())
-    )
+  const rows = lpState.rows.slice()
     .sort((a, b) => {
       const { key, dir } = lpState.sort, sign = dir === "asc" ? 1 : -1;
       let av = a[key], bv = b[key];
@@ -3927,14 +3862,11 @@ function renderLandingPagesTable() {
   document.getElementById("lp-tbody").innerHTML = rows.map(r => "<tr>" + cols.map(c => {
     if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
     if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
+    if (c.key === "adGroup") return '<td class="txt" data-col="adGroup">' + escapeHtml(r.adGroup || "—") + "</td>";
+    if (c.key === "source") return '<td class="txt" data-col="source"><span class="src-tag src-' + (r.source || "").toLowerCase().replace(/[^a-z]/g, "") + '">' + escapeHtml(r.source || "") + "</span></td>";
     if (c.key === "finalUrl") {
       const safe = escapeHtml(r.finalUrl || "");
       return '<td class="txt" data-col="finalUrl"><a href="' + safe + '" target="_blank" rel="noopener noreferrer" class="lp-link" title="' + safe + '">' + safe + "</a></td>";
-    }
-    if (c.key === "status") {
-      const s = (r.status || "").toLowerCase();
-      const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other";
-      return '<td class="txt" data-col="status"><span class="pill ' + cls + '">' + titleCase(r.status) + "</span></td>";
     }
     if (c.key === "clicks") return '<td class="num tabnum" data-col="clicks">' + fmtInt(r.clicks || 0) + "</td>";
     if (c.key === "ctr") return '<td class="num tabnum" data-col="ctr">' + fmtPct(r.ctr || 0) + "</td>";
@@ -3963,7 +3895,7 @@ function exportLandingPages(fmt) {
   const header = cols.map(c => c.label);
   const data = rows.map(r => cols.map(c => {
     if (c.key === "account") return r.accountName || "";
-    if (c.key === "status") return titleCase(r.status || "");
+    if (c.key === "adGroup") return r.adGroup || "—";
     if (c.key === "ctr" || c.key === "convRate") return fmtPct(r[c.key] || 0);
     if (c.key === "clicks") return r.clicks || 0;
     return r[c.key] != null ? r[c.key] : "";
