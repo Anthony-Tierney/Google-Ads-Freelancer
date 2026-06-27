@@ -129,6 +129,7 @@
   .src-tag.srcad { background: rgba(67,56,202,.12); color: var(--accent); }
   .src-tag.srcsitelink { background: rgba(16,185,129,.14); color: #047857; }
   .src-tag.srcassetgroup { background: rgba(234,88,12,.14); color: #c2410c; }
+  .src-tag.srcpromotion { background: rgba(217,70,239,.14); color: #a21caf; }
   .acc-logo-wrap { position: relative; display: inline-block; width: 22px; height: 22px; margin-right: 9px; vertical-align: middle; border-radius: 5px; overflow: hidden; flex: none; }
   .acc-logo-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700; color: var(--muted); background: var(--off-bg); border: 1px solid var(--line); border-radius: 5px; }
   .acc-logo-img { position: absolute; inset: 0; width: 22px; height: 22px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 5px; }
@@ -873,6 +874,14 @@
                   <span class="count" id="assetsFilterCount" hidden>0</span>
                 </button>
                 <div class="pop filters-menu" id="assetsFiltersMenu" hidden>
+                  <div class="filter-section">
+                    <label class="field-label">Account contains</label>
+                    <input type="text" id="asfAccount" class="filter-input" placeholder="e.g. client name" />
+                  </div>
+                  <div class="filter-section">
+                    <label class="field-label">Campaign contains</label>
+                    <input type="text" id="asfCampaign" class="filter-input" placeholder="e.g. brand" />
+                  </div>
                   <div class="filter-group-header" onclick="toggleFilterGroup('assets-group-status', event)">
                     <span class="toggle">−</span>Campaign Status
                   </div>
@@ -937,6 +946,43 @@
           <div class="controls-row account">
             <div class="grow"></div>
             <div class="toolset">
+              <div class="filters" id="lpFilterGroup">
+                <button class="filters-btn" id="lpFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  Filters <span class="count" id="lpFilterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="lpFiltersMenu" hidden>
+                  <div class="filter-section">
+                    <label class="field-label">Account contains</label>
+                    <input type="text" id="lpfAccount" class="filter-input" placeholder="e.g. client name" />
+                  </div>
+                  <div class="filter-section">
+                    <label class="field-label">Campaign contains</label>
+                    <input type="text" id="lpfCampaign" class="filter-input" placeholder="e.g. brand" />
+                  </div>
+                  <div class="filter-section">
+                    <label class="field-label">Ad Group contains</label>
+                    <input type="text" id="lpfAdGroup" class="filter-input" placeholder="e.g. shoes" />
+                  </div>
+                  <div class="filter-section">
+                    <label class="field-label">Source</label>
+                    <div class="status-checks">
+                      <div class="check-row"><input type="checkbox" id="lpfSrcAd" /><label for="lpfSrcAd">Ad</label></div>
+                      <div class="check-row"><input type="checkbox" id="lpfSrcAssetGroup" /><label for="lpfSrcAssetGroup">Asset Group</label></div>
+                      <div class="check-row"><input type="checkbox" id="lpfSrcSitelink" /><label for="lpfSrcSitelink">Sitelink</label></div>
+                      <div class="check-row"><input type="checkbox" id="lpfSrcPromotion" /><label for="lpfSrcPromotion">Promotion</label></div>
+                    </div>
+                  </div>
+                  <div class="filter-section">
+                    <label class="field-label">Final URL / Landing Page contains</label>
+                    <input type="text" id="lpfUrl" class="filter-input" placeholder="e.g. /checkout" />
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetLpFilters()">Reset</button>
+                    <button class="apply" onclick="applyLpFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
               <div class="filters" id="lpExportGroup">
                 <button class="filters-btn" id="lpExportBtn" title="Export current view">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
@@ -962,7 +1008,7 @@
               <colgroup id="lp-colgroup"></colgroup><thead id="lp-thead"></thead><tbody id="lp-tbody"></tbody><tfoot id="lp-tfoot"></tfoot>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Final URLs from enabled placements, whether or not they've served recently: ads in enabled ad groups/campaigns (Search, Display, Shopping, Video, App, Demand Gen), enabled asset groups in Performance Max, and enabled account-level sitelinks (shown once as "All Campaigns"). The Source column shows where each URL comes from. Clicks, CTR and conversion rate are a best-effort overlay for the last 30 days (0 when a placement hasn't served in that window); sitelink metrics count interactions with the sitelink, so they aren't directly comparable to ad metrics.</div>
+          <div class="foot-note" style="margin-top:10px;">Final URLs from enabled placements, whether or not they've served recently: ads (Search, Display, Shopping, Video, App, Demand Gen) in enabled ad groups/campaigns, asset groups in Performance Max, and enabled Sitelink and Promotion assets at account, campaign and ad-group level (account-level shown once as "All Campaigns"). The Source column shows where each URL comes from. Clicks, CTR and conversion rate are a best-effort overlay for the last 30 days (0 when a placement hasn't served in that window); asset metrics count interactions with that asset, so they aren't directly comparable to ad metrics.</div>
         </section>
       </section>
 
@@ -2068,7 +2114,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpExportPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -3532,7 +3578,7 @@ const ASSET_COLUMNS = [
   { key: "callouts",     label: "Callouts",            type: "int",    align: "num" },
   { key: "snippets",     label: "Structured Snippets", type: "int",    align: "num" },
 ];
-const assetsState = { rows: [], account: "", loadedAccount: null, sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), columnWidths: {} };
+const assetsState = { rows: [], account: "", loadedAccount: null, sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), filterAccount: "", filterCampaign: "", columnWidths: {} };
 
 const BUSINESS_LOGO_TOOLTIP = "Each campaign should have exactly one business logo. A value other than 1 means a logo is missing or duplicated.";
 const BUSINESS_NAME_TOOLTIP = "Each campaign should have exactly one business name. A value other than 1 means a name is missing or duplicated.";
@@ -3565,18 +3611,24 @@ function initAssets() {
   else { showEl("asLoading", false); showEl("asEmpty", true); }
 }
 
-// Restore saved Assets status filter.
+// Restore saved Assets filters.
 function restoreAssetsFilters() {
   const saved = loadPageFilters("assets");
-  if (!saved || !saved.status) return;
-  assetsState.filterStatus = new Set(saved.status);
-  document.getElementById("assetsStatusEnabled").checked = saved.status.includes("ENABLED");
-  document.getElementById("assetsStatusPaused").checked = saved.status.includes("PAUSED");
-  document.getElementById("assetsStatusRemoved").checked = saved.status.includes("REMOVED");
+  if (!saved) return;
+  if (saved.status) {
+    assetsState.filterStatus = new Set(saved.status);
+    document.getElementById("assetsStatusEnabled").checked = saved.status.includes("ENABLED");
+    document.getElementById("assetsStatusPaused").checked = saved.status.includes("PAUSED");
+    document.getElementById("assetsStatusRemoved").checked = saved.status.includes("REMOVED");
+  }
+  assetsState.filterAccount = saved.account || "";
+  assetsState.filterCampaign = saved.campaign || "";
+  document.getElementById("asfAccount").value = assetsState.filterAccount;
+  document.getElementById("asfCampaign").value = assetsState.filterCampaign;
 }
 
 function persistAssetsFilters() {
-  savePageFilters("assets", { status: [...assetsState.filterStatus] });
+  savePageFilters("assets", { status: [...assetsState.filterStatus], account: assetsState.filterAccount, campaign: assetsState.filterCampaign });
 }
 
 function applyAssetsFilters() {
@@ -3585,6 +3637,8 @@ function applyAssetsFilters() {
     document.getElementById("assetsStatusPaused").checked ? "PAUSED" : null,
     document.getElementById("assetsStatusRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
+  assetsState.filterAccount = document.getElementById("asfAccount").value.trim().toLowerCase();
+  assetsState.filterCampaign = document.getElementById("asfCampaign").value.trim().toLowerCase();
   document.getElementById("assetsFiltersMenu").hidden = true;
   persistAssetsFilters();
   updateAssetsFilterCount();
@@ -3595,11 +3649,13 @@ function resetAssetsFilters() {
   document.getElementById("assetsStatusEnabled").checked = true;
   document.getElementById("assetsStatusPaused").checked = false;
   document.getElementById("assetsStatusRemoved").checked = false;
+  document.getElementById("asfAccount").value = "";
+  document.getElementById("asfCampaign").value = "";
   applyAssetsFilters();
 }
 
 function updateAssetsFilterCount() {
-  const n = assetsState.filterStatus.size;
+  const n = assetsState.filterStatus.size + (assetsState.filterAccount ? 1 : 0) + (assetsState.filterCampaign ? 1 : 0);
   const el = document.getElementById("assetsFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
@@ -3677,6 +3733,8 @@ function renderAssetsTable() {
   const cols = inAll ? [{ key: "account", label: "Account", align: "txt", width: 180 }, ...ASSET_COLUMNS] : ASSET_COLUMNS;
   const rows = assetsState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
+      (!assetsState.filterAccount || (r.accountName || "").toLowerCase().includes(assetsState.filterAccount)) &&
+      (!assetsState.filterCampaign || (r.name || "").toLowerCase().includes(assetsState.filterCampaign)) &&
       assetsState.filterStatus.has((r.status || "").toUpperCase())
     )
     .sort((a, b) => {
@@ -3768,23 +3826,67 @@ const LP_COLUMNS = [
   { key: "ctr",      label: "CTR",                      align: "num", width: 90 },
   { key: "convRate", label: "Conv. Rate",               align: "num", width: 110 },
 ];
-const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, columnWidths: {} };
+const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: "", campaign: "", adGroup: "", url: "", sources: new Set() }, columnWidths: {} };
+
+const LP_SOURCE_BOXES = [["lpfSrcAd", "Ad"], ["lpfSrcAssetGroup", "Asset Group"], ["lpfSrcSitelink", "Sitelink"], ["lpfSrcPromotion", "Promotion"]];
 
 function initLandingPages() {
   document.getElementById("lpSignedOut").hidden = signedIn;
   document.getElementById("lpSignedIn").hidden = !signedIn;
   if (!signedIn) return;
-  const exp = document.getElementById("lpExportBtn");
-  if (!exp.dataset.wired) {
-    exp.dataset.wired = "1";
+  const fBtn = document.getElementById("lpFiltersBtn");
+  if (!fBtn.dataset.wired) {
+    fBtn.dataset.wired = "1";
+    const fMenu = document.getElementById("lpFiltersMenu");
+    fBtn.addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
+    fMenu.addEventListener("click", (e) => e.stopPropagation());
     const lpExportPop = document.getElementById("lpExportPop");
-    exp.addEventListener("click", e => { e.stopPropagation(); const open = lpExportPop.hidden; closeAllMenus(); if (open) lpExportPop.hidden = false; });
+    document.getElementById("lpExportBtn").addEventListener("click", e => { e.stopPropagation(); const open = lpExportPop.hidden; closeAllMenus(); if (open) lpExportPop.hidden = false; });
     lpExportPop.addEventListener("click", e => e.stopPropagation());
     lpExportPop.querySelectorAll("[data-lpfmt]").forEach(b => b.addEventListener("click", () => { lpExportPop.hidden = true; exportLandingPages(b.dataset.lpfmt); }));
+    restoreLpFilters();
+    updateLpFilterCount();
   }
   if (lpState.loadedAccount !== GLOBAL_ACCOUNT) loadLandingPages(GLOBAL_ACCOUNT);
   else if (lpState.rows.length) { showEl("lpLoading", false); showEl("lpPrompt", false); showEl("lpTable", true); renderLandingPagesTable(); }
   else { showEl("lpLoading", false); showEl("lpEmpty", true); }
+}
+
+function restoreLpFilters() {
+  const saved = loadPageFilters("landingpages");
+  if (!saved) return;
+  lpState.filters = { account: saved.account || "", campaign: saved.campaign || "", adGroup: saved.adGroup || "", url: saved.url || "", sources: new Set(saved.sources || []) };
+  document.getElementById("lpfAccount").value = lpState.filters.account;
+  document.getElementById("lpfCampaign").value = lpState.filters.campaign;
+  document.getElementById("lpfAdGroup").value = lpState.filters.adGroup;
+  document.getElementById("lpfUrl").value = lpState.filters.url;
+  LP_SOURCE_BOXES.forEach(([id, label]) => { document.getElementById(id).checked = lpState.filters.sources.has(label); });
+}
+function applyLpFilters() {
+  const sources = new Set();
+  LP_SOURCE_BOXES.forEach(([id, label]) => { if (document.getElementById(id).checked) sources.add(label); });
+  lpState.filters = {
+    account: document.getElementById("lpfAccount").value.trim().toLowerCase(),
+    campaign: document.getElementById("lpfCampaign").value.trim().toLowerCase(),
+    adGroup: document.getElementById("lpfAdGroup").value.trim().toLowerCase(),
+    url: document.getElementById("lpfUrl").value.trim().toLowerCase(),
+    sources,
+  };
+  document.getElementById("lpFiltersMenu").hidden = true;
+  savePageFilters("landingpages", { account: lpState.filters.account, campaign: lpState.filters.campaign, adGroup: lpState.filters.adGroup, url: lpState.filters.url, sources: [...sources] });
+  updateLpFilterCount();
+  renderLandingPagesTable();
+}
+function resetLpFilters() {
+  ["lpfAccount", "lpfCampaign", "lpfAdGroup", "lpfUrl"].forEach(id => { document.getElementById(id).value = ""; });
+  LP_SOURCE_BOXES.forEach(([id]) => { document.getElementById(id).checked = false; });
+  applyLpFilters();
+}
+function updateLpFilterCount() {
+  const f = lpState.filters;
+  const n = (f.account ? 1 : 0) + (f.campaign ? 1 : 0) + (f.adGroup ? 1 : 0) + (f.url ? 1 : 0) + (f.sources.size ? 1 : 0);
+  const el = document.getElementById("lpFilterCount");
+  if (n > 0) { el.textContent = n; el.hidden = false; } else { el.hidden = true; }
 }
 
 async function loadLandingPages(customerId) {
@@ -3843,7 +3945,15 @@ async function loadLandingPages(customerId) {
 function renderLandingPagesTable() {
   const inAll = lpState.account === "ALL";
   const cols = inAll ? [{ key: "account", label: "Account", align: "txt", width: 170 }, ...LP_COLUMNS] : LP_COLUMNS;
-  const rows = lpState.rows.slice()
+  const f = lpState.filters;
+  const rows = lpState.rows.filter(r => {
+      if (f.account && !(r.accountName || "").toLowerCase().includes(f.account)) return false;
+      if (f.campaign && !(r.name || "").toLowerCase().includes(f.campaign)) return false;
+      if (f.adGroup && !(r.adGroup || "").toLowerCase().includes(f.adGroup)) return false;
+      if (f.url && !(r.finalUrl || "").toLowerCase().includes(f.url)) return false;
+      if (f.sources.size && !f.sources.has(r.source)) return false;
+      return true;
+    })
     .sort((a, b) => {
       const { key, dir } = lpState.sort, sign = dir === "asc" ? 1 : -1;
       let av = a[key], bv = b[key];
