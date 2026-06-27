@@ -986,7 +986,7 @@
               <colgroup id="lp-colgroup"></colgroup><thead id="lp-thead"></thead><tbody id="lp-tbody"></tbody><tfoot id="lp-tfoot"></tfoot>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Lists the final URLs set on enabled ads within enabled campaigns, whether or not they've served recently. Clicks, CTR and conversion rate are a best-effort overlay for the last 30 days (0 when a URL hasn't served in that window). A campaign appears once per distinct final URL. Asset-based campaign types (Performance Max, Demand Gen) aren't covered by this ad-level rule.</div>
+          <div class="foot-note" style="margin-top:10px;">Lists final URLs on enabled ads in enabled ad groups within enabled campaigns (Search, Display, Shopping, Video, App and Demand Gen), plus enabled asset groups in enabled Performance Max campaigns — whether or not a URL has served recently. Clicks, CTR and conversion rate are a best-effort overlay for the last 30 days (0 when a URL hasn't served in that window). A campaign appears once per distinct final URL.</div>
         </section>
       </section>
 
@@ -3861,6 +3861,7 @@ async function loadLandingPages(customerId) {
         const res = await fetch("/api/landingpages?customerId=" + encodeURIComponent(a.id), { credentials: "same-origin" });
         const data = await res.json().catch(() => ({}));
         if (data.error && !data.rows) { errors.push((a.name || a.id) + ": " + data.error); return; }
+        if (data.warning) errors.push((a.name || a.id) + ": " + data.warning);
         (data.rows || []).forEach(c => { c.accountName = a.name || a.formatted; c.accountId = a.id; rows.push(c); });
       } catch { errors.push((a.name || a.id) + ": request failed"); }
     });
@@ -3888,6 +3889,7 @@ async function loadLandingPages(customerId) {
     }
     lpState.rows = data.rows || [];
     showEl("lpLoading", false);
+    if (data.warning) { const w = document.getElementById("lpWarn"); w.hidden = false; w.textContent = data.warning; }
     if (!lpState.rows.length) { showEl("lpEmpty", true); return; }
     showEl("lpTable", true);
     renderLandingPagesTable();
