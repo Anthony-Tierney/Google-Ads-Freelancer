@@ -130,6 +130,7 @@
   .src-tag.srcsitelink { background: rgba(16,185,129,.14); color: #047857; }
   .src-tag.srcassetgroup { background: rgba(234,88,12,.14); color: #c2410c; }
   .src-tag.srcpromotion { background: rgba(217,70,239,.14); color: #a21caf; }
+  .src-tag.srcprice { background: rgba(13,148,136,.14); color: #0f766e; }
   .acc-logo-wrap { position: relative; display: inline-block; width: 22px; height: 22px; margin-right: 9px; vertical-align: middle; border-radius: 5px; overflow: hidden; flex: none; }
   .acc-logo-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700; color: var(--muted); background: var(--off-bg); border: 1px solid var(--line); border-radius: 5px; }
   .acc-logo-img { position: absolute; inset: 0; width: 22px; height: 22px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 5px; }
@@ -265,6 +266,9 @@
     cursor: col-resize; background: transparent; z-index: 4;
   }
   .resize-handle:hover { background: var(--accent); opacity: .5; }
+  .col-draggable { cursor: grab; }
+  .col-dragging { opacity: .4; }
+  .col-drop-target { box-shadow: inset 3px 0 0 var(--accent); }
 
   .pagination { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--muted); }
   .page-size { display: flex; align-items: center; gap: 6px; }
@@ -875,12 +879,12 @@
                 </button>
                 <div class="pop filters-menu" id="assetsFiltersMenu" hidden>
                   <div class="filter-section">
-                    <label class="field-label">Account contains</label>
-                    <input type="text" id="asfAccount" class="filter-input" placeholder="e.g. client name" />
+                    <label class="field-label">Account</label>
+                    <select id="asfAccount" class="filter-input"><option value="">All accounts</option></select>
                   </div>
                   <div class="filter-section">
-                    <label class="field-label">Campaign contains</label>
-                    <input type="text" id="asfCampaign" class="filter-input" placeholder="e.g. brand" />
+                    <label class="field-label">Campaign</label>
+                    <select id="asfCampaign" class="filter-input"><option value="">All campaigns</option></select>
                   </div>
                   <div class="filter-group-header" onclick="toggleFilterGroup('assets-group-status', event)">
                     <span class="toggle">−</span>Campaign Status
@@ -953,29 +957,30 @@
                 </button>
                 <div class="pop filters-menu" id="lpFiltersMenu" hidden>
                   <div class="filter-section">
-                    <label class="field-label">Account contains</label>
-                    <input type="text" id="lpfAccount" class="filter-input" placeholder="e.g. client name" />
+                    <label class="field-label">Account</label>
+                    <select id="lpfAccount" class="filter-input"><option value="">All accounts</option></select>
                   </div>
                   <div class="filter-section">
-                    <label class="field-label">Campaign contains</label>
-                    <input type="text" id="lpfCampaign" class="filter-input" placeholder="e.g. brand" />
+                    <label class="field-label">Campaign</label>
+                    <select id="lpfCampaign" class="filter-input"><option value="">All campaigns</option></select>
                   </div>
                   <div class="filter-section">
-                    <label class="field-label">Ad Group contains</label>
-                    <input type="text" id="lpfAdGroup" class="filter-input" placeholder="e.g. shoes" />
+                    <label class="field-label">Ad Group</label>
+                    <select id="lpfAdGroup" class="filter-input"><option value="">All ad groups</option></select>
                   </div>
                   <div class="filter-section">
-                    <label class="field-label">Source</label>
+                    <label class="field-label">URL Source</label>
                     <div class="status-checks">
                       <div class="check-row"><input type="checkbox" id="lpfSrcAd" /><label for="lpfSrcAd">Ad</label></div>
                       <div class="check-row"><input type="checkbox" id="lpfSrcAssetGroup" /><label for="lpfSrcAssetGroup">Asset Group</label></div>
                       <div class="check-row"><input type="checkbox" id="lpfSrcSitelink" /><label for="lpfSrcSitelink">Sitelink</label></div>
                       <div class="check-row"><input type="checkbox" id="lpfSrcPromotion" /><label for="lpfSrcPromotion">Promotion</label></div>
+                      <div class="check-row"><input type="checkbox" id="lpfSrcPrice" /><label for="lpfSrcPrice">Price</label></div>
                     </div>
                   </div>
                   <div class="filter-section">
                     <label class="field-label">Final URL / Landing Page contains</label>
-                    <input type="text" id="lpfUrl" class="filter-input" placeholder="e.g. /checkout" />
+                    <input type="text" id="lpfUrl" class="filter-input" autocomplete="off" placeholder="e.g. /checkout" />
                   </div>
                   <div class="filter-buttons">
                     <button onclick="resetLpFilters()">Reset</button>
@@ -2268,7 +2273,7 @@ function deltaHtml(key, cur, prev) {
 }
 
 function renderTable() {
-  const cols = shownColumns();
+  const cols = applyColumnOrder(shownColumns(), colOrder("campaigns"));
   const filtered = sortedAndFiltered();
   const pageRows = paginatedRows();
   const tot = totals(pageRows);
@@ -2333,6 +2338,7 @@ function renderTable() {
       setSort(th.dataset.col);
     });
   });
+  enableColReorder("thead", (keys) => { setColOrder("campaigns", keys); renderTable(); });
 }
 
 function setSort(key) {
@@ -2549,7 +2555,7 @@ function colWidthSimple(c) {
   if (c.key === "name" || c.key === "account") return 200;
   return c.align === "num" ? 130 : 150;
 }
-function wireColumnResize(ids, widths, onSort) {
+function wireColumnResize(ids, widths, onSort, onReorder) {
   document.querySelectorAll("#" + ids.thead + " th").forEach(th => {
     const handle = document.createElement("div");
     handle.className = "resize-handle";
@@ -2561,6 +2567,54 @@ function wireColumnResize(ids, widths, onSort) {
       if (e.target.classList.contains("resize-handle")) return;
       if (th.dataset.resizing === "1") { th.dataset.resizing = ""; return; }
       onSort(th.dataset.col);
+    });
+  });
+  if (onReorder) enableColReorder(ids.thead, onReorder);
+}
+
+// ---- Column drag-to-reorder (desktop only) ----
+const COL_DRAG_ENABLED = !!(window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches);
+const COL_ORDERS = (() => { try { return JSON.parse(localStorage.getItem("tableColumnOrder_v1") || "{}"); } catch { return {}; } })();
+function colOrder(table) { return COL_ORDERS[table] || []; }
+function setColOrder(table, keys) { COL_ORDERS[table] = keys; try { localStorage.setItem("tableColumnOrder_v1", JSON.stringify(COL_ORDERS)); } catch {} }
+// Reorder `cols` to match a saved key order, leaving any unordered columns in their original slots.
+function applyColumnOrder(cols, order) {
+  if (!order || !order.length) return cols;
+  const inOrder = new Set(order.filter(k => cols.some(c => c.key === k)));
+  if (!inOrder.size) return cols;
+  const ordered = cols.filter(c => inOrder.has(c.key)).sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key));
+  let oi = 0;
+  return cols.map(c => (inOrder.has(c.key) ? ordered[oi++] : c));
+}
+// Make a thead's <th>s draggable to reorder; calls onReorder(newKeyArray) on drop. Desktop only.
+function enableColReorder(theadId, onReorder) {
+  if (!COL_DRAG_ENABLED) return;
+  const ths = [...document.querySelectorAll("#" + theadId + " th")];
+  let dragKey = null;
+  ths.forEach(th => {
+    th.setAttribute("draggable", "true");
+    th.classList.add("col-draggable");
+    th.addEventListener("dragstart", (e) => {
+      if (e.target && e.target.classList && e.target.classList.contains("resize-handle")) { e.preventDefault(); return; }
+      dragKey = th.dataset.col;
+      th.classList.add("col-dragging");
+      if (e.dataTransfer) { e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", dragKey); } catch {} }
+    });
+    th.addEventListener("dragend", () => { th.classList.remove("col-dragging"); ths.forEach(t => t.classList.remove("col-drop-target")); });
+    th.addEventListener("dragover", (e) => { e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = "move"; if (dragKey && th.dataset.col !== dragKey) th.classList.add("col-drop-target"); });
+    th.addEventListener("dragleave", () => th.classList.remove("col-drop-target"));
+    th.addEventListener("drop", (e) => {
+      e.preventDefault();
+      th.classList.remove("col-drop-target");
+      const targetKey = th.dataset.col;
+      if (!dragKey || dragKey === targetKey) { dragKey = null; return; }
+      const keys = ths.map(t => t.dataset.col);
+      const from = keys.indexOf(dragKey);
+      if (from > -1) keys.splice(from, 1);
+      const to = keys.indexOf(targetKey);
+      keys.splice(to, 0, dragKey);
+      dragKey = null;
+      onReorder(keys);
     });
   });
 }
@@ -3035,7 +3089,7 @@ function refreshLogosInView() {
 
 function renderAccountsTable() {
   accState.search = document.getElementById("accSearch").value;
-  const cols = accShownColumns();
+  const cols = applyColumnOrder(accShownColumns(), colOrder("accounts"));
   const filtered = accSortedFiltered();
   const totalPages = Math.max(1, Math.ceil(filtered.length / accState.pageSize));
   if (accState.currentPage > totalPages) accState.currentPage = totalPages;
@@ -3055,7 +3109,7 @@ function renderAccountsTable() {
   }).join("") + "</tr>").join("");
 
   document.getElementById("acc-tfoot").innerHTML = "<tr>" + cols.map((c, i) => {
-    if (i === 0) return '<td class="txt" data-col="name">Total · ' + filtered.length + "</td>";
+    if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total · ' + filtered.length + "</td>";
     return '<td class="num tabnum" data-col="' + c.key + '">' + formatCell(c.type, tot[c.key]) + "</td>";
   }).join("") + "</tr>";
 
@@ -3079,6 +3133,7 @@ function renderAccountsTable() {
       renderAccountsTable();
     });
   });
+  enableColReorder("acc-thead", (keys) => { setColOrder("accounts", keys); renderAccountsTable(); });
 }
 
 function renderAccColsPop() {
@@ -3571,7 +3626,7 @@ function renderInactiveAccounts(inactive) {
 
 const ASSET_COLUMNS = [
   { key: "name",         label: "Campaign",            type: "text",   align: "txt" },
-  { key: "status",       label: "Status",              type: "status", align: "txt" },
+  { key: "status",       label: "Campaign Status",     type: "status", align: "txt" },
   { key: "sitelinks",    label: "Sitelinks",           type: "int",    align: "num" },
   { key: "landscape",    label: "Landscape (1.91:1)",  type: "int",    align: "num" },
   { key: "square",       label: "Square (1:1)",        type: "int",    align: "num" },
@@ -3623,8 +3678,12 @@ function restoreAssetsFilters() {
   }
   assetsState.filterAccount = saved.account || "";
   assetsState.filterCampaign = saved.campaign || "";
-  document.getElementById("asfAccount").value = assetsState.filterAccount;
-  document.getElementById("asfCampaign").value = assetsState.filterCampaign;
+}
+
+function populateAssetsFilterOptions() {
+  const distinct = (key) => [...new Set(assetsState.rows.map(r => r[key]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
+  fillSelect("asfAccount", "All accounts", distinct("accountName"), assetsState.filterAccount);
+  fillSelect("asfCampaign", "All campaigns", distinct("name"), assetsState.filterCampaign);
 }
 
 function persistAssetsFilters() {
@@ -3637,8 +3696,8 @@ function applyAssetsFilters() {
     document.getElementById("assetsStatusPaused").checked ? "PAUSED" : null,
     document.getElementById("assetsStatusRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
-  assetsState.filterAccount = document.getElementById("asfAccount").value.trim().toLowerCase();
-  assetsState.filterCampaign = document.getElementById("asfCampaign").value.trim().toLowerCase();
+  assetsState.filterAccount = document.getElementById("asfAccount").value;
+  assetsState.filterCampaign = document.getElementById("asfCampaign").value;
   document.getElementById("assetsFiltersMenu").hidden = true;
   persistAssetsFilters();
   updateAssetsFilterCount();
@@ -3727,14 +3786,15 @@ async function loadAssets(customerId) {
 }
 
 function renderAssetsTable() {
+  populateAssetsFilterOptions();
   assetsState.search = document.getElementById("assetsSearch").value;
   const q = assetsState.search.trim().toLowerCase();
   const inAll = assetsState.account === "ALL";
-  const cols = inAll ? [{ key: "account", label: "Account", align: "txt", width: 180 }, ...ASSET_COLUMNS] : ASSET_COLUMNS;
+  const cols = applyColumnOrder(inAll ? [{ key: "account", label: "Account", align: "txt", width: 180 }, ...ASSET_COLUMNS] : ASSET_COLUMNS, colOrder("assets"));
   const rows = assetsState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
-      (!assetsState.filterAccount || (r.accountName || "").toLowerCase().includes(assetsState.filterAccount)) &&
-      (!assetsState.filterCampaign || (r.name || "").toLowerCase().includes(assetsState.filterCampaign)) &&
+      (!assetsState.filterAccount || (r.accountName || "") === assetsState.filterAccount) &&
+      (!assetsState.filterCampaign || (r.name || "") === assetsState.filterCampaign) &&
       assetsState.filterStatus.has((r.status || "").toUpperCase())
     )
     .sort((a, b) => {
@@ -3774,7 +3834,7 @@ function renderAssetsTable() {
     const s = assetsState.sort;
     assetsState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
     renderAssetsTable();
-  });
+  }, (keys) => { setColOrder("assets", keys); renderAssetsTable(); });
 }
 
 // Conditional cell formatting (warning icon shown on every red and orange cell).
@@ -3828,7 +3888,24 @@ const LP_COLUMNS = [
 ];
 const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: "", campaign: "", adGroup: "", url: "", sources: new Set() }, columnWidths: {} };
 
-const LP_SOURCE_BOXES = [["lpfSrcAd", "Ad"], ["lpfSrcAssetGroup", "Asset Group"], ["lpfSrcSitelink", "Sitelink"], ["lpfSrcPromotion", "Promotion"]];
+const LP_SOURCE_BOXES = [["lpfSrcAd", "Ad"], ["lpfSrcAssetGroup", "Asset Group"], ["lpfSrcSitelink", "Sitelink"], ["lpfSrcPromotion", "Promotion"], ["lpfSrcPrice", "Price"]];
+
+// Shared helper: rebuild a <select> with an "all" option + sorted distinct values, keeping the current selection if still valid.
+function fillSelect(id, allLabel, values, current) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const opts = ['<option value="">' + allLabel + "</option>"];
+  values.forEach(v => { opts.push('<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + "</option>"); });
+  sel.innerHTML = opts.join("");
+  sel.value = values.includes(current) ? current : "";
+}
+
+function populateLpFilterOptions() {
+  const distinct = (key) => [...new Set(lpState.rows.map(r => r[key]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
+  fillSelect("lpfAccount", "All accounts", distinct("accountName"), lpState.filters.account);
+  fillSelect("lpfCampaign", "All campaigns", distinct("name"), lpState.filters.campaign);
+  fillSelect("lpfAdGroup", "All ad groups", distinct("adGroup"), lpState.filters.adGroup);
+}
 
 function initLandingPages() {
   document.getElementById("lpSignedOut").hidden = signedIn;
@@ -3856,9 +3933,6 @@ function restoreLpFilters() {
   const saved = loadPageFilters("landingpages");
   if (!saved) return;
   lpState.filters = { account: saved.account || "", campaign: saved.campaign || "", adGroup: saved.adGroup || "", url: saved.url || "", sources: new Set(saved.sources || []) };
-  document.getElementById("lpfAccount").value = lpState.filters.account;
-  document.getElementById("lpfCampaign").value = lpState.filters.campaign;
-  document.getElementById("lpfAdGroup").value = lpState.filters.adGroup;
   document.getElementById("lpfUrl").value = lpState.filters.url;
   LP_SOURCE_BOXES.forEach(([id, label]) => { document.getElementById(id).checked = lpState.filters.sources.has(label); });
 }
@@ -3866,9 +3940,9 @@ function applyLpFilters() {
   const sources = new Set();
   LP_SOURCE_BOXES.forEach(([id, label]) => { if (document.getElementById(id).checked) sources.add(label); });
   lpState.filters = {
-    account: document.getElementById("lpfAccount").value.trim().toLowerCase(),
-    campaign: document.getElementById("lpfCampaign").value.trim().toLowerCase(),
-    adGroup: document.getElementById("lpfAdGroup").value.trim().toLowerCase(),
+    account: document.getElementById("lpfAccount").value,
+    campaign: document.getElementById("lpfCampaign").value,
+    adGroup: document.getElementById("lpfAdGroup").value,
     url: document.getElementById("lpfUrl").value.trim().toLowerCase(),
     sources,
   };
@@ -3878,7 +3952,8 @@ function applyLpFilters() {
   renderLandingPagesTable();
 }
 function resetLpFilters() {
-  ["lpfAccount", "lpfCampaign", "lpfAdGroup", "lpfUrl"].forEach(id => { document.getElementById(id).value = ""; });
+  ["lpfAccount", "lpfCampaign", "lpfAdGroup"].forEach(id => { document.getElementById(id).value = ""; });
+  document.getElementById("lpfUrl").value = "";
   LP_SOURCE_BOXES.forEach(([id]) => { document.getElementById(id).checked = false; });
   applyLpFilters();
 }
@@ -3943,13 +4018,14 @@ async function loadLandingPages(customerId) {
 }
 
 function renderLandingPagesTable() {
+  populateLpFilterOptions();
   const inAll = lpState.account === "ALL";
-  const cols = inAll ? [{ key: "account", label: "Account", align: "txt", width: 170 }, ...LP_COLUMNS] : LP_COLUMNS;
+  const cols = applyColumnOrder(inAll ? [{ key: "account", label: "Account", align: "txt", width: 170 }, ...LP_COLUMNS] : LP_COLUMNS, colOrder("landingpages"));
   const f = lpState.filters;
   const rows = lpState.rows.filter(r => {
-      if (f.account && !(r.accountName || "").toLowerCase().includes(f.account)) return false;
-      if (f.campaign && !(r.name || "").toLowerCase().includes(f.campaign)) return false;
-      if (f.adGroup && !(r.adGroup || "").toLowerCase().includes(f.adGroup)) return false;
+      if (f.account && (r.accountName || "") !== f.account) return false;
+      if (f.campaign && (r.name || "") !== f.campaign) return false;
+      if (f.adGroup && (r.adGroup || "") !== f.adGroup) return false;
       if (f.url && !(r.finalUrl || "").toLowerCase().includes(f.url)) return false;
       if (f.sources.size && !f.sources.has(r.source)) return false;
       return true;
@@ -3995,7 +4071,7 @@ function renderLandingPagesTable() {
     const s = lpState.sort;
     lpState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
     renderLandingPagesTable();
-  });
+  }, (keys) => { setColOrder("landingpages", keys); renderLandingPagesTable(); });
 }
 
 function exportLandingPages(fmt) {
@@ -4018,7 +4094,7 @@ function exportLandingPages(fmt) {
 const US_COLUMNS = [
   { key: "account",      label: "Account",                         align: "txt", width: 170 },
   { key: "name",         label: "Campaign",                        align: "txt", width: 220 },
-  { key: "status",       label: "Status",                          align: "txt", width: 110 },
+  { key: "status",       label: "Campaign Status",                 align: "txt", width: 140 },
   { key: "type",         label: "Type",                            align: "txt", width: 110 },
   { key: "dailyBudget",  label: "Daily Budget",                    align: "num", width: 120 },
   { key: "lastAdjusted", label: "Last Adjusted",                   align: "txt", width: 130 },
@@ -4127,7 +4203,7 @@ function renderUnderspendTable() {
     });
   const arrow = key => underspendState.sort.key === key ? '<span class="arr">' + (underspendState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
 
-  const cols = GLOBAL_ACCOUNT === "ALL" ? US_COLUMNS : US_COLUMNS.filter(c => c.key !== "account");
+  const cols = applyColumnOrder(GLOBAL_ACCOUNT === "ALL" ? US_COLUMNS : US_COLUMNS.filter(c => c.key !== "account"), colOrder("underspend"));
   underspendState.viewRows = rows;
   document.getElementById("us-colgroup").innerHTML = colgroupHtml(cols, underspendState.columnWidths);
   document.getElementById("us-thead").innerHTML = "<tr>" + cols.map(c =>
@@ -4149,7 +4225,7 @@ function renderUnderspendTable() {
     const s = underspendState.sort;
     underspendState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
     renderUnderspendTable();
-  });
+  }, (keys) => { setColOrder("underspend", keys); renderUnderspendTable(); });
 }
 
 // Budget Pacing status from average daily spend vs daily budget.
@@ -4219,7 +4295,7 @@ function pacingCellHtml(dailySpend, dailyBudget) {
 function exportUnderspend(fmt) {
   const rows = underspendState.viewRows || [];
   if (!rows.length) { showToast("Nothing to export."); return; }
-  const cols = GLOBAL_ACCOUNT === "ALL" ? US_COLUMNS : US_COLUMNS.filter(c => c.key !== "account");
+  const cols = applyColumnOrder(GLOBAL_ACCOUNT === "ALL" ? US_COLUMNS : US_COLUMNS.filter(c => c.key !== "account"), colOrder("underspend"));
   const header = cols.map(c => c.label.replace(/<br>/g, " "));
   const data = rows.map(r => cols.map(c => {
     switch (c.key) {
@@ -4240,7 +4316,7 @@ function exportUnderspend(fmt) {
 function exportBidding(fmt) {
   const rows = biddingState.viewRows || [];
   if (!rows.length) { showToast("Nothing to export."); return; }
-  const cols = GLOBAL_ACCOUNT === "ALL" ? BID_COLUMNS : BID_COLUMNS.filter(c => c.key !== "account");
+  const cols = applyColumnOrder(GLOBAL_ACCOUNT === "ALL" ? BID_COLUMNS : BID_COLUMNS.filter(c => c.key !== "account"), colOrder("bidding"));
   const header = cols.map(c => c.label);
   const data = rows.map(r => cols.map(c => {
     switch (c.key) {
@@ -4411,7 +4487,7 @@ function renderBiddingTable() {
     });
   const arrow = key => biddingState.sort.key === key ? '<span class="arr">' + (biddingState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
 
-  const cols = GLOBAL_ACCOUNT === "ALL" ? BID_COLUMNS : BID_COLUMNS.filter(c => c.key !== "account");
+  const cols = applyColumnOrder(GLOBAL_ACCOUNT === "ALL" ? BID_COLUMNS : BID_COLUMNS.filter(c => c.key !== "account"), colOrder("bidding"));
   biddingState.viewRows = rows;
   document.getElementById("bid-colgroup").innerHTML = colgroupHtml(cols, biddingState.columnWidths);
   document.getElementById("bid-thead").innerHTML = "<tr>" + cols.map(c =>
@@ -4446,7 +4522,7 @@ function renderBiddingTable() {
     const s = biddingState.sort;
     biddingState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
     renderBiddingTable();
-  });
+  }, (keys) => { setColOrder("bidding", keys); renderBiddingTable(); });
 }
 
 function applyBiddingFilters() {
