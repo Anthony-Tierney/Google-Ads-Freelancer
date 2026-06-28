@@ -1,9 +1,10 @@
 // GET /api/landingpages?customerId=1234567890
 // Lists final URLs on live placements, independent of recent serving:
-//   • Ads (Search, Display, Shopping, Video, App, Demand Gen): enabled ad / ad group / campaign  → source "Ad"
-//   • Performance Max: enabled asset group in enabled campaign                                   → source "Asset Group"
-//   • Sitelink & Promotion assets at account / campaign / ad-group level (enabled link)          → source "Sitelink" / "Promotion"
-//     - account-level shows once as "All Campaigns"; campaign-level shows the campaign; ad-group-level shows both.
+//   • Ads (Search, Display, Shopping, Video, App, Demand Gen): enabled ad / ad group / campaign  → "Ad"
+//   • Performance Max: enabled asset group in enabled campaign                                   → "Asset Group"
+//   • Sitelink / Promotion / Price assets at account / campaign / ad-group level (enabled link)  → "Sitelink" / "Promotion" / "Price"
+//     - Sitelink & Promotion URLs come from asset.final_urls; Price URLs come from each
+//       price offering's final_url. Account-level shows once as "All Campaigns".
 // Clicks / CTR / conversion rate are a best-effort overlay for the last 30 days (0 when not served lately).
 //   { rows: [{ name, adGroup, source, finalUrl, clicks, ctr, convRate }], warning? }
 
@@ -13,6 +14,8 @@ import {
   adsRequest,
   json,
 } from "../../shared/google.js";
+
+const ASSET_FIELD_TYPES = "('SITELINK','PROMOTION','PRICE')";
 
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -28,7 +31,14 @@ export async function onRequestGet(context) {
   const search = (query) =>
     adsRequest(env, accessToken, `customers/${cleanId}/googleAds:search`, { query });
   const assetId = (rn) => String(rn || "").split("/").pop();
-  const srcLabel = (ft) => (ft === "PROMOTION" ? "Promotion" : "Sitelink");
+  const srcLabel = (ft) => ({ SITELINK: "Sitelink", PROMOTION: "Promotion", PRICE: "Price" }[ft] || "Sitelink");
+  // All final URLs an asset points at: sitelink/promotion use final_urls; price uses per-offering final_url.
+  const assetUrls = (r) => {
+    const out = [];
+    (r.asset?.finalUrls || []).forEach((u) => { if (u) out.push(u); });
+    (r.asset?.priceAsset?.priceOfferings || []).forEach((o) => { if (o?.finalUrl) out.push(o.finalUrl); });
+    return out;
+  };
 
   const byUrl = new Map();
   const entityToKeys = new Map();
@@ -57,26 +67,21 @@ export async function onRequestGet(context) {
 
   // ---------- config (one query per source, run in parallel) ----------
   const cfgQueries = [
-    // 0: ads
     `SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id, ad_group_ad.ad.final_urls
        FROM ad_group_ad
       WHERE campaign.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND ad_group_ad.status = 'ENABLED'`,
-    // 1: performance max
     `SELECT campaign.id, campaign.name, asset_group.id, asset_group.name, asset_group.final_urls
        FROM asset_group
       WHERE campaign.status = 'ENABLED' AND asset_group.status = 'ENABLED'`,
-    // 2: account-level sitelink / promotion
-    `SELECT customer_asset.asset, customer_asset.field_type, asset.final_urls
+    `SELECT customer_asset.asset, customer_asset.field_type, asset.final_urls, asset.price_asset.price_offerings
        FROM customer_asset
-      WHERE customer_asset.field_type IN ('SITELINK','PROMOTION') AND customer_asset.status = 'ENABLED'`,
-    // 3: campaign-level sitelink / promotion
-    `SELECT campaign.id, campaign.name, campaign_asset.asset, campaign_asset.field_type, asset.final_urls
+      WHERE customer_asset.field_type IN ${ASSET_FIELD_TYPES} AND customer_asset.status = 'ENABLED'`,
+    `SELECT campaign.id, campaign.name, campaign_asset.asset, campaign_asset.field_type, asset.final_urls, asset.price_asset.price_offerings
        FROM campaign_asset
-      WHERE campaign_asset.field_type IN ('SITELINK','PROMOTION') AND campaign_asset.status = 'ENABLED' AND campaign.status = 'ENABLED'`,
-    // 4: ad-group-level sitelink / promotion
-    `SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_asset.asset, ad_group_asset.field_type, asset.final_urls
+      WHERE campaign_asset.field_type IN ${ASSET_FIELD_TYPES} AND campaign_asset.status = 'ENABLED' AND campaign.status = 'ENABLED'`,
+    `SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_asset.asset, ad_group_asset.field_type, asset.final_urls, asset.price_asset.price_offerings
        FROM ad_group_asset
-      WHERE ad_group_asset.field_type IN ('SITELINK','PROMOTION') AND ad_group_asset.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND campaign.status = 'ENABLED'`,
+      WHERE ad_group_asset.field_type IN ${ASSET_FIELD_TYPES} AND ad_group_asset.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND campaign.status = 'ENABLED'`,
   ];
   const cfgLabels = ["ad URLs", "Performance Max URLs", "account-level asset URLs", "campaign-level asset URLs", "ad group-level asset URLs"];
 
@@ -98,18 +103,18 @@ export async function onRequestGet(context) {
     const entity = "ag:" + agId;
     (r.assetGroup?.finalUrls || []).forEach((u) => { if (u) addUrl("AssetGroup|" + cid + ":" + agId + "|" + u, { name: cname, adGroup: agName, source: "Asset Group", finalUrl: u }, entity); });
   });
-  // 2: account-level asset
+  // 2: account-level asset (sitelink / promotion / price)
   if (cfg[2].status === "fulfilled") (cfg[2].value.results || []).forEach((r) => {
     const aid = assetId(r.customerAsset?.asset), src = srcLabel(r.customerAsset?.fieldType);
     const entity = "ca:" + aid;
-    (r.asset?.finalUrls || []).forEach((u) => { if (u) addUrl(src + "|ALL|" + u, { name: "All Campaigns", adGroup: "", source: src, finalUrl: u }, entity); });
+    assetUrls(r).forEach((u) => addUrl(src + "|ALL|" + u, { name: "All Campaigns", adGroup: "", source: src, finalUrl: u }, entity));
   });
   // 3: campaign-level asset
   if (cfg[3].status === "fulfilled") (cfg[3].value.results || []).forEach((r) => {
     const cid = String(r.campaign?.id || ""), cname = r.campaign?.name || "";
     const aid = assetId(r.campaignAsset?.asset), src = srcLabel(r.campaignAsset?.fieldType);
     const entity = "pa:" + cid + ":" + aid;
-    (r.asset?.finalUrls || []).forEach((u) => { if (u) addUrl(src + "|" + cid + ":|" + u, { name: cname, adGroup: "", source: src, finalUrl: u }, entity); });
+    assetUrls(r).forEach((u) => addUrl(src + "|" + cid + ":|" + u, { name: cname, adGroup: "", source: src, finalUrl: u }, entity));
   });
   // 4: ad-group-level asset
   if (cfg[4].status === "fulfilled") (cfg[4].value.results || []).forEach((r) => {
@@ -117,7 +122,7 @@ export async function onRequestGet(context) {
     const agId = String(r.adGroup?.id || ""), agName = r.adGroup?.name || "";
     const aid = assetId(r.adGroupAsset?.asset), src = srcLabel(r.adGroupAsset?.fieldType);
     const entity = "ga:" + agId + ":" + aid;
-    (r.asset?.finalUrls || []).forEach((u) => { if (u) addUrl(src + "|" + cid + ":" + agId + "|" + u, { name: cname, adGroup: agName, source: src, finalUrl: u }, entity); });
+    assetUrls(r).forEach((u) => addUrl(src + "|" + cid + ":" + agId + "|" + u, { name: cname, adGroup: agName, source: src, finalUrl: u }, entity));
   });
 
   if (failures.length === cfgQueries.length) return json({ error: "Could not load landing pages" }, 500);
@@ -126,9 +131,9 @@ export async function onRequestGet(context) {
   const metQueries = [
     `SELECT ad_group_ad.ad.id, metrics.clicks, metrics.impressions, metrics.conversions FROM ad_group_ad WHERE campaign.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND ad_group_ad.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS`,
     `SELECT asset_group.id, metrics.clicks, metrics.impressions, metrics.conversions FROM asset_group WHERE campaign.status = 'ENABLED' AND asset_group.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS`,
-    `SELECT customer_asset.asset, metrics.clicks, metrics.impressions, metrics.conversions FROM customer_asset WHERE customer_asset.field_type IN ('SITELINK','PROMOTION') AND segments.date DURING LAST_30_DAYS`,
-    `SELECT campaign.id, campaign_asset.asset, metrics.clicks, metrics.impressions, metrics.conversions FROM campaign_asset WHERE campaign_asset.field_type IN ('SITELINK','PROMOTION') AND campaign.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS`,
-    `SELECT ad_group.id, ad_group_asset.asset, metrics.clicks, metrics.impressions, metrics.conversions FROM ad_group_asset WHERE ad_group_asset.field_type IN ('SITELINK','PROMOTION') AND ad_group.status = 'ENABLED' AND campaign.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS`,
+    `SELECT customer_asset.asset, metrics.clicks, metrics.impressions, metrics.conversions FROM customer_asset WHERE customer_asset.field_type IN ${ASSET_FIELD_TYPES} AND segments.date DURING LAST_30_DAYS`,
+    `SELECT campaign.id, campaign_asset.asset, metrics.clicks, metrics.impressions, metrics.conversions FROM campaign_asset WHERE campaign_asset.field_type IN ${ASSET_FIELD_TYPES} AND campaign.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS`,
+    `SELECT ad_group.id, ad_group_asset.asset, metrics.clicks, metrics.impressions, metrics.conversions FROM ad_group_asset WHERE ad_group_asset.field_type IN ${ASSET_FIELD_TYPES} AND ad_group.status = 'ENABLED' AND campaign.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS`,
   ];
   const met = await Promise.allSettled(metQueries.map((q) => search(q)));
   if (met[0].status === "fulfilled") (met[0].value.results || []).forEach((r) => applyMetrics("ad:" + String(r.adGroupAd?.ad?.id || ""), r.metrics));
