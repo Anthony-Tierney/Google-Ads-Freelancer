@@ -269,6 +269,10 @@
   .col-draggable { cursor: grab; }
   .col-dragging { opacity: .4; }
   .col-drop-target { box-shadow: inset 3px 0 0 var(--accent); }
+  .filter-checklist { max-height: 168px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; padding: 2px 2px 2px 0; }
+  .filter-checklist .check-row { white-space: nowrap; }
+  .filter-checklist .check-row label { overflow: hidden; text-overflow: ellipsis; }
+  .filter-empty { color: var(--muted); font-size: 12px; padding: 2px 0; }
 
   .pagination { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--muted); }
   .page-size { display: flex; align-items: center; gap: 6px; }
@@ -878,13 +882,13 @@
                   <span class="count" id="assetsFilterCount" hidden>0</span>
                 </button>
                 <div class="pop filters-menu" id="assetsFiltersMenu" hidden>
-                  <div class="filter-section">
+                  <div class="filter-section" id="asfAccountSection">
                     <label class="field-label">Account</label>
-                    <select id="asfAccount" class="filter-input"><option value="">All accounts</option></select>
+                    <div class="filter-checklist" id="asfAccountList"></div>
                   </div>
                   <div class="filter-section">
                     <label class="field-label">Campaign</label>
-                    <select id="asfCampaign" class="filter-input"><option value="">All campaigns</option></select>
+                    <div class="filter-checklist" id="asfCampaignList"></div>
                   </div>
                   <div class="filter-group-header" onclick="toggleFilterGroup('assets-group-status', event)">
                     <span class="toggle">−</span>Campaign Status
@@ -956,17 +960,17 @@
                   Filters <span class="count" id="lpFilterCount" hidden>0</span>
                 </button>
                 <div class="pop filters-menu" id="lpFiltersMenu" hidden>
-                  <div class="filter-section">
+                  <div class="filter-section" id="lpfAccountSection">
                     <label class="field-label">Account</label>
-                    <select id="lpfAccount" class="filter-input"><option value="">All accounts</option></select>
+                    <div class="filter-checklist" id="lpfAccountList"></div>
                   </div>
                   <div class="filter-section">
                     <label class="field-label">Campaign</label>
-                    <select id="lpfCampaign" class="filter-input"><option value="">All campaigns</option></select>
+                    <div class="filter-checklist" id="lpfCampaignList"></div>
                   </div>
                   <div class="filter-section">
                     <label class="field-label">Ad Group</label>
-                    <select id="lpfAdGroup" class="filter-input"><option value="">All ad groups</option></select>
+                    <div class="filter-checklist" id="lpfAdGroupList"></div>
                   </div>
                   <div class="filter-section">
                     <label class="field-label">URL Source</label>
@@ -3633,7 +3637,7 @@ const ASSET_COLUMNS = [
   { key: "callouts",     label: "Callouts",            type: "int",    align: "num" },
   { key: "snippets",     label: "Structured Snippets", type: "int",    align: "num" },
 ];
-const assetsState = { rows: [], account: "", loadedAccount: null, sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), filterAccount: "", filterCampaign: "", columnWidths: {} };
+const assetsState = { rows: [], account: "", loadedAccount: null, sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), filterAccount: new Set(), filterCampaign: new Set(), columnWidths: {} };
 
 const BUSINESS_LOGO_TOOLTIP = "Each campaign should have exactly one business logo. A value other than 1 means a logo is missing or duplicated.";
 const BUSINESS_NAME_TOOLTIP = "Each campaign should have exactly one business name. A value other than 1 means a name is missing or duplicated.";
@@ -3652,7 +3656,7 @@ function initAssets() {
   if (!fBtn.dataset.wired) {
     fBtn.dataset.wired = "1";
     const fMenu = document.getElementById("assetsFiltersMenu");
-    fBtn.addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
+    fBtn.addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) { populateAssetsFilterOptions(); fMenu.hidden = false; } });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
     const assetsExportPop = document.getElementById("assetsExportPop");
     document.getElementById("assetsExportBtn").addEventListener("click", e => { e.stopPropagation(); const open = assetsExportPop.hidden; closeAllMenus(); if (open) assetsExportPop.hidden = false; });
@@ -3676,28 +3680,32 @@ function restoreAssetsFilters() {
     document.getElementById("assetsStatusPaused").checked = saved.status.includes("PAUSED");
     document.getElementById("assetsStatusRemoved").checked = saved.status.includes("REMOVED");
   }
-  assetsState.filterAccount = saved.account || "";
-  assetsState.filterCampaign = saved.campaign || "";
+  assetsState.filterAccount = new Set(Array.isArray(saved.account) ? saved.account : []);
+  assetsState.filterCampaign = new Set(Array.isArray(saved.campaign) ? saved.campaign : []);
 }
 
 function populateAssetsFilterOptions() {
+  const inAll = GLOBAL_ACCOUNT === "ALL";
+  const accSec = document.getElementById("asfAccountSection");
+  if (accSec) accSec.hidden = !inAll;
   const distinct = (key) => [...new Set(assetsState.rows.map(r => r[key]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
-  fillSelect("asfAccount", "All accounts", distinct("accountName"), assetsState.filterAccount);
-  fillSelect("asfCampaign", "All campaigns", distinct("name"), assetsState.filterCampaign);
+  if (inAll) fillCheckList("asfAccountList", distinct("accountName"), assetsState.filterAccount);
+  fillCheckList("asfCampaignList", distinct("name"), assetsState.filterCampaign);
 }
 
 function persistAssetsFilters() {
-  savePageFilters("assets", { status: [...assetsState.filterStatus], account: assetsState.filterAccount, campaign: assetsState.filterCampaign });
+  savePageFilters("assets", { status: [...assetsState.filterStatus], account: [...assetsState.filterAccount], campaign: [...assetsState.filterCampaign] });
 }
 
 function applyAssetsFilters() {
+  const inAll = GLOBAL_ACCOUNT === "ALL";
   assetsState.filterStatus = new Set([
     document.getElementById("assetsStatusEnabled").checked ? "ENABLED" : null,
     document.getElementById("assetsStatusPaused").checked ? "PAUSED" : null,
     document.getElementById("assetsStatusRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
-  assetsState.filterAccount = document.getElementById("asfAccount").value;
-  assetsState.filterCampaign = document.getElementById("asfCampaign").value;
+  if (inAll) assetsState.filterAccount = readCheckList("asfAccountList");
+  assetsState.filterCampaign = readCheckList("asfCampaignList");
   document.getElementById("assetsFiltersMenu").hidden = true;
   persistAssetsFilters();
   updateAssetsFilterCount();
@@ -3708,13 +3716,15 @@ function resetAssetsFilters() {
   document.getElementById("assetsStatusEnabled").checked = true;
   document.getElementById("assetsStatusPaused").checked = false;
   document.getElementById("assetsStatusRemoved").checked = false;
-  document.getElementById("asfAccount").value = "";
-  document.getElementById("asfCampaign").value = "";
+  assetsState.filterAccount = new Set();
+  assetsState.filterCampaign = new Set();
+  populateAssetsFilterOptions();
   applyAssetsFilters();
 }
 
 function updateAssetsFilterCount() {
-  const n = assetsState.filterStatus.size + (assetsState.filterAccount ? 1 : 0) + (assetsState.filterCampaign ? 1 : 0);
+  const inAll = GLOBAL_ACCOUNT === "ALL";
+  const n = assetsState.filterStatus.size + ((inAll && assetsState.filterAccount.size) ? 1 : 0) + (assetsState.filterCampaign.size ? 1 : 0);
   const el = document.getElementById("assetsFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
@@ -3786,15 +3796,14 @@ async function loadAssets(customerId) {
 }
 
 function renderAssetsTable() {
-  populateAssetsFilterOptions();
   assetsState.search = document.getElementById("assetsSearch").value;
   const q = assetsState.search.trim().toLowerCase();
   const inAll = assetsState.account === "ALL";
   const cols = applyColumnOrder(inAll ? [{ key: "account", label: "Account", align: "txt", width: 180 }, ...ASSET_COLUMNS] : ASSET_COLUMNS, colOrder("assets"));
   const rows = assetsState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
-      (!assetsState.filterAccount || (r.accountName || "") === assetsState.filterAccount) &&
-      (!assetsState.filterCampaign || (r.name || "") === assetsState.filterCampaign) &&
+      (!(inAll && assetsState.filterAccount.size) || assetsState.filterAccount.has(r.accountName || "")) &&
+      (!assetsState.filterCampaign.size || assetsState.filterCampaign.has(r.name || "")) &&
       assetsState.filterStatus.has((r.status || "").toUpperCase())
     )
     .sort((a, b) => {
@@ -3886,25 +3895,35 @@ const LP_COLUMNS = [
   { key: "ctr",      label: "CTR",                      align: "num", width: 90 },
   { key: "convRate", label: "Conv. Rate",               align: "num", width: 110 },
 ];
-const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: "", campaign: "", adGroup: "", url: "", sources: new Set() }, columnWidths: {} };
+const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), url: "", sources: new Set() }, columnWidths: {} };
 
 const LP_SOURCE_BOXES = [["lpfSrcAd", "Ad"], ["lpfSrcAssetGroup", "Asset Group"], ["lpfSrcSitelink", "Sitelink"], ["lpfSrcPromotion", "Promotion"], ["lpfSrcPrice", "Price"]];
 
-// Shared helper: rebuild a <select> with an "all" option + sorted distinct values, keeping the current selection if still valid.
-function fillSelect(id, allLabel, values, current) {
-  const sel = document.getElementById(id);
-  if (!sel) return;
-  const opts = ['<option value="">' + allLabel + "</option>"];
-  values.forEach(v => { opts.push('<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + "</option>"); });
-  sel.innerHTML = opts.join("");
-  sel.value = values.includes(current) ? current : "";
+// Shared helpers: build a multi-select checkbox list of distinct values, and read back the checked set.
+function fillCheckList(containerId, values, selectedSet) {
+  const box = document.getElementById(containerId);
+  if (!box) return;
+  if (!values.length) { box.innerHTML = '<div class="filter-empty">No options</div>'; return; }
+  box.innerHTML = values.map((v, i) => {
+    const id = containerId + "_" + i;
+    const checked = selectedSet.has(v) ? " checked" : "";
+    return '<div class="check-row"><input type="checkbox" id="' + id + '" value="' + escapeHtml(v) + '"' + checked + ' /><label for="' + id + '" title="' + escapeHtml(v) + '">' + escapeHtml(v) + "</label></div>";
+  }).join("");
+}
+function readCheckList(containerId) {
+  const set = new Set();
+  document.querySelectorAll("#" + containerId + " input[type=checkbox]:checked").forEach(cb => set.add(cb.value));
+  return set;
 }
 
 function populateLpFilterOptions() {
+  const inAll = GLOBAL_ACCOUNT === "ALL";
+  const accSec = document.getElementById("lpfAccountSection");
+  if (accSec) accSec.hidden = !inAll;
   const distinct = (key) => [...new Set(lpState.rows.map(r => r[key]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
-  fillSelect("lpfAccount", "All accounts", distinct("accountName"), lpState.filters.account);
-  fillSelect("lpfCampaign", "All campaigns", distinct("name"), lpState.filters.campaign);
-  fillSelect("lpfAdGroup", "All ad groups", distinct("adGroup"), lpState.filters.adGroup);
+  if (inAll) fillCheckList("lpfAccountList", distinct("accountName"), lpState.filters.account);
+  fillCheckList("lpfCampaignList", distinct("name"), lpState.filters.campaign);
+  fillCheckList("lpfAdGroupList", distinct("adGroup"), lpState.filters.adGroup);
 }
 
 function initLandingPages() {
@@ -3915,7 +3934,7 @@ function initLandingPages() {
   if (!fBtn.dataset.wired) {
     fBtn.dataset.wired = "1";
     const fMenu = document.getElementById("lpFiltersMenu");
-    fBtn.addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) fMenu.hidden = false; });
+    fBtn.addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) { populateLpFilterOptions(); fMenu.hidden = false; } });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
     const lpExportPop = document.getElementById("lpExportPop");
     document.getElementById("lpExportBtn").addEventListener("click", e => { e.stopPropagation(); const open = lpExportPop.hidden; closeAllMenus(); if (open) lpExportPop.hidden = false; });
@@ -3932,34 +3951,39 @@ function initLandingPages() {
 function restoreLpFilters() {
   const saved = loadPageFilters("landingpages");
   if (!saved) return;
-  lpState.filters = { account: saved.account || "", campaign: saved.campaign || "", adGroup: saved.adGroup || "", url: saved.url || "", sources: new Set(saved.sources || []) };
+  lpState.filters = { account: new Set(Array.isArray(saved.account) ? saved.account : []), campaign: new Set(Array.isArray(saved.campaign) ? saved.campaign : []), adGroup: new Set(Array.isArray(saved.adGroup) ? saved.adGroup : []), url: saved.url || "", sources: new Set(saved.sources || []) };
   document.getElementById("lpfUrl").value = lpState.filters.url;
   LP_SOURCE_BOXES.forEach(([id, label]) => { document.getElementById(id).checked = lpState.filters.sources.has(label); });
 }
 function applyLpFilters() {
+  const inAll = GLOBAL_ACCOUNT === "ALL";
   const sources = new Set();
   LP_SOURCE_BOXES.forEach(([id, label]) => { if (document.getElementById(id).checked) sources.add(label); });
   lpState.filters = {
-    account: document.getElementById("lpfAccount").value,
-    campaign: document.getElementById("lpfCampaign").value,
-    adGroup: document.getElementById("lpfAdGroup").value,
+    account: inAll ? readCheckList("lpfAccountList") : lpState.filters.account,
+    campaign: readCheckList("lpfCampaignList"),
+    adGroup: readCheckList("lpfAdGroupList"),
     url: document.getElementById("lpfUrl").value.trim().toLowerCase(),
     sources,
   };
   document.getElementById("lpFiltersMenu").hidden = true;
-  savePageFilters("landingpages", { account: lpState.filters.account, campaign: lpState.filters.campaign, adGroup: lpState.filters.adGroup, url: lpState.filters.url, sources: [...sources] });
+  savePageFilters("landingpages", { account: [...lpState.filters.account], campaign: [...lpState.filters.campaign], adGroup: [...lpState.filters.adGroup], url: lpState.filters.url, sources: [...sources] });
   updateLpFilterCount();
   renderLandingPagesTable();
 }
 function resetLpFilters() {
-  ["lpfAccount", "lpfCampaign", "lpfAdGroup"].forEach(id => { document.getElementById(id).value = ""; });
+  lpState.filters.account = new Set();
+  lpState.filters.campaign = new Set();
+  lpState.filters.adGroup = new Set();
   document.getElementById("lpfUrl").value = "";
   LP_SOURCE_BOXES.forEach(([id]) => { document.getElementById(id).checked = false; });
+  populateLpFilterOptions();
   applyLpFilters();
 }
 function updateLpFilterCount() {
   const f = lpState.filters;
-  const n = (f.account ? 1 : 0) + (f.campaign ? 1 : 0) + (f.adGroup ? 1 : 0) + (f.url ? 1 : 0) + (f.sources.size ? 1 : 0);
+  const inAll = GLOBAL_ACCOUNT === "ALL";
+  const n = ((inAll && f.account.size) ? 1 : 0) + (f.campaign.size ? 1 : 0) + (f.adGroup.size ? 1 : 0) + (f.url ? 1 : 0) + (f.sources.size ? 1 : 0);
   const el = document.getElementById("lpFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; } else { el.hidden = true; }
 }
@@ -4018,14 +4042,13 @@ async function loadLandingPages(customerId) {
 }
 
 function renderLandingPagesTable() {
-  populateLpFilterOptions();
   const inAll = lpState.account === "ALL";
   const cols = applyColumnOrder(inAll ? [{ key: "account", label: "Account", align: "txt", width: 170 }, ...LP_COLUMNS] : LP_COLUMNS, colOrder("landingpages"));
   const f = lpState.filters;
   const rows = lpState.rows.filter(r => {
-      if (f.account && (r.accountName || "") !== f.account) return false;
-      if (f.campaign && (r.name || "") !== f.campaign) return false;
-      if (f.adGroup && (r.adGroup || "") !== f.adGroup) return false;
+      if (inAll && f.account.size && !f.account.has(r.accountName || "")) return false;
+      if (f.campaign.size && !f.campaign.has(r.name || "")) return false;
+      if (f.adGroup.size && !f.adGroup.has(r.adGroup || "")) return false;
       if (f.url && !(r.finalUrl || "").toLowerCase().includes(f.url)) return false;
       if (f.sources.size && !f.sources.has(r.source)) return false;
       return true;
