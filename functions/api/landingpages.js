@@ -29,6 +29,12 @@ export async function onRequestGet(context) {
   if (!customerId) return json({ error: "Missing customerId" }, 400);
   const cleanId = customerId.replace(/-/g, "");
 
+  // Date range for the metrics overlay. Accepts a GAQL macro (e.g. LAST_30_DAYS) or a
+  // "segments.date >= '...' AND segments.date <= '...'" clause; anything else falls back to 30 days.
+  const drParam = url.searchParams.get("dateRange") || "LAST_30_DAYS";
+  const drSafe = /^[A-Z0-9_]+$/.test(drParam) || /^segments\.date >= '\d{8}' AND segments\.date <= '\d{8}'$/.test(drParam);
+  const dateClause = drSafe ? (/segments\.date/i.test(drParam) ? drParam : "segments.date DURING " + drParam) : "segments.date DURING LAST_30_DAYS";
+
   const accessToken = await getAccessToken(env, refreshToken);
   const search = (query) => adsRequest(env, accessToken, `customers/${cleanId}/googleAds:search`, { query });
   const idOf = (rn) => String(rn || "").split("/").pop();
@@ -136,11 +142,11 @@ export async function onRequestGet(context) {
 
   // ---------- metrics overlay (last 30 days, parallel, best-effort) ----------
   const M = [
-    `SELECT ad_group_ad.ad.id, metrics.clicks, metrics.impressions, metrics.conversions FROM ad_group_ad WHERE campaign.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND ad_group_ad.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS`,
-    `SELECT asset_group.id, metrics.clicks, metrics.impressions, metrics.conversions FROM asset_group WHERE campaign.status = 'ENABLED' AND asset_group.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS`,
-    `SELECT customer_asset.asset, metrics.clicks, metrics.impressions, metrics.conversions FROM customer_asset WHERE customer_asset.field_type IN ${ASSET_FIELD_TYPES} AND segments.date DURING LAST_30_DAYS`,
-    `SELECT campaign_asset.campaign, campaign_asset.asset, metrics.clicks, metrics.impressions, metrics.conversions FROM campaign_asset WHERE campaign_asset.field_type IN ${ASSET_FIELD_TYPES} AND segments.date DURING LAST_30_DAYS`,
-    `SELECT ad_group_asset.ad_group, ad_group_asset.asset, metrics.clicks, metrics.impressions, metrics.conversions FROM ad_group_asset WHERE ad_group_asset.field_type IN ${ASSET_FIELD_TYPES} AND segments.date DURING LAST_30_DAYS`,
+    `SELECT ad_group_ad.ad.id, metrics.clicks, metrics.impressions, metrics.conversions FROM ad_group_ad WHERE campaign.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND ad_group_ad.status = 'ENABLED' AND ${dateClause}`,
+    `SELECT asset_group.id, metrics.clicks, metrics.impressions, metrics.conversions FROM asset_group WHERE campaign.status = 'ENABLED' AND asset_group.status = 'ENABLED' AND ${dateClause}`,
+    `SELECT customer_asset.asset, metrics.clicks, metrics.impressions, metrics.conversions FROM customer_asset WHERE customer_asset.field_type IN ${ASSET_FIELD_TYPES} AND ${dateClause}`,
+    `SELECT campaign_asset.campaign, campaign_asset.asset, metrics.clicks, metrics.impressions, metrics.conversions FROM campaign_asset WHERE campaign_asset.field_type IN ${ASSET_FIELD_TYPES} AND ${dateClause}`,
+    `SELECT ad_group_asset.ad_group, ad_group_asset.asset, metrics.clicks, metrics.impressions, metrics.conversions FROM ad_group_asset WHERE ad_group_asset.field_type IN ${ASSET_FIELD_TYPES} AND ${dateClause}`,
   ];
   const met = await Promise.allSettled(M.map((q) => search(q)));
   const mRows = (i) => (met[i].status === "fulfilled" ? (met[i].value.results || []) : []);
@@ -153,8 +159,7 @@ export async function onRequestGet(context) {
   const rows = [...byUrl.values()].map((r) => ({
     name: r.name, adGroup: r.adGroup, source: r.source, finalUrl: r.finalUrl,
     clicks: r.clicks,
-    ctr: r.impressions ? r.clicks / r.impressions : 0,
-    convRate: r.clicks ? r.conversions / r.clicks : 0,
+    conversions: r.conversions,
   }));
 
   const warning = failures.length ? "Some URLs couldn't be read: " + failures.join(", ") : undefined;
