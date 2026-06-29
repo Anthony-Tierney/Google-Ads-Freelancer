@@ -281,7 +281,11 @@
   .page-nav .pg-btn { font: inherit; line-height: 1; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); cursor: pointer; padding: 4px 9px; }
   .page-nav .pg-btn:hover:not(:disabled) { background: var(--line-soft); }
   .page-nav .pg-btn:disabled { opacity: .4; cursor: default; }
-  .cnf-op { font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px; background: var(--panel); color: var(--ink); width: 100%; margin-bottom: 6px; }
+  .cnf-op { appearance: none; -webkit-appearance: none; font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 8px 30px 8px 10px; background: var(--panel) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='%2364748b'/></svg>") no-repeat right 10px center; color: var(--ink); width: 100%; cursor: pointer; margin-bottom: 10px; }
+  .cnf-sublabel { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+  .cnf-value { font: inherit; width: 100%; min-height: 62px; resize: vertical; border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; color: var(--ink); background: var(--panel); box-sizing: border-box; }
+  .cnf-value:focus { outline: none; border-color: var(--accent); }
+  .cnf-hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
 
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   .scroll { overflow-x: auto; }
@@ -563,9 +567,11 @@
                     <span class="toggle">+</span>Campaign Name
                   </div>
                   <div class="filter-group-items" id="group-name" hidden>
-                    <div class="filter-section">
+                    <div class="filter-section cnf">
                       <select id="filterNameOp" class="cnf-op"></select>
-                      <input type="text" class="filter-input" id="filterName" placeholder="Enter text…" />
+                      <label class="cnf-sublabel">Any of the following values</label>
+                      <textarea id="filterName" class="cnf-value" autocomplete="off" placeholder="Value" rows="3"></textarea>
+                      <div class="cnf-hint">Enter one value per line</div>
                     </div>
                   </div>
 
@@ -721,10 +727,10 @@
             <div class="scroll"><table id="table" hidden><colgroup id="colgroup"></colgroup><thead id="thead"></thead><tbody id="tbody"></tbody><tfoot id="tfoot"></tfoot></table></div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-            <div class="foot-note">Click a column header to sort. Drag column borders to resize. Views are saved in this browser.</div>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px;">
             <div class="pagination" id="pagination" hidden></div>
           </div>
+          <div class="foot-note" style="margin-top:10px;">Click a column header to sort. Drag column borders to resize. Views are saved in this browser.</div>
         </section>
       </section>
 
@@ -813,10 +819,10 @@
             <div class="scroll"><table id="accTable" hidden><colgroup id="acc-colgroup"></colgroup><thead id="acc-thead"></thead><tbody id="acc-tbody"></tbody><tfoot id="acc-tfoot"></tfoot></table></div>
           </div>
 
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
-            <div class="foot-note">Each row aggregates all campaigns in that account for the selected period. Click a header to sort; drag or double-click borders to resize.</div>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px;">
             <div class="pagination" id="accPagination" hidden></div>
           </div>
+          <div class="foot-note" style="margin-top:10px;">Each row aggregates all campaigns in that account for the selected period. Click a header to sort; drag or double-click borders to resize.</div>
         </section>
       </section>
 
@@ -866,10 +872,6 @@
 
         <section id="asSignedIn" hidden>
           <div class="controls-row account">
-            <div>
-              <label class="field-label">&nbsp;</label>
-              <input type="text" id="assetsSearch" class="filter-input" placeholder="Search campaigns…" style="width:220px" oninput="renderAssetsTable()" />
-            </div>
             <div class="grow"></div>
             <div class="toolset">
               <div class="filters" id="assetsFilterGroup">
@@ -882,9 +884,11 @@
                     <span class="toggle">+</span>Campaign Name
                   </div>
                   <div class="filter-group-items" id="assets-group-name" hidden>
-                    <div class="filter-section">
+                    <div class="filter-section cnf">
                       <select id="asfNameOp" class="cnf-op"></select>
-                      <input type="text" id="asfName" class="filter-input" autocomplete="off" placeholder="Enter text…" />
+                      <label class="cnf-sublabel">Any of the following values</label>
+                      <textarea id="asfName" class="cnf-value" autocomplete="off" placeholder="Value" rows="3"></textarea>
+                      <div class="cnf-hint">Enter one value per line</div>
                     </div>
                   </div>
                   <div class="filter-group-header" id="asfAccountSection" onclick="toggleFilterGroup('assets-group-account', event)">
@@ -946,10 +950,10 @@
               <colgroup id="assets-colgroup"></colgroup><thead id="assets-thead"></thead><tbody id="assets-tbody"></tbody><tfoot id="assets-tfoot"></tfoot>
             </table></div>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
-            <div class="foot-note" style="margin:0;">Counts reflect campaign-level assets that are enabled and actually serving (policy-approved). Account-level assets aren't included. Image extensions are split by shape: Landscape (1.91:1) and Square (1:1). Cells are red when 0, orange when below the recommended count, and green when optimal (Sitelinks 8+, Landscape 2+, Square 5+, Callouts 10+, Structured Snippets 1+).</div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
             <div class="pagination" id="assetsPagination" hidden></div>
           </div>
+          <div class="foot-note" style="margin-top:10px;">Counts reflect campaign-level assets that are enabled and actually serving (policy-approved). Account-level assets aren't included. Image extensions are split by shape: Landscape (1.91:1) and Square (1:1). Cells are red when 0, orange when below the recommended count, and green when optimal (Sitelinks 8+, Landscape 2+, Square 5+, Callouts 10+, Structured Snippets 1+).</div>
         </section>
       </section>
 
@@ -980,9 +984,11 @@
                     <span class="toggle">+</span>Campaign Name
                   </div>
                   <div class="filter-group-items" id="lp-group-name" hidden>
-                    <div class="filter-section">
+                    <div class="filter-section cnf">
                       <select id="lpfNameOp" class="cnf-op"></select>
-                      <input type="text" id="lpfName" class="filter-input" autocomplete="off" placeholder="Enter text…" />
+                      <label class="cnf-sublabel">Any of the following values</label>
+                      <textarea id="lpfName" class="cnf-value" autocomplete="off" placeholder="Value" rows="3"></textarea>
+                      <div class="cnf-hint">Enter one value per line</div>
                     </div>
                   </div>
                   <div class="filter-group-header" id="lpfAccountSection" onclick="toggleFilterGroup('lp-group-account', event)">
@@ -1062,10 +1068,10 @@
               <colgroup id="lp-colgroup"></colgroup><thead id="lp-thead"></thead><tbody id="lp-tbody"></tbody><tfoot id="lp-tfoot"></tfoot>
             </table></div>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
-            <div class="foot-note" style="margin:0;">Final URLs from enabled placements, whether or not they've served recently: ads (Search, Display, Shopping, Video, App, Demand Gen) in enabled ad groups/campaigns, asset groups in Performance Max, and enabled Sitelink, Promotion and Price assets at account, campaign and ad-group level (account-level shown once as "All Campaigns"). The Source column shows where each URL comes from. Clicks, CTR and conversion rate are a best-effort overlay for the last 30 days (0 when a placement hasn't served in that window); asset metrics count interactions with that asset, so they aren't directly comparable to ad metrics.</div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
             <div class="pagination" id="lpPagination" hidden></div>
           </div>
+          <div class="foot-note" style="margin-top:10px;">Final URLs from enabled placements, whether or not they've served recently: ads (Search, Display, Shopping, Video, App, Demand Gen) in enabled ad groups/campaigns, asset groups in Performance Max, and enabled Sitelink, Promotion and Price assets at account, campaign and ad-group level (account-level shown once as "All Campaigns"). The Source column shows where each URL comes from. Clicks, CTR and conversion rate are a best-effort overlay for the last 30 days (0 when a placement hasn't served in that window); asset metrics count interactions with that asset, so they aren't directly comparable to ad metrics.</div>
         </section>
       </section>
 
@@ -1134,9 +1140,11 @@
                     <span class="toggle">+</span>Campaign Name
                   </div>
                   <div class="filter-group-items" id="us-group-name" hidden>
-                    <div class="filter-section">
+                    <div class="filter-section cnf">
                       <select id="usfNameOp" class="cnf-op"></select>
-                      <input type="text" id="usfName" class="filter-input" autocomplete="off" placeholder="Enter text…" />
+                      <label class="cnf-sublabel">Any of the following values</label>
+                      <textarea id="usfName" class="cnf-value" autocomplete="off" placeholder="Value" rows="3"></textarea>
+                      <div class="cnf-hint">Enter one value per line</div>
                     </div>
                   </div>
                   <div class="filter-group-header" onclick="toggleFilterGroup('us-group-status', event)">
@@ -1181,10 +1189,10 @@
               <colgroup id="us-colgroup"></colgroup><thead id="us-thead"></thead><tbody id="us-tbody"></tbody>
             </table></div>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
-            <div class="foot-note" style="margin:0;">Budget Pacing compares average daily spend since the last budget change to the daily budget: 90–119% is On Track (green), 120–149% is Overspending – low risk (orange), and 150%+ is Overspending – high risk (red); below 90% shows as Underspending. Change history only spans the last 30 days, so campaigns not adjusted recently use a rolling 30-day window (shown as "30+ days ago").</div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
             <div class="pagination" id="usPagination" hidden></div>
           </div>
+          <div class="foot-note" style="margin-top:10px;">Budget Pacing compares average daily spend since the last budget change to the daily budget: 90–119% is On Track (green), 120–149% is Overspending – low risk (orange), and 150%+ is Overspending – high risk (red); below 90% shows as Underspending. Change history only spans the last 30 days, so campaigns not adjusted recently use a rolling 30-day window (shown as "30+ days ago").</div>
         </section>
       </section>
 
@@ -1219,9 +1227,11 @@
                     <span class="toggle">+</span>Campaign Name
                   </div>
                   <div class="filter-group-items" id="bid-group-name" hidden>
-                    <div class="filter-section">
+                    <div class="filter-section cnf">
                       <select id="bidfNameOp" class="cnf-op"></select>
-                      <input type="text" id="bidfName" class="filter-input" autocomplete="off" placeholder="Enter text…" />
+                      <label class="cnf-sublabel">Any of the following values</label>
+                      <textarea id="bidfName" class="cnf-value" autocomplete="off" placeholder="Value" rows="3"></textarea>
+                      <div class="cnf-hint">Enter one value per line</div>
                     </div>
                   </div>
                   <div class="filter-group-header" onclick="toggleFilterGroup('bid-group-status', event)">
@@ -1266,10 +1276,10 @@
               <colgroup id="bid-colgroup"></colgroup><thead id="bid-thead"></thead><tbody id="bid-tbody"></tbody>
             </table></div>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
-            <div class="foot-note" style="margin:0;">CPA Achieved is cost ÷ conversions measured from the date the Target CPA was last changed up to yesterday. If the last change predates the available 30-day history (or there's no target), it's measured across the last 30 days. It's highlighted red with a warning icon when it's 20% or more below the campaign's Target CPA. Last Adjusted shows when the Target CPA was last changed — Google's change history only covers the last 30 days, so older changes show as "30+ days ago". Target CPA is read from the campaign's bid strategy; portfolio-level targets aren't included.</div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
             <div class="pagination" id="bidPagination" hidden></div>
           </div>
+          <div class="foot-note" style="margin-top:10px;">CPA Achieved is cost ÷ conversions measured from the date the Target CPA was last changed up to yesterday. If the last change predates the available 30-day history (or there's no target), it's measured across the last 30 days. It's highlighted red with a warning icon when it's 20% or more below the campaign's Target CPA. Last Adjusted shows when the Target CPA was last changed — Google's change history only covers the last 30 days, so older changes show as "30+ days ago". Target CPA is read from the campaign's bid strategy; portfolio-level targets aren't included.</div>
         </section>
       </section>
 
@@ -1805,16 +1815,20 @@ const TEXT_OP_OPTIONS =
   '<option value="starts">starts with</option>';
 function matchTextFilter(haystack, op, needle) {
   if (!needle) return true;
+  const values = String(needle).split(/\r?\n/).map(v => v.trim()).filter(Boolean);
+  if (!values.length) return true;
   const h = haystack == null ? "" : String(haystack);
-  const hl = h.toLowerCase(), nl = needle.toLowerCase();
+  const hl = h.toLowerCase();
+  const anyCI = values.some(v => hl.includes(v.toLowerCase()));
+  const anyCS = values.some(v => h.includes(v));
   switch (op) {
-    case "ncontains": return !hl.includes(nl);
-    case "contains_cs": return h.includes(needle);
-    case "ncontains_cs": return !h.includes(needle);
-    case "equals_cs": return h === needle;
-    case "starts": return hl.startsWith(nl);
+    case "ncontains": return !anyCI;
+    case "contains_cs": return anyCS;
+    case "ncontains_cs": return !anyCS;
+    case "equals_cs": return values.some(v => h === v);
+    case "starts": return values.some(v => hl.startsWith(v.toLowerCase()));
     case "contains":
-    default: return hl.includes(nl);
+    default: return anyCI;
   }
 }
 
@@ -1865,26 +1879,28 @@ function updateFilterCount() {
   updateFilterGroupIndicators();
 }
 
+// Show/update a count badge on a single filter-group header.
+function markFilterGroup(itemsId, count) {
+  const items = document.getElementById(itemsId);
+  if (!items || !items.previousElementSibling) return;
+  const header = items.previousElementSibling;
+  let badge = header.querySelector(".cat-count");
+  if (count > 0) {
+    if (!badge) { badge = document.createElement("span"); badge.className = "cat-count"; header.appendChild(badge); }
+    badge.textContent = count;
+    badge.hidden = false;
+  } else if (badge) {
+    badge.hidden = true;
+  }
+}
+
 // Show a count badge on each filter category that currently has a filter applied.
 function updateFilterGroupIndicators() {
-  const mark = (itemsId, count) => {
-    const items = document.getElementById(itemsId);
-    if (!items || !items.previousElementSibling) return;
-    const header = items.previousElementSibling;
-    let badge = header.querySelector(".cat-count");
-    if (count > 0) {
-      if (!badge) { badge = document.createElement("span"); badge.className = "cat-count"; header.appendChild(badge); }
-      badge.textContent = count;
-      badge.hidden = false;
-    } else if (badge) {
-      badge.hidden = true;
-    }
-  };
-  mark("group-name", state.filterName ? 1 : 0);
-  mark("group-type", state.filterChannelType.size);
-  mark("group-impr", state.filterImpValue > 0 ? 1 : 0);
-  mark("group-cost", state.filterCostValue > 0 ? 1 : 0);
-  mark("group-status", state.filterStatus.size);
+  markFilterGroup("group-name", state.filterName ? 1 : 0);
+  markFilterGroup("group-type", state.filterChannelType.size);
+  markFilterGroup("group-impr", state.filterImpValue > 0 ? 1 : 0);
+  markFilterGroup("group-cost", state.filterCostValue > 0 ? 1 : 0);
+  markFilterGroup("group-status", state.filterStatus.size);
 }
 
 function applyFilters() {
@@ -3586,13 +3602,14 @@ function renderBudgetPacing() {
         '</div>';
     }
 
-    // Avg daily spend over the last 7 full days, and a steadier projection
+    // Avg daily spend over the last 7 full days, and projections
     const avg7 = (r.last7 || 0) / 7;
     const remainingDays = Math.max(0, mi.daysInMonth - mi.dayOfMonth);
     const projected = r.spend + avg7 * remainingDays;
+    const projectedNext30 = avg7 * 30;
 
-    const stat = (label, value, cls) =>
-      '<div class="bp-stat"><div class="bp-stat-label">' + label + '</div>' +
+    const stat = (key, label, value, cls) =>
+      '<div class="bp-stat bp-stat-' + key + '"><div class="bp-stat-label">' + label + '</div>' +
       '<div class="bp-stat-value' + (cls ? ' ' + cls : '') + '">' + value + '</div></div>';
 
     // Pacing bar + scorecards
@@ -3600,9 +3617,10 @@ function renderBudgetPacing() {
     if (!budget || budget <= 0) {
       bar = '<div class="pace-none">Set a monthly budget to see pacing.' + (suggested ? ' Suggested: ' + fmtCurrency(suggested) + '.' : '') + '</div>';
       foot =
-        stat("Spend (MTD)", fmtCurrency(r.spend)) +
-        stat("Avg. Spend (Last 7 Days)", fmtCurrency(avg7)) +
-        stat("Projected", fmtCurrency(projected));
+        stat("spend-mtd", "Spend (MTD)", fmtCurrency(r.spend)) +
+        stat("avg7", "Avg. Spend (Last 7 Days)", fmtCurrency(avg7)) +
+        stat("projected-month", "Projected (this month)", fmtCurrency(projected)) +
+        stat("projected-next30", "Projected (next 30 days)", fmtCurrency(projectedNext30));
     } else {
       const spendPct = (r.spend / budget) * 100;
       const fillPct = Math.min(spendPct, 100);
@@ -3628,11 +3646,12 @@ function renderBudgetPacing() {
           '<div class="pace-marker" style="left:' + pacePct.toFixed(1) + '%" title="Expected pace today"></div>' +
         '</div>';
       foot =
-        stat("Spend (MTD)", fmtCurrency(r.spend)) +
-        stat("% of budget", spendPct.toFixed(0) + "%") +
-        stat("Pace", verdict, colorClass) +
-        stat("Avg. Spend (Last 7 Days)", fmtCurrency(avg7)) +
-        stat("Projected", fmtCurrency(projected));
+        stat("spend-mtd", "Spend (MTD)", fmtCurrency(r.spend)) +
+        stat("pct-budget", "% of budget", spendPct.toFixed(0) + "%") +
+        stat("pace", "Pace", verdict, colorClass) +
+        stat("avg7", "Avg. Spend (Last 7 Days)", fmtCurrency(avg7)) +
+        stat("projected-month", "Projected (this month)", fmtCurrency(projected)) +
+        stat("projected-next30", "Projected (next 30 days)", fmtCurrency(projectedNext30));
     }
 
     const rec = buildRecommendation(r, budget, mi, avg7, projected);
@@ -3867,6 +3886,10 @@ function updateAssetsFilterCount() {
   const el = document.getElementById("assetsFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
+  markFilterGroup("assets-group-name", assetsState.filterName ? 1 : 0);
+  markFilterGroup("assets-group-account", (inAll && assetsState.filterAccount.size) ? assetsState.filterAccount.size : 0);
+  markFilterGroup("assets-group-campaign", assetsState.filterCampaign.size);
+  markFilterGroup("assets-group-status", assetsState.filterStatus.size);
 }
 
 async function loadAssets(customerId) {
@@ -3935,12 +3958,9 @@ async function loadAssets(customerId) {
 }
 
 function renderAssetsTable() {
-  assetsState.search = document.getElementById("assetsSearch").value;
-  const q = assetsState.search.trim().toLowerCase();
   const inAll = assetsState.account === "ALL";
   const cols = applyColumnOrder(inAll ? [{ key: "account", label: "Account", align: "txt", width: 180 }, ...ASSET_COLUMNS] : ASSET_COLUMNS, colOrder("assets"));
   const rows = assetsState.rows.filter(r =>
-      (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
       matchTextFilter(r.name, assetsState.filterNameOp, assetsState.filterName) &&
       (!(inAll && assetsState.filterAccount.size) || assetsState.filterAccount.has(r.accountName || "")) &&
       (!assetsState.filterCampaign.size || assetsState.filterCampaign.has(r.name || "")) &&
@@ -4138,6 +4158,12 @@ function updateLpFilterCount() {
   const n = (f.name ? 1 : 0) + ((inAll && f.account.size) ? 1 : 0) + (f.campaign.size ? 1 : 0) + (f.adGroup.size ? 1 : 0) + (f.url ? 1 : 0) + (f.sources.size ? 1 : 0);
   const el = document.getElementById("lpFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; } else { el.hidden = true; }
+  markFilterGroup("lp-group-name", f.name ? 1 : 0);
+  markFilterGroup("lp-group-account", (inAll && f.account.size) ? f.account.size : 0);
+  markFilterGroup("lp-group-campaign", f.campaign.size);
+  markFilterGroup("lp-group-adgroup", f.adGroup.size);
+  markFilterGroup("lp-group-source", f.sources.size);
+  markFilterGroup("lp-group-url", f.url ? 1 : 0);
 }
 
 async function loadLandingPages(customerId) {
@@ -4573,6 +4599,8 @@ function updateUnderspendFilterCount() {
   const el = document.getElementById("usFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
+  markFilterGroup("us-group-name", underspendState.filterName ? 1 : 0);
+  markFilterGroup("us-group-status", underspendState.filterStatus.size);
 }
 
 /* ============================ Bidding Strategies page ============================ */
@@ -4761,6 +4789,8 @@ function updateBiddingFilterCount() {
   const el = document.getElementById("bidFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
+  markFilterGroup("bid-group-name", biddingState.filterName ? 1 : 0);
+  markFilterGroup("bid-group-status", biddingState.filterStatus.size);
 }
 
 function escapeHtml(s) {
