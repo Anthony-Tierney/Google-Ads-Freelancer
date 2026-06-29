@@ -286,6 +286,7 @@
   .cnf-value { font: inherit; width: 100%; min-height: 62px; resize: vertical; border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; color: var(--ink); background: var(--panel); box-sizing: border-box; }
   .cnf-value:focus { outline: none; border-color: var(--accent); }
   .cnf-hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .filters-btn.toggled { background: var(--accent); color: #fff; border-color: var(--accent); }
 
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   .scroll { overflow-x: auto; }
@@ -689,36 +690,6 @@
 
           <div id="compareCaption" class="compare-caption" hidden></div>
 
-          <div id="customDateModal" class="calendar-modal">
-            <div class="calendar-content">
-              <h3 id="calendarTitle">Custom date range</h3>
-              <div class="calendar-inputs">
-                <div class="calendar-picker">
-                  <label class="picker-label">From</label>
-                  <div class="month-nav">
-                    <button onclick="prevMonth('from')">&larr;</button>
-                    <span class="month-label" id="fromMonthLabel"></span>
-                    <button onclick="nextMonth('from')">&rarr;</button>
-                  </div>
-                  <div class="calendar-grid" id="fromCalendar"></div>
-                </div>
-                <div class="calendar-picker">
-                  <label class="picker-label">To</label>
-                  <div class="month-nav">
-                    <button onclick="prevMonth('to')">&larr;</button>
-                    <span class="month-label" id="toMonthLabel"></span>
-                    <button onclick="nextMonth('to')">&rarr;</button>
-                  </div>
-                  <div class="calendar-grid" id="toCalendar"></div>
-                </div>
-              </div>
-              <div class="calendar-buttons">
-                <button onclick="cancelCustomDate()">Cancel</button>
-                <button class="apply" onclick="applyCustomDate()">Apply</button>
-              </div>
-            </div>
-          </div>
-
           <div class="panel">
             <div id="loading" class="state" hidden><div class="spinner"></div>Loading campaigns…</div>
             <div id="prompt" class="state"><div class="big">Choose an account</div>Select an account above to load its campaigns.</div>
@@ -972,8 +943,26 @@
 
         <section id="lpSignedIn" hidden>
           <div class="controls-row account">
+            <div>
+              <label class="field-label" for="lpDateSelect">Date range</label>
+              <select id="lpDateSelect" onchange="onLpDateRangeChange()">
+                <option value="yesterday">Yesterday</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="14days">Last 14 Days</option>
+                <option value="30days" selected>Last 30 Days</option>
+                <option value="thisMonth">This Month</option>
+                <option value="lastMonth">Last Month</option>
+                <option value="custom">Custom...</option>
+              </select>
+            </div>
             <div class="grow"></div>
             <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="lpHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                  Heatmap
+                </button>
+              </div>
               <div class="filters" id="lpFilterGroup">
                 <button class="filters-btn" id="lpFiltersBtn" aria-haspopup="true" title="Filters">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -1055,6 +1044,13 @@
                   <button class="pop-row" data-lpfmt="sheets">Copy for Google Sheets</button>
                 </div>
               </div>
+              <div class="filters" id="lpColsGroup">
+                <button class="filters-btn" id="lpColsBtn" aria-haspopup="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
+                  Columns <span class="count" id="lpColsCount">0</span>
+                </button>
+                <div class="pop col-pop" id="lpColsPop" hidden></div>
+              </div>
             </div>
           </div>
 
@@ -1071,7 +1067,7 @@
           <div style="display:flex;justify-content:flex-end;margin-top:10px;">
             <div class="pagination" id="lpPagination" hidden></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Final URLs from enabled placements, whether or not they've served recently: ads (Search, Display, Shopping, Video, App, Demand Gen) in enabled ad groups/campaigns, asset groups in Performance Max, and enabled Sitelink, Promotion and Price assets at account, campaign and ad-group level (account-level shown once as "All Campaigns"). The Source column shows where each URL comes from. Clicks, CTR and conversion rate are a best-effort overlay for the last 30 days (0 when a placement hasn't served in that window); asset metrics count interactions with that asset, so they aren't directly comparable to ad metrics.</div>
+          <div class="foot-note" style="margin-top:10px;">Final URLs from enabled placements, whether or not they've served recently: ads (Search, Display, Shopping, Video, App, Demand Gen) in enabled ad groups/campaigns, asset groups in Performance Max, and enabled Sitelink, Promotion and Price assets at account, campaign and ad-group level (account-level shown once as "All Campaigns"). The Source column shows where each URL comes from. Clicks and conversion rate cover the selected date range (0 when a placement hasn't served in that window); asset metrics count interactions with that asset, so they aren't directly comparable to ad metrics. With the Ad Group column hidden the table reports campaign-level URL performance (metrics summed across ad groups); switch it on via Columns for ad-group-level detail.</div>
         </section>
       </section>
 
@@ -1299,6 +1295,36 @@
           </div>
         </div>
       </section>
+      <!-- Shared custom date-range modal (global so any page can open it) -->
+      <div id="customDateModal" class="calendar-modal">
+        <div class="calendar-content">
+          <h3 id="calendarTitle">Custom date range</h3>
+          <div class="calendar-inputs">
+            <div class="calendar-picker">
+              <label class="picker-label">From</label>
+              <div class="month-nav">
+                <button onclick="prevMonth('from')">&larr;</button>
+                <span class="month-label" id="fromMonthLabel"></span>
+                <button onclick="nextMonth('from')">&rarr;</button>
+              </div>
+              <div class="calendar-grid" id="fromCalendar"></div>
+            </div>
+            <div class="calendar-picker">
+              <label class="picker-label">To</label>
+              <div class="month-nav">
+                <button onclick="prevMonth('to')">&larr;</button>
+                <span class="month-label" id="toMonthLabel"></span>
+                <button onclick="nextMonth('to')">&rarr;</button>
+              </div>
+              <div class="calendar-grid" id="toCalendar"></div>
+            </div>
+          </div>
+          <div class="calendar-buttons">
+            <button onclick="cancelCustomDate()">Cancel</button>
+            <button class="apply" onclick="applyCustomDate()">Apply</button>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 
@@ -1577,8 +1603,7 @@ function withMetrics(c) {
   };
 }
 
-function getDateRange() {
-  const r = state.dateRange;
+function dateRangeToGAQL(r) {
   if (r.type === "thisMonth") {
     const now = new Date();
     const first = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -1595,6 +1620,36 @@ function getDateRange() {
   if (r.days === 7) return "LAST_7_DAYS";
   if (r.days === 14) return "LAST_14_DAYS";
   return "LAST_30_DAYS";
+}
+
+function getDateRange() {
+  return dateRangeToGAQL(state.dateRange);
+}
+
+const DATE_PRESET_MAP = {
+  "yesterday": { label: "Yesterday", days: 1 },
+  "7days": { label: "Last 7 Days", days: 7 },
+  "14days": { label: "Last 14 Days", days: 14 },
+  "30days": { label: "Last 30 Days", days: 30 },
+  "thisMonth": { label: "This Month", type: "thisMonth" },
+  "lastMonth": { label: "Last Month", type: "lastMonth" },
+};
+
+function onLpDateRangeChange() {
+  const val = document.getElementById("lpDateSelect").value;
+  if (val === "custom") {
+    state.calendarTarget = "lp";
+    state.calendarFromDate = new Date();
+    state.calendarToDate = new Date();
+    document.getElementById("calendarTitle").textContent = "Custom date range";
+    renderCalendar("from");
+    renderCalendar("to");
+    document.getElementById("customDateModal").setAttribute("open", "");
+  } else {
+    lpState.dateRange = DATE_PRESET_MAP[val];
+    lpState.currentPage = 1;
+    loadLandingPages(GLOBAL_ACCOUNT);
+  }
 }
 
 function formatDateForGAQL(d) {
@@ -1759,10 +1814,19 @@ function syncDateSelect() {
   else if (r.type === "lastMonth") sel.value = "lastMonth";
   else sel.value = ({ 1: "yesterday", 7: "7days", 14: "14days", 30: "30days" })[r.days] || "30days";
 }
+function syncLpDateSelect() {
+  const r = lpState.dateRange, sel = document.getElementById("lpDateSelect");
+  if (!sel) return;
+  if (r.from && r.to) sel.value = "custom";
+  else if (r.type === "thisMonth") sel.value = "thisMonth";
+  else if (r.type === "lastMonth") sel.value = "lastMonth";
+  else sel.value = ({ 1: "yesterday", 7: "7days", 14: "14days", 30: "30days" })[r.days] || "30days";
+}
 
 function cancelCustomDate() {
   closeCustomDateModal();
-  if (state.calendarTarget !== "compare") syncDateSelect();
+  if (state.calendarTarget === "lp") syncLpDateSelect();
+  else if (state.calendarTarget !== "compare") syncDateSelect();
 }
 
 function applyCustomDate() {
@@ -1777,6 +1841,14 @@ function applyCustomDate() {
     saveFilters();
     updateCompareUI();
     loadCampaigns();
+    return;
+  }
+
+  if (state.calendarTarget === "lp") {
+    lpState.dateRange = { label: from + " to " + to, from, to };
+    lpState.currentPage = 1;
+    closeCustomDateModal();
+    loadLandingPages(GLOBAL_ACCOUNT);
     return;
   }
 
@@ -2268,7 +2340,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -3753,7 +3825,15 @@ function buildRecommendation(r, budget, mi, avg7, projected) {
   }
   if (diff < -band) {
     const z = requiredDaily - avg7;
-    return '<div class="bp-rec under"><span class="rec-lbl">Recommendation:</span> Based on spending for the past 7 days, this account is projected to <strong>underspend by ' + fmtCurrency0(-diff) + '</strong> versus the client\u2019s ' + budgetStr + ' monthly budget. Increasing average daily spend by <strong>' + fmtCurrency0(z) + '</strong> \u2014 from ' + fmtCurrency0(avg7) + ' to ' + fmtCurrency0(requiredDaily) + ' per day across the remaining ' + days(remainingDays) + ' \u2014 would use the full budget.</div>';
+    // A late-month, disproportionate increase would destabilise bidding/learning, so don't advise it.
+    const impractical = remainingDays <= 7 && (avg7 <= 0 || requiredDaily > avg7 * 1.5);
+    let msg = 'Based on spending for the past 7 days, this account is projected to <strong>underspend by ' + fmtCurrency0(-diff) + '</strong> versus the client\u2019s ' + budgetStr + ' monthly budget.';
+    if (impractical) {
+      msg += ' With only ' + days(remainingDays) + ' left, closing the gap would require a disproportionate jump in daily spend, so no budget change is recommended.';
+    } else {
+      msg += ' Increasing average daily spend by <strong>' + fmtCurrency0(z) + '</strong> \u2014 from ' + fmtCurrency0(avg7) + ' to ' + fmtCurrency0(requiredDaily) + ' per day across the remaining ' + days(remainingDays) + ' \u2014 would use the full budget.';
+    }
+    return '<div class="bp-rec under"><span class="rec-lbl">Recommendation:</span> ' + msg + '</div>';
   }
   return '<div class="bp-rec ontrack"><span class="rec-lbl">Recommendation:</span> Based on the past 7 days, projected spend of <strong>' + fmtCurrency0(projected) + '</strong> is in line with the ' + budgetStr + ' monthly budget. Hold the current daily rate of around ' + fmtCurrency0(avg7) + ' per day.</div>';
 }
@@ -4049,15 +4129,16 @@ function assetCellHtml(key, v) {
 /* ============================ Landing Pages page ============================ */
 
 const LP_COLUMNS = [
-  { key: "name",     label: "Campaign",                 align: "txt", width: 200 },
-  { key: "adGroup",  label: "Ad Group",                 align: "txt", width: 180 },
-  { key: "source",   label: "Source",                   align: "txt", width: 110 },
-  { key: "finalUrl", label: "Final URL / Landing Page", align: "txt", width: 360 },
-  { key: "clicks",   label: "Clicks",                   align: "num", width: 90 },
-  { key: "ctr",      label: "CTR",                      align: "num", width: 90 },
-  { key: "convRate", label: "Conv. Rate",               align: "num", width: 110 },
+  { key: "name",     label: "Campaign",                 align: "txt", width: 200, group: "Columns" },
+  { key: "adGroup",  label: "Ad Group",                 align: "txt", width: 180, group: "Columns" },
+  { key: "source",   label: "Source",                   align: "txt", width: 110, group: "Columns" },
+  { key: "finalUrl", label: "Final URL / Landing Page", align: "txt", width: 360, group: "Columns" },
+  { key: "clicks",   label: "Clicks",                   align: "num", width: 90,  group: "Columns" },
+  { key: "convRate", label: "Conv. Rate",               align: "num", width: 110, group: "Columns" },
 ];
-const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { name: "", nameOp: "contains", account: new Set(), campaign: new Set(), adGroup: new Set(), url: "", sources: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10 };
+const LP_COL_GROUPS = ["Columns"];
+const LP_DEFAULT_VISIBLE = ["name", "source", "finalUrl", "clicks", "convRate"];
+const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { name: "", nameOp: "contains", account: new Set(), campaign: new Set(), adGroup: new Set(), url: "", sources: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set(LP_DEFAULT_VISIBLE), openColGroups: new Set(["lpColsPop_g0"]), heatmap: false, dateRange: { label: "Last 30 Days", days: 30 } };
 
 const LP_SOURCE_BOXES = [["lpfSrcAd", "Ad"], ["lpfSrcAssetGroup", "Asset Group"], ["lpfSrcSitelink", "Sitelink"], ["lpfSrcPromotion", "Promotion"], ["lpfSrcPrice", "Price"]];
 
@@ -4105,6 +4186,18 @@ function initLandingPages() {
     document.getElementById("lpExportBtn").addEventListener("click", e => { e.stopPropagation(); const open = lpExportPop.hidden; closeAllMenus(); if (open) lpExportPop.hidden = false; });
     lpExportPop.addEventListener("click", e => e.stopPropagation());
     lpExportPop.querySelectorAll("[data-lpfmt]").forEach(b => b.addEventListener("click", () => { lpExportPop.hidden = true; exportLandingPages(b.dataset.lpfmt); }));
+
+    // Columns picker
+    const colsBtn = document.getElementById("lpColsBtn"), colsPop = document.getElementById("lpColsPop");
+    colsBtn.addEventListener("click", e => { e.stopPropagation(); const open = colsPop.hidden; closeAllMenus(); if (open) { renderLpColsPop(); colsPop.hidden = false; } });
+    colsPop.addEventListener("click", e => e.stopPropagation());
+    syncLpColsCount();
+
+    // Heatmap toggle
+    const heatBtn = document.getElementById("lpHeatmapBtn");
+    heatBtn.addEventListener("click", e => { e.stopPropagation(); lpState.heatmap = !lpState.heatmap; heatBtn.classList.toggle("toggled", lpState.heatmap); heatBtn.setAttribute("aria-pressed", lpState.heatmap ? "true" : "false"); renderLandingPagesTable(); });
+
+    syncLpDateSelect();
     restoreLpFilters();
     updateLpFilterCount();
   }
@@ -4169,6 +4262,7 @@ function updateLpFilterCount() {
 async function loadLandingPages(customerId) {
   lpState.account = customerId;
   lpState.loadedAccount = customerId;
+  const dr = encodeURIComponent(dateRangeToGAQL(lpState.dateRange));
   showEl("lpLoading", true); showEl("lpPrompt", false); showEl("lpError", false);
   showEl("lpEmpty", false); showEl("lpWarn", false); showEl("lpTable", false);
 
@@ -4177,7 +4271,7 @@ async function loadLandingPages(customerId) {
     const rows = [], errors = [];
     await mapLimit(ACCOUNTS, 4, async (a) => {
       try {
-        const res = await fetch("/api/landingpages?customerId=" + encodeURIComponent(a.id), { credentials: "same-origin" });
+        const res = await fetch("/api/landingpages?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + dr, { credentials: "same-origin" });
         const data = await res.json().catch(() => ({}));
         if (data.error && !data.rows) { errors.push((a.name || a.id) + ": " + data.error); return; }
         if (data.warning) errors.push((a.name || a.id) + ": " + data.warning);
@@ -4199,7 +4293,7 @@ async function loadLandingPages(customerId) {
   }
 
   try {
-    const res = await fetch("/api/landingpages?customerId=" + encodeURIComponent(customerId), { credentials: "same-origin" });
+    const res = await fetch("/api/landingpages?customerId=" + encodeURIComponent(customerId) + "&dateRange=" + dr, { credentials: "same-origin" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || (data.error && !data.rows)) {
       showEl("lpLoading", false); showEl("lpError", true);
@@ -4221,9 +4315,14 @@ async function loadLandingPages(customerId) {
 
 function renderLandingPagesTable() {
   const inAll = lpState.account === "ALL";
-  const cols = applyColumnOrder(inAll ? [{ key: "account", label: "Account", align: "txt", width: 170 }, ...LP_COLUMNS] : LP_COLUMNS, colOrder("landingpages"));
+  const showAdGroup = lpState.visible.has("adGroup");
+
+  let baseCols = LP_COLUMNS.filter(c => lpState.visible.has(c.key));
+  if (inAll) baseCols = [{ key: "account", label: "Account", align: "txt", width: 170 }, ...baseCols];
+  const cols = applyColumnOrder(baseCols, colOrder("landingpages"));
+
   const f = lpState.filters;
-  const rows = lpState.rows.filter(r => {
+  let rows = lpState.rows.filter(r => {
       if (f.name && !matchTextFilter(r.name, f.nameOp, f.name)) return false;
       if (inAll && f.account.size && !f.account.has(r.accountName || "")) return false;
       if (f.campaign.size && !f.campaign.has(r.name || "")) return false;
@@ -4231,18 +4330,50 @@ function renderLandingPagesTable() {
       if (f.url && !(r.finalUrl || "").toLowerCase().includes(f.url)) return false;
       if (f.sources.size && !f.sources.has(r.source)) return false;
       return true;
-    })
-    .sort((a, b) => {
-      const { key, dir } = lpState.sort, sign = dir === "asc" ? 1 : -1;
-      let av = a[key], bv = b[key];
-      if (key === "account") { av = a.accountName || ""; bv = b.accountName || ""; }
-      if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
-      return ((av || 0) - (bv || 0)) * sign;
     });
+
+  // Granularity: Ad Group hidden → campaign-level (sum across ad groups); shown → ad-group-level.
+  if (!showAdGroup) {
+    const agg = new Map();
+    rows.forEach(r => {
+      const key = (r.accountName || "") + "|" + (r.name || "") + "|" + (r.source || "") + "|" + (r.finalUrl || "");
+      let row = agg.get(key);
+      if (!row) { row = { accountName: r.accountName, accountId: r.accountId, name: r.name, adGroup: "", source: r.source, finalUrl: r.finalUrl, clicks: 0, conversions: 0 }; agg.set(key, row); }
+      row.clicks += r.clicks || 0;
+      row.conversions += r.conversions || 0;
+    });
+    rows = [...agg.values()];
+  } else {
+    rows = rows.map(r => ({ ...r }));
+  }
+  rows.forEach(r => { r.convRate = r.clicks ? r.conversions / r.clicks : 0; });
+
+  rows.sort((a, b) => {
+    const { key, dir } = lpState.sort, sign = dir === "asc" ? 1 : -1;
+    let av = a[key], bv = b[key];
+    if (key === "account") { av = a.accountName || ""; bv = b.accountName || ""; }
+    if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
+    return ((av || 0) - (bv || 0)) * sign;
+  });
+
   lpState.viewRows = rows;
   lpState.viewCols = cols;
   const pageRows = pageSlice(rows, lpState);
   renderPagination("lpPagination", lpState, rows.length, renderLandingPagesTable);
+
+  // Heatmap shading ranges across the full filtered/aggregated set.
+  const heat = lpState.heatmap, ranges = {};
+  if (heat) ["clicks", "convRate"].forEach(k => {
+    let min = Infinity, max = -Infinity;
+    rows.forEach(r => { const v = r[k] || 0; if (v < min) min = v; if (v > max) max = v; });
+    ranges[k] = { min: min === Infinity ? 0 : min, max: max === -Infinity ? 0 : max };
+  });
+  const heatStyle = (k, v) => {
+    if (!heat || !ranges[k]) return "";
+    const { min, max } = ranges[k];
+    const frac = max > min ? (v - min) / (max - min) : 0;
+    return ' style="background:rgba(16,185,129,' + (0.06 + 0.46 * frac).toFixed(3) + ')"';
+  };
   const arrow = key => lpState.sort.key === key ? '<span class="arr">' + (lpState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
 
   document.getElementById("lp-colgroup").innerHTML = colgroupHtml(cols, lpState.columnWidths);
@@ -4258,16 +4389,17 @@ function renderLandingPagesTable() {
       const safe = escapeHtml(r.finalUrl || "");
       return '<td class="txt" data-col="finalUrl"><a href="' + safe + '" target="_blank" rel="noopener noreferrer" class="lp-link" title="' + safe + '">' + safe + "</a></td>";
     }
-    if (c.key === "clicks") return '<td class="num tabnum" data-col="clicks">' + fmtInt(r.clicks || 0) + "</td>";
-    if (c.key === "ctr") return '<td class="num tabnum" data-col="ctr">' + fmtPct(r.ctr || 0) + "</td>";
-    if (c.key === "convRate") return '<td class="num tabnum" data-col="convRate">' + fmtPct(r.convRate || 0) + "</td>";
+    if (c.key === "clicks") return '<td class="num tabnum" data-col="clicks"' + heatStyle("clicks", r.clicks || 0) + ">" + fmtInt(r.clicks || 0) + "</td>";
+    if (c.key === "convRate") return '<td class="num tabnum" data-col="convRate"' + heatStyle("convRate", r.convRate || 0) + ">" + fmtPct(r.convRate || 0) + "</td>";
     return '<td class="txt" data-col="' + c.key + '"></td>';
   }).join("") + "</tr>").join("");
 
   const totClicks = rows.reduce((a, r) => a + (r.clicks || 0), 0);
+  const totConv = rows.reduce((a, r) => a + (r.conversions || 0), 0);
   document.getElementById("lp-tfoot").innerHTML = "<tr>" + cols.map((c, i) => {
     if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total · ' + rows.length + "</td>";
     if (c.key === "clicks") return '<td class="num tabnum" data-col="clicks">' + fmtInt(totClicks) + "</td>";
+    if (c.key === "convRate") return '<td class="num tabnum" data-col="convRate">' + fmtPct(totClicks ? totConv / totClicks : 0) + "</td>";
     return '<td data-col="' + c.key + '"></td>';
   }).join("") + "</tr>";
 
@@ -4277,6 +4409,17 @@ function renderLandingPagesTable() {
     renderLandingPagesTable();
   }, (keys) => { setColOrder("landingpages", keys); renderLandingPagesTable(); });
 }
+
+function renderLpColsPop() {
+  renderGroupedCols("lpColsPop", LP_COLUMNS, LP_COL_GROUPS, lpState.visible, lpState.openColGroups, key => {
+    lpState.visible.has(key) ? lpState.visible.delete(key) : lpState.visible.add(key);
+    syncLpColsCount();
+    renderLpColsPop();
+    lpState.currentPage = 1;
+    renderLandingPagesTable();
+  });
+}
+function syncLpColsCount() { document.getElementById("lpColsCount").textContent = lpState.visible.size; }
 
 function exportLandingPages(fmt) {
   const rows = lpState.viewRows || [];
