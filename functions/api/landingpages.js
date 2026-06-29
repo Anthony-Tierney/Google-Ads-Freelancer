@@ -73,13 +73,13 @@ export async function onRequestGet(context) {
     // 3 asset URLs for price (offerings carry their own final_url)
     `SELECT asset.id, asset.price_asset.price_offerings FROM asset WHERE asset.type = 'PRICE'`,
     // 4 account-level links
-    `SELECT customer_asset.asset, customer_asset.field_type
+    `SELECT customer_asset.resource_name, customer_asset.asset, customer_asset.field_type
        FROM customer_asset WHERE customer_asset.field_type IN ${ASSET_FIELD_TYPES} AND customer_asset.status = 'ENABLED'`,
     // 5 campaign-level links
-    `SELECT campaign.id, campaign.name, campaign_asset.asset, campaign_asset.field_type
+    `SELECT campaign.id, campaign.name, campaign_asset.resource_name, campaign_asset.asset, campaign_asset.field_type
        FROM campaign_asset WHERE campaign_asset.field_type IN ${ASSET_FIELD_TYPES} AND campaign_asset.status = 'ENABLED' AND campaign.status = 'ENABLED'`,
     // 6 ad-group-level links
-    `SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_asset.asset, ad_group_asset.field_type
+    `SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_asset.resource_name, ad_group_asset.asset, ad_group_asset.field_type
        FROM ad_group_asset WHERE ad_group_asset.field_type IN ${ASSET_FIELD_TYPES} AND ad_group_asset.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND campaign.status = 'ENABLED'`,
   ];
   const LABELS = ["ad URLs", "Performance Max URLs", "sitelink/promotion asset URLs", "price asset URLs", "account-level links", "campaign-level links", "ad group-level links"];
