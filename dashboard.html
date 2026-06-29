@@ -277,6 +277,11 @@
   .pagination { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--muted); }
   .page-size { display: flex; align-items: center; gap: 6px; }
   .page-size select { font: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; background: var(--panel); cursor: pointer; color: var(--ink); }
+  .page-nav { display: flex; align-items: center; gap: 8px; }
+  .page-nav .pg-btn { font: inherit; line-height: 1; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); cursor: pointer; padding: 4px 9px; }
+  .page-nav .pg-btn:hover:not(:disabled) { background: var(--line-soft); }
+  .page-nav .pg-btn:disabled { opacity: .4; cursor: default; }
+  .cnf-op { font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 7px; background: var(--panel); color: var(--ink); width: 100%; margin-bottom: 6px; }
 
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   .scroll { overflow-x: auto; }
@@ -559,7 +564,8 @@
                   </div>
                   <div class="filter-group-items" id="group-name" hidden>
                     <div class="filter-section">
-                      <input type="text" class="filter-input" id="filterName" placeholder="Search..." />
+                      <select id="filterNameOp" class="cnf-op"></select>
+                      <input type="text" class="filter-input" id="filterName" placeholder="Enter text…" />
                     </div>
                   </div>
 
@@ -717,17 +723,7 @@
 
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
             <div class="foot-note">Click a column header to sort. Drag column borders to resize. Views are saved in this browser.</div>
-            <div class="pagination" id="pagination" hidden>
-              <div class="page-size">
-                Show <select id="pageSize">
-                  <option value="10">10</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                  <option value="500">500</option>
-                </select> per page
-              </div>
-              <span id="pageInfo"></span>
-            </div>
+            <div class="pagination" id="pagination" hidden></div>
           </div>
         </section>
       </section>
@@ -819,10 +815,7 @@
 
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
             <div class="foot-note">Each row aggregates all campaigns in that account for the selected period. Click a header to sort; drag or double-click borders to resize.</div>
-            <div class="pagination" id="accPagination" hidden>
-              <div class="page-size">Show <select id="accPageSize"><option value="10">10</option><option value="25" selected>25</option><option value="50">50</option><option value="100">100</option></select> per page</div>
-              <span id="accPageInfo"></span>
-            </div>
+            <div class="pagination" id="accPagination" hidden></div>
           </div>
         </section>
       </section>
@@ -851,6 +844,9 @@
 
           <div class="panel" style="margin-top:14px;">
             <div class="scroll"><table id="audTable"><colgroup id="aud-colgroup"></colgroup><thead id="aud-thead"></thead><tbody id="aud-tbody"></tbody></table></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+            <div class="pagination" id="audPagination" hidden></div>
           </div>
         </section>
       </section>
@@ -882,13 +878,30 @@
                   <span class="count" id="assetsFilterCount" hidden>0</span>
                 </button>
                 <div class="pop filters-menu" id="assetsFiltersMenu" hidden>
-                  <div class="filter-section" id="asfAccountSection">
-                    <label class="field-label">Account</label>
-                    <div class="filter-checklist" id="asfAccountList"></div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('assets-group-name', event)">
+                    <span class="toggle">+</span>Campaign Name
                   </div>
-                  <div class="filter-section">
-                    <label class="field-label">Campaign</label>
-                    <div class="filter-checklist" id="asfCampaignList"></div>
+                  <div class="filter-group-items" id="assets-group-name" hidden>
+                    <div class="filter-section">
+                      <select id="asfNameOp" class="cnf-op"></select>
+                      <input type="text" id="asfName" class="filter-input" autocomplete="off" placeholder="Enter text…" />
+                    </div>
+                  </div>
+                  <div class="filter-group-header" id="asfAccountSection" onclick="toggleFilterGroup('assets-group-account', event)">
+                    <span class="toggle">+</span>Account
+                  </div>
+                  <div class="filter-group-items" id="assets-group-account" hidden>
+                    <div class="filter-section">
+                      <div class="filter-checklist" id="asfAccountList"></div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('assets-group-campaign', event)">
+                    <span class="toggle">+</span>Campaign
+                  </div>
+                  <div class="filter-group-items" id="assets-group-campaign" hidden>
+                    <div class="filter-section">
+                      <div class="filter-checklist" id="asfCampaignList"></div>
+                    </div>
                   </div>
                   <div class="filter-group-header" onclick="toggleFilterGroup('assets-group-status', event)">
                     <span class="toggle">−</span>Campaign Status
@@ -933,7 +946,10 @@
               <colgroup id="assets-colgroup"></colgroup><thead id="assets-thead"></thead><tbody id="assets-tbody"></tbody><tfoot id="assets-tfoot"></tfoot>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Counts reflect campaign-level assets that are enabled and actually serving (policy-approved). Account-level assets aren't included. Image extensions are split by shape: Landscape (1.91:1) and Square (1:1). Cells are red when 0, orange when below the recommended count, and green when optimal (Sitelinks 8+, Landscape 2+, Square 5+, Callouts 10+, Structured Snippets 1+).</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
+            <div class="foot-note" style="margin:0;">Counts reflect campaign-level assets that are enabled and actually serving (policy-approved). Account-level assets aren't included. Image extensions are split by shape: Landscape (1.91:1) and Square (1:1). Cells are red when 0, orange when below the recommended count, and green when optimal (Sitelinks 8+, Landscape 2+, Square 5+, Callouts 10+, Structured Snippets 1+).</div>
+            <div class="pagination" id="assetsPagination" hidden></div>
+          </div>
         </section>
       </section>
 
@@ -960,31 +976,60 @@
                   Filters <span class="count" id="lpFilterCount" hidden>0</span>
                 </button>
                 <div class="pop filters-menu" id="lpFiltersMenu" hidden>
-                  <div class="filter-section" id="lpfAccountSection">
-                    <label class="field-label">Account</label>
-                    <div class="filter-checklist" id="lpfAccountList"></div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('lp-group-name', event)">
+                    <span class="toggle">+</span>Campaign Name
                   </div>
-                  <div class="filter-section">
-                    <label class="field-label">Campaign</label>
-                    <div class="filter-checklist" id="lpfCampaignList"></div>
-                  </div>
-                  <div class="filter-section">
-                    <label class="field-label">Ad Group</label>
-                    <div class="filter-checklist" id="lpfAdGroupList"></div>
-                  </div>
-                  <div class="filter-section">
-                    <label class="field-label">URL Source</label>
-                    <div class="status-checks">
-                      <div class="check-row"><input type="checkbox" id="lpfSrcAd" /><label for="lpfSrcAd">Ad</label></div>
-                      <div class="check-row"><input type="checkbox" id="lpfSrcAssetGroup" /><label for="lpfSrcAssetGroup">Asset Group</label></div>
-                      <div class="check-row"><input type="checkbox" id="lpfSrcSitelink" /><label for="lpfSrcSitelink">Sitelink</label></div>
-                      <div class="check-row"><input type="checkbox" id="lpfSrcPromotion" /><label for="lpfSrcPromotion">Promotion</label></div>
-                      <div class="check-row"><input type="checkbox" id="lpfSrcPrice" /><label for="lpfSrcPrice">Price</label></div>
+                  <div class="filter-group-items" id="lp-group-name" hidden>
+                    <div class="filter-section">
+                      <select id="lpfNameOp" class="cnf-op"></select>
+                      <input type="text" id="lpfName" class="filter-input" autocomplete="off" placeholder="Enter text…" />
                     </div>
                   </div>
-                  <div class="filter-section">
-                    <label class="field-label">Final URL / Landing Page contains</label>
-                    <input type="text" id="lpfUrl" class="filter-input" autocomplete="off" placeholder="e.g. /checkout" />
+                  <div class="filter-group-header" id="lpfAccountSection" onclick="toggleFilterGroup('lp-group-account', event)">
+                    <span class="toggle">+</span>Account
+                  </div>
+                  <div class="filter-group-items" id="lp-group-account" hidden>
+                    <div class="filter-section">
+                      <div class="filter-checklist" id="lpfAccountList"></div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('lp-group-campaign', event)">
+                    <span class="toggle">+</span>Campaign
+                  </div>
+                  <div class="filter-group-items" id="lp-group-campaign" hidden>
+                    <div class="filter-section">
+                      <div class="filter-checklist" id="lpfCampaignList"></div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('lp-group-adgroup', event)">
+                    <span class="toggle">+</span>Ad Group
+                  </div>
+                  <div class="filter-group-items" id="lp-group-adgroup" hidden>
+                    <div class="filter-section">
+                      <div class="filter-checklist" id="lpfAdGroupList"></div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('lp-group-source', event)">
+                    <span class="toggle">+</span>URL Source
+                  </div>
+                  <div class="filter-group-items" id="lp-group-source" hidden>
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="lpfSrcAd" /><label for="lpfSrcAd">Ad</label></div>
+                        <div class="check-row"><input type="checkbox" id="lpfSrcAssetGroup" /><label for="lpfSrcAssetGroup">Asset Group</label></div>
+                        <div class="check-row"><input type="checkbox" id="lpfSrcSitelink" /><label for="lpfSrcSitelink">Sitelink</label></div>
+                        <div class="check-row"><input type="checkbox" id="lpfSrcPromotion" /><label for="lpfSrcPromotion">Promotion</label></div>
+                        <div class="check-row"><input type="checkbox" id="lpfSrcPrice" /><label for="lpfSrcPrice">Price</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('lp-group-url', event)">
+                    <span class="toggle">+</span>Final URL / Landing Page
+                  </div>
+                  <div class="filter-group-items" id="lp-group-url" hidden>
+                    <div class="filter-section">
+                      <input type="text" id="lpfUrl" class="filter-input" autocomplete="off" placeholder="contains e.g. /checkout" />
+                    </div>
                   </div>
                   <div class="filter-buttons">
                     <button onclick="resetLpFilters()">Reset</button>
@@ -1017,7 +1062,10 @@
               <colgroup id="lp-colgroup"></colgroup><thead id="lp-thead"></thead><tbody id="lp-tbody"></tbody><tfoot id="lp-tfoot"></tfoot>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Final URLs from enabled placements, whether or not they've served recently: ads (Search, Display, Shopping, Video, App, Demand Gen) in enabled ad groups/campaigns, asset groups in Performance Max, and enabled Sitelink and Promotion assets at account, campaign and ad-group level (account-level shown once as "All Campaigns"). The Source column shows where each URL comes from. Clicks, CTR and conversion rate are a best-effort overlay for the last 30 days (0 when a placement hasn't served in that window); asset metrics count interactions with that asset, so they aren't directly comparable to ad metrics.</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
+            <div class="foot-note" style="margin:0;">Final URLs from enabled placements, whether or not they've served recently: ads (Search, Display, Shopping, Video, App, Demand Gen) in enabled ad groups/campaigns, asset groups in Performance Max, and enabled Sitelink, Promotion and Price assets at account, campaign and ad-group level (account-level shown once as "All Campaigns"). The Source column shows where each URL comes from. Clicks, CTR and conversion rate are a best-effort overlay for the last 30 days (0 when a placement hasn't served in that window); asset metrics count interactions with that asset, so they aren't directly comparable to ad metrics.</div>
+            <div class="pagination" id="lpPagination" hidden></div>
+          </div>
         </section>
       </section>
 
@@ -1082,6 +1130,15 @@
                   <span class="count" id="usFilterCount" hidden>0</span>
                 </button>
                 <div class="pop filters-menu" id="underspendFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('us-group-name', event)">
+                    <span class="toggle">+</span>Campaign Name
+                  </div>
+                  <div class="filter-group-items" id="us-group-name" hidden>
+                    <div class="filter-section">
+                      <select id="usfNameOp" class="cnf-op"></select>
+                      <input type="text" id="usfName" class="filter-input" autocomplete="off" placeholder="Enter text…" />
+                    </div>
+                  </div>
                   <div class="filter-group-header" onclick="toggleFilterGroup('us-group-status', event)">
                     <span class="toggle">−</span>Campaign Status
                   </div>
@@ -1124,7 +1181,10 @@
               <colgroup id="us-colgroup"></colgroup><thead id="us-thead"></thead><tbody id="us-tbody"></tbody>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Budget Pacing compares average daily spend since the last budget change to the daily budget: 90–119% is On Track (green), 120–149% is Overspending – low risk (orange), and 150%+ is Overspending – high risk (red); below 90% shows as Underspending. Change history only spans the last 30 days, so campaigns not adjusted recently use a rolling 30-day window (shown as "30+ days ago").</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
+            <div class="foot-note" style="margin:0;">Budget Pacing compares average daily spend since the last budget change to the daily budget: 90–119% is On Track (green), 120–149% is Overspending – low risk (orange), and 150%+ is Overspending – high risk (red); below 90% shows as Underspending. Change history only spans the last 30 days, so campaigns not adjusted recently use a rolling 30-day window (shown as "30+ days ago").</div>
+            <div class="pagination" id="usPagination" hidden></div>
+          </div>
         </section>
       </section>
 
@@ -1155,6 +1215,15 @@
                   <span class="count" id="bidFilterCount" hidden>0</span>
                 </button>
                 <div class="pop filters-menu" id="biddingFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('bid-group-name', event)">
+                    <span class="toggle">+</span>Campaign Name
+                  </div>
+                  <div class="filter-group-items" id="bid-group-name" hidden>
+                    <div class="filter-section">
+                      <select id="bidfNameOp" class="cnf-op"></select>
+                      <input type="text" id="bidfName" class="filter-input" autocomplete="off" placeholder="Enter text…" />
+                    </div>
+                  </div>
                   <div class="filter-group-header" onclick="toggleFilterGroup('bid-group-status', event)">
                     <span class="toggle">−</span>Campaign Status
                   </div>
@@ -1197,7 +1266,10 @@
               <colgroup id="bid-colgroup"></colgroup><thead id="bid-thead"></thead><tbody id="bid-tbody"></tbody>
             </table></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">CPA Achieved is cost ÷ conversions measured from the date the Target CPA was last changed up to yesterday. If the last change predates the available 30-day history (or there's no target), it's measured across the last 30 days. It's highlighted red with a warning icon when it's 20% or more below the campaign's Target CPA. Last Adjusted shows when the Target CPA was last changed — Google's change history only covers the last 30 days, so older changes show as "30+ days ago". Target CPA is read from the campaign's bid strategy; portfolio-level targets aren't included.</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
+            <div class="foot-note" style="margin:0;">CPA Achieved is cost ÷ conversions measured from the date the Target CPA was last changed up to yesterday. If the last change predates the available 30-day history (or there's no target), it's measured across the last 30 days. It's highlighted red with a warning icon when it's 20% or more below the campaign's Target CPA. Last Adjusted shows when the Target CPA was last changed — Google's change history only covers the last 30 days, so older changes show as "30+ days ago". Target CPA is read from the campaign's bid strategy; portfolio-level targets aren't included.</div>
+            <div class="pagination" id="bidPagination" hidden></div>
+          </div>
         </section>
       </section>
 
@@ -1404,7 +1476,7 @@ const accState = {
   visible: new Set(ACCOUNT_DEFAULT_VISIBLE),
   sort: { key: "cost", dir: "desc" },
   dateRange: { label: "Last 30 Days", days: 30 },
-  pageSize: 25,
+  pageSize: 10,
   currentPage: 1,
   search: "",
   filterAccountStatus: new Set(["active"]),
@@ -1414,7 +1486,7 @@ const accState = {
   wired: false,
 };
 
-const auditState = { rows: [], loaded: false, columnWidths: {} };
+const auditState = { rows: [], loaded: false, columnWidths: {}, currentPage: 1, pageSize: 10 };
 
 const BUDGETS_KEY = "budget_pacing_monthly_v1";
 const bpState = { rows: [], loaded: false, budgets: {}, editing: null };
@@ -1424,6 +1496,7 @@ const state = {
   visible: new Set(SEED_VIEWS[0].columns),
   sort: { key: "clicks", dir: "desc" },
   filterName: "",
+  filterNameOp: "contains",
   filterChannelType: new Set(),
   filterImpOp: ">=",
   filterImpValue: 0,
@@ -1722,6 +1795,58 @@ function toggleFilterGroup(id, event) {
   }
 }
 
+// ---- Shared "Campaign Name" text-operator filter ----
+const TEXT_OP_OPTIONS =
+  '<option value="contains">contains</option>' +
+  '<option value="ncontains">does not contain</option>' +
+  '<option value="contains_cs">contains (case sensitive)</option>' +
+  '<option value="ncontains_cs">does not contain (case sensitive)</option>' +
+  '<option value="equals_cs">equals (case sensitive)</option>' +
+  '<option value="starts">starts with</option>';
+function matchTextFilter(haystack, op, needle) {
+  if (!needle) return true;
+  const h = haystack == null ? "" : String(haystack);
+  const hl = h.toLowerCase(), nl = needle.toLowerCase();
+  switch (op) {
+    case "ncontains": return !hl.includes(nl);
+    case "contains_cs": return h.includes(needle);
+    case "ncontains_cs": return !h.includes(needle);
+    case "equals_cs": return h === needle;
+    case "starts": return hl.startsWith(nl);
+    case "contains":
+    default: return hl.includes(nl);
+  }
+}
+
+// ---- Reusable pagination (page-size + prev/next + "Page x of y") ----
+function pageSlice(rows, st) {
+  const size = st.pageSize || 10;
+  const start = (st.currentPage - 1) * size;
+  return rows.slice(start, start + size);
+}
+function renderPagination(containerId, st, totalRows, onChange) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const size = st.pageSize || 10;
+  const totalPages = Math.max(1, Math.ceil(totalRows / size));
+  if (st.currentPage > totalPages) st.currentPage = totalPages;
+  if (st.currentPage < 1) st.currentPage = 1;
+  const cur = st.currentPage;
+  el.hidden = false;
+  el.innerHTML =
+    '<div class="page-size">Show <select class="pg-size">' +
+      [10, 25, 50, 100, 500].map(n => '<option value="' + n + '"' + (n === size ? " selected" : "") + ">" + n + "</option>").join("") +
+    "</select> per page</div>" +
+    '<div class="page-nav">' +
+      '<button class="pg-btn pg-prev"' + (cur <= 1 ? " disabled" : "") + ' aria-label="Previous page">‹ Prev</button>' +
+      '<span class="pg-info">Page ' + cur + " of " + totalPages + "</span>" +
+      '<button class="pg-btn pg-next"' + (cur >= totalPages ? " disabled" : "") + ' aria-label="Next page">Next ›</button>' +
+    "</div>";
+  el.querySelector(".pg-size").addEventListener("change", e => { st.pageSize = parseInt(e.target.value, 10); st.currentPage = 1; onChange(); });
+  el.querySelector(".pg-prev").addEventListener("click", () => { if (st.currentPage > 1) { st.currentPage--; onChange(); } });
+  el.querySelector(".pg-next").addEventListener("click", () => { if (st.currentPage < totalPages) { st.currentPage++; onChange(); } });
+}
+
 function updateFilterCount() {
   let count = 0;
   if (state.filterName) count++;
@@ -1764,6 +1889,7 @@ function updateFilterGroupIndicators() {
 
 function applyFilters() {
   state.filterName = document.getElementById("filterName").value;
+  state.filterNameOp = document.getElementById("filterNameOp").value;
   state.filterChannelType = new Set(
     ["typeSearch","typeDisplay","typeShopping","typePmax","typeVideo","typeApp","typeSmart"]
       .map(id => document.getElementById(id))
@@ -1790,6 +1916,7 @@ function saveFilters() {
   try {
     localStorage.setItem(FILTERS_KEY, JSON.stringify({
       filterName: state.filterName,
+      filterNameOp: state.filterNameOp,
       filterChannelType: [...state.filterChannelType],
       filterImpOp: state.filterImpOp,
       filterImpValue: state.filterImpValue,
@@ -1808,6 +1935,7 @@ function loadFilters() {
     const d = JSON.parse(localStorage.getItem(FILTERS_KEY) || "null");
     if (!d) return;
     state.filterName = d.filterName || "";
+    state.filterNameOp = d.filterNameOp || "contains";
     state.filterChannelType = new Set(d.filterChannelType || []);
     state.filterImpOp = d.filterImpOp || ">=";
     state.filterImpValue = d.filterImpValue || 0;
@@ -1822,6 +1950,7 @@ function loadFilters() {
 
 function syncFilterDOM() {
   document.getElementById("filterName").value = state.filterName;
+  document.getElementById("filterNameOp").value = state.filterNameOp || "contains";
   TYPE_CHECKBOXES.forEach(([id, val]) => {
     document.getElementById(id).checked = state.filterChannelType.has(val);
   });
@@ -1890,6 +2019,7 @@ function showToast(msg) {
 
 function resetFilters() {
   document.getElementById("filterName").value = "";
+  document.getElementById("filterNameOp").value = "contains";
   ["typeSearch","typeDisplay","typeShopping","typePmax","typeVideo","typeApp","typeSmart"]
     .forEach(id => { document.getElementById(id).checked = false; });
   document.getElementById("filterImpValue").value = "0";
@@ -2064,8 +2194,8 @@ function showApp(accounts) {
 
   loadFilters();
   loadViewState();
+  document.getElementById("filterNameOp").innerHTML = TEXT_OP_OPTIONS;
   syncFilterDOM();
-  document.getElementById("pageSize").value = String(state.pageSize);
   renderViewsLabel();
   updateCompareUI();
 
@@ -2080,7 +2210,6 @@ function showApp(accounts) {
   const trBtn = document.getElementById("topbarRefreshBtn");
   if (!trBtn.dataset.wired) { trBtn.dataset.wired = "1"; trBtn.addEventListener("click", globalRefresh); }
 
-  document.getElementById("pageSize").addEventListener("change", e => { state.pageSize = parseInt(e.target.value); state.currentPage = 1; saveViewState(); renderTable(); });
   document.getElementById("filtersBtn").addEventListener("click", e => { e.stopPropagation(); closeAllMenus(); document.getElementById("filtersMenu").hidden = !document.getElementById("filtersMenu").hidden; });
   document.addEventListener("click", closeAllMenus);
   document.getElementById("filtersMenu").addEventListener("click", e => e.stopPropagation());
@@ -2208,9 +2337,8 @@ function shownColumns() {
 }
 
 function sortedAndFiltered() {
-  const nameQ = state.filterName.toLowerCase();
   return state.campaigns.filter(c => {
-    const nameMatch = (c.name || "").toLowerCase().includes(nameQ) || (GLOBAL_ACCOUNT === "ALL" && (c.account || "").toLowerCase().includes(nameQ));
+    const nameMatch = matchTextFilter(c.name, state.filterNameOp, state.filterName);
     const typeMatch = state.filterChannelType.size === 0 || state.filterChannelType.has(c.channelType);
     const statusMatch = state.filterStatus.has(c.status);
     
@@ -2248,6 +2376,8 @@ function sortedAndFiltered() {
 
 function paginatedRows() {
   const filtered = sortedAndFiltered();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+  if (state.currentPage > totalPages) state.currentPage = totalPages;
   const start = (state.currentPage - 1) * state.pageSize;
   return filtered.slice(start, start + state.pageSize);
 }
@@ -2317,8 +2447,7 @@ function renderTable() {
     return '<td class="num tabnum" data-col="' + c.key + '">' + formatCell(c.type, tot[c.key]) + delta + '</td>';
   }).join("") + "</tr>";
 
-  const totalPages = Math.ceil(filtered.length / state.pageSize);
-  document.getElementById("pageInfo").innerHTML = "Page " + state.currentPage + " of " + totalPages;
+  renderPagination("pagination", state, filtered.length, () => { saveViewState(); renderTable(); });
 
   document.querySelectorAll("#thead th").forEach(th => {
     const handle = document.createElement('div');
@@ -2899,7 +3028,6 @@ function initAllAccounts() {
   if (!signedIn) return;
   if (!accState.wired) {
     accState.wired = true;
-    document.getElementById("accPageSize").value = String(accState.pageSize);
     wireAccountsControls();
     restoreAccFilters();
   }
@@ -2921,8 +3049,6 @@ function restoreAccFilters() {
 }
 
 function wireAccountsControls() {
-  document.getElementById("accPageSize").addEventListener("change", e => { accState.pageSize = parseInt(e.target.value); accState.currentPage = 1; renderAccountsTable(); });
-
   const colsBtn = document.getElementById("accColsBtn"), colsPop = document.getElementById("accColsPop");
   colsBtn.addEventListener("click", e => { e.stopPropagation(); const open = colsPop.hidden; closeAllMenus(); if (open) { renderAccColsPop(); colsPop.hidden = false; } });
   colsPop.addEventListener("click", e => e.stopPropagation());
@@ -3117,8 +3243,7 @@ function renderAccountsTable() {
     return '<td class="num tabnum" data-col="' + c.key + '">' + formatCell(c.type, tot[c.key]) + "</td>";
   }).join("") + "</tr>";
 
-  const totalPagesLabel = totalPages;
-  document.getElementById("accPageInfo").textContent = "Page " + accState.currentPage + " of " + totalPagesLabel;
+  renderPagination("accPagination", accState, filtered.length, renderAccountsTable);
 
   const ids = { colgroup: "acc-colgroup", thead: "acc-thead", tbody: "acc-tbody", tfoot: "acc-tfoot" };
   document.querySelectorAll("#acc-thead th").forEach(th => {
@@ -3261,7 +3386,9 @@ function renderAuditTable() {
   document.getElementById("aud-thead").innerHTML = "<tr>" +
     AUDIT_COLS.map(c => '<th class="txt" data-col="' + c.key + '">' + c.label + "</th>").join("") + "</tr>";
 
-  document.getElementById("aud-tbody").innerHTML = auditState.rows.map(r => {
+  const pageRows = pageSlice(auditState.rows, auditState);
+  renderPagination("audPagination", auditState, auditState.rows.length, renderAuditTable);
+  document.getElementById("aud-tbody").innerHTML = pageRows.map(r => {
     if (r.loading) {
       return "<tr><td data-col='account'><div style='display:flex;align-items:center;gap:9px'>" + logoHtml(r.id, r.name) + "<div><strong>" + escapeHtml(r.name) + "</strong><div class='aud-detail'>" + escapeHtml(r.formatted) + "</div></div></div></td>" +
         "<td colspan='3'><span class='aud-spinner'></span> <span style='color:var(--muted)'>Checking…</span></td></tr>";
@@ -3637,7 +3764,7 @@ const ASSET_COLUMNS = [
   { key: "callouts",     label: "Callouts",            type: "int",    align: "num" },
   { key: "snippets",     label: "Structured Snippets", type: "int",    align: "num" },
 ];
-const assetsState = { rows: [], account: "", loadedAccount: null, sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), filterAccount: new Set(), filterCampaign: new Set(), columnWidths: {} };
+const assetsState = { rows: [], account: "", loadedAccount: null, sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), filterName: "", filterNameOp: "contains", filterAccount: new Set(), filterCampaign: new Set(), columnWidths: {}, currentPage: 1, pageSize: 10 };
 
 const BUSINESS_LOGO_TOOLTIP = "Each campaign should have exactly one business logo. A value other than 1 means a logo is missing or duplicated.";
 const BUSINESS_NAME_TOOLTIP = "Each campaign should have exactly one business name. A value other than 1 means a name is missing or duplicated.";
@@ -3655,6 +3782,7 @@ function initAssets() {
   const fBtn = document.getElementById("assetsFiltersBtn");
   if (!fBtn.dataset.wired) {
     fBtn.dataset.wired = "1";
+    document.getElementById("asfNameOp").innerHTML = TEXT_OP_OPTIONS;
     const fMenu = document.getElementById("assetsFiltersMenu");
     fBtn.addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) { populateAssetsFilterOptions(); fMenu.hidden = false; } });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
@@ -3680,21 +3808,27 @@ function restoreAssetsFilters() {
     document.getElementById("assetsStatusPaused").checked = saved.status.includes("PAUSED");
     document.getElementById("assetsStatusRemoved").checked = saved.status.includes("REMOVED");
   }
+  assetsState.filterName = saved.name || "";
+  assetsState.filterNameOp = saved.nameOp || "contains";
+  document.getElementById("asfName").value = assetsState.filterName;
+  document.getElementById("asfNameOp").value = assetsState.filterNameOp;
   assetsState.filterAccount = new Set(Array.isArray(saved.account) ? saved.account : []);
   assetsState.filterCampaign = new Set(Array.isArray(saved.campaign) ? saved.campaign : []);
 }
 
 function populateAssetsFilterOptions() {
   const inAll = GLOBAL_ACCOUNT === "ALL";
-  const accSec = document.getElementById("asfAccountSection");
-  if (accSec) accSec.hidden = !inAll;
+  const accHdr = document.getElementById("asfAccountSection");
+  const accItems = document.getElementById("assets-group-account");
+  if (accHdr) accHdr.hidden = !inAll;
+  if (accItems && !inAll) accItems.hidden = true;
   const distinct = (key) => [...new Set(assetsState.rows.map(r => r[key]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
   if (inAll) fillCheckList("asfAccountList", distinct("accountName"), assetsState.filterAccount);
   fillCheckList("asfCampaignList", distinct("name"), assetsState.filterCampaign);
 }
 
 function persistAssetsFilters() {
-  savePageFilters("assets", { status: [...assetsState.filterStatus], account: [...assetsState.filterAccount], campaign: [...assetsState.filterCampaign] });
+  savePageFilters("assets", { status: [...assetsState.filterStatus], name: assetsState.filterName, nameOp: assetsState.filterNameOp, account: [...assetsState.filterAccount], campaign: [...assetsState.filterCampaign] });
 }
 
 function applyAssetsFilters() {
@@ -3704,9 +3838,12 @@ function applyAssetsFilters() {
     document.getElementById("assetsStatusPaused").checked ? "PAUSED" : null,
     document.getElementById("assetsStatusRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
+  assetsState.filterName = document.getElementById("asfName").value.trim();
+  assetsState.filterNameOp = document.getElementById("asfNameOp").value;
   if (inAll) assetsState.filterAccount = readCheckList("asfAccountList");
   assetsState.filterCampaign = readCheckList("asfCampaignList");
   document.getElementById("assetsFiltersMenu").hidden = true;
+  assetsState.currentPage = 1;
   persistAssetsFilters();
   updateAssetsFilterCount();
   renderAssetsTable();
@@ -3716,6 +3853,8 @@ function resetAssetsFilters() {
   document.getElementById("assetsStatusEnabled").checked = true;
   document.getElementById("assetsStatusPaused").checked = false;
   document.getElementById("assetsStatusRemoved").checked = false;
+  document.getElementById("asfName").value = "";
+  document.getElementById("asfNameOp").value = "contains";
   assetsState.filterAccount = new Set();
   assetsState.filterCampaign = new Set();
   populateAssetsFilterOptions();
@@ -3724,7 +3863,7 @@ function resetAssetsFilters() {
 
 function updateAssetsFilterCount() {
   const inAll = GLOBAL_ACCOUNT === "ALL";
-  const n = assetsState.filterStatus.size + ((inAll && assetsState.filterAccount.size) ? 1 : 0) + (assetsState.filterCampaign.size ? 1 : 0);
+  const n = assetsState.filterStatus.size + (assetsState.filterName ? 1 : 0) + ((inAll && assetsState.filterAccount.size) ? 1 : 0) + (assetsState.filterCampaign.size ? 1 : 0);
   const el = document.getElementById("assetsFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
@@ -3802,6 +3941,7 @@ function renderAssetsTable() {
   const cols = applyColumnOrder(inAll ? [{ key: "account", label: "Account", align: "txt", width: 180 }, ...ASSET_COLUMNS] : ASSET_COLUMNS, colOrder("assets"));
   const rows = assetsState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
+      matchTextFilter(r.name, assetsState.filterNameOp, assetsState.filterName) &&
       (!(inAll && assetsState.filterAccount.size) || assetsState.filterAccount.has(r.accountName || "")) &&
       (!assetsState.filterCampaign.size || assetsState.filterCampaign.has(r.name || "")) &&
       assetsState.filterStatus.has((r.status || "").toUpperCase())
@@ -3815,13 +3955,15 @@ function renderAssetsTable() {
     });
   assetsState.viewRows = rows;
   assetsState.viewCols = cols;
+  const pageRows = pageSlice(rows, assetsState);
+  renderPagination("assetsPagination", assetsState, rows.length, renderAssetsTable);
   const arrow = key => assetsState.sort.key === key ? '<span class="arr">' + (assetsState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
 
   document.getElementById("assets-colgroup").innerHTML = colgroupHtml(cols, assetsState.columnWidths);
   document.getElementById("assets-thead").innerHTML = "<tr>" + cols.map(c =>
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
-  document.getElementById("assets-tbody").innerHTML = rows.map(r => "<tr>" + cols.map(c => {
+  document.getElementById("assets-tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
     if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
     if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
     if (c.type === "status") {
@@ -3895,7 +4037,7 @@ const LP_COLUMNS = [
   { key: "ctr",      label: "CTR",                      align: "num", width: 90 },
   { key: "convRate", label: "Conv. Rate",               align: "num", width: 110 },
 ];
-const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), url: "", sources: new Set() }, columnWidths: {} };
+const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { name: "", nameOp: "contains", account: new Set(), campaign: new Set(), adGroup: new Set(), url: "", sources: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10 };
 
 const LP_SOURCE_BOXES = [["lpfSrcAd", "Ad"], ["lpfSrcAssetGroup", "Asset Group"], ["lpfSrcSitelink", "Sitelink"], ["lpfSrcPromotion", "Promotion"], ["lpfSrcPrice", "Price"]];
 
@@ -3918,8 +4060,10 @@ function readCheckList(containerId) {
 
 function populateLpFilterOptions() {
   const inAll = GLOBAL_ACCOUNT === "ALL";
-  const accSec = document.getElementById("lpfAccountSection");
-  if (accSec) accSec.hidden = !inAll;
+  const accHdr = document.getElementById("lpfAccountSection");
+  const accItems = document.getElementById("lp-group-account");
+  if (accHdr) accHdr.hidden = !inAll;
+  if (accItems && !inAll) accItems.hidden = true;
   const distinct = (key) => [...new Set(lpState.rows.map(r => r[key]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
   if (inAll) fillCheckList("lpfAccountList", distinct("accountName"), lpState.filters.account);
   fillCheckList("lpfCampaignList", distinct("name"), lpState.filters.campaign);
@@ -3933,6 +4077,7 @@ function initLandingPages() {
   const fBtn = document.getElementById("lpFiltersBtn");
   if (!fBtn.dataset.wired) {
     fBtn.dataset.wired = "1";
+    document.getElementById("lpfNameOp").innerHTML = TEXT_OP_OPTIONS;
     const fMenu = document.getElementById("lpFiltersMenu");
     fBtn.addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) { populateLpFilterOptions(); fMenu.hidden = false; } });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
@@ -3951,7 +4096,9 @@ function initLandingPages() {
 function restoreLpFilters() {
   const saved = loadPageFilters("landingpages");
   if (!saved) return;
-  lpState.filters = { account: new Set(Array.isArray(saved.account) ? saved.account : []), campaign: new Set(Array.isArray(saved.campaign) ? saved.campaign : []), adGroup: new Set(Array.isArray(saved.adGroup) ? saved.adGroup : []), url: saved.url || "", sources: new Set(saved.sources || []) };
+  lpState.filters = { name: saved.name || "", nameOp: saved.nameOp || "contains", account: new Set(Array.isArray(saved.account) ? saved.account : []), campaign: new Set(Array.isArray(saved.campaign) ? saved.campaign : []), adGroup: new Set(Array.isArray(saved.adGroup) ? saved.adGroup : []), url: saved.url || "", sources: new Set(saved.sources || []) };
+  document.getElementById("lpfName").value = lpState.filters.name;
+  document.getElementById("lpfNameOp").value = lpState.filters.nameOp;
   document.getElementById("lpfUrl").value = lpState.filters.url;
   LP_SOURCE_BOXES.forEach(([id, label]) => { document.getElementById(id).checked = lpState.filters.sources.has(label); });
 }
@@ -3960,6 +4107,8 @@ function applyLpFilters() {
   const sources = new Set();
   LP_SOURCE_BOXES.forEach(([id, label]) => { if (document.getElementById(id).checked) sources.add(label); });
   lpState.filters = {
+    name: document.getElementById("lpfName").value.trim(),
+    nameOp: document.getElementById("lpfNameOp").value,
     account: inAll ? readCheckList("lpfAccountList") : lpState.filters.account,
     campaign: readCheckList("lpfCampaignList"),
     adGroup: readCheckList("lpfAdGroupList"),
@@ -3967,7 +4116,8 @@ function applyLpFilters() {
     sources,
   };
   document.getElementById("lpFiltersMenu").hidden = true;
-  savePageFilters("landingpages", { account: [...lpState.filters.account], campaign: [...lpState.filters.campaign], adGroup: [...lpState.filters.adGroup], url: lpState.filters.url, sources: [...sources] });
+  lpState.currentPage = 1;
+  savePageFilters("landingpages", { name: lpState.filters.name, nameOp: lpState.filters.nameOp, account: [...lpState.filters.account], campaign: [...lpState.filters.campaign], adGroup: [...lpState.filters.adGroup], url: lpState.filters.url, sources: [...sources] });
   updateLpFilterCount();
   renderLandingPagesTable();
 }
@@ -3975,6 +4125,8 @@ function resetLpFilters() {
   lpState.filters.account = new Set();
   lpState.filters.campaign = new Set();
   lpState.filters.adGroup = new Set();
+  document.getElementById("lpfName").value = "";
+  document.getElementById("lpfNameOp").value = "contains";
   document.getElementById("lpfUrl").value = "";
   LP_SOURCE_BOXES.forEach(([id]) => { document.getElementById(id).checked = false; });
   populateLpFilterOptions();
@@ -3983,7 +4135,7 @@ function resetLpFilters() {
 function updateLpFilterCount() {
   const f = lpState.filters;
   const inAll = GLOBAL_ACCOUNT === "ALL";
-  const n = ((inAll && f.account.size) ? 1 : 0) + (f.campaign.size ? 1 : 0) + (f.adGroup.size ? 1 : 0) + (f.url ? 1 : 0) + (f.sources.size ? 1 : 0);
+  const n = (f.name ? 1 : 0) + ((inAll && f.account.size) ? 1 : 0) + (f.campaign.size ? 1 : 0) + (f.adGroup.size ? 1 : 0) + (f.url ? 1 : 0) + (f.sources.size ? 1 : 0);
   const el = document.getElementById("lpFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; } else { el.hidden = true; }
 }
@@ -4046,6 +4198,7 @@ function renderLandingPagesTable() {
   const cols = applyColumnOrder(inAll ? [{ key: "account", label: "Account", align: "txt", width: 170 }, ...LP_COLUMNS] : LP_COLUMNS, colOrder("landingpages"));
   const f = lpState.filters;
   const rows = lpState.rows.filter(r => {
+      if (f.name && !matchTextFilter(r.name, f.nameOp, f.name)) return false;
       if (inAll && f.account.size && !f.account.has(r.accountName || "")) return false;
       if (f.campaign.size && !f.campaign.has(r.name || "")) return false;
       if (f.adGroup.size && !f.adGroup.has(r.adGroup || "")) return false;
@@ -4062,13 +4215,15 @@ function renderLandingPagesTable() {
     });
   lpState.viewRows = rows;
   lpState.viewCols = cols;
+  const pageRows = pageSlice(rows, lpState);
+  renderPagination("lpPagination", lpState, rows.length, renderLandingPagesTable);
   const arrow = key => lpState.sort.key === key ? '<span class="arr">' + (lpState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
 
   document.getElementById("lp-colgroup").innerHTML = colgroupHtml(cols, lpState.columnWidths);
   document.getElementById("lp-thead").innerHTML = "<tr>" + cols.map(c =>
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
-  document.getElementById("lp-tbody").innerHTML = rows.map(r => "<tr>" + cols.map(c => {
+  document.getElementById("lp-tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
     if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
     if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
     if (c.key === "adGroup") return '<td class="txt" data-col="adGroup">' + escapeHtml(r.adGroup || "—") + "</td>";
@@ -4124,7 +4279,7 @@ const US_COLUMNS = [
   { key: "dailySpend",   label: "Daily Spend<br>(since adjusted)", align: "num", width: 140 },
   { key: "pacing",       label: "Budget Pacing",                   align: "txt", width: 200 },
 ];
-const underspendState = { rows: [], loaded: false, sort: { key: "pacing", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), errors: [], columnWidths: {} };
+const underspendState = { rows: [], loaded: false, sort: { key: "pacing", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), filterName: "", filterNameOp: "contains", errors: [], columnWidths: {}, currentPage: 1, pageSize: 10 };
 
 function fmtShortDate(ymd) {
   const d = new Date(ymd + "T00:00:00");
@@ -4139,6 +4294,7 @@ function initUnderspend() {
   const exp = document.getElementById("usExportBtn");
   if (!exp.dataset.wired) {
     exp.dataset.wired = "1";
+    document.getElementById("usfNameOp").innerHTML = TEXT_OP_OPTIONS;
     const usExportPop = document.getElementById("usExportPop");
     exp.addEventListener("click", e => { e.stopPropagation(); const open = usExportPop.hidden; closeAllMenus(); if (open) usExportPop.hidden = false; });
     usExportPop.addEventListener("click", e => e.stopPropagation());
@@ -4157,11 +4313,17 @@ function initUnderspend() {
 // Restore saved Budgeting status filter.
 function restoreUnderspendFilters() {
   const saved = loadPageFilters("budgeting");
-  if (!saved || !saved.status) return;
-  underspendState.filterStatus = new Set(saved.status);
-  document.getElementById("usStatusEnabled").checked = saved.status.includes("ENABLED");
-  document.getElementById("usStatusPaused").checked = saved.status.includes("PAUSED");
-  document.getElementById("usStatusRemoved").checked = saved.status.includes("REMOVED");
+  if (!saved) return;
+  if (saved.status) {
+    underspendState.filterStatus = new Set(saved.status);
+    document.getElementById("usStatusEnabled").checked = saved.status.includes("ENABLED");
+    document.getElementById("usStatusPaused").checked = saved.status.includes("PAUSED");
+    document.getElementById("usStatusRemoved").checked = saved.status.includes("REMOVED");
+  }
+  underspendState.filterName = saved.name || "";
+  underspendState.filterNameOp = saved.nameOp || "contains";
+  document.getElementById("usfName").value = underspendState.filterName;
+  document.getElementById("usfNameOp").value = underspendState.filterNameOp;
 }
 
 async function loadUnderspend(force) {
@@ -4209,6 +4371,7 @@ function renderUnderspendTable() {
   const q = underspendState.search.trim().toLowerCase();
   const rows = underspendState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
+      matchTextFilter(r.name, underspendState.filterNameOp, underspendState.filterName) &&
       underspendState.filterStatus.has((r.status || "").toUpperCase()) &&
       (GLOBAL_ACCOUNT === "ALL" || r.accountId === GLOBAL_ACCOUNT)
     )
@@ -4228,11 +4391,13 @@ function renderUnderspendTable() {
 
   const cols = applyColumnOrder(GLOBAL_ACCOUNT === "ALL" ? US_COLUMNS : US_COLUMNS.filter(c => c.key !== "account"), colOrder("underspend"));
   underspendState.viewRows = rows;
+  const pageRows = pageSlice(rows, underspendState);
+  renderPagination("usPagination", underspendState, rows.length, renderUnderspendTable);
   document.getElementById("us-colgroup").innerHTML = colgroupHtml(cols, underspendState.columnWidths);
   document.getElementById("us-thead").innerHTML = "<tr>" + cols.map(c =>
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
-  document.getElementById("us-tbody").innerHTML = rows.map(r => "<tr>" + cols.map(c => {
+  document.getElementById("us-tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
     if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
     if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
     if (c.key === "status") { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<td class="txt" data-col="status"><span class="pill ' + cls + '">' + titleCase(r.status) + "</span></td>"; }
@@ -4381,7 +4546,10 @@ function applyUnderspendFilters() {
     document.getElementById("usStatusPaused").checked ? "PAUSED" : null,
     document.getElementById("usStatusRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
+  underspendState.filterName = document.getElementById("usfName").value.trim();
+  underspendState.filterNameOp = document.getElementById("usfNameOp").value;
   document.getElementById("underspendFiltersMenu").hidden = true;
+  underspendState.currentPage = 1;
   persistUnderspendFilters();
   updateUnderspendFilterCount();
   renderUnderspendTable();
@@ -4391,15 +4559,17 @@ function resetUnderspendFilters() {
   document.getElementById("usStatusEnabled").checked = true;
   document.getElementById("usStatusPaused").checked = false;
   document.getElementById("usStatusRemoved").checked = false;
+  document.getElementById("usfName").value = "";
+  document.getElementById("usfNameOp").value = "contains";
   applyUnderspendFilters();
 }
 
 function persistUnderspendFilters() {
-  savePageFilters("budgeting", { status: [...underspendState.filterStatus] });
+  savePageFilters("budgeting", { status: [...underspendState.filterStatus], name: underspendState.filterName, nameOp: underspendState.filterNameOp });
 }
 
 function updateUnderspendFilterCount() {
-  const n = underspendState.filterStatus.size;
+  const n = underspendState.filterStatus.size + (underspendState.filterName ? 1 : 0);
   const el = document.getElementById("usFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
@@ -4416,7 +4586,7 @@ const BID_COLUMNS = [
   { key: "lastAdjusted",    label: "Last Adjusted",               align: "txt", width: 130 },
   { key: "cpaAchieved",     label: "CPA Achieved (since last adjustment)", align: "num", width: 240 },
 ];
-const biddingState = { rows: [], loaded: false, sort: { key: "account", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), errors: [], columnWidths: {} };
+const biddingState = { rows: [], loaded: false, sort: { key: "account", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), filterName: "", filterNameOp: "contains", errors: [], columnWidths: {}, currentPage: 1, pageSize: 10 };
 const CPA_TOOLTIP = "CPA achieved is 20% or more below the campaign's Target CPA.";
 
 function initBidding() {
@@ -4426,6 +4596,7 @@ function initBidding() {
   const exp = document.getElementById("bidExportBtn");
   if (!exp.dataset.wired) {
     exp.dataset.wired = "1";
+    document.getElementById("bidfNameOp").innerHTML = TEXT_OP_OPTIONS;
     const bidExportPop = document.getElementById("bidExportPop");
     exp.addEventListener("click", e => { e.stopPropagation(); const open = bidExportPop.hidden; closeAllMenus(); if (open) bidExportPop.hidden = false; });
     bidExportPop.addEventListener("click", e => e.stopPropagation());
@@ -4444,11 +4615,17 @@ function initBidding() {
 // Restore saved Bidding status filter.
 function restoreBiddingFilters() {
   const saved = loadPageFilters("bidding");
-  if (!saved || !saved.status) return;
-  biddingState.filterStatus = new Set(saved.status);
-  document.getElementById("bidStatusEnabled").checked = saved.status.includes("ENABLED");
-  document.getElementById("bidStatusPaused").checked = saved.status.includes("PAUSED");
-  document.getElementById("bidStatusRemoved").checked = saved.status.includes("REMOVED");
+  if (!saved) return;
+  if (saved.status) {
+    biddingState.filterStatus = new Set(saved.status);
+    document.getElementById("bidStatusEnabled").checked = saved.status.includes("ENABLED");
+    document.getElementById("bidStatusPaused").checked = saved.status.includes("PAUSED");
+    document.getElementById("bidStatusRemoved").checked = saved.status.includes("REMOVED");
+  }
+  biddingState.filterName = saved.name || "";
+  biddingState.filterNameOp = saved.nameOp || "contains";
+  document.getElementById("bidfName").value = biddingState.filterName;
+  document.getElementById("bidfNameOp").value = biddingState.filterNameOp;
 }
 
 async function loadBidding(force) {
@@ -4496,6 +4673,7 @@ function renderBiddingTable() {
   const q = biddingState.search.trim().toLowerCase();
   const rows = biddingState.rows.filter(r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
+      matchTextFilter(r.name, biddingState.filterNameOp, biddingState.filterName) &&
       biddingState.filterStatus.has((r.status || "").toUpperCase()) &&
       (GLOBAL_ACCOUNT === "ALL" || r.accountId === GLOBAL_ACCOUNT)
     )
@@ -4512,11 +4690,13 @@ function renderBiddingTable() {
 
   const cols = applyColumnOrder(GLOBAL_ACCOUNT === "ALL" ? BID_COLUMNS : BID_COLUMNS.filter(c => c.key !== "account"), colOrder("bidding"));
   biddingState.viewRows = rows;
+  const pageRows = pageSlice(rows, biddingState);
+  renderPagination("bidPagination", biddingState, rows.length, renderBiddingTable);
   document.getElementById("bid-colgroup").innerHTML = colgroupHtml(cols, biddingState.columnWidths);
   document.getElementById("bid-thead").innerHTML = "<tr>" + cols.map(c =>
     '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
 
-  document.getElementById("bid-tbody").innerHTML = rows.map(r => "<tr>" + cols.map(c => {
+  document.getElementById("bid-tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
     if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
     if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
     if (c.key === "type") return '<td class="txt" data-col="type">' + titleCase((r.type || "").replace(/_/g, " ")) + "</td>";
@@ -4554,7 +4734,10 @@ function applyBiddingFilters() {
     document.getElementById("bidStatusPaused").checked ? "PAUSED" : null,
     document.getElementById("bidStatusRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
+  biddingState.filterName = document.getElementById("bidfName").value.trim();
+  biddingState.filterNameOp = document.getElementById("bidfNameOp").value;
   document.getElementById("biddingFiltersMenu").hidden = true;
+  biddingState.currentPage = 1;
   persistBiddingFilters();
   updateBiddingFilterCount();
   renderBiddingTable();
@@ -4564,15 +4747,17 @@ function resetBiddingFilters() {
   document.getElementById("bidStatusEnabled").checked = true;
   document.getElementById("bidStatusPaused").checked = false;
   document.getElementById("bidStatusRemoved").checked = false;
+  document.getElementById("bidfName").value = "";
+  document.getElementById("bidfNameOp").value = "contains";
   applyBiddingFilters();
 }
 
 function persistBiddingFilters() {
-  savePageFilters("bidding", { status: [...biddingState.filterStatus] });
+  savePageFilters("bidding", { status: [...biddingState.filterStatus], name: biddingState.filterName, nameOp: biddingState.filterNameOp });
 }
 
 function updateBiddingFilterCount() {
-  const n = biddingState.filterStatus.size;
+  const n = biddingState.filterStatus.size + (biddingState.filterName ? 1 : 0);
   const el = document.getElementById("bidFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
