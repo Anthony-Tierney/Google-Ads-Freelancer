@@ -1138,6 +1138,40 @@
                 <option value="custom">Custom...</option>
               </select>
             </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters" id="geoFilterGroup">
+                <button class="filters-btn" id="geoFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <span class="count" id="geoFilterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="geoFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('geo-group-name', event)">
+                    <span class="toggle">−</span>Campaign Name
+                  </div>
+                  <div class="filter-group-items" id="geo-group-name">
+                    <div class="filter-section">
+                      <div class="filter-checklist" id="geoNameList"></div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('geo-group-status', event)">
+                    <span class="toggle">−</span>Campaign Status
+                  </div>
+                  <div class="filter-group-items" id="geo-group-status">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="geoStatusEnabled" checked /><label for="geoStatusEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="geoStatusPaused" /><label for="geoStatusPaused">Paused</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetGeoFilters()">Reset</button>
+                    <button class="apply" onclick="applyGeoFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="panel">
             <div id="geoLoading" class="state" hidden><div class="spinner"></div>Loading location targeting…</div>
@@ -2452,7 +2486,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "geoFiltersMenu"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -4546,7 +4580,51 @@ function syncLpColsCount() { document.getElementById("lpColsCount").textContent 
 
 // ---------- Geo Coverage ----------
 const GEO_ACCENT = "#10b981";
-const geoState = { loadedAccount: null, radius: [], locations: [], excluded: [], map: null, layer: null, dateRange: { label: "Last 30 Days", days: 30 } };
+const geoState = { loadedAccount: null, radius: [], locations: [], excluded: [], map: null, layer: null, dateRange: { label: "Last 30 Days", days: 30 }, filters: { names: new Set(), status: new Set(["ENABLED"]) }, allCampaigns: new Set(), wired: false };
+
+function geoRowVisible(r) {
+  const f = geoState.filters;
+  if (r.status && f.status.size && !f.status.has(r.status)) return false;
+  if (f.names.size && !f.names.has(r.campaign)) return false;
+  return true;
+}
+
+function populateGeoFilterOptions() {
+  const names = [...geoState.allCampaigns].sort((a, b) => String(a).localeCompare(String(b)));
+  fillCheckList("geoNameList", names, geoState.filters.names);
+  document.getElementById("geoStatusEnabled").checked = geoState.filters.status.has("ENABLED");
+  document.getElementById("geoStatusPaused").checked = geoState.filters.status.has("PAUSED");
+}
+
+function applyGeoFilters() {
+  geoState.filters.names = readCheckList("geoNameList");
+  const st = new Set();
+  if (document.getElementById("geoStatusEnabled").checked) st.add("ENABLED");
+  if (document.getElementById("geoStatusPaused").checked) st.add("PAUSED");
+  geoState.filters.status = st;
+  document.getElementById("geoFiltersMenu").hidden = true;
+  updateGeoFilterCount();
+  renderGeoCoverage();
+}
+
+function resetGeoFilters() {
+  geoState.filters.names = new Set(geoState.allCampaigns);
+  geoState.filters.status = new Set(["ENABLED"]);
+  populateGeoFilterOptions();
+  updateGeoFilterCount();
+  renderGeoCoverage();
+}
+
+function updateGeoFilterCount() {
+  const f = geoState.filters;
+  const nameNarrowed = f.names.size > 0 && f.names.size < geoState.allCampaigns.size;
+  const nameCount = nameNarrowed ? f.names.size : 0;
+  const total = nameCount + f.status.size;
+  const el = document.getElementById("geoFilterCount");
+  if (total > 0) { el.textContent = total; el.hidden = false; } else { el.hidden = true; }
+  markFilterGroup("geo-group-name", nameCount);
+  markFilterGroup("geo-group-status", f.status.size);
+}
 
 function initGeoCoverage() {
   document.getElementById("geoSignedOut").hidden = signedIn;
@@ -4560,6 +4638,12 @@ function initGeoCoverage() {
   }
   document.getElementById("geoControls").hidden = false;
   document.getElementById("geoPrompt").hidden = true;
+  if (!geoState.wired) {
+    geoState.wired = true;
+    const fBtn = document.getElementById("geoFiltersBtn"), fMenu = document.getElementById("geoFiltersMenu");
+    fBtn.addEventListener("click", e => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) { populateGeoFilterOptions(); fMenu.hidden = false; } });
+    fMenu.addEventListener("click", e => e.stopPropagation());
+  }
   syncGeoDateSelect();
   if (geoState.loadedAccount !== GLOBAL_ACCOUNT) loadGeoCoverage(GLOBAL_ACCOUNT);
   else renderGeoCoverage();
@@ -4603,9 +4687,16 @@ async function loadGeoCoverage(customerId) {
     geoState.radius = data.radius || [];
     geoState.locations = data.locations || [];
     geoState.excluded = data.excluded || [];
+    // Refresh the campaign universe; keep the user's name selection where it still applies,
+    // otherwise default to all campaigns selected (status filter handles the enabled-only default).
+    const newAll = new Set([...geoState.radius, ...geoState.locations, ...geoState.excluded].map(r => r.campaign).filter(Boolean));
+    geoState.allCampaigns = newAll;
+    const kept = new Set([...geoState.filters.names].filter(n => newAll.has(n)));
+    geoState.filters.names = kept.size ? kept : new Set(newAll);
     document.getElementById("geoWarn").hidden = !data.warning;
     if (data.warning) document.getElementById("geoWarn").textContent = data.warning;
     showEl("geoLoading", false);
+    updateGeoFilterCount();
     renderGeoCoverage();
   } catch (e) {
     showEl("geoLoading", false);
@@ -4614,7 +4705,9 @@ async function loadGeoCoverage(customerId) {
 }
 
 function renderGeoCoverage() {
-  const radius = geoState.radius, locations = geoState.locations, excluded = geoState.excluded;
+  const radius = geoState.radius.filter(geoRowVisible);
+  const locations = geoState.locations.filter(geoRowVisible);
+  const excluded = geoState.excluded.filter(geoRowVisible);
   showEl("geoLayout", true);
 
   // ----- left table: every targeted location + clicks -----
