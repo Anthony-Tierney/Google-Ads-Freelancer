@@ -332,7 +332,7 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .foot-note { color: var(--faint); font-size: 12px; margin-top: 10px; }
 
-  .calendar-modal { position: fixed; inset: 0; background: rgba(15,23,42,.5); display: none; align-items: center; justify-content: center; z-index: 100; }
+  .calendar-modal { position: fixed; inset: 0; background: rgba(15,23,42,.5); display: none; align-items: center; justify-content: center; z-index: 2000; }
   .calendar-modal[open] { display: flex; }
   .calendar-content { background: var(--panel); border-radius: 12px; padding: 24px; max-width: 700px; box-shadow: var(--shadow); }
   .calendar-content h3 { margin: 0 0 20px; font-size: 16px; }
@@ -471,6 +471,7 @@
   }
   .geo-map { width: 100%; height: 540px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
   .geo-layout { display: flex; gap: 16px; align-items: flex-start; }
+  #geoControls { position: relative; z-index: 1200; }
   .geo-side { flex: 0 0 320px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
   .geo-main { flex: 1 1 auto; min-width: 0; }
   .geo-table-wrap { max-height: 540px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; }
@@ -1138,9 +1139,7 @@
                 <option value="custom">Custom...</option>
               </select>
             </div>
-            <div class="grow"></div>
-            <div class="toolset">
-              <div class="filters" id="geoFilterGroup">
+            <div class="filters" id="geoFilterGroup">
                 <button class="filters-btn" id="geoFiltersBtn" aria-haspopup="true" title="Filters">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                   <span class="count" id="geoFilterCount" hidden>0</span>
@@ -1171,7 +1170,6 @@
                   </div>
                 </div>
               </div>
-            </div>
           </div>
           <div class="panel">
             <div id="geoLoading" class="state" hidden><div class="spinner"></div>Loading location targeting…</div>
