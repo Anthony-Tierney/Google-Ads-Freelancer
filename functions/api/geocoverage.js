@@ -32,7 +32,7 @@ export async function onRequestGet(context) {
   // location_view: one row per location criterion per campaign, metrics aggregated over the range.
   const LOCATION_VIEW_Q = `
     SELECT
-      campaign.id, campaign.name,
+      campaign.id, campaign.name, campaign.status,
       campaign_criterion.criterion_id, campaign_criterion.type, campaign_criterion.negative,
       campaign_criterion.location.geo_target_constant,
       campaign_criterion.proximity.radius, campaign_criterion.proximity.radius_units,
@@ -41,7 +41,7 @@ export async function onRequestGet(context) {
       campaign_criterion.proximity.address.city_name,
       metrics.clicks, metrics.impressions, metrics.conversions
     FROM location_view
-    WHERE campaign.status = 'ENABLED' AND ${dateClause}`;
+    WHERE campaign.status != 'REMOVED' AND ${dateClause}`;
 
   let lvRows, lvError;
   try {
@@ -65,6 +65,7 @@ export async function onRequestGet(context) {
     const base = {
       campaign: r.campaign?.name || "",
       campaignId: String(r.campaign?.id || ""),
+      status: r.campaign?.status || "",
       clicks: Number(m.clicks) || 0,
       impressions: Number(m.impressions) || 0,
       conversions: Number(m.conversions) || 0,
