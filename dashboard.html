@@ -474,6 +474,10 @@
   #geoControls { position: relative; z-index: 1200; }
   .geo-side { flex: 0 0 384px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
   .geo-main { flex: 1 1 auto; min-width: 0; }
+  .geo-divider { flex: 0 0 7px; align-self: stretch; min-height: 120px; cursor: col-resize; background: var(--line); border-radius: 4px; transition: background .12s; }
+  .geo-divider:hover, .geo-layout.resizing .geo-divider { background: #10b981; }
+  .geo-layout.resizing { user-select: none; cursor: col-resize; }
+  .geo-layout.resizing .geo-main { pointer-events: none; }
   .geo-table-wrap { max-height: 540px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; }
   .geo-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
   .geo-table thead th { position: sticky; top: 0; background: var(--panel); text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); z-index: 1; }
@@ -483,7 +487,7 @@
   .geo-table .loc-sub { display: block; font-size: 11px; color: var(--faint); margin-top: 2px; overflow-wrap: anywhere; }
   .geo-table .empty { color: var(--muted); text-align: center; padding: 18px; }
   .geo-name-muted label { color: var(--faint); }
-  @media (max-width: 900px) { .geo-layout { flex-wrap: wrap; } .geo-side, .geo-main { flex-basis: 100%; } }
+  @media (max-width: 900px) { .geo-layout { flex-wrap: wrap; } .geo-side, .geo-main { flex-basis: 100%; } .geo-divider { display: none; } }
   .geo-label { background: transparent; border: none; box-shadow: none; color: #0f5132; font-weight: 700; font-size: 11px; text-align: center; white-space: nowrap; }
   .geo-label::before { display: none; }
   .geo-legend { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
@@ -1178,7 +1182,7 @@
             <div id="geoError" class="state" hidden></div>
             <div id="geoWarn" class="as-warn" hidden></div>
             <div id="geoLayout" class="geo-layout" hidden>
-              <div class="geo-side">
+              <div class="geo-side" id="geoSide">
                 <div class="geo-table-wrap">
                   <table class="geo-table">
                     <colgroup id="geo-colgroup"></colgroup>
@@ -1188,6 +1192,7 @@
                 </div>
                 <div id="geoExcluded" class="geo-names" hidden></div>
               </div>
+              <div class="geo-divider" id="geoDivider" title="Drag to resize"></div>
               <div class="geo-main">
                 <div id="geoMap" class="geo-map"></div>
                 <div id="geoLegend" class="geo-legend">
@@ -4678,6 +4683,30 @@ function initGeoCoverage() {
     const fBtn = document.getElementById("geoFiltersBtn"), fMenu = document.getElementById("geoFiltersMenu");
     fBtn.addEventListener("click", e => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) { populateGeoFilterOptions(); fMenu.hidden = false; } });
     fMenu.addEventListener("click", e => e.stopPropagation());
+    // Draggable splitter between the table (geo-side) and the map (geo-main).
+    const divider = document.getElementById("geoDivider"), side = document.getElementById("geoSide"), layout = document.getElementById("geoLayout");
+    let dragging = false, startX = 0, startW = 0, raf = 0;
+    const onMove = (e) => {
+      if (!dragging) return;
+      const avail = layout.clientWidth - 28 - 32 - 7; // padding(14*2) + 2 gaps(16) + divider(7)
+      const maxSide = Math.max(260, avail - 360); // keep the map at least ~360px
+      let w = Math.max(240, Math.min(startW + (e.clientX - startX), maxSide));
+      side.style.flexBasis = w + "px";
+      geoState.sideWidth = w;
+      if (geoState.map && !raf) raf = requestAnimationFrame(() => { raf = 0; geoState.map.invalidateSize(); });
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false; layout.classList.remove("resizing");
+      document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp);
+      if (geoState.map) geoState.map.invalidateSize();
+    };
+    divider.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      dragging = true; startX = e.clientX; startW = side.getBoundingClientRect().width;
+      layout.classList.add("resizing");
+      document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp);
+    });
   }
   syncGeoDateSelect();
   if (geoState.loadedAccount !== GLOBAL_ACCOUNT) loadGeoCoverage(GLOBAL_ACCOUNT);
@@ -4748,6 +4777,7 @@ function renderGeoCoverage() {
   const locations = geoState.locations.filter(geoRowVisible);
   const excluded = geoState.excluded.filter(geoRowVisible);
   showEl("geoLayout", true);
+  if (geoState.sideWidth) document.getElementById("geoSide").style.flexBasis = geoState.sideWidth + "px";
 
   // ----- left table: every targeted location + clicks -----
   const radiusLabel = (b) => {
