@@ -82,6 +82,7 @@
   .nav-ico { width: 17px; height: 17px; flex: none; }
   .nav-sub::before { content: "└ "; color: var(--faint); margin-right: 2px; }
   .nav-warn { display: inline-flex; vertical-align: middle; color: #d97706; margin-left: 5px; }
+  .nav-warn.red { color: #dc2626; }
   .nav-warn svg { width: 15px; height: 15px; }
   
   .main-content { flex: 1; display: flex; flex-direction: column; }
@@ -514,12 +515,12 @@
     <a href="#" class="nav-item nav-sub" data-page="budgetpacing">Budget Pacing<span class="nav-warn" id="bpNavWarn" hidden title="One or more accounts are off pace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
     <div class="nav-heading">Campaigns</div>
     <a href="#" class="nav-item nav-sub" data-page="dashboard">Campaign Overview</a>
-    <a href="#" class="nav-item nav-sub" data-page="underspend">Budgeting</a>
-    <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies</a>
+    <a href="#" class="nav-item nav-sub" data-page="underspend">Budgeting<span class="nav-warn" id="usNavWarn" hidden title="Underspending campaigns found"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
+    <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies<span class="nav-warn" id="bidNavWarn" hidden title="CPA running below target on one or more campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
     <a href="#" class="nav-item nav-sub" data-page="geocoverage">Geo Coverage</a>
     <div class="nav-heading">Audit</div>
-    <a href="#" class="nav-item nav-sub" data-page="audit">Policy Issues</a>
-    <a href="#" class="nav-item nav-sub" data-page="assets">Assets</a>
+    <a href="#" class="nav-item nav-sub" data-page="audit">Policy Issues<span class="nav-warn" id="auditNavWarn" hidden title="Policy issues found"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
+    <a href="#" class="nav-item nav-sub" data-page="assets">Assets<span class="nav-warn" id="assetsNavWarn" hidden title="Assets missing or below recommended counts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
     <a href="#" class="nav-item nav-sub" data-page="landingpages">Landing Pages</a>
     <a href="#" class="nav-item nav-settings" data-page="settings"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
   </aside>
@@ -3633,6 +3634,8 @@ function renderAuditTable() {
   document.getElementById("aud-colgroup").innerHTML = colgroupHtml(AUDIT_COLS, auditState.columnWidths);
   document.getElementById("aud-thead").innerHTML = "<tr>" +
     AUDIT_COLS.map(c => '<th class="txt" data-col="' + c.key + '">' + c.label + "</th>").join("") + "</tr>";
+  const auditAny = auditState.rows.some(r => !r.loading && ((r.disapproved > 0) || (r.limited > 0) || ((r.accountStatus || "").toUpperCase() === "SUSPENDED")));
+  setNavWarn("auditNavWarn", auditAny ? 2 : 0);
 
   const pageRows = pageSlice(auditState.rows, auditState);
   renderPagination("audPagination", auditState, auditState.rows.length, renderAuditTable);
@@ -3944,6 +3947,22 @@ function paceStatus(spend, budget, mi) {
 }
 
 // Show the amber warning in the side nav if any active, budgeted account is off pace.
+// Show/colour a side-nav warning icon. level: 0 none, 1 amber, 2 red.
+function setNavWarn(id, level) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.hidden = level === 0;
+  el.classList.toggle("red", level === 2);
+}
+// Amber(1)/red(2) level for an Assets count cell, mirroring assetCellHtml thresholds.
+function assetCellLevel(key, v) {
+  if (key === "sitelinks") return v >= 8 ? 0 : (v >= 1 ? 1 : 2);
+  if (key === "landscape") return v >= 2 ? 0 : (v === 1 ? 1 : 2);
+  if (key === "square") return v >= 5 ? 0 : (v >= 1 ? 1 : 2);
+  if (key === "callouts") return v >= 10 ? 0 : (v >= 1 ? 1 : 2);
+  if (key === "snippets") return v >= 1 ? 0 : 2;
+  return v === 0 ? 2 : 0;
+}
 function updateBpNavWarning() {
   const mi = monthInfo();
   const anyOff = bpState.rows.filter(r => r.hasEnabled).some(r => {
@@ -4215,6 +4234,9 @@ function renderAssetsTable() {
     });
   assetsState.viewRows = rows;
   assetsState.viewCols = cols;
+  let assetsLvl = 0;
+  for (const r of rows) { for (const c of cols) { if (c.key === "account" || c.key === "name" || c.type === "status") continue; const L = assetCellLevel(c.key, r[c.key] || 0); if (L === 2) { assetsLvl = 2; break; } if (L === 1) assetsLvl = 1; } if (assetsLvl === 2) break; }
+  setNavWarn("assetsNavWarn", assetsLvl);
   const pageRows = pageSlice(rows, assetsState);
   renderPagination("assetsPagination", assetsState, rows.length, renderAssetsTable);
   const arrow = key => assetsState.sort.key === key ? '<span class="arr">' + (assetsState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
@@ -4999,6 +5021,9 @@ function renderUnderspendTable() {
 
   const cols = applyColumnOrder(GLOBAL_ACCOUNT === "ALL" ? US_COLUMNS : US_COLUMNS.filter(c => c.key !== "account"), colOrder("underspend"));
   underspendState.viewRows = rows;
+  let usLvl = 0;
+  for (const r of rows) { const c = pacingLabel(r.dailySpend, r.dailyBudget).cls; if (c === "pace-high") { usLvl = 2; break; } if (c === "pace-low") usLvl = 1; }
+  setNavWarn("usNavWarn", usLvl);
   const pageRows = pageSlice(rows, underspendState);
   renderPagination("usPagination", underspendState, rows.length, renderUnderspendTable);
   document.getElementById("us-colgroup").innerHTML = colgroupHtml(cols, underspendState.columnWidths);
@@ -5300,6 +5325,9 @@ function renderBiddingTable() {
 
   const cols = applyColumnOrder(GLOBAL_ACCOUNT === "ALL" ? BID_COLUMNS : BID_COLUMNS.filter(c => c.key !== "account"), colOrder("bidding"));
   biddingState.viewRows = rows;
+  let bidLvl = 0;
+  for (const r of rows) { if (r.targetCpa > 0 && r.cpaAchieved != null && r.cpaAchieved <= r.targetCpa * 0.8) { bidLvl = 2; break; } }
+  setNavWarn("bidNavWarn", bidLvl);
   const pageRows = pageSlice(rows, biddingState);
   renderPagination("bidPagination", biddingState, rows.length, renderBiddingTable);
   document.getElementById("bid-colgroup").innerHTML = colgroupHtml(cols, biddingState.columnWidths);
