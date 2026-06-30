@@ -187,6 +187,7 @@
 
   .grow { flex: 1; }
   .toolset { display: flex; align-items: flex-end; gap: 8px; margin-left: auto; }
+  .toolset [id$="ExportGroup"] { order: 99; }
 
   .filters { position: relative; }
   .filters-btn {
@@ -294,18 +295,18 @@
   .scroll { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   thead th, tbody td, tfoot td { overflow: hidden; text-overflow: ellipsis; }
-  th.num, td.num { text-align: center; }
-  th.txt, td.txt { text-align: left; }
+  td.num { text-align: center; }
+  td.txt { text-align: left; }
+  td[data-col="status"] { text-align: center; }
   thead th {
     position: sticky; top: 0; background: var(--line-soft); z-index: 2;
-    font-weight: 560; color: var(--muted); font-size: 12.5px;
+    font-weight: 560; color: var(--muted); font-size: 12.5px; text-align: center;
     padding: 10px 12px; white-space: nowrap; cursor: pointer; user-select: none;
     border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
   }
   thead th:last-child { border-right: none; }
   thead th:hover { color: var(--ink); }
   thead th .sortable { display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
-  thead th.txt .sortable { justify-content: flex-start; }
   thead th .arr { color: var(--accent); font-size: 15px; line-height: 1; }
   tbody td { padding: 10px 12px; border-bottom: 1px solid var(--line-soft); border-right: 1px solid var(--line-soft); white-space: nowrap; }
   tbody td:last-child { border-right: none; }
@@ -366,7 +367,7 @@
   .audit-card.warn .num-big { color: #b45309; }
   .audit-card.ok .num-big { color: #047857; }
   #audTable td, #audTable th { padding: 12px; border-bottom: 1px solid var(--line-soft); text-align: left; vertical-align: top; }
-  #audTable th { background: var(--line-soft); color: var(--muted); font-weight: 560; font-size: 12.5px; }
+  #audTable th { background: var(--line-soft); color: var(--muted); text-align: center; font-weight: 560; font-size: 12.5px; }
   .issue-tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 540; border: 1px solid; margin: 2px 4px 2px 0; }
   .issue-tag.disapproved { background: var(--off-bg); color: #dc2626; border-color: #fca5a5; }
   .issue-tag.limited { background: var(--warn-bg); color: var(--warn-fg); border-color: var(--warn-rg); }
@@ -425,7 +426,7 @@
   .bp-inactive-head h2 { font-size: 15px; margin: 0; font-weight: 600; }
   .bp-inactive-head .sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
   #bpInactiveTable { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-  #bpInactiveTable th { text-align: left; padding: 9px 14px; background: var(--line-soft); color: var(--muted); font-weight: 560; font-size: 12px; }
+  #bpInactiveTable th { text-align: center; padding: 9px 14px; background: var(--line-soft); color: var(--muted); font-weight: 560; font-size: 12px; }
   #bpInactiveTable td { padding: 9px 14px; border-top: 1px solid var(--line-soft); font-size: 13px; }
   #bpInactiveTable td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
   #bpInactiveTable .sub { color: var(--faint); font-size: 12px; }
@@ -480,7 +481,7 @@
   .geo-layout.resizing .geo-main { pointer-events: none; }
   .geo-table-wrap { max-height: 540px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; }
   .geo-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-  .geo-table thead th { position: sticky; top: 0; background: var(--panel); text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); z-index: 1; }
+  .geo-table thead th { position: sticky; top: 0; background: var(--panel); text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); z-index: 1; }
   .geo-table th.clk, .geo-table td.clk { text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .geo-table td { padding: 8px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top; overflow-wrap: anywhere; }
   .geo-table tbody tr:last-child td { border-bottom: none; }
@@ -705,8 +706,6 @@
               <div class="filters" id="campaignsExportGroup">
                 <button class="filters-btn" id="exportBtn" title="Export current view">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-                  Export
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
                 </button>
                 <div class="pop col-pop" id="exportPop" hidden>
                   <button class="pop-row" data-fmt="csv">Download CSV</button>
@@ -813,8 +812,6 @@
               <div class="filters" id="accountsExportGroup">
                 <button class="filters-btn" id="accExportBtn" title="Export current view">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-                  Export
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
                 </button>
                 <div class="pop col-pop" id="accExportPop" hidden>
                   <button class="pop-row" data-accfmt="csv">Download CSV</button>
@@ -948,8 +945,6 @@
               <div class="filters" id="assetsExportGroup">
                 <button class="filters-btn" id="assetsExportBtn" title="Export current view">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                  Export
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
                 </button>
                 <div class="pop col-pop" id="assetsExportPop" hidden>
                   <button class="pop-row" data-asfmt="csv">Download CSV</button>
@@ -1084,8 +1079,6 @@
               <div class="filters" id="lpExportGroup">
                 <button class="filters-btn" id="lpExportBtn" title="Export current view">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                  Export
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
                 </button>
                 <div class="pop col-pop" id="lpExportPop" hidden>
                   <button class="pop-row" data-lpfmt="csv">Download CSV</button>
@@ -1299,8 +1292,6 @@
               <div class="filters" id="budgetingExportGroup">
                 <button class="filters-btn" id="usExportBtn" title="Export current view">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                  Export
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
                 </button>
                 <div class="pop col-pop" id="usExportPop" hidden>
                   <button class="pop-row" data-usfmt="csv">Download CSV</button>
@@ -1386,8 +1377,6 @@
               <div class="filters" id="biddingExportGroup">
                 <button class="filters-btn" id="bidExportBtn" title="Export current view">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                  Export
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
                 </button>
                 <div class="pop col-pop" id="bidExportPop" hidden>
                   <button class="pop-row" data-bidfmt="csv">Download CSV</button>
@@ -1548,8 +1537,19 @@ function renderTopbarRefresh() {
   const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   cap.textContent = "Last fetched: " + date + ", " + time;
 }
-// Force-reload the data for whichever page is currently showing.
+// Force-reload data everywhere: clear the cache, mark every page stale, then
+// reload whichever page is showing now (the rest refetch when next opened).
 function globalRefresh() {
+  try { sessionStorage.removeItem(DATA_CACHE_KEY); } catch {}
+  state.loadedAccount = "__stale__";
+  assetsState.loadedAccount = "__stale__";
+  lpState.loadedAccount = "__stale__";
+  geoState.loadedAccount = "__stale__";
+  accState.loaded = false;
+  auditState.loaded = false;
+  bpState.loaded = false;
+  underspendState.loaded = false;
+  biddingState.loaded = false;
   switch (currentHashPage()) {
     case "allaccounts": loadAllAccounts(); break;
     case "budgetpacing": loadBudgetPacing(true); break;
@@ -1643,9 +1643,14 @@ let logosLoaded = false;
 let GLOBAL_ACCOUNT = localStorage.getItem("globalAccount") || "ALL";
 let signedIn = false;
 
+// Persist which columns are visible per table, so selections survive a hard refresh.
+const COL_VISIBLE = (() => { try { return JSON.parse(localStorage.getItem("tableColumnVisible_v1") || "{}"); } catch { return {}; } })();
+function savedColVisible(table) { return Array.isArray(COL_VISIBLE[table]) && COL_VISIBLE[table].length ? COL_VISIBLE[table] : null; }
+function setColVisible(table, set) { COL_VISIBLE[table] = [...set]; try { localStorage.setItem("tableColumnVisible_v1", JSON.stringify(COL_VISIBLE)); } catch {} }
+
 const accState = {
   rows: [],
-  visible: new Set(ACCOUNT_DEFAULT_VISIBLE),
+  visible: new Set(savedColVisible("accounts") || ACCOUNT_DEFAULT_VISIBLE),
   sort: { key: "cost", dir: "desc" },
   dateRange: { label: "Last 30 Days", days: 30 },
   pageSize: 10,
@@ -1666,7 +1671,7 @@ const bpState = { rows: [], loaded: false, budgets: {}, editing: null };
 
 const state = {
   campaigns: [],
-  visible: new Set(SEED_VIEWS[0].columns),
+  visible: new Set(savedColVisible("campaigns") || SEED_VIEWS[0].columns),
   sort: { key: "clicks", dir: "desc" },
   filterName: "",
   filterNameOp: "contains",
@@ -2815,7 +2820,7 @@ function renderColsPop() {
   pop.querySelectorAll(".pop-row:not(.locked)").forEach(row =>
     row.addEventListener("click", () => {
       const k = row.dataset.key;
-      state.visible.has(k) ? state.visible.delete(k) : state.visible.add(k);
+      state.visible.has(k) ? state.visible.delete(k) : state.visible.add(k); setColVisible("campaigns", state.visible);
       state.activeView = null;
       saveViewState();
       syncColsCount(); renderColsPop(); renderViewsLabel(); renderTable();
@@ -2868,7 +2873,7 @@ function showNameInput() {
 
 function applyView(id) {
   const v = state.views.find(x => x.id === id); if (!v) return;
-  state.visible = new Set(v.columns);
+  state.visible = new Set(v.columns); setColVisible("campaigns", state.visible);
   state.activeView = id;
   document.getElementById("viewsPop").hidden = true;
   saveViewState();
@@ -3510,7 +3515,7 @@ function renderAccountsTable() {
 
 function renderAccColsPop() {
   renderGroupedCols("accColsPop", ACCOUNT_COLUMNS, ACCOUNT_GROUPS, accState.visible, accState.openColGroups, key => {
-    accState.visible.has(key) ? accState.visible.delete(key) : accState.visible.add(key);
+    accState.visible.has(key) ? accState.visible.delete(key) : accState.visible.add(key); setColVisible("accounts", accState.visible);
     syncAccColsCount(); renderAccColsPop(); renderAccountsTable();
   });
 }
@@ -4293,7 +4298,7 @@ const LP_COLUMNS = [
 ];
 const LP_COL_GROUPS = ["Columns"];
 const LP_DEFAULT_VISIBLE = ["name", "source", "finalUrl", "clicks", "convRate"];
-const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { name: "", nameOp: "contains", account: new Set(), campaign: new Set(), adGroup: new Set(), url: "", sources: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set(LP_DEFAULT_VISIBLE), openColGroups: new Set(["lpColsPop_g0"]), heatmap: false, dateRange: { label: "Last 30 Days", days: 30 } };
+const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { name: "", nameOp: "contains", account: new Set(), campaign: new Set(), adGroup: new Set(), url: "", sources: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set(savedColVisible("landingpages") || LP_DEFAULT_VISIBLE), openColGroups: new Set(["lpColsPop_g0"]), heatmap: false, dateRange: { label: "Last 30 Days", days: 30 } };
 
 const LP_SOURCE_BOXES = [["lpfSrcAd", "Ad"], ["lpfSrcAssetGroup", "Asset Group"], ["lpfSrcSitelink", "Sitelink"], ["lpfSrcPromotion", "Promotion"], ["lpfSrcPrice", "Price"]];
 
@@ -4574,7 +4579,7 @@ function renderLandingPagesTable() {
 
 function renderLpColsPop() {
   renderGroupedCols("lpColsPop", LP_COLUMNS, LP_COL_GROUPS, lpState.visible, lpState.openColGroups, key => {
-    lpState.visible.has(key) ? lpState.visible.delete(key) : lpState.visible.add(key);
+    lpState.visible.has(key) ? lpState.visible.delete(key) : lpState.visible.add(key); setColVisible("landingpages", lpState.visible);
     syncLpColsCount();
     renderLpColsPop();
     lpState.currentPage = 1;
