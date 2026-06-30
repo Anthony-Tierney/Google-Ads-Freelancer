@@ -4502,7 +4502,7 @@ function syncLpColsCount() { document.getElementById("lpColsCount").textContent 
 
 // ---------- Geo Coverage ----------
 const GEO_ACCENT = "#10b981";
-const geoState = { loadedAccount: null, radius: [], locations: [], map: null, layer: null };
+const geoState = { loadedAccount: null, radius: [], locations: [], excluded: [], map: null, layer: null };
 
 function initGeoCoverage() {
   document.getElementById("geoSignedOut").hidden = signedIn;
@@ -4529,6 +4529,7 @@ async function loadGeoCoverage(customerId) {
     if (data.error) throw new Error(data.error);
     geoState.radius = data.radius || [];
     geoState.locations = data.locations || [];
+    geoState.excluded = data.excluded || [];
     document.getElementById("geoWarn").hidden = !data.warning;
     if (data.warning) document.getElementById("geoWarn").textContent = data.warning;
     showEl("geoLoading", false);
@@ -4540,8 +4541,8 @@ async function loadGeoCoverage(customerId) {
 }
 
 function renderGeoCoverage() {
-  const radius = geoState.radius, locations = geoState.locations;
-  if (!radius.length && !locations.length) {
+  const radius = geoState.radius, locations = geoState.locations, excluded = geoState.excluded;
+  if (!radius.length && !locations.length && !excluded.length) {
     showEl("geoMap", false); showEl("geoLegend", false); showEl("geoNames", false);
     showEl("geoEmpty", true);
     return;
@@ -4575,17 +4576,20 @@ function renderGeoCoverage() {
   });
   if (bounds.length) { try { geoState.map.fitBounds(group.getBounds().pad(0.2)); } catch {} }
 
-  // Named-location targets: clicks available, geometry pending — list them for now.
-  const named = locations.filter(l => (l.clicks || 0) >= 0);
+  // Named-location targets & exclusions: clicks available, geometry pending — list them for now.
   const namesEl = document.getElementById("geoNames");
-  if (named.length) {
-    namesEl.hidden = false;
-    const sorted = [...named].sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
-    namesEl.innerHTML = "<h4>Named-location targets (" + named.length + ")</h4>" +
-      sorted.map(l => '<div class="geo-name-row"><span>' + escapeHtml(l.name || ("Location " + l.geoTargetId)) + (l.campaign ? ' <span style="color:var(--faint)">\u00b7 ' + escapeHtml(l.campaign) + "</span>" : "") + '</span><span class="clk">Clicks: ' + fmtInt(l.clicks || 0) + "</span></div>").join("");
-  } else {
-    namesEl.hidden = true;
+  const rowHtml = (l) => '<div class="geo-name-row"><span>' + escapeHtml(l.name || ("Location " + l.geoTargetId)) + (l.campaign ? ' <span style="color:var(--faint)">\u00b7 ' + escapeHtml(l.campaign) + "</span>" : "") + '</span><span class="clk">Clicks: ' + fmtInt(l.clicks || 0) + "</span></div>";
+  let html = "";
+  if (locations.length) {
+    const sorted = [...locations].sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
+    html += "<h4>Named-location targets (" + locations.length + ")</h4>" + sorted.map(rowHtml).join("");
   }
+  if (excluded.length) {
+    const sortedX = [...excluded].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    html += '<h4 style="margin-top:14px;color:var(--muted)">Excluded locations (' + excluded.length + ")</h4>" + sortedX.map(rowHtml).join("");
+  }
+  if (html) { namesEl.hidden = false; namesEl.innerHTML = html; }
+  else namesEl.hidden = true;
 }
 
 function exportLandingPages(fmt) {
