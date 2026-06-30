@@ -21,6 +21,10 @@ export async function onRequestGet(context) {
   if (!customerId) return json({ error: "Missing customerId" }, 400);
   const cleanId = customerId.replace(/-/g, "");
 
+  const drParam = url.searchParams.get("dateRange") || "LAST_30_DAYS";
+  const drSafe = /^[A-Z0-9_]+$/.test(drParam) || /^segments\.date >= '\d{8}' AND segments\.date <= '\d{8}'$/.test(drParam);
+  const dateClause = drSafe ? (/segments\.date/i.test(drParam) ? drParam : "segments.date DURING " + drParam) : "segments.date DURING LAST_30_DAYS";
+
   const accessToken = await getAccessToken(env, refreshToken);
   const search = (query) => adsRequest(env, accessToken, `customers/${cleanId}/googleAds:search`, { query });
   const idOf = (rn) => String(rn || "").split("/").pop();
@@ -37,7 +41,7 @@ export async function onRequestGet(context) {
       campaign_criterion.proximity.address.city_name,
       metrics.clicks, metrics.impressions, metrics.conversions
     FROM location_view
-    WHERE campaign.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS`;
+    WHERE campaign.status = 'ENABLED' AND ${dateClause}`;
 
   let lvRows, lvError;
   try {
