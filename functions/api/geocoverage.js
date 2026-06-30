@@ -99,13 +99,27 @@ export async function onRequestGet(context) {
       gtc.forEach((g) => nameMap.set(g.geoTargetConstant?.resourceName, { name: g.geoTargetConstant?.name || "", canonical: g.geoTargetConstant?.canonicalName || "" }));
       [...locations, ...excluded].forEach((l) => {
         const n = nameMap.get(l.geoTargetConstant);
-        if (n) l.name = n.canonical || n.name || ("Location " + l.geoTargetId);
-        else l.name = "Location " + l.geoTargetId;
+        l.canonical = n ? (n.canonical || n.name) : "";
+        l.name = (n && (n.canonical || n.name)) || ("Location " + l.geoTargetId);
       });
     } catch (e) {
       nameError = String(e && e.message ? e.message : e);
       [...locations, ...excluded].forEach((l) => { if (!l.name) l.name = "Location " + l.geoTargetId; });
     }
+  }
+
+  // Boundary geometry for named (positive) targets, via OpenStreetMap/Nominatim.
+  // The Ads API has no geometry for geo target constants, so this is the shape source.
+  const geomDiag = [];
+  const uniq = new Map(); // geoTargetConstant -> first location row
+  locations.forEach((l) => { if (l.geoTargetConstant && !uniq.has(l.geoTargetConstant)) uniq.set(l.geoTargetConstant, l); });
+  const targets = [...uniq.values()].slice(0, 30);
+  for (const l of targets) {
+    const g = await geocodeBoundary(l.canonical || l.name);
+    geomDiag.push({ name: l.name, status: g.status, type: g.geometry?.type });
+    locations.forEach((row) => {
+      if (row.geoTargetConstant === l.geoTargetConstant) { row.geometry = g.geometry || null; row.center = g.center || null; }
+    });
   }
 
   const payload = { radius, locations, excluded };
@@ -117,8 +131,35 @@ export async function onRequestGet(context) {
       locationCount: locations.length,
       excludedCount: excluded.length,
       nameError: nameError ? nameError.slice(0, 300) : undefined,
+      geocode: geomDiag,
       sample: lvRows.slice(0, 3).map((r) => ({ type: r.campaignCriterion?.type, negative: r.campaignCriterion?.negative, campaign: r.campaign?.name, clicks: r.metrics?.clicks })),
     };
   }
   return json(payload);
+}
+
+// Per-isolate cache so repeated locations aren't re-fetched within a warm worker.
+const _geoCache = new Map();
+async function geocodeBoundary(query) {
+  if (!query) return { status: "empty" };
+  if (_geoCache.has(query)) return _geoCache.get(query);
+  let out;
+  try {
+    const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&polygon_geojson=1&limit=1&countrycodes=gb,ie&q=" + encodeURIComponent(query);
+    const res = await fetch(url, { headers: { "User-Agent": "AdLytics/1.0 (https://anthonytierney.co.uk)", "Accept-Language": "en-GB" } });
+    if (!res.ok) out = { status: "http_" + res.status };
+    else {
+      const arr = await res.json();
+      if (!arr.length) out = { status: "not_found" };
+      else {
+        const hit = arr[0];
+        const geometry = hit.geojson && /Polygon$/.test(hit.geojson.type) ? hit.geojson : null;
+        out = { status: geometry ? "ok" : "point_only", geometry, center: { lat: Number(hit.lat), lng: Number(hit.lon) } };
+      }
+    }
+  } catch (e) {
+    out = { status: "error", message: String(e && e.message ? e.message : e).slice(0, 120) };
+  }
+  _geoCache.set(query, out);
+  return out;
 }
