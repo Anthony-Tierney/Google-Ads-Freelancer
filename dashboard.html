@@ -469,7 +469,19 @@
     select { min-width: 0; width: 100%; }
     .calendar-inputs { grid-template-columns: 1fr; }
   }
-  .geo-map { width: 100%; height: 560px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .geo-map { width: 100%; height: 540px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .geo-layout { display: flex; gap: 16px; align-items: flex-start; }
+  .geo-side { flex: 0 0 320px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+  .geo-main { flex: 1 1 auto; min-width: 0; }
+  .geo-table-wrap { max-height: 540px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; }
+  .geo-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .geo-table thead th { position: sticky; top: 0; background: var(--panel); text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); z-index: 1; }
+  .geo-table th.clk, .geo-table td.clk { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .geo-table td { padding: 8px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top; overflow-wrap: anywhere; }
+  .geo-table tbody tr:last-child td { border-bottom: none; }
+  .geo-table .loc-sub { display: block; font-size: 11px; color: var(--faint); margin-top: 2px; overflow-wrap: anywhere; }
+  .geo-table .empty { color: var(--muted); text-align: center; padding: 18px; }
+  @media (max-width: 900px) { .geo-layout { flex-wrap: wrap; } .geo-side, .geo-main { flex-basis: 100%; } }
   .geo-label { background: transparent; border: none; box-shadow: none; color: #0f5132; font-weight: 700; font-size: 11px; text-align: center; white-space: nowrap; }
   .geo-label::before { display: none; }
   .geo-legend { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
@@ -1113,21 +1125,45 @@
         </section>
 
         <section id="geoSignedIn" hidden>
+          <div class="controls-row account" id="geoControls" hidden>
+            <div>
+              <label class="field-label" for="geoDateSelect">Date range</label>
+              <select id="geoDateSelect" onchange="onGeoDateRangeChange()">
+                <option value="yesterday">Yesterday</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="14days">Last 14 Days</option>
+                <option value="30days" selected>Last 30 Days</option>
+                <option value="thisMonth">This Month</option>
+                <option value="lastMonth">Last Month</option>
+                <option value="custom">Custom...</option>
+              </select>
+            </div>
+          </div>
           <div class="panel">
             <div id="geoLoading" class="state" hidden><div class="spinner"></div>Loading location targeting…</div>
             <div id="geoPrompt" class="state"><div class="big">Choose an account</div>Select an account above to map its location targeting.</div>
             <div id="geoError" class="state" hidden></div>
-            <div id="geoEmpty" class="state" hidden><div class="big">No location targeting</div>No radius or location targets found on enabled campaigns for this account.</div>
             <div id="geoWarn" class="as-warn" hidden></div>
-            <div id="geoMap" class="geo-map" hidden></div>
-            <div id="geoLegend" class="geo-legend" hidden>
-              <span class="dot"></span> Radius (proximity) target
-              <span style="margin-left:14px" class="sq"></span> Named location
-              <span style="margin-left:14px">Bubble/label = clicks in the last 30 days</span>
+            <div id="geoLayout" class="geo-layout" hidden>
+              <div class="geo-side">
+                <div class="geo-table-wrap">
+                  <table class="geo-table">
+                    <thead><tr><th>Targeted Location</th><th class="clk">Clicks</th></tr></thead>
+                    <tbody id="geo-tbody"></tbody>
+                  </table>
+                </div>
+                <div id="geoExcluded" class="geo-names" hidden></div>
+              </div>
+              <div class="geo-main">
+                <div id="geoMap" class="geo-map"></div>
+                <div id="geoLegend" class="geo-legend">
+                  <span class="dot"></span> Radius (proximity) target
+                  <span style="margin-left:14px" class="sq"></span> Named location
+                </div>
+              </div>
             </div>
-            <div id="geoNames" class="geo-names" hidden></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Bubbles show radius (proximity) targets on enabled campaigns, drawn to scale at their centre point, labelled with clicks over the last 30 days (from the same data behind the Google Ads "Locations" report). Named-location targets (cities, regions) are listed below the map with their clicks; mapped shapes for those are coming next.</div>
+          <div class="foot-note" style="margin-top:10px;">Bubbles show radius (proximity) targets on enabled campaigns, drawn to scale at their centre point. The table lists every targeted location with its clicks over the selected date range (from the same data behind the Google Ads "Locations" report). Named-location targets (cities, regions) appear in the table now; their mapped shapes are coming next.</div>
         </section>
       </section>
 
@@ -1889,6 +1925,7 @@ function syncLpDateSelect() {
 function cancelCustomDate() {
   closeCustomDateModal();
   if (state.calendarTarget === "lp") syncLpDateSelect();
+  else if (state.calendarTarget === "geo") syncGeoDateSelect();
   else if (state.calendarTarget !== "compare") syncDateSelect();
 }
 
@@ -1912,6 +1949,13 @@ function applyCustomDate() {
     lpState.currentPage = 1;
     closeCustomDateModal();
     loadLandingPages(GLOBAL_ACCOUNT);
+    return;
+  }
+
+  if (state.calendarTarget === "geo") {
+    geoState.dateRange = { label: from + " to " + to, from, to };
+    closeCustomDateModal();
+    loadGeoCoverage(GLOBAL_ACCOUNT);
     return;
   }
 
@@ -4502,28 +4546,57 @@ function syncLpColsCount() { document.getElementById("lpColsCount").textContent 
 
 // ---------- Geo Coverage ----------
 const GEO_ACCENT = "#10b981";
-const geoState = { loadedAccount: null, radius: [], locations: [], excluded: [], map: null, layer: null };
+const geoState = { loadedAccount: null, radius: [], locations: [], excluded: [], map: null, layer: null, dateRange: { label: "Last 30 Days", days: 30 } };
 
 function initGeoCoverage() {
   document.getElementById("geoSignedOut").hidden = signedIn;
   document.getElementById("geoSignedIn").hidden = !signedIn;
   if (!signedIn) return;
   if (GLOBAL_ACCOUNT === "ALL") {
-    showEl("geoLoading", false); showEl("geoMap", false); showEl("geoLegend", false); showEl("geoNames", false); showEl("geoEmpty", false); showEl("geoError", false);
+    document.getElementById("geoControls").hidden = true;
+    showEl("geoLoading", false); showEl("geoLayout", false); showEl("geoError", false);
     const p = document.getElementById("geoPrompt"); p.hidden = false; p.innerHTML = '<div class="big">Choose a single account</div>Geo Coverage maps one account at a time \u2014 pick a specific account from the selector above.';
     return;
   }
+  document.getElementById("geoControls").hidden = false;
   document.getElementById("geoPrompt").hidden = true;
+  syncGeoDateSelect();
   if (geoState.loadedAccount !== GLOBAL_ACCOUNT) loadGeoCoverage(GLOBAL_ACCOUNT);
   else renderGeoCoverage();
 }
 
+function onGeoDateRangeChange() {
+  const val = document.getElementById("geoDateSelect").value;
+  if (val === "custom") {
+    state.calendarTarget = "geo";
+    state.calendarFromDate = new Date();
+    state.calendarToDate = new Date();
+    document.getElementById("calendarTitle").textContent = "Custom date range";
+    renderCalendar("from");
+    renderCalendar("to");
+    document.getElementById("customDateModal").setAttribute("open", "");
+  } else {
+    geoState.dateRange = DATE_PRESET_MAP[val];
+    loadGeoCoverage(GLOBAL_ACCOUNT);
+  }
+}
+
+function syncGeoDateSelect() {
+  const r = geoState.dateRange, sel = document.getElementById("geoDateSelect");
+  if (!sel) return;
+  if (r.from && r.to) sel.value = "custom";
+  else if (r.type === "thisMonth") sel.value = "thisMonth";
+  else if (r.type === "lastMonth") sel.value = "lastMonth";
+  else sel.value = ({ 1: "yesterday", 7: "7days", 14: "14days", 30: "30days" })[r.days] || "30days";
+}
+
 async function loadGeoCoverage(customerId) {
   geoState.loadedAccount = customerId;
-  showEl("geoPrompt", false); showEl("geoEmpty", false); showEl("geoError", false); showEl("geoMap", false); showEl("geoLegend", false); showEl("geoNames", false);
+  showEl("geoPrompt", false); showEl("geoError", false); showEl("geoLayout", false);
   showEl("geoLoading", true);
   try {
-    const res = await fetch("/api/geocoverage?customerId=" + encodeURIComponent(customerId), { credentials: "same-origin" });
+    const dr = encodeURIComponent(dateRangeToGAQL(geoState.dateRange));
+    const res = await fetch("/api/geocoverage?customerId=" + encodeURIComponent(customerId) + "&dateRange=" + dr, { credentials: "same-origin" });
     if (res.status === 401) { showSignedOut(); return; }
     const data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -4542,15 +4615,30 @@ async function loadGeoCoverage(customerId) {
 
 function renderGeoCoverage() {
   const radius = geoState.radius, locations = geoState.locations, excluded = geoState.excluded;
-  if (!radius.length && !locations.length && !excluded.length) {
-    showEl("geoMap", false); showEl("geoLegend", false); showEl("geoNames", false);
-    showEl("geoEmpty", true);
-    return;
-  }
-  showEl("geoEmpty", false);
-  showEl("geoMap", true); showEl("geoLegend", true);
+  showEl("geoLayout", true);
 
-  // Lazy-init the Leaflet map (container must be visible first).
+  // ----- left table: every targeted location + clicks -----
+  const rows = [];
+  radius.forEach(b => {
+    const u = b.radiusUnits === "MILES" ? "mi" : "km";
+    const label = b.city ? (b.radius + " " + u + " around " + b.city) : (b.radius + " " + u + " radius");
+    rows.push({ label, sub: b.campaign, clicks: b.clicks || 0 });
+  });
+  locations.forEach(l => rows.push({ label: l.name || ("Location " + l.geoTargetId), sub: l.campaign, clicks: l.clicks || 0 }));
+  rows.sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
+  document.getElementById("geo-tbody").innerHTML = rows.length
+    ? rows.map(r => '<tr><td>' + escapeHtml(r.label) + (r.sub ? '<span class="loc-sub">' + escapeHtml(r.sub) + "</span>" : "") + '</td><td class="clk">' + fmtInt(r.clicks) + "</td></tr>").join("")
+    : '<tr><td class="empty" colspan="2">No location targeting found for this account.</td></tr>';
+
+  const exEl = document.getElementById("geoExcluded");
+  if (excluded.length) {
+    exEl.hidden = false;
+    const sortedX = [...excluded].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    exEl.innerHTML = '<h4 style="color:var(--muted)">Excluded locations (' + excluded.length + ")</h4>" +
+      sortedX.map(l => '<div class="geo-name-row"><span>' + escapeHtml(l.name || ("Location " + l.geoTargetId)) + "</span></div>").join("");
+  } else exEl.hidden = true;
+
+  // ----- right map: radius bubbles (no centre label; click for details) -----
   if (!geoState.map) {
     geoState.map = L.map("geoMap", { scrollWheelZoom: true }).setView([54.0, -2.5], 6); // UK
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
@@ -4566,30 +4654,12 @@ function renderGeoCoverage() {
   radius.forEach(b => {
     if (b.lat == null || b.lng == null) return;
     const meters = b.radiusUnits === "MILES" ? b.radius * 1609.344 : b.radius * 1000;
-    const circle = L.circle([b.lat, b.lng], {
-      radius: meters, color: GEO_ACCENT, weight: 2, fillColor: GEO_ACCENT, fillOpacity: 0.18,
-    }).addTo(group);
-    circle.bindTooltip("Clicks: " + fmtInt(b.clicks || 0), { permanent: true, direction: "center", className: "geo-label" });
-    const milesLabel = b.radiusUnits === "MILES" ? b.radius + " mi" : b.radius + " km";
-    circle.bindPopup("<strong>" + escapeHtml(b.campaign || "") + "</strong><br>" + milesLabel + " radius<br>Clicks: " + fmtInt(b.clicks || 0) + " · Impr: " + fmtInt(b.impressions || 0) + " · Conv: " + fmtDec(b.conversions || 0));
+    const circle = L.circle([b.lat, b.lng], { radius: meters, color: GEO_ACCENT, weight: 2, fillColor: GEO_ACCENT, fillOpacity: 0.18 }).addTo(group);
+    const u = b.radiusUnits === "MILES" ? " mi" : " km";
+    circle.bindPopup("<strong>" + escapeHtml(b.campaign || "") + "</strong><br>" + b.radius + u + " radius<br>Clicks: " + fmtInt(b.clicks || 0) + " \u00b7 Impr: " + fmtInt(b.impressions || 0) + " \u00b7 Conv: " + fmtDec(b.conversions || 0));
     bounds.push([b.lat, b.lng]);
   });
   if (bounds.length) { try { geoState.map.fitBounds(group.getBounds().pad(0.2)); } catch {} }
-
-  // Named-location targets & exclusions: clicks available, geometry pending — list them for now.
-  const namesEl = document.getElementById("geoNames");
-  const rowHtml = (l) => '<div class="geo-name-row"><span>' + escapeHtml(l.name || ("Location " + l.geoTargetId)) + (l.campaign ? ' <span style="color:var(--faint)">\u00b7 ' + escapeHtml(l.campaign) + "</span>" : "") + '</span><span class="clk">Clicks: ' + fmtInt(l.clicks || 0) + "</span></div>";
-  let html = "";
-  if (locations.length) {
-    const sorted = [...locations].sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
-    html += "<h4>Named-location targets (" + locations.length + ")</h4>" + sorted.map(rowHtml).join("");
-  }
-  if (excluded.length) {
-    const sortedX = [...excluded].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    html += '<h4 style="margin-top:14px;color:var(--muted)">Excluded locations (' + excluded.length + ")</h4>" + sortedX.map(rowHtml).join("");
-  }
-  if (html) { namesEl.hidden = false; namesEl.innerHTML = html; }
-  else namesEl.hidden = true;
 }
 
 function exportLandingPages(fmt) {
