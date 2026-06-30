@@ -1195,7 +1195,7 @@
               </div>
             </div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Bubbles show radius (proximity) targets on enabled campaigns, drawn to scale at their centre point. The table lists every targeted location with its clicks over the selected date range (from the same data behind the Google Ads "Locations" report). Named-location targets (cities, regions) appear in the table now; their mapped shapes are coming next.</div>
+          <div class="foot-note" style="margin-top:10px;">Bubbles are radius (proximity) targets, drawn to scale at their centre point and named by the nearest town. Named-location targets (cities, regions, counties, countries) are drawn as boundary shapes via OpenStreetMap; where a boundary can't be resolved they appear as a dashed "approx." circle. The table lists every targeted location with its clicks over the selected date range (from the same data behind the Google Ads "Locations" report).</div>
         </section>
       </section>
 
@@ -4578,6 +4578,32 @@ function syncLpColsCount() { document.getElementById("lpColsCount").textContent 
 
 // ---------- Geo Coverage ----------
 const GEO_ACCENT = "#10b981";
+// Compact UK + Ireland gazetteer for naming pinned radius centres ("5 mi around <town>"),
+// since the Ads API returns no place name for point-pinned proximity targets.
+const UK_GAZETTEER = [
+  ["London",51.5074,-0.1278],["Manchester",53.4808,-2.2426],["Birmingham",52.4862,-1.8904],["Leeds",53.8008,-1.5491],
+  ["Liverpool",53.4084,-2.9916],["Sheffield",53.3811,-1.4701],["Bristol",51.4545,-2.5879],["Newcastle upon Tyne",54.9783,-1.6178],
+  ["Nottingham",52.9548,-1.1581],["Leicester",52.6369,-1.1398],["Coventry",52.4068,-1.5197],["Bradford",53.7960,-1.7594],
+  ["Cardiff",51.4816,-3.1791],["Belfast",54.5973,-5.9301],["Edinburgh",55.9533,-3.1883],["Glasgow",55.8642,-4.2518],
+  ["Aberdeen",57.1497,-2.0943],["Dundee",56.4620,-2.9707],["Brighton",50.8225,-0.1372],["Southampton",50.9097,-1.4044],
+  ["Portsmouth",50.8198,-1.0880],["Plymouth",50.3755,-4.1427],["Reading",51.4543,-0.9781],["Milton Keynes",52.0406,-0.7594],
+  ["Northampton",52.2405,-0.9027],["Norwich",52.6309,1.2974],["Luton",51.8787,-0.4200],["Swindon",51.5558,-1.7797],
+  ["Hull",53.7676,-0.3274],["Stoke-on-Trent",53.0027,-2.1794],["Wolverhampton",52.5870,-2.1288],["Derby",52.9226,-1.4746],
+  ["Swansea",51.6214,-3.9436],["Sunderland",54.9069,-1.3838],["Preston",53.7632,-2.7031],["Middlesbrough",54.5742,-1.2349],
+  ["Blackpool",53.8175,-3.0357],["Bournemouth",50.7192,-1.8808],["Peterborough",52.5695,-0.2405],["York",53.9600,-1.0873],
+  ["Cambridge",52.2053,0.1218],["Oxford",51.7520,-1.2577],["Exeter",50.7184,-3.5339],["Gloucester",51.8642,-2.2380],
+  ["Bath",51.3811,-2.3590],["Ipswich",52.0567,1.1482],["Maidstone",51.2720,0.5292],["Canterbury",51.2802,1.0789],
+  ["Chelmsford",51.7356,0.4685],["Watford",51.6565,-0.3903],["Crawley",51.1091,-0.1872],["Basingstoke",51.2665,-1.0876],
+  ["Wigan",53.5450,-2.6325],["Bolton",53.5769,-2.4282],["Stockport",53.4106,-2.1575],["Huddersfield",53.6450,-1.7798],
+  ["Wakefield",53.6833,-1.4977],["Doncaster",53.5228,-1.1285],["Telford",52.6784,-2.4453],
+  ["Dublin",53.3498,-6.2603],["Cork",51.8985,-8.4756],["Limerick",52.6638,-8.6267],["Galway",53.2707,-9.0568],["Waterford",52.2593,-7.1101],
+];
+function nearestPlace(lat, lng) {
+  if (lat == null || lng == null) return "";
+  let best = "", bd = Infinity; const cl = Math.cos(lat * Math.PI / 180);
+  for (const [n, la, lo] of UK_GAZETTEER) { const dy = la - lat, dx = (lo - lng) * cl, d = dy * dy + dx * dx; if (d < bd) { bd = d; best = n; } }
+  return best;
+}
 const geoState = { loadedAccount: null, radius: [], locations: [], excluded: [], map: null, layer: null, dateRange: { label: "Last 30 Days", days: 30 }, filters: { names: new Set(), status: new Set(["ENABLED"]) }, allCampaigns: new Set(), wired: false };
 
 function geoRowVisible(r) {
@@ -4709,12 +4735,13 @@ function renderGeoCoverage() {
   showEl("geoLayout", true);
 
   // ----- left table: every targeted location + clicks -----
-  const rows = [];
-  radius.forEach(b => {
+  const radiusLabel = (b) => {
     const u = b.radiusUnits === "MILES" ? "mi" : "km";
-    const label = b.city ? (b.radius + " " + u + " around " + b.city) : (b.radius + " " + u + " radius");
-    rows.push({ label, sub: b.campaign, clicks: b.clicks || 0 });
-  });
+    const where = b.city || nearestPlace(b.lat, b.lng);
+    return where ? (b.radius + " " + u + " around " + where) : (b.radius + " " + u + " radius");
+  };
+  const rows = [];
+  radius.forEach(b => rows.push({ label: radiusLabel(b), sub: b.campaign, clicks: b.clicks || 0 }));
   locations.forEach(l => rows.push({ label: l.name || ("Location " + l.geoTargetId), sub: l.campaign, clicks: l.clicks || 0 }));
   rows.sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
   document.getElementById("geo-tbody").innerHTML = rows.length
@@ -4729,7 +4756,7 @@ function renderGeoCoverage() {
       sortedX.map(l => '<div class="geo-name-row"><span>' + escapeHtml(l.name || ("Location " + l.geoTargetId)) + "</span></div>").join("");
   } else exEl.hidden = true;
 
-  // ----- right map: radius bubbles (no centre label; click for details) -----
+  // ----- right map -----
   if (!geoState.map) {
     geoState.map = L.map("geoMap", { scrollWheelZoom: true }).setView([54.0, -2.5], 6); // UK
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
@@ -4741,16 +4768,32 @@ function renderGeoCoverage() {
   const group = L.featureGroup().addTo(geoState.map);
   geoState.layer = group;
 
-  const bounds = [];
+  // Radius (proximity) targets → bubbles.
   radius.forEach(b => {
     if (b.lat == null || b.lng == null) return;
     const meters = b.radiusUnits === "MILES" ? b.radius * 1609.344 : b.radius * 1000;
     const circle = L.circle([b.lat, b.lng], { radius: meters, color: GEO_ACCENT, weight: 2, fillColor: GEO_ACCENT, fillOpacity: 0.18 }).addTo(group);
-    const u = b.radiusUnits === "MILES" ? " mi" : " km";
-    circle.bindPopup("<strong>" + escapeHtml(b.campaign || "") + "</strong><br>" + b.radius + u + " radius<br>Clicks: " + fmtInt(b.clicks || 0) + " \u00b7 Impr: " + fmtInt(b.impressions || 0) + " \u00b7 Conv: " + fmtDec(b.conversions || 0));
-    bounds.push([b.lat, b.lng]);
+    circle.bindPopup("<strong>" + escapeHtml(b.campaign || "") + "</strong><br>" + escapeHtml(radiusLabel(b)) + "<br>Clicks: " + fmtInt(b.clicks || 0) + " \u00b7 Impr: " + fmtInt(b.impressions || 0) + " \u00b7 Conv: " + fmtDec(b.conversions || 0));
   });
-  if (bounds.length) { try { geoState.map.fitBounds(group.getBounds().pad(0.2)); } catch {} }
+
+  // Named-location targets → boundary shapes (deduped across campaigns, clicks summed).
+  const locByGeo = new Map();
+  locations.forEach(l => {
+    const key = l.geoTargetId || l.name;
+    let e = locByGeo.get(key);
+    if (!e) { e = { name: l.name, geometry: l.geometry, center: l.center, clicks: 0 }; locByGeo.set(key, e); }
+    e.clicks += l.clicks || 0;
+  });
+  [...locByGeo.values()].forEach(l => {
+    const popup = "<strong>" + escapeHtml(l.name || "") + "</strong><br>Clicks: " + fmtInt(l.clicks || 0);
+    if (l.geometry && /Polygon$/.test(l.geometry.type || "")) {
+      L.geoJSON({ type: "Feature", geometry: l.geometry, properties: {} }, { style: { color: GEO_ACCENT, weight: 2, fillColor: GEO_ACCENT, fillOpacity: 0.18 } }).bindPopup(popup).addTo(group);
+    } else if (l.center && l.center.lat != null) {
+      L.circle([l.center.lat, l.center.lng], { radius: 12000, color: GEO_ACCENT, weight: 2, dashArray: "5 5", fillColor: GEO_ACCENT, fillOpacity: 0.12 }).bindPopup(popup + "<br><em>approx. location</em>").addTo(group);
+    }
+  });
+
+  if (group.getLayers().length) { try { geoState.map.fitBounds(group.getBounds().pad(0.2)); } catch {} }
 }
 
 function exportLandingPages(fmt) {
