@@ -470,18 +470,19 @@
     .calendar-inputs { grid-template-columns: 1fr; }
   }
   .geo-map { width: 100%; height: 540px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-  .geo-layout { display: flex; gap: 16px; align-items: flex-start; }
+  .geo-layout { display: flex; gap: 16px; align-items: flex-start; padding: 14px; }
   #geoControls { position: relative; z-index: 1200; }
-  .geo-side { flex: 0 0 320px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+  .geo-side { flex: 0 0 384px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
   .geo-main { flex: 1 1 auto; min-width: 0; }
-  .geo-table-wrap { max-height: 540px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; }
-  .geo-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .geo-table-wrap { max-height: 540px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; }
+  .geo-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
   .geo-table thead th { position: sticky; top: 0; background: var(--panel); text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); z-index: 1; }
-  .geo-table th.clk, .geo-table td.clk { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .geo-table th.clk, .geo-table td.clk { text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .geo-table td { padding: 8px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top; overflow-wrap: anywhere; }
   .geo-table tbody tr:last-child td { border-bottom: none; }
   .geo-table .loc-sub { display: block; font-size: 11px; color: var(--faint); margin-top: 2px; overflow-wrap: anywhere; }
   .geo-table .empty { color: var(--muted); text-align: center; padding: 18px; }
+  .geo-name-muted label { color: var(--faint); }
   @media (max-width: 900px) { .geo-layout { flex-wrap: wrap; } .geo-side, .geo-main { flex-basis: 100%; } }
   .geo-label { background: transparent; border: none; box-shadow: none; color: #0f5132; font-weight: 700; font-size: 11px; text-align: center; white-space: nowrap; }
   .geo-label::before { display: none; }
@@ -1180,7 +1181,8 @@
               <div class="geo-side">
                 <div class="geo-table-wrap">
                   <table class="geo-table">
-                    <thead><tr><th>Targeted Location</th><th class="clk">Clicks</th></tr></thead>
+                    <colgroup id="geo-colgroup"></colgroup>
+                    <thead id="geo-thead"></thead>
                     <tbody id="geo-tbody"></tbody>
                   </table>
                 </div>
@@ -4604,7 +4606,8 @@ function nearestPlace(lat, lng) {
   for (const [n, la, lo] of UK_GAZETTEER) { const dy = la - lat, dx = (lo - lng) * cl, d = dy * dy + dx * dx; if (d < bd) { bd = d; best = n; } }
   return best;
 }
-const geoState = { loadedAccount: null, radius: [], locations: [], excluded: [], map: null, layer: null, dateRange: { label: "Last 30 Days", days: 30 }, filters: { names: new Set(), status: new Set(["ENABLED"]) }, allCampaigns: new Set(), wired: false };
+const geoState = { loadedAccount: null, radius: [], locations: [], excluded: [], map: null, layer: null, dateRange: { label: "Last 30 Days", days: 30 }, filters: { names: new Set(), status: new Set(["ENABLED"]) }, allCampaigns: new Set(), campaignStatus: new Map(), columnWidths: {}, sort: { key: "clicks", dir: "desc" }, wired: false };
+const GEO_COLS = [{ key: "label", label: "Targeted Location", align: "txt", width: 250 }, { key: "clicks", label: "Clicks", align: "clk", width: 90 }];
 
 function geoRowVisible(r) {
   const f = geoState.filters;
@@ -4614,8 +4617,19 @@ function geoRowVisible(r) {
 }
 
 function populateGeoFilterOptions() {
-  const names = [...geoState.allCampaigns].sort((a, b) => String(a).localeCompare(String(b)));
-  fillCheckList("geoNameList", names, geoState.filters.names);
+  const box = document.getElementById("geoNameList");
+  const names = [...geoState.allCampaigns].sort((a, b) => {
+    const ea = geoState.campaignStatus.get(a) === "ENABLED", eb = geoState.campaignStatus.get(b) === "ENABLED";
+    if (ea !== eb) return ea ? -1 : 1;
+    return String(a).localeCompare(String(b));
+  });
+  box.innerHTML = names.length ? names.map((v, i) => {
+    const id = "geoNameList_" + i;
+    const checked = geoState.filters.names.has(v) ? " checked" : "";
+    const muted = geoState.campaignStatus.get(v) === "ENABLED" ? "" : ' class="check-row geo-name-muted"';
+    const cls = muted || ' class="check-row"';
+    return "<div" + cls + '><input type="checkbox" id="' + id + '" value="' + escapeHtml(v) + '"' + checked + ' /><label for="' + id + '" title="' + escapeHtml(v) + '">' + escapeHtml(v) + "</label></div>";
+  }).join("") : '<div class="filter-empty">No options</div>';
   document.getElementById("geoStatusEnabled").checked = geoState.filters.status.has("ENABLED");
   document.getElementById("geoStatusPaused").checked = geoState.filters.status.has("PAUSED");
 }
@@ -4632,7 +4646,7 @@ function applyGeoFilters() {
 }
 
 function resetGeoFilters() {
-  geoState.filters.names = new Set(geoState.allCampaigns);
+  geoState.filters.names = new Set([...geoState.allCampaigns].filter(n => geoState.campaignStatus.get(n) === "ENABLED"));
   geoState.filters.status = new Set(["ENABLED"]);
   populateGeoFilterOptions();
   updateGeoFilterCount();
@@ -4641,12 +4655,9 @@ function resetGeoFilters() {
 
 function updateGeoFilterCount() {
   const f = geoState.filters;
-  const nameNarrowed = f.names.size > 0 && f.names.size < geoState.allCampaigns.size;
-  const nameCount = nameNarrowed ? f.names.size : 0;
-  const total = nameCount + f.status.size;
   const el = document.getElementById("geoFilterCount");
-  if (total > 0) { el.textContent = total; el.hidden = false; } else { el.hidden = true; }
-  markFilterGroup("geo-group-name", nameCount);
+  if (f.names.size > 0) { el.textContent = f.names.size; el.hidden = false; } else { el.hidden = true; }
+  markFilterGroup("geo-group-name", f.names.size);
   markFilterGroup("geo-group-status", f.status.size);
 }
 
@@ -4715,8 +4726,12 @@ async function loadGeoCoverage(customerId) {
     // otherwise default to all campaigns selected (status filter handles the enabled-only default).
     const newAll = new Set([...geoState.radius, ...geoState.locations, ...geoState.excluded].map(r => r.campaign).filter(Boolean));
     geoState.allCampaigns = newAll;
+    const statusMap = new Map();
+    [...geoState.radius, ...geoState.locations, ...geoState.excluded].forEach(r => { if (r.campaign && !statusMap.has(r.campaign)) statusMap.set(r.campaign, r.status || ""); });
+    geoState.campaignStatus = statusMap;
+    const enabledNames = new Set([...newAll].filter(n => statusMap.get(n) === "ENABLED"));
     const kept = new Set([...geoState.filters.names].filter(n => newAll.has(n)));
-    geoState.filters.names = kept.size ? kept : new Set(newAll);
+    geoState.filters.names = kept.size ? kept : enabledNames;
     document.getElementById("geoWarn").hidden = !data.warning;
     if (data.warning) document.getElementById("geoWarn").textContent = data.warning;
     showEl("geoLoading", false);
@@ -4743,10 +4758,24 @@ function renderGeoCoverage() {
   const rows = [];
   radius.forEach(b => rows.push({ label: radiusLabel(b), sub: b.campaign, clicks: b.clicks || 0 }));
   locations.forEach(l => rows.push({ label: l.name || ("Location " + l.geoTargetId), sub: l.campaign, clicks: l.clicks || 0 }));
-  rows.sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
+  const sk = geoState.sort.key, sdir = geoState.sort.dir === "asc" ? 1 : -1;
+  rows.sort((a, b) => {
+    if (sk === "label") return String(a.label).localeCompare(String(b.label)) * sdir;
+    return ((a.clicks || 0) - (b.clicks || 0)) * sdir;
+  });
+
+  const arrow = key => geoState.sort.key === key ? '<span class="arr">' + (geoState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
+  document.getElementById("geo-colgroup").innerHTML = colgroupHtml(GEO_COLS, geoState.columnWidths);
+  document.getElementById("geo-thead").innerHTML = "<tr>" + GEO_COLS.map(c =>
+    '<th class="' + (c.align === "clk" ? "clk" : "") + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
   document.getElementById("geo-tbody").innerHTML = rows.length
-    ? rows.map(r => '<tr><td>' + escapeHtml(r.label) + (r.sub ? '<span class="loc-sub">' + escapeHtml(r.sub) + "</span>" : "") + '</td><td class="clk">' + fmtInt(r.clicks) + "</td></tr>").join("")
+    ? rows.map(r => '<tr><td data-col="label">' + escapeHtml(r.label) + (r.sub ? '<span class="loc-sub">' + escapeHtml(r.sub) + "</span>" : "") + '</td><td class="clk" data-col="clicks">' + fmtInt(r.clicks) + "</td></tr>").join("")
     : '<tr><td class="empty" colspan="2">No location targeting found for this account.</td></tr>';
+  wireColumnResize({ colgroup: "geo-colgroup", thead: "geo-thead", tbody: "geo-tbody" }, geoState.columnWidths, (k) => {
+    const s = geoState.sort;
+    geoState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
+    renderGeoCoverage();
+  });
 
   const exEl = document.getElementById("geoExcluded");
   if (excluded.length) {
