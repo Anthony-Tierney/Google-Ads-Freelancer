@@ -29,7 +29,7 @@ export async function onRequestGet(context) {
   const LOCATION_VIEW_Q = `
     SELECT
       campaign.id, campaign.name,
-      campaign_criterion.criterion_id, campaign_criterion.type,
+      campaign_criterion.criterion_id, campaign_criterion.type, campaign_criterion.negative,
       campaign_criterion.location.geo_target_constant,
       campaign_criterion.proximity.radius, campaign_criterion.proximity.radius_units,
       campaign_criterion.proximity.geo_point.latitude_in_micro_degrees,
@@ -51,11 +51,13 @@ export async function onRequestGet(context) {
 
   const radius = [];
   const locations = [];
+  const excluded = [];
   const geoTargetIds = new Set();
 
   lvRows.forEach((r) => {
     const cc = r.campaignCriterion || {};
     const m = r.metrics || {};
+    const isNeg = cc.negative === true;
     const base = {
       campaign: r.campaign?.name || "",
       campaignId: String(r.campaign?.id || ""),
@@ -67,7 +69,8 @@ export async function onRequestGet(context) {
       const gp = cc.proximity.geoPoint || {};
       const lat = gp.latitudeInMicroDegrees != null ? gp.latitudeInMicroDegrees / 1e6 : null;
       const lng = gp.longitudeInMicroDegrees != null ? gp.longitudeInMicroDegrees / 1e6 : null;
-      radius.push({
+      // Proximity is positive-only in Google Ads, but guard anyway.
+      if (!isNeg) radius.push({
         ...base,
         lat, lng,
         radius: Number(cc.proximity.radius) || 0,
@@ -77,7 +80,7 @@ export async function onRequestGet(context) {
     } else if (cc.type === "LOCATION" && cc.location?.geoTargetConstant) {
       const gid = idOf(cc.location.geoTargetConstant);
       geoTargetIds.add(cc.location.geoTargetConstant);
-      locations.push({ ...base, geoTargetId: gid, geoTargetConstant: cc.location.geoTargetConstant, name: "" });
+      (isNeg ? excluded : locations).push({ ...base, geoTargetId: gid, geoTargetConstant: cc.location.geoTargetConstant, name: "", negative: isNeg });
     }
   });
 
@@ -89,26 +92,27 @@ export async function onRequestGet(context) {
       const gtc = (await search(`SELECT geo_target_constant.resource_name, geo_target_constant.name, geo_target_constant.canonical_name FROM geo_target_constant WHERE geo_target_constant.resource_name IN (${inList})`)).results || [];
       const nameMap = new Map();
       gtc.forEach((g) => nameMap.set(g.geoTargetConstant?.resourceName, { name: g.geoTargetConstant?.name || "", canonical: g.geoTargetConstant?.canonicalName || "" }));
-      locations.forEach((l) => {
+      [...locations, ...excluded].forEach((l) => {
         const n = nameMap.get(l.geoTargetConstant);
         if (n) l.name = n.canonical || n.name || ("Location " + l.geoTargetId);
         else l.name = "Location " + l.geoTargetId;
       });
     } catch (e) {
       nameError = String(e && e.message ? e.message : e);
-      locations.forEach((l) => { if (!l.name) l.name = "Location " + l.geoTargetId; });
+      [...locations, ...excluded].forEach((l) => { if (!l.name) l.name = "Location " + l.geoTargetId; });
     }
   }
 
-  const payload = { radius, locations };
+  const payload = { radius, locations, excluded };
   if (debug) {
     payload.diag = {
       locationViewRows: lvRows.length,
       proximityCount: radius.length,
       proximityWithGeoPoint: radius.filter((b) => b.lat != null && b.lng != null).length,
       locationCount: locations.length,
+      excludedCount: excluded.length,
       nameError: nameError ? nameError.slice(0, 300) : undefined,
-      sample: lvRows.slice(0, 3).map((r) => ({ type: r.campaignCriterion?.type, campaign: r.campaign?.name, clicks: r.metrics?.clicks })),
+      sample: lvRows.slice(0, 3).map((r) => ({ type: r.campaignCriterion?.type, negative: r.campaignCriterion?.negative, campaign: r.campaign?.name, clicks: r.metrics?.clicks })),
     };
   }
   return json(payload);
