@@ -772,6 +772,7 @@
                 <option value="30days" selected>Last 30 Days</option>
                 <option value="thisMonth">This Month</option>
                 <option value="lastMonth">Last Month</option>
+                <option value="custom">Custom...</option>
               </select>
             </div>
             <div>
@@ -1816,6 +1817,7 @@ const DATE_PRESET_MAP = {
 
 function onLpDateRangeChange() {
   const val = document.getElementById("lpDateSelect").value;
+  if (val === "customApplied") return;
   if (val === "custom") {
     state.calendarTarget = "lp";
     state.calendarFromDate = new Date();
@@ -1827,6 +1829,7 @@ function onLpDateRangeChange() {
   } else {
     lpState.dateRange = DATE_PRESET_MAP[val];
     lpState.currentPage = 1;
+    syncLpDateSelect();
     loadLandingPages(GLOBAL_ACCOUNT);
   }
 }
@@ -1882,6 +1885,7 @@ function getCompareDateRange() {
 
 function onDateRangeChange() {
   const val = document.getElementById("dateSelect").value;
+  if (val === "customApplied") return; // already the active custom range
   const map = {
     "yesterday": { label: "Yesterday", days: 1 },
     "7days": { label: "Last 7 Days", days: 7 },
@@ -1901,6 +1905,7 @@ function onDateRangeChange() {
   } else {
     state.dateRange = map[val];
     state.currentPage = 1;
+    syncDateSelect();
     if (state.compareEnabled) updateCompareUI();
     loadCampaigns();
   }
@@ -1986,26 +1991,46 @@ function closeCustomDateModal() {
   document.getElementById("customDateModal").removeAttribute("open");
 }
 
-function syncDateSelect() {
-  const r = state.dateRange, sel = document.getElementById("dateSelect");
-  if (r.from && r.to) sel.value = "custom";
-  else if (r.type === "thisMonth") sel.value = "thisMonth";
-  else if (r.type === "lastMonth") sel.value = "lastMonth";
-  else sel.value = ({ 1: "yesterday", 7: "7days", 14: "14days", 30: "30days" })[r.days] || "30days";
+// Human-readable label for a custom range whose from/to are GAQL "YYYYMMDD" strings.
+function prettyRangeLabel(r) {
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const parse = (s) => ({ y: +s.slice(0, 4), m: +s.slice(4, 6) - 1, d: +s.slice(6, 8) });
+  const f = parse(r.from), t = parse(r.to);
+  if (f.y === t.y && f.m === t.m && f.d === t.d) return f.d + " " + MON[t.m] + " " + t.y;
+  if (f.y === t.y && f.m === t.m) return f.d + "–" + t.d + " " + MON[t.m] + " " + t.y;
+  if (f.y === t.y) return f.d + " " + MON[f.m] + " – " + t.d + " " + MON[t.m] + " " + t.y;
+  return f.d + " " + MON[f.m] + " " + f.y + " – " + t.d + " " + MON[t.m] + " " + t.y;
 }
-function syncLpDateSelect() {
-  const r = lpState.dateRange, sel = document.getElementById("lpDateSelect");
+
+// Sync a date-range <select> to a dateRange object. For a custom range we insert a
+// dedicated, selectable option showing the range — so the button displays it AND
+// picking "Custom..." again still fires a change event (its value actually differs).
+function syncDateSelectEl(selectId, r) {
+  const sel = document.getElementById(selectId);
   if (!sel) return;
-  if (r.from && r.to) sel.value = "custom";
-  else if (r.type === "thisMonth") sel.value = "thisMonth";
-  else if (r.type === "lastMonth") sel.value = "lastMonth";
-  else sel.value = ({ 1: "yesterday", 7: "7days", 14: "14days", 30: "30days" })[r.days] || "30days";
+  const prev = sel.querySelector('option[value="customApplied"]');
+  if (prev) prev.remove();
+  if (r && r.from && r.to) {
+    const opt = document.createElement("option");
+    opt.value = "customApplied";
+    opt.textContent = prettyRangeLabel(r);
+    const customOpt = sel.querySelector('option[value="custom"]');
+    if (customOpt) sel.insertBefore(opt, customOpt); else sel.appendChild(opt);
+    sel.value = "customApplied";
+  } else if (r && r.type === "thisMonth") sel.value = "thisMonth";
+  else if (r && r.type === "lastMonth") sel.value = "lastMonth";
+  else sel.value = ({ 1: "yesterday", 7: "7days", 14: "14days", 30: "30days" })[r ? r.days : 30] || "30days";
 }
+
+function syncDateSelect() { syncDateSelectEl("dateSelect", state.dateRange); }
+function syncAccDateSelect() { syncDateSelectEl("accDateSelect", accState.dateRange); }
+function syncLpDateSelect() { syncDateSelectEl("lpDateSelect", lpState.dateRange); }
 
 function cancelCustomDate() {
   closeCustomDateModal();
   if (state.calendarTarget === "lp") syncLpDateSelect();
   else if (state.calendarTarget === "geo") syncGeoDateSelect();
+  else if (state.calendarTarget === "acc") syncAccDateSelect();
   else if (state.calendarTarget !== "compare") syncDateSelect();
 }
 
@@ -2035,7 +2060,17 @@ function applyCustomDate() {
   if (state.calendarTarget === "geo") {
     geoState.dateRange = { label: from + " to " + to, from, to };
     closeCustomDateModal();
+    syncGeoDateSelect();
     loadGeoCoverage(GLOBAL_ACCOUNT);
+    return;
+  }
+
+  if (state.calendarTarget === "acc") {
+    accState.dateRange = { label: from + " to " + to, from, to };
+    accState.currentPage = 1;
+    closeCustomDateModal();
+    syncAccDateSelect();
+    loadAllAccounts();
     return;
   }
 
@@ -2376,6 +2411,7 @@ function initDashboard() {
   document.getElementById("signedOut").hidden = signedIn;
   document.getElementById("signedIn").hidden = !signedIn;
   if (!signedIn) return;
+  syncDateSelect();
   if (state.loadedAccount !== GLOBAL_ACCOUNT) loadCampaigns();
   else if (state.campaigns.length) { showEl("loading", false); showEl("table", true); showEl("pagination", true); renderTable(); }
   else { showEl("loading", false); showEl("empty", true); }
@@ -3315,6 +3351,7 @@ function initAllAccounts() {
     wireAccountsControls();
     restoreAccFilters();
   }
+  syncAccDateSelect();
   if (!accState.loaded) { accState.loaded = true; loadAllAccounts(); }
   else if (accState.rows.length) {
     showEl("accLoading", false); showEl("accTable", true); showEl("accPagination", true);
@@ -3384,9 +3421,22 @@ function updateAccFilterCount() {
 }
 
 function onAccDateRangeChange() {
-  accState.dateRange = periodMapToRange(document.getElementById("accDateSelect").value);
-  accState.currentPage = 1;
-  loadAllAccounts();
+  const val = document.getElementById("accDateSelect").value;
+  if (val === "customApplied") return; // already the active custom range
+  if (val === "custom") {
+    state.calendarTarget = "acc";
+    state.calendarFromDate = new Date();
+    state.calendarToDate = new Date();
+    document.getElementById("calendarTitle").textContent = "Custom date range";
+    renderCalendar("from");
+    renderCalendar("to");
+    document.getElementById("customDateModal").setAttribute("open", "");
+  } else {
+    accState.dateRange = periodMapToRange(val);
+    accState.currentPage = 1;
+    syncAccDateSelect();
+    loadAllAccounts();
+  }
 }
 
 function aggregateCampaigns(campaigns) {
@@ -4785,6 +4835,7 @@ function initGeoCoverage() {
 
 function onGeoDateRangeChange() {
   const val = document.getElementById("geoDateSelect").value;
+  if (val === "customApplied") return;
   if (val === "custom") {
     state.calendarTarget = "geo";
     state.calendarFromDate = new Date();
@@ -4795,18 +4846,12 @@ function onGeoDateRangeChange() {
     document.getElementById("customDateModal").setAttribute("open", "");
   } else {
     geoState.dateRange = DATE_PRESET_MAP[val];
+    syncGeoDateSelect();
     loadGeoCoverage(GLOBAL_ACCOUNT);
   }
 }
 
-function syncGeoDateSelect() {
-  const r = geoState.dateRange, sel = document.getElementById("geoDateSelect");
-  if (!sel) return;
-  if (r.from && r.to) sel.value = "custom";
-  else if (r.type === "thisMonth") sel.value = "thisMonth";
-  else if (r.type === "lastMonth") sel.value = "lastMonth";
-  else sel.value = ({ 1: "yesterday", 7: "7days", 14: "14days", 30: "30days" })[r.days] || "30days";
-}
+function syncGeoDateSelect() { syncDateSelectEl("geoDateSelect", geoState.dateRange); }
 
 async function loadGeoCoverage(customerId) {
   geoState.loadedAccount = customerId;
