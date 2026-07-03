@@ -5014,8 +5014,8 @@ const US_COLUMNS = [
     cell: r => fmtCurrency(r.dailySpend) },
   { key: "pacing", label: "Budget Pacing", align: "txt", width: 200,
     sort: r => r.dailyBudget > 0 ? r.dailySpend / r.dailyBudget : -1,
-    cellCls: r => pacingLabel(r.dailySpend, r.dailyBudget).cls,
-    cell: r => pacingLabel(r.dailySpend, r.dailyBudget).label },
+    cellCls: r => pacingLabel(r.dailySpend, r.dailyBudget, r.status).cls,
+    cell: r => pacingLabel(r.dailySpend, r.dailyBudget, r.status).label },
 ];
 const underspendState = { rows: [], loaded: false, sort: { key: "pacing", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), filterName: "", filterNameOp: "contains", errors: [], columnWidths: {}, currentPage: 1, pageSize: 10 };
 
@@ -5107,6 +5107,7 @@ async function loadUnderspend(force) {
 function renderUnderspendTable() {
   underspendState.search = document.getElementById("usSearch").value;
   const q = underspendState.search.trim().toLowerCase();
+  updateUnderspendNavWarning();
   renderDataTable({
     state: underspendState,
     columns: US_COLUMNS,
@@ -5120,12 +5121,21 @@ function renderUnderspendTable() {
       matchTextFilter(r.name, underspendState.filterNameOp, underspendState.filterName) &&
       underspendState.filterStatus.has((r.status || "").toUpperCase()) &&
       (GLOBAL_ACCOUNT === "ALL" || r.accountId === GLOBAL_ACCOUNT),
-    afterFilter: rows => {
-      let lvl = 0;
-      for (const r of rows) { const c = pacingLabel(r.dailySpend, r.dailyBudget).cls; if (c === "pace-high") { lvl = 2; break; } if (c === "pace-low") lvl = 1; }
-      setNavWarn("usNavWarn", lvl);
-    },
   });
+}
+
+// Nav warning reflects the whole account's ENABLED campaigns, independent of the
+// user's name/status/search filters (only the global account scope applies).
+function updateUnderspendNavWarning() {
+  let lvl = 0;
+  for (const r of underspendState.rows) {
+    if ((r.status || "").toUpperCase() !== "ENABLED") continue;
+    if (GLOBAL_ACCOUNT !== "ALL" && r.accountId !== GLOBAL_ACCOUNT) continue;
+    const c = pacingLabel(r.dailySpend, r.dailyBudget, r.status).cls;
+    if (c === "pace-high") { lvl = 2; break; }
+    if (c === "pace-low") lvl = 1;
+  }
+  setNavWarn("usNavWarn", lvl);
 }
 
 // Budget Pacing status from average daily spend vs daily budget.
@@ -5133,7 +5143,8 @@ function renderUnderspendTable() {
 //   90-119% On Track (green) · 120-149% Overspending low (orange) · 150%+ high (red)
 //   below 90% Underspending (neutral) · no budget shows a dash.
 // Plain-text Budget Pacing label (also used by CSV export).
-function pacingLabel(dailySpend, dailyBudget) {
+function pacingLabel(dailySpend, dailyBudget, status) {
+  if ((status || "").toUpperCase() === "PAUSED") return { label: "Campaign is paused.", cls: "pace-wait" };
   if (Math.round((dailySpend || 0) * 100) === 0) return { label: "Check Back Later", cls: "pace-wait" };
   if (!dailyBudget || dailyBudget <= 0) return { label: "—", cls: "" };
   const pct = (dailySpend / dailyBudget) * 100;
@@ -5206,7 +5217,7 @@ function exportUnderspend(fmt) {
       case "dailyBudget": return fmtCurrency(r.dailyBudget);
       case "lastAdjusted": return r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : "30+ days ago";
       case "dailySpend": return fmtCurrency(r.dailySpend);
-      case "pacing": return pacingLabel(r.dailySpend, r.dailyBudget).label;
+      case "pacing": return pacingLabel(r.dailySpend, r.dailyBudget, r.status).label;
       default: return "";
     }
   }));
@@ -5462,6 +5473,7 @@ async function loadBidding(force) {
 function renderBiddingTable() {
   biddingState.search = document.getElementById("bidSearch").value;
   const q = biddingState.search.trim().toLowerCase();
+  updateBiddingNavWarning();
   renderDataTable({
     state: biddingState,
     columns: BID_COLUMNS,
@@ -5475,12 +5487,19 @@ function renderBiddingTable() {
       matchTextFilter(r.name, biddingState.filterNameOp, biddingState.filterName) &&
       biddingState.filterStatus.has((r.status || "").toUpperCase()) &&
       (GLOBAL_ACCOUNT === "ALL" || r.accountId === GLOBAL_ACCOUNT),
-    afterFilter: rows => {
-      let lvl = 0;
-      for (const r of rows) { if (r.targetCpa > 0 && r.cpaAchieved != null && r.cpaAchieved <= r.targetCpa * 0.8) { lvl = 2; break; } }
-      setNavWarn("bidNavWarn", lvl);
-    },
   });
+}
+
+// Nav warning reflects the whole account's ENABLED campaigns, independent of the
+// user's name/status/search filters (only the global account scope applies).
+function updateBiddingNavWarning() {
+  let lvl = 0;
+  for (const r of biddingState.rows) {
+    if ((r.status || "").toUpperCase() !== "ENABLED") continue;
+    if (GLOBAL_ACCOUNT !== "ALL" && r.accountId !== GLOBAL_ACCOUNT) continue;
+    if (r.targetCpa > 0 && r.cpaAchieved != null && r.cpaAchieved <= r.targetCpa * 0.8) { lvl = 2; break; }
+  }
+  setNavWarn("bidNavWarn", lvl);
 }
 
 function applyBiddingFilters() {
