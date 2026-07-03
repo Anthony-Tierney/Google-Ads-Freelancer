@@ -5308,14 +5308,87 @@ function updateUnderspendFilterCount() {
 
 /* ============================ Bidding Strategies page ============================ */
 
+// ---- Shared config-driven table renderer ------------------------------------
+// Renders a sortable / resizable / reorderable / paginated table from a column
+// config, so pages don't each re-implement the same plumbing. Each column may set:
+//   cell(row)   -> inner <td> HTML         (default: escaped row[key])
+//   sort(row)   -> value used for sorting  (default: row[key])
+//   cls         -> static extra <td> classes (e.g. "tabnum", "name")
+//   cellCls(row)-> dynamic extra <td> classes (e.g. "cell-red")
+//   always      -> keep even when state.visible is a picker set
+// cfg: { state, columns, ids{colgroup,thead,tbody,tfoot,pagination}, rerender,
+//        rowVisible(row)?, rows()?, prefKey?, colOrderKey?, dropAccountWhenSingle?,
+//        heatmap?, afterFilter(rows)? }
+function renderDataTable(cfg) {
+  const st = cfg.state;
+  let cols = cfg.columns.slice();
+  if (st.visible) cols = cols.filter(c => c.always || st.visible.has(c.key));
+  if (cfg.dropAccountWhenSingle && GLOBAL_ACCOUNT !== "ALL") cols = cols.filter(c => c.key !== "account");
+  cols = applyColumnOrder(cols, cfg.colOrderKey ? colOrder(cfg.colOrderKey) : []);
+
+  let rows = cfg.rows ? cfg.rows() : st.rows;
+  rows = cfg.rowVisible ? rows.filter(cfg.rowVisible) : rows.slice();
+  const { key, dir } = st.sort, sign = dir === "asc" ? 1 : -1;
+  const sortCol = cfg.columns.find(c => c.key === key);
+  const getVal = sortCol && sortCol.sort ? sortCol.sort : (r => r[key]);
+  rows.sort((a, b) => {
+    const av = getVal(a), bv = getVal(b);
+    if (typeof av === "string" || typeof bv === "string") return String(av == null ? "" : av).localeCompare(String(bv == null ? "" : bv)) * sign;
+    return ((av || 0) - (bv || 0)) * sign;
+  });
+
+  st.viewRows = rows;
+  if (cfg.afterFilter) cfg.afterFilter(rows);
+  if (cfg.prefKey) persistUi(cfg.prefKey, st);
+
+  const heat = cfg.heatmap && st.heatmap ? buildHeatmap(rows, cols.filter(c => c.align === "num").map(c => c.key), true) : null;
+  const pageRows = pageSlice(rows, st);
+  if (cfg.ids.pagination) renderPagination(cfg.ids.pagination, st, rows.length, cfg.rerender);
+
+  const arrow = k => st.sort.key === k ? '<span class="arr">' + (st.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
+  document.getElementById(cfg.ids.colgroup).innerHTML = colgroupHtml(cols, st.columnWidths);
+  document.getElementById(cfg.ids.thead).innerHTML = "<tr>" + cols.map(c =>
+    '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
+  document.getElementById(cfg.ids.tbody).innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
+    const cls = [c.align, c.cls, c.cellCls ? c.cellCls(r) : ""].filter(Boolean).join(" ");
+    const heatAttr = heat && c.align === "num" ? heat(c.key, r[c.key]) : "";
+    const inner = c.cell ? c.cell(r) : escapeHtml(r[c.key] == null ? "" : String(r[c.key]));
+    return '<td class="' + cls + '" data-col="' + c.key + '"' + heatAttr + ">" + inner + "</td>";
+  }).join("") + "</tr>").join("");
+
+  wireColumnResize(cfg.ids, st.columnWidths,
+    (k) => { const s = st.sort; st.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" }; cfg.rerender(); },
+    cfg.colOrderKey ? (keys) => { setColOrder(cfg.colOrderKey, keys); cfg.rerender(); } : null);
+}
+
 const BID_COLUMNS = [
-  { key: "account",         label: "Account",                     align: "txt", width: 170 },
-  { key: "name",            label: "Campaign",                    align: "txt", width: 220 },
-  { key: "type",            label: "Type",                        align: "txt", width: 120 },
-  { key: "biddingStrategy", label: "Bidding Strategy",            align: "txt", width: 180 },
-  { key: "targetCpa",       label: "Target CPA",                  align: "num", width: 120 },
-  { key: "lastAdjusted",    label: "Last Adjusted",               align: "txt", width: 130 },
-  { key: "cpaAchieved",     label: "CPA Achieved (since last adjustment)", align: "num", width: 240 },
+  { key: "account", label: "Account", align: "txt", width: 170,
+    sort: r => r.accountName || "",
+    cell: r => logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") },
+  { key: "name", label: "Campaign", align: "txt", width: 220, cls: "name",
+    cell: r => escapeHtml(r.name) },
+  { key: "type", label: "Type", align: "txt", width: 120,
+    cell: r => titleCase((r.type || "").replace(/_/g, " ")) },
+  { key: "biddingStrategy", label: "Bidding Strategy", align: "txt", width: 180,
+    cell: r => titleCase((r.biddingStrategy || "").replace(/_/g, " ")) },
+  { key: "targetCpa", label: "Target CPA", align: "num", width: 120, cls: "tabnum",
+    sort: r => r.targetCpa == null ? -1 : r.targetCpa,
+    cell: r => r.targetCpa != null ? fmtCurrency(r.targetCpa) : '<span style="color:var(--faint)">—</span>' },
+  { key: "lastAdjusted", label: "Last Adjusted", align: "txt", width: 130,
+    sort: r => r.lastAdjusted || "",
+    cell: r => r.targetCpa == null ? '<span style="color:var(--faint)">—</span>' : (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>') },
+  { key: "cpaAchieved", label: "CPA Achieved (since last adjustment)", align: "num", width: 240, cls: "tabnum",
+    sort: r => r.cpaAchieved == null ? -1 : r.cpaAchieved,
+    cellCls: r => (r.targetCpa && r.targetCpa > 0 && r.cpaAchieved != null && r.cpaAchieved <= r.targetCpa * 0.8) ? "cell-red" : "",
+    cell: r => {
+      if (r.cpaAchieved == null) return '<span style="color:var(--faint)">—</span>';
+      const hasTarget = r.targetCpa && r.targetCpa > 0;
+      const off = hasTarget && r.cpaAchieved <= r.targetCpa * 0.8;
+      let delta = "";
+      if (hasTarget) { const pct = (r.cpaAchieved - r.targetCpa) / r.targetCpa * 100; delta = ' <span class="cpa-delta">(' + (pct >= 0 ? "+" : "") + pct.toFixed(1) + '%)</span>'; }
+      const icon = off ? ' <span class="sl-warn" title="' + CPA_TOOLTIP + '">' + WARN_TRI_SVG + "</span>" : "";
+      return fmtCurrency(r.cpaAchieved) + delta + icon;
+    } },
 ];
 const biddingState = { rows: [], loaded: false, sort: { key: "account", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), filterName: "", filterNameOp: "contains", errors: [], columnWidths: {}, currentPage: 1, pageSize: 10 };
 const CPA_TOOLTIP = "CPA achieved is 20% or more below the campaign's Target CPA.";
@@ -5402,65 +5475,25 @@ async function loadBidding(force) {
 function renderBiddingTable() {
   biddingState.search = document.getElementById("bidSearch").value;
   const q = biddingState.search.trim().toLowerCase();
-  const rows = biddingState.rows.filter(r =>
+  renderDataTable({
+    state: biddingState,
+    columns: BID_COLUMNS,
+    colOrderKey: "bidding",
+    prefKey: "bidding",
+    dropAccountWhenSingle: true,
+    ids: { colgroup: "bid-colgroup", thead: "bid-thead", tbody: "bid-tbody", tfoot: "bid-tfoot", pagination: "bidPagination" },
+    rerender: renderBiddingTable,
+    rowVisible: r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
       matchTextFilter(r.name, biddingState.filterNameOp, biddingState.filterName) &&
       biddingState.filterStatus.has((r.status || "").toUpperCase()) &&
-      (GLOBAL_ACCOUNT === "ALL" || r.accountId === GLOBAL_ACCOUNT)
-    )
-    .sort((a, b) => {
-      const { key, dir } = biddingState.sort, sign = dir === "asc" ? 1 : -1;
-      let av = a[key], bv = b[key];
-      if (key === "account") { av = a.accountName || ""; bv = b.accountName || ""; }
-      if (key === "lastAdjusted") { av = av || ""; bv = bv || ""; }
-      if (key === "targetCpa" || key === "cpaAchieved") { av = av == null ? -1 : av; bv = bv == null ? -1 : bv; }
-      if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
-      return ((av || 0) - (bv || 0)) * sign;
-    });
-  const arrow = key => biddingState.sort.key === key ? '<span class="arr">' + (biddingState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
-
-  const cols = applyColumnOrder(GLOBAL_ACCOUNT === "ALL" ? BID_COLUMNS : BID_COLUMNS.filter(c => c.key !== "account"), colOrder("bidding"));
-  biddingState.viewRows = rows;
-  let bidLvl = 0;
-  for (const r of rows) { if (r.targetCpa > 0 && r.cpaAchieved != null && r.cpaAchieved <= r.targetCpa * 0.8) { bidLvl = 2; break; } }
-  setNavWarn("bidNavWarn", bidLvl);
-  persistUi("bidding", biddingState);
-  const pageRows = pageSlice(rows, biddingState);
-  renderPagination("bidPagination", biddingState, rows.length, renderBiddingTable);
-  document.getElementById("bid-colgroup").innerHTML = colgroupHtml(cols, biddingState.columnWidths);
-  document.getElementById("bid-thead").innerHTML = "<tr>" + cols.map(c =>
-    '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
-
-  document.getElementById("bid-tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
-    if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
-    if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
-    if (c.key === "type") return '<td class="txt" data-col="type">' + titleCase((r.type || "").replace(/_/g, " ")) + "</td>";
-    if (c.key === "biddingStrategy") return '<td class="txt" data-col="biddingStrategy">' + titleCase((r.biddingStrategy || "").replace(/_/g, " ")) + "</td>";
-    if (c.key === "targetCpa") return '<td class="num tabnum" data-col="targetCpa">' + (r.targetCpa != null ? fmtCurrency(r.targetCpa) : '<span style="color:var(--faint)">—</span>') + "</td>";
-    if (c.key === "lastAdjusted") {
-      if (r.targetCpa == null) return '<td class="txt" data-col="lastAdjusted"><span style="color:var(--faint)">—</span></td>';
-      return '<td class="txt" data-col="lastAdjusted">' + (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>') + "</td>";
-    }
-    if (c.key === "cpaAchieved") {
-      if (r.cpaAchieved == null) return '<td class="num tabnum" data-col="cpaAchieved"><span style="color:var(--faint)">—</span></td>';
-      const hasTarget = r.targetCpa && r.targetCpa > 0;
-      const off = hasTarget && r.cpaAchieved <= r.targetCpa * 0.8;
-      let delta = "";
-      if (hasTarget) {
-        const pct = (r.cpaAchieved - r.targetCpa) / r.targetCpa * 100;
-        delta = ' <span class="cpa-delta">(' + (pct >= 0 ? "+" : "") + pct.toFixed(1) + "%)</span>";
-      }
-      const icon = off ? ' <span class="sl-warn" title="' + CPA_TOOLTIP + '">' + WARN_TRI_SVG + "</span>" : "";
-      return '<td class="num tabnum' + (off ? " cell-red" : "") + '" data-col="cpaAchieved">' + fmtCurrency(r.cpaAchieved) + delta + icon + "</td>";
-    }
-    return "<td></td>";
-  }).join("") + "</tr>").join("");
-
-  wireColumnResize({ colgroup: "bid-colgroup", thead: "bid-thead", tbody: "bid-tbody", tfoot: "bid-tfoot" }, biddingState.columnWidths, (k) => {
-    const s = biddingState.sort;
-    biddingState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
-    renderBiddingTable();
-  }, (keys) => { setColOrder("bidding", keys); renderBiddingTable(); });
+      (GLOBAL_ACCOUNT === "ALL" || r.accountId === GLOBAL_ACCOUNT),
+    afterFilter: rows => {
+      let lvl = 0;
+      for (const r of rows) { if (r.targetCpa > 0 && r.cpaAchieved != null && r.cpaAchieved <= r.targetCpa * 0.8) { lvl = 2; break; } }
+      setNavWarn("bidNavWarn", lvl);
+    },
+  });
 }
 
 function applyBiddingFilters() {
