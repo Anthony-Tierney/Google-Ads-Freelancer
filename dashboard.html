@@ -4995,14 +4995,27 @@ function exportLandingPages(fmt) {
 /* ============================ Underspend Alerts page ============================ */
 
 const US_COLUMNS = [
-  { key: "account",      label: "Account",                         align: "txt", width: 170 },
-  { key: "name",         label: "Campaign",                        align: "txt", width: 220 },
-  { key: "status",       label: "Campaign Status",                 align: "txt", width: 140 },
-  { key: "type",         label: "Type",                            align: "txt", width: 110 },
-  { key: "dailyBudget",  label: "Daily Budget",                    align: "num", width: 120 },
-  { key: "lastAdjusted", label: "Last Adjusted",                   align: "txt", width: 130 },
-  { key: "dailySpend",   label: "Daily Spend<br>(since adjusted)", align: "num", width: 140 },
-  { key: "pacing",       label: "Budget Pacing",                   align: "txt", width: 200 },
+  { key: "account", label: "Account", align: "txt", width: 170,
+    sort: r => r.accountName || "",
+    cell: r => logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") },
+  { key: "name", label: "Campaign", align: "txt", width: 220, cls: "name",
+    cell: r => escapeHtml(r.name) },
+  { key: "status", label: "Campaign Status", align: "txt", width: 140,
+    sort: r => r.status || "",
+    cell: r => { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<span class="pill ' + cls + '">' + titleCase(r.status) + "</span>"; } },
+  { key: "type", label: "Type", align: "txt", width: 110,
+    cell: r => titleCase((r.type || "").replace(/_/g, " ")) },
+  { key: "dailyBudget", label: "Daily Budget", align: "num", width: 120, cls: "tabnum",
+    cell: r => fmtCurrency(r.dailyBudget) },
+  { key: "lastAdjusted", label: "Last Adjusted", align: "txt", width: 130,
+    sort: r => r.lastAdjusted || "",
+    cell: r => r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>' },
+  { key: "dailySpend", label: "Daily Spend<br>(since adjusted)", align: "num", width: 140, cls: "tabnum",
+    cell: r => fmtCurrency(r.dailySpend) },
+  { key: "pacing", label: "Budget Pacing", align: "txt", width: 200,
+    sort: r => r.dailyBudget > 0 ? r.dailySpend / r.dailyBudget : -1,
+    cellCls: r => pacingLabel(r.dailySpend, r.dailyBudget).cls,
+    cell: r => pacingLabel(r.dailySpend, r.dailyBudget).label },
 ];
 const underspendState = { rows: [], loaded: false, sort: { key: "pacing", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), filterName: "", filterNameOp: "contains", errors: [], columnWidths: {}, currentPage: 1, pageSize: 10 };
 
@@ -5094,55 +5107,25 @@ async function loadUnderspend(force) {
 function renderUnderspendTable() {
   underspendState.search = document.getElementById("usSearch").value;
   const q = underspendState.search.trim().toLowerCase();
-  const rows = underspendState.rows.filter(r =>
+  renderDataTable({
+    state: underspendState,
+    columns: US_COLUMNS,
+    colOrderKey: "underspend",
+    prefKey: "underspend",
+    dropAccountWhenSingle: true,
+    ids: { colgroup: "us-colgroup", thead: "us-thead", tbody: "us-tbody", tfoot: "us-tfoot", pagination: "usPagination" },
+    rerender: renderUnderspendTable,
+    rowVisible: r =>
       (!q || (r.name || "").toLowerCase().includes(q) || (r.accountName || "").toLowerCase().includes(q)) &&
       matchTextFilter(r.name, underspendState.filterNameOp, underspendState.filterName) &&
       underspendState.filterStatus.has((r.status || "").toUpperCase()) &&
-      (GLOBAL_ACCOUNT === "ALL" || r.accountId === GLOBAL_ACCOUNT)
-    )
-    .sort((a, b) => {
-      const { key, dir } = underspendState.sort, sign = dir === "asc" ? 1 : -1;
-      let av = a[key], bv = b[key];
-      if (key === "account") { av = a.accountName || ""; bv = b.accountName || ""; }
-      if (key === "pacing") {
-        av = a.dailyBudget > 0 ? a.dailySpend / a.dailyBudget : -1;
-        bv = b.dailyBudget > 0 ? b.dailySpend / b.dailyBudget : -1;
-      }
-      if (key === "lastAdjusted") { av = av || ""; bv = bv || ""; }
-      if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
-      return ((av || 0) - (bv || 0)) * sign;
-    });
-  const arrow = key => underspendState.sort.key === key ? '<span class="arr">' + (underspendState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
-
-  const cols = applyColumnOrder(GLOBAL_ACCOUNT === "ALL" ? US_COLUMNS : US_COLUMNS.filter(c => c.key !== "account"), colOrder("underspend"));
-  underspendState.viewRows = rows;
-  let usLvl = 0;
-  for (const r of rows) { const c = pacingLabel(r.dailySpend, r.dailyBudget).cls; if (c === "pace-high") { usLvl = 2; break; } if (c === "pace-low") usLvl = 1; }
-  setNavWarn("usNavWarn", usLvl);
-  persistUi("underspend", underspendState);
-  const pageRows = pageSlice(rows, underspendState);
-  renderPagination("usPagination", underspendState, rows.length, renderUnderspendTable);
-  document.getElementById("us-colgroup").innerHTML = colgroupHtml(cols, underspendState.columnWidths);
-  document.getElementById("us-thead").innerHTML = "<tr>" + cols.map(c =>
-    '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
-
-  document.getElementById("us-tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
-    if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
-    if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
-    if (c.key === "status") { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<td class="txt" data-col="status"><span class="pill ' + cls + '">' + titleCase(r.status) + "</span></td>"; }
-    if (c.key === "type") return '<td class="txt" data-col="type">' + titleCase((r.type || "").replace(/_/g, " ")) + "</td>";
-    if (c.key === "dailyBudget") return '<td class="num tabnum" data-col="dailyBudget">' + fmtCurrency(r.dailyBudget) + "</td>";
-    if (c.key === "lastAdjusted") return '<td class="txt" data-col="lastAdjusted">' + (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>') + "</td>";
-    if (c.key === "dailySpend") return '<td class="num tabnum" data-col="dailySpend">' + fmtCurrency(r.dailySpend) + "</td>";
-    if (c.key === "pacing") return pacingCellHtml(r.dailySpend, r.dailyBudget);
-    return "<td></td>";
-  }).join("") + "</tr>").join("");
-
-  wireColumnResize({ colgroup: "us-colgroup", thead: "us-thead", tbody: "us-tbody", tfoot: "us-tfoot" }, underspendState.columnWidths, (k) => {
-    const s = underspendState.sort;
-    underspendState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
-    renderUnderspendTable();
-  }, (keys) => { setColOrder("underspend", keys); renderUnderspendTable(); });
+      (GLOBAL_ACCOUNT === "ALL" || r.accountId === GLOBAL_ACCOUNT),
+    afterFilter: rows => {
+      let lvl = 0;
+      for (const r of rows) { const c = pacingLabel(r.dailySpend, r.dailyBudget).cls; if (c === "pace-high") { lvl = 2; break; } if (c === "pace-low") lvl = 1; }
+      setNavWarn("usNavWarn", lvl);
+    },
+  });
 }
 
 // Budget Pacing status from average daily spend vs daily budget.
