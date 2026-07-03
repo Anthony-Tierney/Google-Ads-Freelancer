@@ -2413,8 +2413,14 @@ function initDashboard() {
   if (!signedIn) return;
   syncDateSelect();
   if (state.loadedAccount !== GLOBAL_ACCOUNT) loadCampaigns();
-  else if (state.campaigns.length) { showEl("loading", false); showEl("table", true); showEl("pagination", true); renderTable(); }
-  else { showEl("loading", false); showEl("empty", true); }
+  else if (state.campaigns.length) {
+    showEl("loading", false); showEl("prompt", false); showEl("error", false); showEl("empty", false);
+    showEl("table", true); showEl("pagination", true);
+    renderTable();
+  } else {
+    showEl("loading", false); showEl("prompt", false); showEl("error", false); showEl("table", false); showEl("pagination", false);
+    showEl("empty", true);
+  }
 }
 
 // Global account selection changed — refresh whatever the user is currently looking at,
@@ -4163,7 +4169,7 @@ function initAssets() {
   }
   if (assetsState.loadedAccount !== GLOBAL_ACCOUNT) loadAssets(GLOBAL_ACCOUNT);
   else if (assetsState.rows.length) { showEl("asLoading", false); showEl("asPrompt", false); showEl("assetsTable", true); renderAssetsTable(); }
-  else { showEl("asLoading", false); showEl("asEmpty", true); }
+  else { showEl("asLoading", false); showEl("asPrompt", false); showEl("assetsTable", false); showEl("asEmpty", true); }
 }
 
 // Restore saved Assets filters.
@@ -4476,7 +4482,7 @@ function initLandingPages() {
   }
   if (lpState.loadedAccount !== GLOBAL_ACCOUNT) loadLandingPages(GLOBAL_ACCOUNT);
   else if (lpState.rows.length) { showEl("lpLoading", false); showEl("lpPrompt", false); showEl("lpTable", true); renderLandingPagesTable(); }
-  else { showEl("lpLoading", false); showEl("lpEmpty", true); }
+  else { showEl("lpLoading", false); showEl("lpPrompt", false); showEl("lpTable", false); showEl("lpEmpty", true); }
 }
 
 function restoreLpFilters() {
