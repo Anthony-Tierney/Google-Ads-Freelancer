@@ -4061,14 +4061,16 @@ function assetCellLevel(key, v) {
 }
 function updateBpNavWarning() {
   const mi = monthInfo();
-  const anyOff = bpState.rows.filter(r => r.hasEnabled).some(r => {
+  let lvl = 0;
+  for (const r of bpState.rows) {
+    if (!r.hasEnabled) continue;
     const saved = bpState.budgets[r.id];
     const budget = (saved != null && saved !== "") ? Number(saved) : 0;
     const st = paceStatus(r.spend, budget, mi);
-    return st && st !== "ontrack";
-  });
-  const el = document.getElementById("bpNavWarn");
-  if (el) el.hidden = !anyOff;
+    if (st === "over") { lvl = 2; break; }   // over pace = red
+    if (st === "under") lvl = 1;              // under pace = amber
+  }
+  setNavWarn("bpNavWarn", lvl);
 }
 
 // Personalised pacing recommendation for an account card.
