@@ -4131,14 +4131,28 @@ function renderInactiveAccounts(inactive) {
 
 /* ============================ Assets page ============================ */
 
+const ASSET_CELL_CLS = ["cell-green", "cell-orange", "cell-red"];
+const ASSET_INT_KEYS = ["sitelinks", "landscape", "square", "callouts", "snippets"];
+// Tooltips resolved at call time (they're declared just below ASSET_COLUMNS).
+function assetWarnIcon(key) {
+  const tip = { sitelinks: SITELINK_TOOLTIP, landscape: LANDSCAPE_TOOLTIP, square: SQUARE_TOOLTIP, callouts: CALLOUT_TOOLTIP, snippets: SNIPPET_TOOLTIP }[key] || "";
+  return ' <span class="sl-warn" title="' + tip + '">' + WARN_TRI_SVG + "</span>";
+}
+function assetCountCol(key, label) {
+  return { key, label, type: "int", align: "num", cls: "tabnum",
+    cellCls: r => ASSET_CELL_CLS[assetCellLevel(key, r[key] || 0)],
+    cell: r => { const v = r[key] || 0; return fmtInt(v) + (assetCellLevel(key, v) > 0 ? assetWarnIcon(key) : ""); } };
+}
 const ASSET_COLUMNS = [
-  { key: "name",         label: "Campaign",            type: "text",   align: "txt" },
-  { key: "status",       label: "Campaign Status",     type: "status", align: "txt" },
-  { key: "sitelinks",    label: "Sitelinks",           type: "int",    align: "num" },
-  { key: "landscape",    label: "Landscape (1.91:1)",  type: "int",    align: "num" },
-  { key: "square",       label: "Square (1:1)",        type: "int",    align: "num" },
-  { key: "callouts",     label: "Callouts",            type: "int",    align: "num" },
-  { key: "snippets",     label: "Structured Snippets", type: "int",    align: "num" },
+  { key: "name", label: "Campaign", type: "text", align: "txt", cls: "name",
+    cell: r => escapeHtml(r.name) },
+  { key: "status", label: "Campaign Status", type: "status", align: "txt",
+    cell: r => { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<span class="pill ' + cls + '">' + titleCase(r.status) + "</span>"; } },
+  assetCountCol("sitelinks", "Sitelinks"),
+  assetCountCol("landscape", "Landscape (1.91:1)"),
+  assetCountCol("square", "Square (1:1)"),
+  assetCountCol("callouts", "Callouts"),
+  assetCountCol("snippets", "Structured Snippets"),
 ];
 const assetsState = { rows: [], account: "", loadedAccount: null, sort: { key: "name", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), filterName: "", filterNameOp: "contains", filterAccount: new Set(), filterCampaign: new Set(), columnWidths: {}, currentPage: 1, pageSize: 10 };
 
@@ -4315,58 +4329,37 @@ async function loadAssets(customerId) {
 }
 
 function renderAssetsTable() {
-  const inAll = assetsState.account === "ALL";
-  const cols = applyColumnOrder(inAll ? [{ key: "account", label: "Account", align: "txt", width: 180 }, ...ASSET_COLUMNS] : ASSET_COLUMNS, colOrder("assets"));
-  const rows = assetsState.rows.filter(r =>
+  renderDataTable({
+    state: assetsState,
+    columns: () => assetsState.account === "ALL"
+      ? [{ key: "account", label: "Account", align: "txt", width: 180, sort: r => r.accountName || "", cell: r => logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") }, ...ASSET_COLUMNS]
+      : ASSET_COLUMNS,
+    colOrderKey: "assets",
+    prefKey: "assets",
+    ids: { colgroup: "assets-colgroup", thead: "assets-thead", tbody: "assets-tbody", tfoot: "assets-tfoot", pagination: "assetsPagination" },
+    rerender: renderAssetsTable,
+    rowVisible: r =>
       matchTextFilter(r.name, assetsState.filterNameOp, assetsState.filterName) &&
-      (!(inAll && assetsState.filterAccount.size) || assetsState.filterAccount.has(r.accountName || "")) &&
+      (!(assetsState.account === "ALL" && assetsState.filterAccount.size) || assetsState.filterAccount.has(r.accountName || "")) &&
       (!assetsState.filterCampaign.size || assetsState.filterCampaign.has(r.name || "")) &&
-      assetsState.filterStatus.has((r.status || "").toUpperCase())
-    )
-    .sort((a, b) => {
-      const { key, dir } = assetsState.sort, sign = dir === "asc" ? 1 : -1;
-      let av = a[key], bv = b[key];
-      if (key === "account") { av = a.accountName || ""; bv = b.accountName || ""; }
-      if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
-      return ((av || 0) - (bv || 0)) * sign;
-    });
-  assetsState.viewRows = rows;
-  assetsState.viewCols = cols;
-  let assetsLvl = 0;
-  for (const r of rows) { for (const c of cols) { if (c.key === "account" || c.key === "name" || c.type === "status") continue; const L = assetCellLevel(c.key, r[c.key] || 0); if (L === 2) { assetsLvl = 2; break; } if (L === 1) assetsLvl = 1; } if (assetsLvl === 2) break; }
-  setNavWarn("assetsNavWarn", assetsLvl);
-  persistUi("assets", assetsState);
-  const pageRows = pageSlice(rows, assetsState);
-  renderPagination("assetsPagination", assetsState, rows.length, renderAssetsTable);
-  const arrow = key => assetsState.sort.key === key ? '<span class="arr">' + (assetsState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
-
-  document.getElementById("assets-colgroup").innerHTML = colgroupHtml(cols, assetsState.columnWidths);
-  document.getElementById("assets-thead").innerHTML = "<tr>" + cols.map(c =>
-    '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
-
-  document.getElementById("assets-tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
-    if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
-    if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
-    if (c.type === "status") {
-      const s = (r.status || "").toLowerCase();
-      const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other";
-      return '<td class="txt" data-col="status"><span class="pill ' + cls + '">' + titleCase(r.status) + "</span></td>";
-    }
-    return assetCellHtml(c.key, r[c.key] || 0);
-  }).join("") + "</tr>").join("");
-
-  const tot = rows.reduce((a, r) => { a.sitelinks += r.sitelinks || 0; a.landscape += r.landscape || 0; a.square += r.square || 0; a.callouts += r.callouts || 0; a.snippets += r.snippets || 0; return a; }, { sitelinks: 0, landscape: 0, square: 0, callouts: 0, snippets: 0 });
-  document.getElementById("assets-tfoot").innerHTML = "<tr>" + cols.map((c, i) => {
-    if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total · ' + rows.length + "</td>";
-    if (c.type === "status" || c.align === "txt") return '<td data-col="' + c.key + '"></td>';
-    return '<td class="num tabnum" data-col="' + c.key + '">' + fmtInt(tot[c.key]) + "</td>";
-  }).join("") + "</tr>";
-
-  wireColumnResize({ colgroup: "assets-colgroup", thead: "assets-thead", tbody: "assets-tbody", tfoot: "assets-tfoot" }, assetsState.columnWidths, (k) => {
-    const s = assetsState.sort;
-    assetsState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
-    renderAssetsTable();
-  }, (keys) => { setColOrder("assets", keys); renderAssetsTable(); });
+      assetsState.filterStatus.has((r.status || "").toUpperCase()),
+    afterFilter: rows => {
+      let lvl = 0;
+      for (const r of rows) {
+        for (const key of ASSET_INT_KEYS) { const L = assetCellLevel(key, r[key] || 0); if (L === 2) { lvl = 2; break; } if (L === 1) lvl = 1; }
+        if (lvl === 2) break;
+      }
+      setNavWarn("assetsNavWarn", lvl);
+    },
+    footer: (rows, cols) => {
+      const tot = rows.reduce((a, r) => { a.sitelinks += r.sitelinks || 0; a.landscape += r.landscape || 0; a.square += r.square || 0; a.callouts += r.callouts || 0; a.snippets += r.snippets || 0; return a; }, { sitelinks: 0, landscape: 0, square: 0, callouts: 0, snippets: 0 });
+      return "<tr>" + cols.map((c, i) => {
+        if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total · ' + rows.length + "</td>";
+        if (c.type === "status" || c.align === "txt") return '<td data-col="' + c.key + '"></td>';
+        return '<td class="num tabnum" data-col="' + c.key + '">' + fmtInt(tot[c.key]) + "</td>";
+      }).join("") + "</tr>";
+    },
+  });
 }
 
 // Conditional cell formatting (warning icon shown on every red and orange cell).
@@ -5318,7 +5311,8 @@ function updateUnderspendFilterCount() {
 //        heatmap?, afterFilter(rows)? }
 function renderDataTable(cfg) {
   const st = cfg.state;
-  let cols = cfg.columns.slice();
+  const allCols = typeof cfg.columns === "function" ? cfg.columns() : cfg.columns;
+  let cols = allCols.slice();
   if (st.visible) cols = cols.filter(c => c.always || st.visible.has(c.key));
   if (cfg.dropAccountWhenSingle && GLOBAL_ACCOUNT !== "ALL") cols = cols.filter(c => c.key !== "account");
   cols = applyColumnOrder(cols, cfg.colOrderKey ? colOrder(cfg.colOrderKey) : []);
@@ -5326,7 +5320,7 @@ function renderDataTable(cfg) {
   let rows = cfg.rows ? cfg.rows() : st.rows;
   rows = cfg.rowVisible ? rows.filter(cfg.rowVisible) : rows.slice();
   const { key, dir } = st.sort, sign = dir === "asc" ? 1 : -1;
-  const sortCol = cfg.columns.find(c => c.key === key);
+  const sortCol = allCols.find(c => c.key === key);
   const getVal = sortCol && sortCol.sort ? sortCol.sort : (r => r[key]);
   rows.sort((a, b) => {
     const av = getVal(a), bv = getVal(b);
@@ -5335,6 +5329,7 @@ function renderDataTable(cfg) {
   });
 
   st.viewRows = rows;
+  st.viewCols = cols;
   if (cfg.afterFilter) cfg.afterFilter(rows);
   if (cfg.prefKey) persistUi(cfg.prefKey, st);
 
@@ -5352,6 +5347,7 @@ function renderDataTable(cfg) {
     const inner = c.cell ? c.cell(r) : escapeHtml(r[c.key] == null ? "" : String(r[c.key]));
     return '<td class="' + cls + '" data-col="' + c.key + '"' + heatAttr + ">" + inner + "</td>";
   }).join("") + "</tr>").join("");
+  if (cfg.footer && cfg.ids.tfoot) document.getElementById(cfg.ids.tfoot).innerHTML = cfg.footer(rows, cols);
 
   wireColumnResize(cfg.ids, st.columnWidths,
     (k) => { const s = st.sort; st.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" }; cfg.rerender(); },
