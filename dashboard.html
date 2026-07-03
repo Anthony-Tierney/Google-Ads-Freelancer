@@ -5239,6 +5239,7 @@ function exportBidding(fmt) {
     switch (c.key) {
       case "account": return r.accountName || "";
       case "name": return r.name || "";
+      case "status": return titleCase(r.status || "");
       case "type": return titleCase((r.type || "").replace(/_/g, " "));
       case "biddingStrategy": return titleCase((r.biddingStrategy || "").replace(/_/g, " "));
       case "targetCpa": return r.targetCpa != null ? fmtCurrency(r.targetCpa) : "—";
@@ -5367,6 +5368,9 @@ const BID_COLUMNS = [
     cell: r => logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") },
   { key: "name", label: "Campaign", align: "txt", width: 220, cls: "name",
     cell: r => escapeHtml(r.name) },
+  { key: "status", label: "Status", align: "txt", width: 120,
+    sort: r => r.status || "",
+    cell: r => { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<span class="pill ' + cls + '">' + titleCase(r.status) + "</span>"; } },
   { key: "type", label: "Type", align: "txt", width: 120,
     cell: r => titleCase((r.type || "").replace(/_/g, " ")) },
   { key: "biddingStrategy", label: "Bidding Strategy", align: "txt", width: 180,
