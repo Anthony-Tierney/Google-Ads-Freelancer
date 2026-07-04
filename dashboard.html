@@ -2425,9 +2425,43 @@ function initDashboard() {
 
 // Global account selection changed — refresh whatever the user is currently looking at,
 // and mark account-dependent pages stale so they refetch when next opened.
+// A different account has different campaigns, so campaign-specific filters
+// shouldn't carry over. Reset the Campaign and Campaign Name filters (and their
+// persisted copies) to defaults on every page when the global account changes.
+function resetAccountScopedFilters() {
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+
+  // Campaign Overview — Campaign Name (no Campaign checklist).
+  state.filterName = ""; state.filterNameOp = "contains";
+  setVal("filterName", ""); setVal("filterNameOp", "contains");
+  saveViewState(); updateFilterCount();
+
+  // Assets — Campaign Name + Campaign checklist.
+  assetsState.filterName = ""; assetsState.filterNameOp = "contains"; assetsState.filterCampaign = new Set();
+  setVal("asfName", ""); setVal("asfNameOp", "contains");
+  persistAssetsFilters(); updateAssetsFilterCount();
+
+  // Landing Pages — Campaign Name + Campaign checklist (leave other filters intact).
+  lpState.filters.name = ""; lpState.filters.nameOp = "contains"; lpState.filters.campaign = new Set();
+  setVal("lpfName", ""); setVal("lpfNameOp", "contains");
+  savePageFilters("landingpages", { name: lpState.filters.name, nameOp: lpState.filters.nameOp, account: [...lpState.filters.account], campaign: [...lpState.filters.campaign], adGroup: [...lpState.filters.adGroup], url: lpState.filters.url, sources: [...lpState.filters.sources] });
+  updateLpFilterCount();
+
+  // Budgeting — Campaign Name.
+  underspendState.filterName = ""; underspendState.filterNameOp = "contains";
+  setVal("usfName", ""); setVal("usfNameOp", "contains");
+  persistUnderspendFilters(); updateUnderspendFilterCount();
+
+  // Bidding — Campaign Name.
+  biddingState.filterName = ""; biddingState.filterNameOp = "contains";
+  setVal("bidfName", ""); setVal("bidfNameOp", "contains");
+  persistBiddingFilters(); updateBiddingFilterCount();
+}
+
 function onGlobalAccountChange(val) {
   GLOBAL_ACCOUNT = val;
   try { localStorage.setItem("globalAccount", val); } catch {}
+  resetAccountScopedFilters();
   state.loadedAccount = "__stale__";
   assetsState.loadedAccount = "__stale__";
   lpState.loadedAccount = "__stale__";
@@ -4329,6 +4363,7 @@ async function loadAssets(customerId) {
 }
 
 function renderAssetsTable() {
+  updateAssetsNavWarning();
   renderDataTable({
     state: assetsState,
     columns: () => assetsState.account === "ALL"
@@ -4343,14 +4378,6 @@ function renderAssetsTable() {
       (!(assetsState.account === "ALL" && assetsState.filterAccount.size) || assetsState.filterAccount.has(r.accountName || "")) &&
       (!assetsState.filterCampaign.size || assetsState.filterCampaign.has(r.name || "")) &&
       assetsState.filterStatus.has((r.status || "").toUpperCase()),
-    afterFilter: rows => {
-      let lvl = 0;
-      for (const r of rows) {
-        for (const key of ASSET_INT_KEYS) { const L = assetCellLevel(key, r[key] || 0); if (L === 2) { lvl = 2; break; } if (L === 1) lvl = 1; }
-        if (lvl === 2) break;
-      }
-      setNavWarn("assetsNavWarn", lvl);
-    },
     footer: (rows, cols) => {
       const tot = rows.reduce((a, r) => { a.sitelinks += r.sitelinks || 0; a.landscape += r.landscape || 0; a.square += r.square || 0; a.callouts += r.callouts || 0; a.snippets += r.snippets || 0; return a; }, { sitelinks: 0, landscape: 0, square: 0, callouts: 0, snippets: 0 });
       return "<tr>" + cols.map((c, i) => {
@@ -4360,6 +4387,18 @@ function renderAssetsTable() {
       }).join("") + "</tr>";
     },
   });
+}
+
+// Nav warning reflects the account's ENABLED campaigns' asset coverage,
+// independent of the user's name/campaign/account/status filters.
+function updateAssetsNavWarning() {
+  let lvl = 0;
+  for (const r of assetsState.rows) {
+    if ((r.status || "").toUpperCase() !== "ENABLED") continue;
+    for (const key of ASSET_INT_KEYS) { const L = assetCellLevel(key, r[key] || 0); if (L === 2) { lvl = 2; break; } if (L === 1) lvl = 1; }
+    if (lvl === 2) break;
+  }
+  setNavWarn("assetsNavWarn", lvl);
 }
 
 // Conditional cell formatting (warning icon shown on every red and orange cell).
