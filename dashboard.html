@@ -4442,12 +4442,18 @@ function assetCellHtml(key, v) {
 /* ============================ Landing Pages page ============================ */
 
 const LP_COLUMNS = [
-  { key: "name",     label: "Campaign",                 align: "txt", width: 200, group: "Columns" },
-  { key: "adGroup",  label: "Ad Group",                 align: "txt", width: 180, group: "Columns" },
-  { key: "source",   label: "Source",                   align: "txt", width: 110, group: "Columns" },
-  { key: "finalUrl", label: "Final URL / Landing Page", align: "txt", width: 360, group: "Columns" },
-  { key: "clicks",   label: "Clicks",                   align: "num", width: 90,  group: "Columns" },
-  { key: "convRate", label: "Conv. Rate",               align: "num", width: 110, group: "Columns" },
+  { key: "name", label: "Campaign", align: "txt", width: 200, group: "Columns", cls: "name",
+    cell: r => escapeHtml(r.name) },
+  { key: "adGroup", label: "Ad Group", align: "txt", width: 180, group: "Columns",
+    cell: r => escapeHtml(r.adGroup || "—") },
+  { key: "source", label: "Source", align: "txt", width: 110, group: "Columns",
+    cell: r => '<span class="src-tag src-' + (r.source || "").toLowerCase().replace(/[^a-z]/g, "") + '">' + escapeHtml(r.source || "") + "</span>" },
+  { key: "finalUrl", label: "Final URL / Landing Page", align: "txt", width: 360, group: "Columns",
+    cell: r => { const safe = escapeHtml(r.finalUrl || ""); return '<a href="' + safe + '" target="_blank" rel="noopener noreferrer" class="lp-link" title="' + safe + '">' + safe + "</a>"; } },
+  { key: "clicks", label: "Clicks", align: "num", width: 90, group: "Columns", cls: "tabnum",
+    cell: r => fmtInt(r.clicks || 0) },
+  { key: "convRate", label: "Conv. Rate", align: "num", width: 110, group: "Columns", cls: "tabnum",
+    cell: r => fmtPct(r.convRate || 0) },
 ];
 const LP_COL_GROUPS = ["Columns"];
 const LP_DEFAULT_VISIBLE = ["name", "source", "finalUrl", "clicks", "convRate"];
@@ -4645,90 +4651,58 @@ function buildHeatmap(rows, keys, enabled) {
 }
 
 function renderLandingPagesTable() {
-  const inAll = lpState.account === "ALL";
-  const showAdGroup = lpState.visible.has("adGroup");
-
-  let baseCols = LP_COLUMNS.filter(c => lpState.visible.has(c.key));
-  if (inAll) baseCols = [{ key: "account", label: "Account", align: "txt", width: 170 }, ...baseCols];
-  const cols = applyColumnOrder(baseCols, colOrder("landingpages"));
-
-  const f = lpState.filters;
-  let rows = lpState.rows.filter(r => {
-      if (f.name && !matchTextFilter(r.name, f.nameOp, f.name)) return false;
-      if (inAll && f.account.size && !f.account.has(r.accountName || "")) return false;
-      if (f.campaign.size && !f.campaign.has(r.name || "")) return false;
-      if (f.adGroup.size && !f.adGroup.has(r.adGroup || "")) return false;
-      if (f.url && !(r.finalUrl || "").toLowerCase().includes(f.url)) return false;
-      if (f.sources.size && !f.sources.has(r.source)) return false;
-      return true;
-    });
-
-  // Granularity: Ad Group hidden → campaign-level (sum across ad groups); shown → ad-group-level.
-  if (!showAdGroup) {
-    const agg = new Map();
-    rows.forEach(r => {
-      const key = (r.accountName || "") + "|" + (r.name || "") + "|" + (r.source || "") + "|" + (r.finalUrl || "");
-      let row = agg.get(key);
-      if (!row) { row = { accountName: r.accountName, accountId: r.accountId, name: r.name, adGroup: "", source: r.source, finalUrl: r.finalUrl, clicks: 0, conversions: 0 }; agg.set(key, row); }
-      row.clicks += r.clicks || 0;
-      row.conversions += r.conversions || 0;
-    });
-    rows = [...agg.values()];
-  } else {
-    rows = rows.map(r => ({ ...r }));
-  }
-  rows.forEach(r => { r.convRate = r.clicks ? r.conversions / r.clicks : 0; });
-
-  rows.sort((a, b) => {
-    const { key, dir } = lpState.sort, sign = dir === "asc" ? 1 : -1;
-    let av = a[key], bv = b[key];
-    if (key === "account") { av = a.accountName || ""; bv = b.accountName || ""; }
-    if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
-    return ((av || 0) - (bv || 0)) * sign;
+  renderDataTable({
+    state: lpState,
+    columns: () => lpState.account === "ALL"
+      ? [{ key: "account", label: "Account", align: "txt", width: 170, always: true, sort: r => r.accountName || "", cell: r => logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") }, ...LP_COLUMNS]
+      : LP_COLUMNS,
+    colOrderKey: "landingpages",
+    prefKey: "landingpages",
+    heatmap: true,
+    ids: { colgroup: "lp-colgroup", thead: "lp-thead", tbody: "lp-tbody", tfoot: "lp-tfoot", pagination: "lpPagination" },
+    rerender: renderLandingPagesTable,
+    // Filter, then apply granularity: Ad Group hidden → campaign-level (sum across
+    // ad groups); shown → ad-group-level. convRate is derived post-aggregation.
+    rows: () => {
+      const f = lpState.filters;
+      const inAll = lpState.account === "ALL";
+      const showAdGroup = lpState.visible.has("adGroup");
+      let rows = lpState.rows.filter(r => {
+        if (f.name && !matchTextFilter(r.name, f.nameOp, f.name)) return false;
+        if (inAll && f.account.size && !f.account.has(r.accountName || "")) return false;
+        if (f.campaign.size && !f.campaign.has(r.name || "")) return false;
+        if (f.adGroup.size && !f.adGroup.has(r.adGroup || "")) return false;
+        if (f.url && !(r.finalUrl || "").toLowerCase().includes(f.url)) return false;
+        if (f.sources.size && !f.sources.has(r.source)) return false;
+        return true;
+      });
+      if (!showAdGroup) {
+        const agg = new Map();
+        rows.forEach(r => {
+          const key = (r.accountName || "") + "|" + (r.name || "") + "|" + (r.source || "") + "|" + (r.finalUrl || "");
+          let row = agg.get(key);
+          if (!row) { row = { accountName: r.accountName, accountId: r.accountId, name: r.name, adGroup: "", source: r.source, finalUrl: r.finalUrl, clicks: 0, conversions: 0 }; agg.set(key, row); }
+          row.clicks += r.clicks || 0;
+          row.conversions += r.conversions || 0;
+        });
+        rows = [...agg.values()];
+      } else {
+        rows = rows.map(r => ({ ...r }));
+      }
+      rows.forEach(r => { r.convRate = r.clicks ? r.conversions / r.clicks : 0; });
+      return rows;
+    },
+    footer: (rows, cols) => {
+      const totClicks = rows.reduce((a, r) => a + (r.clicks || 0), 0);
+      const totConv = rows.reduce((a, r) => a + (r.conversions || 0), 0);
+      return "<tr>" + cols.map((c, i) => {
+        if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total · ' + rows.length + "</td>";
+        if (c.key === "clicks") return '<td class="num tabnum" data-col="clicks">' + fmtInt(totClicks) + "</td>";
+        if (c.key === "convRate") return '<td class="num tabnum" data-col="convRate">' + fmtPct(totClicks ? totConv / totClicks : 0) + "</td>";
+        return '<td data-col="' + c.key + '"></td>';
+      }).join("") + "</tr>";
+    },
   });
-
-  lpState.viewRows = rows;
-  lpState.viewCols = cols;
-  const pageRows = pageSlice(rows, lpState);
-  renderPagination("lpPagination", lpState, rows.length, renderLandingPagesTable);
-
-  // Heatmap shading across the full filtered/aggregated set.
-  const heatStyle = buildHeatmap(rows, ["clicks", "convRate"], lpState.heatmap);
-  const arrow = key => lpState.sort.key === key ? '<span class="arr">' + (lpState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
-
-  document.getElementById("lp-colgroup").innerHTML = colgroupHtml(cols, lpState.columnWidths);
-  document.getElementById("lp-thead").innerHTML = "<tr>" + cols.map(c =>
-    '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
-
-  document.getElementById("lp-tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
-    if (c.key === "account") return '<td class="txt" data-col="account">' + logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") + "</td>";
-    if (c.key === "name") return '<td class="txt name" data-col="name">' + escapeHtml(r.name) + "</td>";
-    if (c.key === "adGroup") return '<td class="txt" data-col="adGroup">' + escapeHtml(r.adGroup || "—") + "</td>";
-    if (c.key === "source") return '<td class="txt" data-col="source"><span class="src-tag src-' + (r.source || "").toLowerCase().replace(/[^a-z]/g, "") + '">' + escapeHtml(r.source || "") + "</span></td>";
-    if (c.key === "finalUrl") {
-      const safe = escapeHtml(r.finalUrl || "");
-      return '<td class="txt" data-col="finalUrl"><a href="' + safe + '" target="_blank" rel="noopener noreferrer" class="lp-link" title="' + safe + '">' + safe + "</a></td>";
-    }
-    if (c.key === "clicks") return '<td class="num tabnum" data-col="clicks"' + heatStyle("clicks", r.clicks || 0) + ">" + fmtInt(r.clicks || 0) + "</td>";
-    if (c.key === "convRate") return '<td class="num tabnum" data-col="convRate"' + heatStyle("convRate", r.convRate || 0) + ">" + fmtPct(r.convRate || 0) + "</td>";
-    return '<td class="txt" data-col="' + c.key + '"></td>';
-  }).join("") + "</tr>").join("");
-
-  const totClicks = rows.reduce((a, r) => a + (r.clicks || 0), 0);
-  const totConv = rows.reduce((a, r) => a + (r.conversions || 0), 0);
-  document.getElementById("lp-tfoot").innerHTML = "<tr>" + cols.map((c, i) => {
-    if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total · ' + rows.length + "</td>";
-    if (c.key === "clicks") return '<td class="num tabnum" data-col="clicks">' + fmtInt(totClicks) + "</td>";
-    if (c.key === "convRate") return '<td class="num tabnum" data-col="convRate">' + fmtPct(totClicks ? totConv / totClicks : 0) + "</td>";
-    return '<td data-col="' + c.key + '"></td>';
-  }).join("") + "</tr>";
-
-  wireColumnResize({ colgroup: "lp-colgroup", thead: "lp-thead", tbody: "lp-tbody", tfoot: "lp-tfoot" }, lpState.columnWidths, (k) => {
-    const s = lpState.sort;
-    lpState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
-    renderLandingPagesTable();
-  }, (keys) => { setColOrder("landingpages", keys); renderLandingPagesTable(); });
-  persistUi("landingpages", lpState);
 }
 
 function renderLpColsPop() {
