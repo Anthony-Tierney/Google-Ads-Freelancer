@@ -192,9 +192,9 @@
 
   .filters { position: relative; }
   .filters-btn {
-    font: inherit; display: inline-flex; align-items: center; gap: 7px;
+    font: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
     background: var(--panel); border: 1px solid var(--line); border-radius: 9px;
-    padding: 8px 12px; cursor: pointer; color: var(--ink); font-weight: 520;
+    padding: 0 12px; height: 36px; cursor: pointer; color: var(--ink); font-weight: 520;
     position: relative;
   }
   .filters-btn:hover { background: #fbfcfe; }
@@ -278,13 +278,15 @@
   .filter-checklist .check-row label { overflow: hidden; text-overflow: ellipsis; }
   .filter-empty { color: var(--muted); font-size: 12px; padding: 2px 0; }
 
-  .pagination { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--muted); }
-  .page-size { display: flex; align-items: center; gap: 6px; }
-  .page-size select { font: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; background: var(--panel); cursor: pointer; color: var(--ink); }
-  .page-nav { display: flex; align-items: center; gap: 8px; }
-  .page-nav .pg-btn { font: inherit; line-height: 1; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); cursor: pointer; padding: 4px 9px; }
-  .page-nav .pg-btn:hover:not(:disabled) { background: var(--line-soft); }
-  .page-nav .pg-btn:disabled { opacity: .4; cursor: default; }
+  .pagination { display: flex; align-items: center; gap: 18px; font-size: 13px; color: var(--muted); padding: 4px 2px; }
+  .pg-rows { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .pg-size { appearance: none; -webkit-appearance: none; font: inherit; font-size: 13px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 26px 5px 10px; background: var(--panel) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='%2364748b'/></svg>") no-repeat right 9px center; color: var(--ink); cursor: pointer; }
+  .pg-range { white-space: nowrap; color: var(--ink); }
+  .page-nav { display: flex; align-items: center; gap: 2px; }
+  .page-nav .pg-ico { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; border: none; background: none; color: var(--ink); cursor: pointer; border-radius: 50%; }
+  .page-nav .pg-ico svg { width: 20px; height: 20px; }
+  .page-nav .pg-ico:hover:not(:disabled) { background: var(--line-soft); }
+  .page-nav .pg-ico:disabled { color: var(--faint); cursor: default; }
   .cnf-op { appearance: none; -webkit-appearance: none; font: inherit; border: 1px solid var(--line); border-radius: 7px; padding: 8px 30px 8px 10px; background: var(--panel) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='%2364748b'/></svg>") no-repeat right 10px center; color: var(--ink); width: 100%; cursor: pointer; margin-bottom: 10px; }
   .cnf-sublabel { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
   .cnf-value { font: inherit; width: 100%; min-height: 62px; resize: vertical; border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; color: var(--ink); background: var(--panel); box-sizing: border-box; }
@@ -1636,6 +1638,14 @@ const ACCOUNT_COLUMNS = [
   { key: "invalidClickRate", label: "Invalid click rate", type: "percent", align: "num", group: "Quality" },
   { key: "activeViewImpressions", label: "Viewable impr.", type: "int", align: "num", group: "Quality" },
 ];
+// Attach per-column cell renderers + widths (matching the previous colWidth defaults).
+(() => {
+  const W = { currency: 120, percent: 130, int: 110, decimal: 110, roas: 100 };
+  ACCOUNT_COLUMNS.forEach(c => {
+    if (c.key === "name") { c.width = 260; c.cls = "name"; c.cell = r => logoHtml(r.id, r.name) + escapeHtml(r.name); }
+    else { const key = c.key, type = c.type; c.width = W[type] || 120; c.cls = "tabnum"; c.cell = r => formatCell(type, r[key]); }
+  });
+})();
 const ACCOUNT_GROUPS = ["Account", "Performance", "Conversions", "Efficiency", "Quality"];
 const ACCOUNT_DEFAULT_VISIBLE = ["name","clicks","cost","conversions","convRate","cpa","convValue","roas"];
 
@@ -2126,19 +2136,32 @@ function renderPagination(containerId, st, totalRows, onChange) {
   if (st.currentPage > totalPages) st.currentPage = totalPages;
   if (st.currentPage < 1) st.currentPage = 1;
   const cur = st.currentPage;
+  const start = totalRows === 0 ? 0 : (cur - 1) * size + 1;
+  const end = Math.min(cur * size, totalRows);
+  const ICONS = {
+    first: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6zM6 6h2v12H6z"/></svg>',
+    prev: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>',
+    next: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>',
+    last: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5.59 7.41L10.18 12l-4.59 4.59L7 18l6-6-6-6zM16 6h2v12h-2z"/></svg>',
+  };
+  const atStart = cur <= 1, atEnd = cur >= totalPages;
   el.hidden = false;
   el.innerHTML =
-    '<div class="page-size">Show <select class="pg-size">' +
+    '<div class="pg-rows">Show rows <select class="pg-size">' +
       [10, 25, 50, 100, 500].map(n => '<option value="' + n + '"' + (n === size ? " selected" : "") + ">" + n + "</option>").join("") +
-    "</select> per page</div>" +
+    "</select></div>" +
+    '<div class="pg-range">' + start + " - " + end + " of " + totalRows + "</div>" +
     '<div class="page-nav">' +
-      '<button class="pg-btn pg-prev"' + (cur <= 1 ? " disabled" : "") + ' aria-label="Previous page">‹ Prev</button>' +
-      '<span class="pg-info">Page ' + cur + " of " + totalPages + "</span>" +
-      '<button class="pg-btn pg-next"' + (cur >= totalPages ? " disabled" : "") + ' aria-label="Next page">Next ›</button>' +
+      '<button class="pg-ico pg-first"' + (atStart ? " disabled" : "") + ' aria-label="First page">' + ICONS.first + "</button>" +
+      '<button class="pg-ico pg-prev"' + (atStart ? " disabled" : "") + ' aria-label="Previous page">' + ICONS.prev + "</button>" +
+      '<button class="pg-ico pg-next"' + (atEnd ? " disabled" : "") + ' aria-label="Next page">' + ICONS.next + "</button>" +
+      '<button class="pg-ico pg-last"' + (atEnd ? " disabled" : "") + ' aria-label="Last page">' + ICONS.last + "</button>" +
     "</div>";
   el.querySelector(".pg-size").addEventListener("change", e => { st.pageSize = parseInt(e.target.value, 10); st.currentPage = 1; onChange(); });
+  el.querySelector(".pg-first").addEventListener("click", () => { if (st.currentPage > 1) { st.currentPage = 1; onChange(); } });
   el.querySelector(".pg-prev").addEventListener("click", () => { if (st.currentPage > 1) { st.currentPage--; onChange(); } });
   el.querySelector(".pg-next").addEventListener("click", () => { if (st.currentPage < totalPages) { st.currentPage++; onChange(); } });
+  el.querySelector(".pg-last").addEventListener("click", () => { if (st.currentPage < totalPages) { st.currentPage = totalPages; onChange(); } });
 }
 
 function updateFilterCount() {
@@ -3581,52 +3604,30 @@ function refreshLogosInView() {
 
 function renderAccountsTable() {
   accState.search = document.getElementById("accSearch").value;
-  const cols = applyColumnOrder(accShownColumns(), colOrder("accounts"));
-  const filtered = accSortedFiltered();
-  const totalPages = Math.max(1, Math.ceil(filtered.length / accState.pageSize));
-  if (accState.currentPage > totalPages) accState.currentPage = totalPages;
-  const start = (accState.currentPage - 1) * accState.pageSize;
-  const pageRows = filtered.slice(start, start + accState.pageSize);
-  const tot = accTotals(filtered);
-  const arrow = key => accState.sort.key === key ? '<span class="arr">' + (accState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
-  const heatStyle = buildHeatmap(filtered, cols.filter(c => c.align === "num").map(c => c.key), accState.heatmap);
-
-  document.getElementById("acc-colgroup").innerHTML = cols.map(c => '<col data-col="' + c.key + '" style="width:' + colWidth(c, accState.columnWidths) + 'px">').join("");
-  document.getElementById("acc-thead").innerHTML = "<tr>" + cols.map(c =>
-    '<th class="' + c.align + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
-
-  document.getElementById("acc-tbody").innerHTML = pageRows.map(r => "<tr>" + cols.map(c => {
-    if (c.key === "name") return '<td class="txt name" data-col="name">' + logoHtml(r.id, r.name) + escapeHtml(r.name) + "</td>";
-    const cls = c.align === "num" ? "num tabnum" : "txt";
-    return '<td class="' + cls + '" data-col="' + c.key + '"' + (c.align === "num" ? heatStyle(c.key, r[c.key]) : "") + ">" + formatCell(c.type, r[c.key]) + "</td>";
-  }).join("") + "</tr>").join("");
-
-  document.getElementById("acc-tfoot").innerHTML = "<tr>" + cols.map((c, i) => {
-    if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total · ' + filtered.length + "</td>";
-    return '<td class="num tabnum" data-col="' + c.key + '">' + formatCell(c.type, tot[c.key]) + "</td>";
-  }).join("") + "</tr>";
-
-  renderPagination("accPagination", accState, filtered.length, renderAccountsTable);
-
-  const ids = { colgroup: "acc-colgroup", thead: "acc-thead", tbody: "acc-tbody", tfoot: "acc-tfoot" };
-  document.querySelectorAll("#acc-thead th").forEach(th => {
-    const handle = document.createElement("div");
-    handle.className = "resize-handle";
-    handle.addEventListener("mousedown", e => { e.preventDefault(); e.stopPropagation(); startResize(e, th.dataset.col, ids, accState.columnWidths, null); });
-    handle.addEventListener("click", e => e.stopPropagation());
-    handle.addEventListener("dblclick", e => { e.preventDefault(); e.stopPropagation(); autoFitColumn(th.dataset.col, ids, accState.columnWidths, null); });
-    th.appendChild(handle);
-    th.addEventListener("click", e => {
-      if (e.target.classList.contains("resize-handle")) return;
-      if (th.dataset.resizing === "1") { th.dataset.resizing = ""; return; }
-      const k = th.dataset.col, s = accState.sort;
-      accState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
-      accState.currentPage = 1;
-      renderAccountsTable();
-    });
+  const q = accState.search.trim().toLowerCase();
+  renderDataTable({
+    state: accState,
+    columns: ACCOUNT_COLUMNS,
+    colOrderKey: "accounts",
+    prefKey: "accounts",
+    heatmap: true,
+    resetPageOnSort: true,
+    ids: { colgroup: "acc-colgroup", thead: "acc-thead", tbody: "acc-tbody", tfoot: "acc-tfoot", pagination: "accPagination" },
+    rerender: renderAccountsTable,
+    rowVisible: r => {
+      const statuses = accState.filterAccountStatus;
+      const searchMatch = !q || (r.name || "").toLowerCase().includes(q) || (r.formatted || "").includes(q);
+      const statusMatch = statuses.size === 0 ? false : ((r.hasEnabled && statuses.has("active")) || (!r.hasEnabled && statuses.has("inactive")));
+      return searchMatch && statusMatch;
+    },
+    footer: (rows, cols) => {
+      const tot = accTotals(rows);
+      return "<tr>" + cols.map((c, i) => {
+        if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total · ' + rows.length + "</td>";
+        return '<td class="num tabnum" data-col="' + c.key + '">' + formatCell(c.type, tot[c.key]) + "</td>";
+      }).join("") + "</tr>";
+    },
   });
-  enableColReorder("acc-thead", (keys) => { setColOrder("accounts", keys); renderAccountsTable(); });
-  persistUi("accounts", accState);
 }
 
 function renderAccColsPop() {
@@ -5349,7 +5350,7 @@ function renderDataTable(cfg) {
   if (cfg.footer && cfg.ids.tfoot) document.getElementById(cfg.ids.tfoot).innerHTML = cfg.footer(rows, cols);
 
   wireColumnResize(cfg.ids, st.columnWidths,
-    (k) => { const s = st.sort; st.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" }; cfg.rerender(); },
+    (k) => { const s = st.sort; st.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" }; if (cfg.resetPageOnSort) st.currentPage = 1; cfg.rerender(); },
     cfg.colOrderKey ? (keys) => { setColOrder(cfg.colOrderKey, keys); cfg.rerender(); } : null);
 }
 
