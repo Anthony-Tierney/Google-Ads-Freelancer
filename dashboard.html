@@ -2049,37 +2049,23 @@ function applyCustomDate() {
     return;
   }
 
-  if (state.calendarTarget === "lp") {
-    lpState.dateRange = { label: from + " to " + to, from, to };
-    lpState.currentPage = 1;
-    closeCustomDateModal();
-    loadLandingPages(GLOBAL_ACCOUNT);
-    return;
-  }
-
-  if (state.calendarTarget === "geo") {
-    geoState.dateRange = { label: from + " to " + to, from, to };
-    closeCustomDateModal();
-    syncGeoDateSelect();
-    loadGeoCoverage(GLOBAL_ACCOUNT);
-    return;
-  }
-
-  if (state.calendarTarget === "acc") {
-    accState.dateRange = { label: from + " to " + to, from, to };
-    accState.currentPage = 1;
-    closeCustomDateModal();
-    syncAccDateSelect();
-    loadAllAccounts();
-    return;
-  }
-
-  state.dateRange = { label: from + " to " + to, from, to };
-  state.currentPage = 1;
+  // A custom range is global: every page's picker AND data adopt it, so the
+  // date range stays consistent as the user moves between pages.
+  const dr = { label: from + " to " + to, from, to };
+  state.dateRange = dr; accState.dateRange = dr; lpState.dateRange = dr; geoState.dateRange = dr;
+  state.currentPage = 1; accState.currentPage = 1; lpState.currentPage = 1;
   closeCustomDateModal();
-  syncDateSelect();
-  if (state.compareEnabled) updateCompareUI();
-  loadCampaigns();
+  syncDateSelect(); syncAccDateSelect(); syncLpDateSelect(); syncGeoDateSelect();
+
+  // Pages other than the current one refetch with the new range when next opened.
+  state.loadedAccount = "__stale__"; accState.loaded = false; lpState.loadedAccount = "__stale__"; geoState.loadedAccount = "__stale__";
+
+  // Reload whichever page the user is on now.
+  const t = state.calendarTarget;
+  if (t === "lp") loadLandingPages(GLOBAL_ACCOUNT);
+  else if (t === "geo") loadGeoCoverage(GLOBAL_ACCOUNT);
+  else if (t === "acc") loadAllAccounts();
+  else { if (state.compareEnabled) updateCompareUI(); loadCampaigns(); }
 }
 
 function toggleFilterGroup(id, event) {
@@ -4442,13 +4428,13 @@ function assetCellHtml(key, v) {
 /* ============================ Landing Pages page ============================ */
 
 const LP_COLUMNS = [
-  { key: "name", label: "Campaign", align: "txt", width: 200, group: "Columns", cls: "name",
+  { key: "name", label: "Campaign", align: "txt", width: 200, group: "Columns", cls: "name", locked: true,
     cell: r => escapeHtml(r.name) },
-  { key: "adGroup", label: "Ad Group", align: "txt", width: 180, group: "Columns",
+  { key: "adGroup", label: "Ad Group", align: "txt", width: 180, group: "Columns", locked: true,
     cell: r => escapeHtml(r.adGroup || "—") },
-  { key: "source", label: "Source", align: "txt", width: 110, group: "Columns",
+  { key: "source", label: "Source", align: "txt", width: 110, group: "Columns", locked: true,
     cell: r => '<span class="src-tag src-' + (r.source || "").toLowerCase().replace(/[^a-z]/g, "") + '">' + escapeHtml(r.source || "") + "</span>" },
-  { key: "finalUrl", label: "Final URL / Landing Page", align: "txt", width: 360, group: "Columns",
+  { key: "finalUrl", label: "Final URL / Landing Page", align: "txt", width: 360, group: "Columns", locked: true,
     cell: r => { const safe = escapeHtml(r.finalUrl || ""); return '<a href="' + safe + '" target="_blank" rel="noopener noreferrer" class="lp-link" title="' + safe + '">' + safe + "</a>"; } },
   { key: "clicks", label: "Clicks", align: "num", width: 90, group: "Columns", cls: "tabnum",
     cell: r => fmtInt(r.clicks || 0) },
@@ -4457,7 +4443,7 @@ const LP_COLUMNS = [
 ];
 const LP_COL_GROUPS = ["Columns"];
 const LP_DEFAULT_VISIBLE = ["name", "source", "finalUrl", "clicks", "convRate"];
-const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { name: "", nameOp: "contains", account: new Set(), campaign: new Set(), adGroup: new Set(), url: "", sources: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set(savedColVisible("landingpages") || LP_DEFAULT_VISIBLE), openColGroups: new Set(["lpColsPop_g0"]), heatmap: false, dateRange: { label: "Last 30 Days", days: 30 } };
+const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { name: "", nameOp: "contains", account: new Set(), campaign: new Set(), adGroup: new Set(), url: "", sources: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("landingpages") || LP_DEFAULT_VISIBLE), "name", "adGroup", "source", "finalUrl"]), openColGroups: new Set(["lpColsPop_g0"]), heatmap: false, dateRange: { label: "Last 30 Days", days: 30 } };
 
 const LP_SOURCE_BOXES = [["lpfSrcAd", "Ad"], ["lpfSrcAssetGroup", "Asset Group"], ["lpfSrcSitelink", "Sitelink"], ["lpfSrcPromotion", "Promotion"], ["lpfSrcPrice", "Price"]];
 
