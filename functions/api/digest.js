@@ -331,21 +331,22 @@ function buildSlack(flagged) {
   const blocks = [{ type: "section", text: { type: "mrkdwn", text: header } }];
   const textParts = [header];
   for (const a of flagged) {
-    const emoji = EMOJI[top(a)];
     const byCat = {};
     for (const i of a.issues) { const cat = CATEGORY[i.kind] || "Other"; (byCat[cat] = byCat[cat] || []).push(i); }
-    const lines = [];
+    const catBlocks = [];
     for (const cat of CATEGORY_ORDER) {
       const items = byCat[cat];
       if (!items || !items.length) continue;
       items.sort((x, y) => y.level - x.level);
-      lines.push(`*${cat}:*`);
-      for (const i of items) lines.push(`\u2022 ${i.text}`);
+      const catLevel = Math.max(...items.map((i) => i.level));
+      const bullets = items.map((i) => `\u2022 ${i.text}`).join("\n");
+      catBlocks.push(`${EMOJI[catLevel]} *${cat}:*\n${bullets}`);
     }
-    const section = `${emoji} *${a.name}*\n${lines.join("\n")}`;
+    // Blank line after the account name and between categories.
+    const section = `*${a.name}*\n\n${catBlocks.join("\n\n")}`;
     blocks.push({ type: "divider" });
     blocks.push({ type: "section", text: { type: "mrkdwn", text: section } });
-    textParts.push(`${emoji} ${a.name}\n${lines.join("\n")}`);
+    textParts.push(section);
   }
   return { text: textParts.join("\n\n"), blocks };
 }
