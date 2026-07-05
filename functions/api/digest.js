@@ -88,7 +88,7 @@ export async function onRequestGet(context) {
     posted,
     ...(slackError ? { slackError } : {}),
     ...(dryRun ? { slackPreview: payload } : {}),
-    accounts: (debug ? results : flagged).map((a) => ({ id: a.id, name: a.name, issues: a.issues.map((i) => i.text), ...(a.error ? { error: a.error } : {}) })),
+    accounts: (debug ? results : flagged).map((a) => ({ id: a.id, name: a.name, issues: a.issues.map((i) => i.text), ...(a.error ? { error: a.error } : {}), ...(debug && a._assetDiag ? { assetDiag: a._assetDiag } : {}) })),
   });
 }
 
@@ -172,17 +172,21 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
 
   // 5) Asset gaps — serving campaign-level assets vs thresholds on enabled campaigns
   //    (matches the Assets page: any campaign below a red threshold = red, else amber).
+  let assetDiag = { ran: false };
   try {
     if (enabledCount) {
       const camps = {};
       for (const r of campEnabled) camps[r.campaign.id] = { sitelinks: 0, landscape: 0, square: 0, callouts: 0, snippets: 0 };
       const assetR = await search("SELECT campaign.id, campaign_asset.field_type, campaign_asset.status, campaign_asset.primary_status, asset.image_asset.full_size.width_pixels, asset.image_asset.full_size.height_pixels FROM campaign_asset WHERE campaign_asset.status = 'ENABLED' AND campaign_asset.field_type IN ('SITELINK','AD_IMAGE','CALLOUT','STRUCTURED_SNIPPET') AND campaign.status = 'ENABLED'");
+      const rows = assetR.results || [];
       const SERVING = new Set(["ELIGIBLE", "LIMITED"]);
-      for (const r of assetR.results || []) {
+      let served = 0, skippedPs = 0;
+      for (const r of rows) {
         const c = camps[r.campaign?.id];
         if (!c) continue;
         const ps = r.campaignAsset?.primaryStatus;
-        if (ps && !SERVING.has(ps)) continue;
+        if (ps && !SERVING.has(ps)) { skippedPs++; continue; }
+        served++;
         switch (r.campaignAsset?.fieldType) {
           case "SITELINK": c.sitelinks++; break;
           case "AD_IMAGE": {
@@ -201,12 +205,13 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
         for (const key of ASSET_KEYS) { const L = assetCellLevel(key, c[key]); if (L > lvl) lvl = L; }
         if (lvl === 2) red++; else if (lvl === 1) amber++;
       }
+      assetDiag = { ran: true, enabledCampaigns: Object.keys(camps).length, assetRows: rows.length, served, skippedPs, red, amber, sampleRow: rows[0] || null, sampleCounts: Object.values(camps).slice(0, 3) };
       if (red) issues.push({ level: 3, kind: "assets", text: `${red} campaign${red > 1 ? "s" : ""} missing key assets` });
       else if (amber) issues.push({ level: 2, kind: "assets", text: `${amber} campaign${amber > 1 ? "s" : ""} with asset gaps` });
     }
-  } catch { /* non-fatal */ }
+  } catch (e) { assetDiag = { ran: false, error: (e && e.message) ? e.message : String(e) }; }
 
-  return { id, name, issues };
+  return { id, name, issues, _assetDiag: assetDiag };
 }
 
 // --- shared rule helpers (mirror the dashboard) ---
