@@ -4058,6 +4058,18 @@ function paceStatus(spend, budget, mi) {
   return "ontrack";
 }
 
+// Projection-based status: where the account lands at the current (last-7-day) run
+// rate, vs budget, with a 5% tolerance band. Mirrors buildRecommendation.
+function projectionStatus(spend, projected, budget) {
+  if (!budget || budget <= 0) return null;
+  if (spend >= budget) return "over";
+  const band = budget * 0.05;
+  const diff = projected - budget;
+  if (diff > band) return "over";
+  if (diff < -band) return "under";
+  return "ontrack";
+}
+
 // Show the amber warning in the side nav if any active, budgeted account is off pace.
 // Show/colour a side-nav warning icon. level: 0 none, 1 amber, 2 red.
 function setNavWarn(id, level) {
@@ -4077,14 +4089,17 @@ function assetCellLevel(key, v) {
 }
 function updateBpNavWarning() {
   const mi = monthInfo();
+  const remainingDays = Math.max(0, mi.daysInMonth - mi.dayOfMonth);
   let lvl = 0;
   for (const r of bpState.rows) {
     if (!r.hasEnabled) continue;
     const saved = bpState.budgets[r.id];
     const budget = (saved != null && saved !== "") ? Number(saved) : 0;
-    const st = paceStatus(r.spend, budget, mi);
-    if (st === "over") { lvl = 2; break; }   // over pace = red
-    if (st === "under") lvl = 1;              // under pace = amber
+    if (!budget) continue;
+    const projected = r.spend + ((r.last7 || 0) / 7) * remainingDays;
+    const st = projectionStatus(r.spend, projected, budget);
+    if (st === "over") { lvl = 2; break; }   // projected to overspend = red
+    if (st === "under") lvl = 1;              // projected to underspend = amber
   }
   setNavWarn("bpNavWarn", lvl);
 }
