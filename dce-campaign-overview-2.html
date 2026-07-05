@@ -44,7 +44,7 @@
         .outcome-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 0;
+            margin-top: 10px;
         }
         .outcome-table th {
             background: #4285f4;
@@ -282,30 +282,6 @@
             color: #1b5e20;
         }
 
-        /* June 2026 placeholder table */
-        .placeholder-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 0;
-        }
-        .placeholder-table th {
-            background: #4285f4;
-            color: white;
-            font-weight: 700;
-            padding: 12px;
-            text-align: left;
-            border: 1px solid #dadce0;
-            font-size: 14px;
-        }
-        .placeholder-table td {
-            padding: 20px 12px;
-            border: 1px solid #dadce0;
-            color: #9aa0a6;
-            font-size: 14px;
-            font-style: italic;
-            text-align: center;
-        }
-
         /* Tab navigation */
         .tab-nav {
             display: flex;
@@ -372,7 +348,7 @@
             color: #1967d2;
         }
 
-        /* Chart panel */
+        /* Chart panel & Grouped Legend styling */
         .panel-title {
             margin: 0 0 16px 0;
             font-size: 1.1rem;
@@ -386,10 +362,35 @@
         }
         .chart-legend {
             display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-top: 18px;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 24px;
+            align-items: center;
+            width: 100%;
+        }
+        .legend-group-container {
+            display: flex;
+            align-items: center;
             justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            border: 1px solid #e8f0fe;
+            padding: 10px 18px;
+            border-radius: 30px;
+            background: #f8f9fa;
+            width: fit-content;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .legend-group-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #5f6368;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-right: 6px;
+            border-right: 2px solid #dadce0;
+            padding-right: 12px;
+            white-space: nowrap;
         }
         .legend-item {
             display: flex;
@@ -399,14 +400,15 @@
             color: #3c4043;
             font-weight: 600;
             cursor: pointer;
-            padding: 5px 10px;
-            border-radius: 6px;
-            border: 2px solid transparent;
-            transition: opacity 0.18s, border-color 0.18s;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+            transition: opacity 0.18s, border-color 0.18s, background 0.18s;
             user-select: none;
         }
         .legend-item:hover {
-            border-color: #dadce0;
+            border-color: #bdc1c6;
+            background: #fff;
         }
         .legend-item.dimmed {
             opacity: 0.35;
@@ -414,9 +416,6 @@
 
         /* Globe icon button */
         .globe-button {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -633,7 +632,7 @@
         <div class="line-v" style="height:30px;"></div>
         <div class="campaign-header">
           <div class="campaign-number">1</div>
-          <div class="campaign-budget">£500</div>
+          <div class="campaign-budget">£900</div>
         </div>
         <div class="campaign-unit">
           <div class="node search" style="width:100%; box-sizing:border-box;">
@@ -656,7 +655,7 @@
         <div class="line-v" style="height:30px;"></div>
         <div class="campaign-header">
           <div class="campaign-number">2</div>
-          <div class="campaign-budget">£750</div>
+          <div class="campaign-budget">£800</div>
         </div>
         <div class="campaign-unit">
           <div class="node search" style="width:100%; box-sizing:border-box; background: #d4edda; border-color: #28a745; color: #155724;">
@@ -682,7 +681,7 @@
         <div class="line-v" style="height:30px;"></div>
         <div class="campaign-header">
           <div class="campaign-number">3</div>
-          <div class="campaign-budget">£750</div>
+          <div class="campaign-budget">£300</div>
         </div>
         <div class="campaign-unit">
           <div class="node search" style="width:100%; box-sizing:border-box; background: #fed7aa; border-color: #fb923c; color: #7c2d12;">
@@ -715,19 +714,33 @@
     <!-- Tab Navigation -->
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-results" onclick="switchTab('results')">Conversions</button>
+      <button class="tab-btn" id="tab-geo" onclick="switchTab('geo')">Geo Report</button>
       <button class="tab-btn" id="tab-cpc" onclick="switchTab('cpc')">Cost per Contact</button>
       <button class="tab-btn" id="tab-adspend" onclick="switchTab('adspend')">Ad Spending</button>
-      <button class="tab-btn" id="tab-summaries" onclick="switchTab('summaries')">Monthly Summaries</button>
+      <button class="tab-btn" id="tab-summaries" onclick="switchTab('summaries')">Monthly<br>Summaries</button>
     </div>
 
     <!-- Results Panel -->
     <div id="panel-results" class="tab-panel">
-      <h2 class="panel-title">Conversions by Month</h2>
+      <div class="chart-header">
+        <h2 class="panel-title">Conversions by Month</h2>
+        <button class="data-label-toggle" id="conversionsLabelToggle" onclick="toggleConversionsLabels()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+            <path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Show Data Labels
+        </button>
+      </div>
       <div class="chart-wrap">
         <canvas id="conversionsChart"></canvas>
       </div>
       <div class="chart-legend" id="chartLegend"></div>
-      <button class="globe-button" onclick="openMapModal()" title="View conversion hotspots on map">
+    </div>
+
+    <!-- Geo Report Panel -->
+    <div id="panel-geo" class="tab-panel" style="display:none; text-align: center; padding: 40px 0;">
+      <p style="margin-bottom: 20px; font-weight: 600; color: #3c4043;">Click the globe icon below to view your conversions by city (2026 only).</p>
+      <button class="globe-button" onclick="openMapModal()" title="View conversion hotspots on map" style="margin: 0 auto;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
           <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="1.5"/>
@@ -737,7 +750,6 @@
           <path d="M12 2c2.21 0 4 4.48 4 10s-1.79 10-4 10" stroke="currentColor" stroke-width="1.5"/>
         </svg>
       </button>
-
     </div>
 
     <!-- Cost per Contact Panel -->
@@ -758,7 +770,15 @@
 
     <!-- Ad Spending Panel -->
     <div id="panel-adspend" class="tab-panel" style="display:none;">
-      <h2 class="panel-title">Ad Spending by Month</h2>
+      <div class="chart-header">
+        <h2 class="panel-title">Ad Spending by Month</h2>
+        <button class="data-label-toggle active" id="adSpendLabelToggle" onclick="toggleAdSpendLabels()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+            <path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Show Data Labels
+        </button>
+      </div>
       <div class="chart-wrap">
         <canvas id="adSpendChart"></canvas>
       </div>
@@ -766,11 +786,11 @@
 
     <!-- Monthly Summaries Panel -->
     <div id="panel-summaries" class="tab-panel" style="display:none;">
-
-      <!-- June 2026 Section -->
+    
+      <!-- New June 2026 Section -->
       <div class="faq-section">
         <div class="faq-toggle" onclick="toggleFaq('jun2026')">
-          <h1>June 2026 - Scheduled Changes</h1>
+          <h1>June 2026 Summary</h1>
           <div class="faq-chevron collapsed" id="chevron-jun2026">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M4 6L8 10L12 6" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -779,6 +799,53 @@
         </div>
         <hr class="faq-divider" id="divider-jun2026">
         <div class="faq-body collapsed" id="body-jun2026">
+          <p style="margin: 10px 0 0 0; font-size: 0.9rem; line-height: 1.5; color: #5f6368;"><strong>Highlights:</strong> In June 2026, the highest no. of monthly Brochure Downloads were recorded for paid media so far (22). The overall cost-per-contact did increase however overall to ~£58 with emails, phone calls, brochure downloads and form submissions considered. The next 1-2 months will be focused on finding the areas of best return for the new, increased monthly ad spend budget of £2,000.</p>
+          <table class="outcome-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Changes</th>
+                <th>Target Outcome</th>
+                <th>Actioned</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Website</td>
+                <td>Introduce product comparison table</td>
+                <td>Help users decide which DCE product is right for their unique circumstance.</td>
+                <td class="actioned-cell"></td>
+              </tr>
+              <tr>
+                <td>Website</td>
+                <td>Simplify products drop-down menu</td>
+                <td>Help users navigate faster to appropriate categories</td>
+                <td class="actioned-cell"></td>
+              </tr>
+              <tr>
+                <td>Dust Extraction / Collection</td>
+                <td>Create a new Ad Group specifically for 'dust and fume extractors'</td>
+                <td>Drive traffic through an unexplored keyword</td>
+                <td class="actioned-cell"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- May 2026 Section -->
+      <div class="faq-section">
+        <div class="faq-toggle" onclick="toggleFaq('may2026')">
+          <h1>May 2026 Summary</h1>
+          <div class="faq-chevron collapsed" id="chevron-may2026">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 6L8 10L12 6" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <hr class="faq-divider" id="divider-may2026">
+        <div class="faq-body collapsed" id="body-may2026">
+          <p style="margin: 10px 0 0 0; font-size: 0.9rem; line-height: 1.5; color: #5f6368;"><strong>Highlights:</strong> In May 2026, the highest no. of monthly email contacts were recorded for paid media so far (8). The overall cost-per-contact remained low at ~£40 with emails, phone calls, brochure downloads and form submissions considered.</p>
           <table class="outcome-table">
             <thead>
               <tr>
@@ -793,43 +860,25 @@
                 <td>Account</td>
                 <td>Further increase budget</td>
                 <td>£2,000pm spend goal</td>
-                <td class="actioned-cell"></td>
-              </tr>
-              <tr>
-                <td>Dust Extraction / Collection</td>
-                <td>Create a new Ad Group specifically for 'dust and fume extractors'</td>
-                <td>Drive traffic through an unexplored keyword</td>
-                <td class="actioned-cell"></td>
-              </tr>
-              <tr>
-                <td>Website</td>
-                <td>Introduce product comparison table</td>
-                <td>Help users decide which DCE product is right for their unique circumstance</td>
-                <td class="actioned-cell"></td>
-              </tr>
-              <tr>
-                <td>Website</td>
-                <td>Simplify products drop-down menu</td>
-                <td>Help users navigate faster to appropriate categories</td>
-                <td class="actioned-cell"></td>
+                <td class="actioned-cell">&#10003;</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- May 2026 Section -->
+      <!-- April 2026 Section -->
       <div class="faq-section">
-        <div class="faq-toggle" onclick="toggleFaq('may2026')">
-          <h1>May 2026 - Scheduled Changes</h1>
-          <div class="faq-chevron collapsed" id="chevron-may2026">
+        <div class="faq-toggle" onclick="toggleFaq('apr2026')">
+          <h1>April 2026 Summary</h1>
+          <div class="faq-chevron collapsed" id="chevron-apr2026">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M4 6L8 10L12 6" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
         </div>
-        <hr class="faq-divider" id="divider-may2026">
-        <div class="faq-body collapsed" id="body-may2026">
+        <hr class="faq-divider" id="divider-apr2026">
+        <div class="faq-body collapsed" id="body-apr2026">
           <table class="outcome-table">
             <thead>
               <tr>
@@ -842,13 +891,13 @@
             <tbody>
               <tr>
                 <td>DCE Searches</td>
-                <td>Users in this campaign are <span style="font-weight: bold; color: #1b5e20;">2.24x</span> more likely to convert mon-fri vs at the weekend. We will reduce the Ad Schedule for this campaign from 7 days to mon - fri only.</td>
+                <td>Users in this campaign are <span style="font-weight: bold; color: #1b5e20;">2.24x</span> more likely to convert Mon-Fri vs at the weekend. We will reduce the Ad Schedule for this campaign from 7 days to Mon - Fri only.</td>
                 <td><span style="font-weight: bold; color: #1b5e20;">£194</span> of budget freed up to increase spend on the other non-brand campaigns.</td>
                 <td class="actioned-cell">&#10003;</td>
               </tr>
               <tr>
                 <td>Dust Extraction / Collection</td>
-                <td>Removal of Sunday from Ad Schedule to make campaign mon - sat only.</td>
+                <td>Removal of Sunday from Ad Schedule to make campaign Mon - Sat only.</td>
                 <td>Small saving of <span style="font-weight: bold; color: #1b5e20;">£25pm</span> which will be reallocated to better converting days.</td>
                 <td class="actioned-cell">&#10003;</td>
               </tr>
@@ -889,10 +938,12 @@
   /* ── Tab switching ── */
   function switchTab(tab) {
     document.getElementById('panel-results').style.display   = tab === 'results'   ? 'block' : 'none';
+    document.getElementById('panel-geo').style.display       = tab === 'geo'       ? 'block' : 'none';
     document.getElementById('panel-cpc').style.display       = tab === 'cpc'       ? 'block' : 'none';
     document.getElementById('panel-adspend').style.display   = tab === 'adspend'   ? 'block' : 'none';
     document.getElementById('panel-summaries').style.display = tab === 'summaries' ? 'block' : 'none';
     document.getElementById('tab-results').classList.toggle('active',   tab === 'results');
+    document.getElementById('tab-geo').classList.toggle('active',       tab === 'geo');
     document.getElementById('tab-cpc').classList.toggle('active',       tab === 'cpc');
     document.getElementById('tab-adspend').classList.toggle('active',   tab === 'adspend');
     document.getElementById('tab-summaries').classList.toggle('active', tab === 'summaries');
@@ -913,42 +964,44 @@
   var months = [
     'Jan 25','Feb 25','Mar 25','Apr 25','May 25','Jun 25',
     'Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25',
-    'Jan 26','Feb 26','Mar 26','Apr 26','May 26'
+    'Jan 26','Feb 26','Mar 26','Apr 26','May 26','Jun 26'
   ];
 
   var campaigns = [
     {
-      label: 'Non-Paid Form Submissions',
-      color: '#4285f4',
-      data: [10,5,6,5,9,6,8,4,4,9,4,9,8,4,10,8,4]
-    },
-    {
       label: 'Paid Form Submissions',
       color: '#34a853',
-      data: [0,5,0,1,1,5,5,7,5,5,5,3,5,5,5,3,4]
+      group: 'paid',
+      data: [0,5,0,1,1,5,5,7,5,5,5,3,5,5,5,3,4,4]
     },
     {
       label: 'Paid Phone Calls',
       color: '#fb923c',
-      data: [0,0,0,0,0,0,0,0,0,0,2,2,4,7,8,12,9]
+      group: 'paid',
+      data: [0,0,0,0,0,0,0,0,0,0,2,2,4,7,8,12,9,6]
     },
     {
       label: 'Paid Email Enquiries',
       color: '#ea4335',
-      data: [0,0,0,0,0,0,0,0,0,0,0,2,2,4,2,5,8]
+      group: 'paid',
+      data: [0,0,0,0,0,0,0,0,0,0,0,2,2,4,2,5,8,3]
     },
     {
-      label: 'Brochure Downloads',
+      label: 'Paid Brochure Downloads',
       color: '#9c27b0',
-      data: [5,1,8,12,12,7,14,2,3,12,11,10,9,13,14,14,11]
+      group: 'paid',
+      data: [5,1,8,12,12,7,14,2,3,12,11,10,9,13,14,14,12,22]
     }
   ];
 
-  var spendData = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38];
+  var spendData = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38,2044.70];
 
   var ctx = document.getElementById('conversionsChart').getContext('2d');
+  // Default is false
+  var conversionsLabelsVisible = false;
   var myChart = new Chart(ctx, {
     type: 'bar',
+    plugins: [ChartDataLabels],
     data: {
       labels: months,
       datasets: campaigns.map(function(c) {
@@ -983,6 +1036,19 @@
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
+        datalabels: {
+          display: function(ctx) {
+            if (!conversionsLabelsVisible) return false;
+            return ctx.dataset.data[ctx.dataIndex] !== 0;
+          },
+          align: function(ctx) { return ctx.dataset.type === 'line' ? 'top' : 'center'; },
+          color: function(ctx) { return ctx.dataset.type === 'line' ? '#f9ab00' : '#fff'; },
+          font: { size: 10, weight: '700', family: "'Segoe UI', Arial, sans-serif" },
+          formatter: function(v, ctx) {
+            if (ctx.dataset.type === 'line') return '£' + v.toLocaleString('en-GB', {maximumFractionDigits:0});
+            return v;
+          }
+        },
         tooltip: {
           mode: 'index',
           callbacks: {
@@ -1010,20 +1076,20 @@
         y: {
           stacked: true,
           min: 0,
-          max: 50,
+          max: 80,
           position: 'left',
           grid: { color: '#f0f0f0' },
-          ticks: { stepSize: 10, font: { size: 11 }, color: '#5f6368' },
+          ticks: { stepSize: 20, font: { size: 11 }, color: '#5f6368' },
           title: { display: true, text: 'Conversions', color: '#5f6368', font: { size: 12 } }
         },
         ySpend: {
           type: 'linear',
           position: 'right',
           min: 0,
-          max: 1800,
+          max: 2400,
           grid: { drawOnChartArea: false },
           ticks: {
-            stepSize: 300,
+            stepSize: 400,
             font: { size: 11 },
             color: '#5f6368',
             callback: function(val) { return '£' + val.toLocaleString('en-GB'); }
@@ -1034,10 +1100,14 @@
     }
   });
 
-  /* Build interactive custom legend — bars + spend line */
+  /* Build interactive DISTINCTLY GROUPED custom legend */
   var legendEl = document.getElementById('chartLegend');
+  legendEl.innerHTML = '';
 
-  /* Bar series */
+  var paidContainer = document.createElement('div');
+  paidContainer.className = 'legend-group-container';
+  paidContainer.innerHTML = '<span class="legend-group-title">Paid Performance</span>';
+
   campaigns.forEach(function(c, i) {
     var item = document.createElement('div');
     item.className = 'legend-item';
@@ -1048,10 +1118,11 @@
       item.classList.toggle('dimmed', meta.hidden);
       myChart.update();
     });
-    legendEl.appendChild(item);
+    
+    paidContainer.appendChild(item);
   });
 
-  /* Ad Spend line */
+  /* Append Ad Spend item to Paid Grouping container */
   var spendIndex = campaigns.length;
   var spendItem = document.createElement('div');
   spendItem.className = 'legend-item';
@@ -1062,12 +1133,23 @@
     spendItem.classList.toggle('dimmed', meta.hidden);
     myChart.update();
   });
-  legendEl.appendChild(spendItem);
+  paidContainer.appendChild(spendItem);
+
+  legendEl.appendChild(paidContainer);
+  
+  function toggleConversionsLabels() {
+    conversionsLabelsVisible = !conversionsLabelsVisible;
+    var btn = document.getElementById('conversionsLabelToggle');
+    btn.classList.toggle('active', conversionsLabelsVisible);
+    btn.innerHTML = conversionsLabelsVisible
+      ? '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels'
+      : '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels';
+    myChart.update();
+  }
 
   /* ── Cost per Contact line chart ── */
-  var cpcData = [0,54.93,73.38,47.72,73.11,80.52,55.23,103.78,115.76,45.52,58.87,61.10,53.83,39.80,40.80,32.77,42.29];
+  var cpcData = [0,54.93,73.38,47.72,73.11,80.52,55.23,103.78,115.76,45.52,58.87,61.10,53.83,39.80,40.80,32.77,41.01,58.42];
 
-  /* Register datalabels plugin for this chart only */
   var cpcCtx = document.getElementById('cpcChart').getContext('2d');
   var cpcLabelsVisible = true;
 
@@ -1157,8 +1239,8 @@
       : '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels';
     cpcChart.update();
   }
+
   // ===== MAP FUNCTIONALITY =====
-  
   const cityCoordinates = {
     'London': {lat: 51.5074, lng: -0.1278}, 'Wakefield': {lat: 53.6832, lng: -1.4969}, 'Birmingham': {lat: 52.5086, lng: -1.8754},
     'Manchester': {lat: 53.4808, lng: -2.2426}, 'Leeds': {lat: 53.8008, lng: -1.5491}, 'Darnall': {lat: 53.3700, lng: -1.3700},
@@ -1190,33 +1272,94 @@
   };
   
   const conversionLocations = [
-    {city: 'London', conversions: 19.56}, {city: 'Wakefield', conversions: 10.0}, {city: 'Birmingham', conversions: 8.0},
-    {city: 'Manchester', conversions: 6.0}, {city: 'Leeds', conversions: 3.0}, {city: 'Darnall', conversions: 3.0},
-    {city: 'Leicester', conversions: 3.0}, {city: 'Chipping Norton', conversions: 3.0}, {city: 'Ossett', conversions: 2.0},
-    {city: 'Widnes', conversions: 2.0}, {city: 'Tamworth', conversions: 2.0}, {city: 'Penistone', conversions: 2.0},
-    {city: 'Barnsley', conversions: 2.0}, {city: 'Lancaster', conversions: 2.0}, {city: 'Bradford', conversions: 2.0},
-    {city: 'Macclesfield', conversions: 2.0}, {city: 'Scunthorpe', conversions: 1.0}, {city: 'Belper', conversions: 1.0},
-    {city: 'Portsmouth', conversions: 1.0}, {city: 'Rochdale', conversions: 1.0}, {city: 'Worksop', conversions: 1.0},
-    {city: 'Ulverston', conversions: 1.0}, {city: 'Halifax', conversions: 1.0}, {city: 'Selby', conversions: 1.0},
-    {city: 'Kingston upon Hull', conversions: 1.0}, {city: 'Linthwaite', conversions: 1.0}, {city: 'Lofthouse', conversions: 1.0},
-    {city: 'Staveley', conversions: 1.0}, {city: 'Ashford', conversions: 1.0}, {city: 'Mansfield', conversions: 1.0},
-    {city: 'Brighouse', conversions: 1.0}, {city: 'Wellingborough', conversions: 1.0}, {city: 'Worcester', conversions: 1.0},
-    {city: 'Sunderland', conversions: 1.0}, {city: 'Stockport', conversions: 1.0}, {city: 'Bridgwater', conversions: 1.0},
-    {city: 'Shepshed', conversions: 1.0}, {city: 'Batley', conversions: 1.0}, {city: 'Middlesbrough', conversions: 1.0},
-    {city: 'Colchester', conversions: 1.0}, {city: 'Cleckheaton', conversions: 1.0}, {city: 'Warwick', conversions: 1.0},
-    {city: 'Dukinfield', conversions: 1.0}, {city: 'Ormskirk', conversions: 1.0}, {city: 'Sheffield', conversions: 1.0},
-    {city: 'Kidsgrove', conversions: 1.0}, {city: 'Warrington', conversions: 1.0}, {city: 'Harlow', conversions: 1.0},
-    {city: 'Liverpool', conversions: 1.0}, {city: 'Royston', conversions: 1.0}, {city: 'Dagenham', conversions: 1.0},
-    {city: 'Sudbury', conversions: 1.0}, {city: 'Speke', conversions: 1.0}, {city: 'Gedling', conversions: 1.0},
-    {city: 'Salford', conversions: 1.0}, {city: 'The Royal Town of Sutton Coldfield', conversions: 1.0}, {city: 'West Bromwich', conversions: 1.0},
-    {city: 'Bicester', conversions: 1.0}, {city: 'Bath', conversions: 1.0}, {city: 'Fakenham', conversions: 1.0},
-    {city: 'Stanningley', conversions: 1.0}, {city: 'Ipswich', conversions: 1.0}, {city: 'Lowestoft', conversions: 1.0},
-    {city: 'Sherburn in Elmet', conversions: 1.0}, {city: 'Ashton-on-Ribble', conversions: 1.0}, {city: 'Ellesmere Port', conversions: 1.0},
-    {city: 'Stourbridge', conversions: 1.0}, {city: 'Alfreton', conversions: 1.0}, {city: 'Nottingham', conversions: 1.0},
-    {city: 'Hove', conversions: 1.0}, {city: 'Cannock', conversions: 1.0}, {city: 'Long Eaton', conversions: 1.0},
-    {city: 'Aylesford', conversions: 1.0}, {city: 'Newcastle-under-Lyme', conversions: 1.0}, {city: 'Barrow upon Soar', conversions: 1.0},
-    {city: 'Stoke-on-Trent', conversions: 1.0}, {city: 'Cramlington', conversions: 1.0}, {city: 'Redditch', conversions: 1.0},
-    {city: 'Birchwood', conversions: 1.0}, {city: 'Reading', conversions: 0.98}
+    {city: 'London', conversions: 17.19},
+    {city: 'Wakefield', conversions: 11.5},
+    {city: 'Birmingham', conversions: 9.0},
+    {city: 'Manchester', conversions: 5.0},
+    {city: 'Leeds', conversions: 4.0},
+    {city: 'Darnall', conversions: 3.0},
+    {city: 'Leicester', conversions: 3.0},
+    {city: 'Tamworth', conversions: 2.89},
+    {city: 'Glenmavis', conversions: 2.0},
+    {city: 'Barnsley', conversions: 2.0},
+    {city: 'Sheffield', conversions: 2.0},
+    {city: 'Bradford', conversions: 2.0},
+    {city: 'Macclesfield', conversions: 2.0},
+    {city: 'Lancaster', conversions: 2.0},
+    {city: 'Penistone', conversions: 2.0},
+    {city: 'Ossett', conversions: 2.0},
+    {city: 'Staveley', conversions: 2.0},
+    {city: 'Ipswich', conversions: 2.0},
+    {city: 'Sherburn in Elmet', conversions: 1.25},
+    {city: 'Royston', conversions: 1.0},
+    {city: 'Scunthorpe', conversions: 1.0},
+    {city: 'Salford', conversions: 1.0},
+    {city: 'Ormskirk', conversions: 1.0},
+    {city: 'Rochdale', conversions: 1.0},
+    {city: 'Shepshed', conversions: 1.0},
+    {city: 'Nottingham', conversions: 1.0},
+    {city: 'Paisley', conversions: 1.0},
+    {city: 'Redditch', conversions: 1.0},
+    {city: 'Alfreton', conversions: 1.0},
+    {city: 'Shetland', conversions: 1.0},
+    {city: 'Smethwick', conversions: 1.0},
+    {city: 'Worcester', conversions: 1.0},
+    {city: 'West Bromwich', conversions: 1.0},
+    {city: 'Washington', conversions: 1.0},
+    {city: 'Warwick', conversions: 1.0},
+    {city: 'Warrington', conversions: 1.0},
+    {city: 'Ulverston', conversions: 1.0},
+    {city: 'The Royal Town of Sutton Coldfield', conversions: 1.0},
+    {city: 'Telford', conversions: 1.0},
+    {city: 'Sunderland', conversions: 1.0},
+    {city: 'Sudbury', conversions: 1.0},
+    {city: 'Stourbridge', conversions: 1.0},
+    {city: 'Stoke-on-Trent', conversions: 1.0},
+    {city: 'Stockport', conversions: 1.0},
+    {city: 'Stanningley', conversions: 1.0},
+    {city: 'Speke', conversions: 1.0},
+    {city: 'Southampton', conversions: 1.0},
+    {city: 'Nairn', conversions: 1.0},
+    {city: 'Newcastle-under-Lyme', conversions: 1.0},
+    {city: 'Long Eaton', conversions: 1.0},
+    {city: 'Middlesbrough', conversions: 1.0},
+    {city: 'Birchwood', conversions: 1.0},
+    {city: 'Cleckheaton', conversions: 1.0},
+    {city: 'Chipping Norton', conversions: 1.0},
+    {city: 'Cannock', conversions: 1.0},
+    {city: 'Broadstairs', conversions: 1.0},
+    {city: 'Bristol', conversions: 1.0},
+    {city: 'Brighouse', conversions: 1.0},
+    {city: 'Bridgwater', conversions: 1.0},
+    {city: 'Bicester', conversions: 1.0},
+    {city: 'Mansfield', conversions: 1.0},
+    {city: 'Belper', conversions: 1.0},
+    {city: 'Batley', conversions: 1.0},
+    {city: 'Bath', conversions: 1.0},
+    {city: 'Barrow upon Soar', conversions: 1.0},
+    {city: 'Aylesford', conversions: 1.0},
+    {city: 'Axminster', conversions: 1.0},
+    {city: 'Ashton-on-Ribble', conversions: 1.0},
+    {city: 'Colchester', conversions: 1.0},
+    {city: 'Cramlington', conversions: 1.0},
+    {city: 'Dagenham', conversions: 1.0},
+    {city: 'East Kilbride', conversions: 1.0},
+    {city: 'Lowestoft', conversions: 1.0},
+    {city: 'Ashford', conversions: 1.0},
+    {city: 'Lofthouse', conversions: 1.0},
+    {city: 'Linthwaite', conversions: 1.0},
+    {city: 'Kingston upon Hull', conversions: 1.0},
+    {city: 'Kidsgrove', conversions: 1.0},
+    {city: 'Keighley', conversions: 1.0},
+    {city: 'Hove', conversions: 1.0},
+    {city: 'Harlow', conversions: 1.0},
+    {city: 'Halifax', conversions: 1.0},
+    {city: 'Glenrothes', conversions: 1.0},
+    {city: 'Gedling', conversions: 1.0},
+    {city: 'Fakenham', conversions: 1.0},
+    {city: 'Ellesmere Port', conversions: 1.0},
+    {city: 'Worksop', conversions: 1.0},
+    {city: 'Reading', conversions: 0.98}
   ];
   
   let conversionMap = null;
@@ -1293,13 +1436,14 @@
     }
   });
 
-
   /* ── Ad Spending line chart ── */
-  var adSpendMonthly = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38];
+  var adSpendMonthly = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38,2044.70];
 
   var adSpendCtx = document.getElementById('adSpendChart').getContext('2d');
-  new Chart(adSpendCtx, {
+  var adSpendLabelsVisible = true;
+  var adSpendChart = new Chart(adSpendCtx, {
     type: 'line',
+    plugins: [ChartDataLabels],
     data: {
       labels: months,
       datasets: [{
@@ -1314,15 +1458,24 @@
         pointHoverRadius: 7,
         borderWidth: 2.5,
         tension: 0.35,
-        fill: true
+        fill: true,
+        datalabels: {
+          display: function(ctx) { return adSpendLabelsVisible && ctx.dataset.data[ctx.dataIndex] !== 0; },
+          align: 'top',
+          anchor: 'end',
+          offset: 4,
+          font: { size: 10, weight: '700', family: "'Segoe UI', Arial, sans-serif" },
+          color: '#f9ab00',
+          formatter: function(v) { return '£' + v.toFixed(2); }
+        }
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { top: 28 } },
       plugins: {
         legend: { display: false },
-        datalabels: { display: false },
         tooltip: {
           callbacks: {
             label: function(item) {
@@ -1338,10 +1491,10 @@
         },
         y: {
           min: 0,
-          max: 1600,
+          max: 2400,
           grid: { color: '#f0f0f0' },
           ticks: {
-            stepSize: 200,
+            stepSize: 400,
             font: { size: 11 },
             color: '#5f6368',
             callback: function(val) { return '£' + val.toLocaleString('en-GB'); }
@@ -1351,6 +1504,16 @@
       }
     }
   });
+
+  function toggleAdSpendLabels() {
+    adSpendLabelsVisible = !adSpendLabelsVisible;
+    var btn = document.getElementById('adSpendLabelToggle');
+    btn.classList.toggle('active', adSpendLabelsVisible);
+    btn.innerHTML = adSpendLabelsVisible
+      ? '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels'
+      : '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels';
+    adSpendChart.update();
+  }
 </script>
 
 <div id="mapModal" class="map-modal">
