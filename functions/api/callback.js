@@ -39,11 +39,18 @@ export async function onRequestGet(context) {
     expirationTtl: ttl,
   });
 
+  // Also keep a copy under a fixed key (no expiry) so the scheduled Slack digest
+  // can authenticate headless. Google only returns a refresh_token on first consent,
+  // so only overwrite when we actually got one.
+  if (tokens.refresh_token) {
+    await env.SESSIONS.put("cron:refreshToken", tokens.refresh_token);
+  }
+
   // Drop the session cookie and send the user back to the app.
   return new Response(null, {
     status: 302,
     headers: {
-      Location: "/dashboard.html",
+      Location: "/",
       "Set-Cookie": `session=${sessionId}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${ttl}`,
     },
   });
