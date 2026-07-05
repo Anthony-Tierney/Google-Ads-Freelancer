@@ -161,12 +161,28 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
   try {
     const budget = budgets[id] || 0;
     if (budget > 0 && enabledCount > 0) {
-      const spendR = await search("SELECT metrics.cost_micros FROM campaign WHERE segments.date DURING THIS_MONTH AND campaign.status != 'REMOVED'");
+      const [spendR, last7R] = await Promise.all([
+        search("SELECT metrics.cost_micros FROM campaign WHERE segments.date DURING THIS_MONTH AND campaign.status != 'REMOVED'"),
+        search("SELECT metrics.cost_micros FROM campaign WHERE segments.date DURING LAST_7_DAYS AND campaign.status != 'REMOVED'"),
+      ]);
       let spend = 0;
       for (const r of spendR.results || []) spend += Number(r.metrics?.costMicros || 0) / 1e6;
+      let last7 = 0;
+      for (const r of last7R.results || []) last7 += Number(r.metrics?.costMicros || 0) / 1e6;
       const st = paceStatus(spend, budget, mi);
-      if (st === "over") issues.push({ level: 3, kind: "pacing", text: `Over pace \u2014 \u00a3${money(spend)} of \u00a3${money(budget)} this month` });
-      else if (st === "under") issues.push({ level: 2, kind: "pacing", text: `Under pace \u2014 \u00a3${money(spend)} of \u00a3${money(budget)} this month` });
+      if (st === "over" || st === "under") {
+        const avgDaily = last7 / 7;
+        const remaining = Math.max(0, mi.daysInMonth - mi.dayOfMonth);
+        const projected = spend + avgDaily * remaining;
+        const variance = projected - budget;
+        const dir = variance >= 0 ? `\u00a3${money(variance)} over` : `\u00a3${money(-variance)} under`;
+        const label = st === "over" ? "Over pace" : "Under pace";
+        issues.push({
+          level: st === "over" ? 3 : 2,
+          kind: "pacing",
+          text: `${label}: avg. spend (last 7 days) is \u00a3${money(avgDaily)}/day. Projected spend this month is ~\u00a3${money(projected)}, ${dir} your \u00a3${money(budget)} budget.`,
+        });
+      }
     }
   } catch { /* non-fatal */ }
 
@@ -199,15 +215,29 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
           case "STRUCTURED_SNIPPET": c.snippets++; break;
         }
       }
+      const redByType = {}, amberByType = {};
+      for (const key of ASSET_KEYS) { redByType[key] = 0; amberByType[key] = 0; }
       let red = 0, amber = 0;
       for (const c of Object.values(camps)) {
         let lvl = 0;
-        for (const key of ASSET_KEYS) { const L = assetCellLevel(key, c[key]); if (L > lvl) lvl = L; }
+        for (const key of ASSET_KEYS) {
+          const L = assetCellLevel(key, c[key]);
+          if (L === 2) redByType[key]++; else if (L === 1) amberByType[key]++;
+          if (L > lvl) lvl = L;
+        }
         if (lvl === 2) red++; else if (lvl === 1) amber++;
       }
-      assetDiag = { ran: true, enabledCampaigns: Object.keys(camps).length, assetRows: rows.length, served, skippedPs, red, amber, sampleRow: rows[0] || null, sampleCounts: Object.values(camps).slice(0, 3) };
-      if (red) issues.push({ level: 3, kind: "assets", text: `${red} campaign${red > 1 ? "s" : ""} missing key assets` });
-      else if (amber) issues.push({ level: 2, kind: "assets", text: `${amber} campaign${amber > 1 ? "s" : ""} with asset gaps` });
+      assetDiag = { ran: true, enabledCampaigns: Object.keys(camps).length, assetRows: rows.length, served, skippedPs, red, amber, redByType, amberByType, sampleRow: rows[0] || null, sampleCounts: Object.values(camps).slice(0, 3) };
+      // Red = missing entirely (0 of that asset). One bullet per asset type.
+      for (const key of ASSET_KEYS) {
+        const n = redByType[key];
+        if (n) issues.push({ level: 3, kind: "assets", text: `${n} campaign${n > 1 ? "s have" : " has"} 0 ${ASSET_LABELS[key]}` });
+      }
+      // Amber = present but below the recommended count.
+      for (const key of ASSET_KEYS) {
+        const n = amberByType[key];
+        if (n) issues.push({ level: 2, kind: "assets", text: `${n} campaign${n > 1 ? "s have" : " has"} fewer than ${GREEN_THRESHOLD[key]} ${ASSET_LABELS[key]}` });
+      }
     }
   } catch (e) { assetDiag = { ran: false, error: (e && e.message) ? e.message : String(e) }; }
 
@@ -217,6 +247,8 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
 // --- shared rule helpers (mirror the dashboard) ---
 
 const ASSET_KEYS = ["sitelinks", "landscape", "square", "callouts", "snippets"];
+const ASSET_LABELS = { sitelinks: "Sitelinks", landscape: "Landscape images", square: "Square images", callouts: "Callouts", snippets: "Structured Snippets" };
+const GREEN_THRESHOLD = { sitelinks: 8, landscape: 2, square: 5, callouts: 10, snippets: 1 };
 
 function assetCellLevel(key, v) {
   if (key === "sitelinks") return v >= 8 ? 0 : (v >= 1 ? 1 : 2);
@@ -267,17 +299,16 @@ function buildSlack(flagged) {
   }
   const top = (a) => Math.max(...a.issues.map((i) => i.level));
   flagged.sort((a, b) => top(b) - top(a));
-  const lines = flagged.map((a) => {
-    const parts = a.issues.slice().sort((x, y) => y.level - x.level).map((i) => i.text).join(" \u00b7 ");
-    return `${EMOJI[top(a)]} *${a.name}* \u2014 ${parts}`;
-  });
   const header = `*AdLytics \u2014 ${flagged.length} account${flagged.length > 1 ? "s" : ""} need attention*`;
-  return {
-    text: header + "\n" + lines.join("\n"),
-    blocks: [
-      { type: "section", text: { type: "mrkdwn", text: header } },
-      { type: "section", text: { type: "mrkdwn", text: lines.join("\n") } },
-      { type: "context", elements: [{ type: "mrkdwn", text: "\uD83D\uDD34 suspended / disapproved / over-pace / missing assets \u00b7 \uD83D\uDFE0 limited / under-pace / asset gaps \u00b7 \uD83D\uDFE1 CPA drift" }] },
-    ],
-  };
+  const blocks = [{ type: "section", text: { type: "mrkdwn", text: header } }];
+  const textParts = [header];
+  for (const a of flagged) {
+    const emoji = EMOJI[top(a)];
+    const bullets = a.issues.slice().sort((x, y) => y.level - x.level).map((i) => `\u2022 ${i.text}`).join("\n");
+    const section = `${emoji} *${a.name}*\n${bullets}`;
+    blocks.push({ type: "divider" });
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: section } });
+    textParts.push(`${emoji} ${a.name}\n${bullets}`);
+  }
+  return { text: textParts.join("\n\n"), blocks };
 }
