@@ -169,19 +169,14 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
       for (const r of spendR.results || []) spend += Number(r.metrics?.costMicros || 0) / 1e6;
       let last7 = 0;
       for (const r of last7R.results || []) last7 += Number(r.metrics?.costMicros || 0) / 1e6;
-      const st = paceStatus(spend, budget, mi);
-      if (st === "over" || st === "under") {
-        const avgDaily = last7 / 7;
-        const remaining = Math.max(0, mi.daysInMonth - mi.dayOfMonth);
-        const projected = spend + avgDaily * remaining;
-        const variance = projected - budget;
-        const dir = variance >= 0 ? `\u00a3${money(variance)} over` : `\u00a3${money(-variance)} under`;
-        const label = st === "over" ? "Over pace" : "Under pace";
-        issues.push({
-          level: st === "over" ? 3 : 2,
-          kind: "pacing",
-          text: `${label}: avg. spend (last 7 days) is \u00a3${money(avgDaily)}/day. Projected spend this month is ~\u00a3${money(projected)}, ${dir} your \u00a3${money(budget)} budget.`,
-        });
+      const avgDaily = last7 / 7;
+      const remaining = Math.max(0, mi.daysInMonth - mi.dayOfMonth);
+      const projected = spend + avgDaily * remaining;
+      const st = projectionStatus(spend, projected, budget);
+      if (st === "over") {
+        issues.push({ level: 3, kind: "pacing", text: `Projected to overspend by \u00a3${money(projected - budget)} \u2014 at \u00a3${money(avgDaily)}/day (last 7 days), projected spend this month is ~\u00a3${money(projected)} vs your \u00a3${money(budget)} budget.` });
+      } else if (st === "under") {
+        issues.push({ level: 2, kind: "pacing", text: `Projected to underspend by \u00a3${money(budget - projected)} \u2014 at \u00a3${money(avgDaily)}/day (last 7 days), projected spend this month is ~\u00a3${money(projected)} vs your \u00a3${money(budget)} budget.` });
       }
     }
   } catch { /* non-fatal */ }
@@ -259,12 +254,13 @@ function assetCellLevel(key, v) {
   return v === 0 ? 2 : 0;
 }
 
-function paceStatus(spend, budget, mi) {
+function projectionStatus(spend, projected, budget) {
   if (!budget || budget <= 0) return null;
-  const expected = budget * mi.pace;
-  if ((spend / budget) >= 1) return "over";
-  if (spend > expected * 1.1) return "over";
-  if (spend < expected * 0.9) return "under";
+  if (spend >= budget) return "over";     // already over budget
+  const band = budget * 0.05;             // 5% tolerance either side
+  const diff = projected - budget;
+  if (diff > band) return "over";         // projected to overspend
+  if (diff < -band) return "under";       // projected to underspend
   return "ontrack";
 }
 
