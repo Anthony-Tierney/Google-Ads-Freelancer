@@ -170,14 +170,8 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
       let last7 = 0;
       for (const r of last7R.results || []) last7 += Number(r.metrics?.costMicros || 0) / 1e6;
       const avgDaily = last7 / 7;
-      const remaining = Math.max(0, mi.daysInMonth - mi.dayOfMonth);
-      const projected = spend + avgDaily * remaining;
-      const st = projectionStatus(spend, projected, budget);
-      if (st === "over") {
-        issues.push({ level: 3, kind: "pacing", text: `Projected to overspend by \u00a3${money(projected - budget)} \u2014 at \u00a3${money(avgDaily)}/day (last 7 days), projected spend this month is ~\u00a3${money(projected)} vs your \u00a3${money(budget)} budget.` });
-      } else if (st === "under") {
-        issues.push({ level: 2, kind: "pacing", text: `Projected to underspend by \u00a3${money(budget - projected)} \u2014 at \u00a3${money(avgDaily)}/day (last 7 days), projected spend this month is ~\u00a3${money(projected)} vs your \u00a3${money(budget)} budget.` });
-      }
+      const alert = pacingAlert(spend, budget, avgDaily, mi);
+      if (alert) issues.push({ level: alert.level, kind: "pacing", text: alert.text });
     }
   } catch { /* non-fatal */ }
 
@@ -254,14 +248,48 @@ function assetCellLevel(key, v) {
   return v === 0 ? 2 : 0;
 }
 
-function projectionStatus(spend, projected, budget) {
+const fmtCurrency0 = (n) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(Math.round(n || 0));
+
+// Budget-pacing alert text — mirrors the dashboard's buildRecommendation exactly, so
+// the Slack line reads the same as the account card's recommendation. Returns
+// { level, text } for over/under projections, or null when on track.
+function pacingAlert(spend, budget, avg7, mi) {
   if (!budget || budget <= 0) return null;
-  if (spend >= budget) return "over";     // already over budget
-  const band = budget * 0.05;             // 5% tolerance either side
+  const remainingDays = Math.max(0, mi.daysInMonth - mi.dayOfMonth);
+  const budgetStr = fmtCurrency0(budget);
+  const days = (n) => n + (n === 1 ? " day" : " days");
+  const projected = spend + avg7 * remainingDays;
+
+  if (remainingDays <= 0) {
+    if (spend > budget) return { level: 3, text: `The month is complete. Final spend of ${fmtCurrency0(spend)} came in ${fmtCurrency0(spend - budget)} over the ${budgetStr} monthly budget.` };
+    if (spend < budget * 0.95) return { level: 2, text: `The month is complete. Final spend of ${fmtCurrency0(spend)} came in ${fmtCurrency0(budget - spend)} under the ${budgetStr} monthly budget.` };
+    return null;
+  }
+
+  if (spend >= budget) {
+    return { level: 3, text: `Spend has already passed the ${budgetStr} monthly budget by ${fmtCurrency0(spend - budget)} with ${days(remainingDays)} left. Consider pausing or lowering daily spend to limit further overspend.` };
+  }
+
+  const requiredDaily = (budget - spend) / remainingDays;
+  const band = budget * 0.05;
   const diff = projected - budget;
-  if (diff > band) return "over";         // projected to overspend
-  if (diff < -band) return "under";       // projected to underspend
-  return "ontrack";
+
+  if (diff > band) {
+    const z = avg7 - requiredDaily;
+    return { level: 3, text: `Based on spending for the past 7 days, this account is projected to overspend by ${fmtCurrency0(diff)} versus the client\u2019s ${budgetStr} monthly budget. Reducing average daily spend by ${fmtCurrency0(z)} \u2014 from ${fmtCurrency0(avg7)} to ${fmtCurrency0(requiredDaily)} per day across the remaining ${days(remainingDays)} \u2014 would bring spend in on budget.` };
+  }
+  if (diff < -band) {
+    const z = requiredDaily - avg7;
+    const impractical = remainingDays <= 7 && (avg7 <= 0 || requiredDaily > avg7 * 1.5);
+    let msg = `Based on spending for the past 7 days, this account is projected to underspend by ${fmtCurrency0(-diff)} versus the client\u2019s ${budgetStr} monthly budget.`;
+    if (impractical) {
+      msg += ` With only ${days(remainingDays)} left, closing the gap would require a disproportionate jump in daily spend, so no budget change is recommended.`;
+    } else {
+      msg += ` Increasing average daily spend by ${fmtCurrency0(z)} \u2014 from ${fmtCurrency0(avg7)} to ${fmtCurrency0(requiredDaily)} per day across the remaining ${days(remainingDays)} \u2014 would use the full budget.`;
+    }
+    return { level: 2, text: msg };
+  }
+  return null;
 }
 
 function monthInfo() {
@@ -289,6 +317,10 @@ async function loadBudgets(env) {
 
 const EMOJI = { 3: "\uD83D\uDD34", 2: "\uD83D\uDFE0", 1: "\uD83D\uDFE1" }; // red / orange / yellow
 
+// Group an account's issues under page-style headings in the Slack message.
+const CATEGORY = { suspended: "Account Status", disapproved: "Policy Issues", limited: "Policy Issues", pacing: "Budget Pacing", cpa: "Bidding Strategies", assets: "Assets" };
+const CATEGORY_ORDER = ["Account Status", "Policy Issues", "Budget Pacing", "Bidding Strategies", "Assets"];
+
 function buildSlack(flagged) {
   if (!flagged.length) {
     return { text: "\u2705 AdLytics daily check: all accounts look healthy." };
@@ -300,11 +332,20 @@ function buildSlack(flagged) {
   const textParts = [header];
   for (const a of flagged) {
     const emoji = EMOJI[top(a)];
-    const bullets = a.issues.slice().sort((x, y) => y.level - x.level).map((i) => `\u2022 ${i.text}`).join("\n");
-    const section = `${emoji} *${a.name}*\n${bullets}`;
+    const byCat = {};
+    for (const i of a.issues) { const cat = CATEGORY[i.kind] || "Other"; (byCat[cat] = byCat[cat] || []).push(i); }
+    const lines = [];
+    for (const cat of CATEGORY_ORDER) {
+      const items = byCat[cat];
+      if (!items || !items.length) continue;
+      items.sort((x, y) => y.level - x.level);
+      lines.push(`*${cat}:*`);
+      for (const i of items) lines.push(`\u2022 ${i.text}`);
+    }
+    const section = `${emoji} *${a.name}*\n${lines.join("\n")}`;
     blocks.push({ type: "divider" });
     blocks.push({ type: "section", text: { type: "mrkdwn", text: section } });
-    textParts.push(`${emoji} ${a.name}\n${bullets}`);
+    textParts.push(`${emoji} ${a.name}\n${lines.join("\n")}`);
   }
   return { text: textParts.join("\n\n"), blocks };
 }
