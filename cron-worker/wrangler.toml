@@ -1,0 +1,16 @@
+name = "adlytics-digest-cron"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# When the digest runs. Times are UTC. Default: 08:00 UTC daily.
+# Examples: ["0 7 * * 1-5"] = 07:00 UTC Mon–Fri.
+[triggers]
+crons = ["0 8 * * *"]
+
+[vars]
+# The AdLytics digest endpoint on your Pages app.
+DIGEST_URL = "https://anthonytierney.co.uk/api/digest"
+
+# CRON_SECRET is a SECRET, not a var — do not put it here.
+# Set it with:  wrangler secret put CRON_SECRET
+# (use the exact same value you set as CRON_SECRET on the Pages project)
