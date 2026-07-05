@@ -105,7 +105,7 @@ async function auditAccount(env, accessToken, id) {
   // 2) Policy — disapproved / limited ads on enabled campaigns
   try {
     const ads = (await search(
-      "SELECT ad_group_ad.policy_summary.approval_status FROM ad_group_ad WHERE ad_group_ad.policy_summary.approval_status != 'APPROVED' AND campaign.status = 'ENABLED' AND ad_group_ad.status != 'REMOVED'"
+      "SELECT ad_group_ad.policy_summary.approval_status FROM ad_group_ad WHERE ad_group_ad.policy_summary.approval_status != 'APPROVED' AND campaign.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND ad_group_ad.status = 'ENABLED'"
     )).results || [];
     let disapproved = 0, limited = 0;
     for (const r of ads) {
@@ -170,4 +170,3 @@ function buildSlack(flagged) {
     ],
   };
 }
-
