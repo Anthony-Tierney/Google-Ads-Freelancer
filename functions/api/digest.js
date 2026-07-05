@@ -50,9 +50,13 @@ export async function onRequestGet(context) {
   const list = await adsRequest(env, accessToken, "customers:listAccessibleCustomers");
   const ids = (list.resourceNames || []).map((rn) => rn.split("/")[1]);
 
+  // User-set monthly budgets (for pacing) + where we are in the month.
+  const budgets = await loadBudgets(env);
+  const mi = monthInfo();
+
   const results = await mapLimit(ids, 5, async (id) => {
     try {
-      return await auditAccount(env, accessToken, id);
+      return await auditAccount(env, accessToken, id, budgets, mi);
     } catch (e) {
       return { id, name: formatId(id), issues: [], error: (e && e.message) ? e.message : String(e) };
     }
@@ -89,7 +93,7 @@ export async function onRequestGet(context) {
 }
 
 // Run the checks for a single account. Returns { id, name, issues:[{level,kind,text}] }.
-async function auditAccount(env, accessToken, id) {
+async function auditAccount(env, accessToken, id, budgets, mi) {
   const search = (query) => adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query });
 
   const cust = (await search("SELECT customer.descriptive_name, customer.manager, customer.status FROM customer LIMIT 1")).results?.[0]?.customer || {};
@@ -101,6 +105,13 @@ async function auditAccount(env, accessToken, id) {
   if ((cust.status || "").toUpperCase() === "SUSPENDED") {
     issues.push({ level: 3, kind: "suspended", text: "Account is SUSPENDED" });
   }
+
+  // Enabled campaigns (with Target CPA) — reused by the CPA, pacing and asset checks.
+  let campEnabled = [];
+  try {
+    campEnabled = (await search("SELECT campaign.id, campaign.target_cpa.target_cpa_micros, campaign.maximize_conversions.target_cpa_micros FROM campaign WHERE campaign.status = 'ENABLED'")).results || [];
+  } catch { /* leave empty */ }
+  const enabledCount = campEnabled.length;
 
   // 2) Policy — disapproved / limited ads on enabled campaigns
   try {
@@ -119,33 +130,128 @@ async function auditAccount(env, accessToken, id) {
 
   // 3) CPA drift — enabled campaigns whose 30-day CPA is well under target
   try {
-    const [campR, metR] = await Promise.all([
-      search("SELECT campaign.id, campaign.target_cpa.target_cpa_micros, campaign.maximize_conversions.target_cpa_micros FROM campaign WHERE campaign.status = 'ENABLED'"),
-      search("SELECT campaign.id, metrics.cost_micros, metrics.conversions FROM campaign WHERE campaign.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS"),
-    ]);
     const target = {};
-    for (const r of campR.results || []) {
+    for (const r of campEnabled) {
       const micros = r.campaign?.targetCpa?.targetCpaMicros ?? r.campaign?.maximizeConversions?.targetCpaMicros;
       if (micros != null) target[r.campaign.id] = Number(micros) / 1e6;
     }
-    const agg = {};
-    for (const r of metR.results || []) {
-      const cid = r.campaign?.id;
-      if (!cid) continue;
-      (agg[cid] = agg[cid] || { cost: 0, conv: 0 });
-      agg[cid].cost += Number(r.metrics?.costMicros || 0) / 1e6;
-      agg[cid].conv += Number(r.metrics?.conversions || 0);
+    if (Object.keys(target).length) {
+      const metR = await search("SELECT campaign.id, metrics.cost_micros, metrics.conversions FROM campaign WHERE campaign.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS");
+      const agg = {};
+      for (const r of metR.results || []) {
+        const cid = r.campaign?.id;
+        if (!cid) continue;
+        (agg[cid] = agg[cid] || { cost: 0, conv: 0 });
+        agg[cid].cost += Number(r.metrics?.costMicros || 0) / 1e6;
+        agg[cid].conv += Number(r.metrics?.conversions || 0);
+      }
+      let drift = 0;
+      for (const cid of Object.keys(target)) {
+        const a = agg[cid];
+        if (!a || a.conv <= 0) continue;
+        if (a.cost / a.conv <= target[cid] * CPA_UNDER) drift++;
+      }
+      if (drift) issues.push({ level: 1, kind: "cpa", text: `${drift} campaign${drift > 1 ? "s" : ""} with CPA well under target` });
     }
-    let drift = 0;
-    for (const cid of Object.keys(target)) {
-      const a = agg[cid];
-      if (!a || a.conv <= 0) continue;
-      if (a.cost / a.conv <= target[cid] * CPA_UNDER) drift++;
+  } catch { /* non-fatal */ }
+
+  // 4) Budget pacing — spend vs the user-set monthly budget (matches the Budget
+  //    Pacing page: over = red, under = amber; only when a budget is set and the
+  //    account has enabled campaigns).
+  try {
+    const budget = budgets[id] || 0;
+    if (budget > 0 && enabledCount > 0) {
+      const spendR = await search("SELECT metrics.cost_micros FROM campaign WHERE segments.date DURING THIS_MONTH AND campaign.status != 'REMOVED'");
+      let spend = 0;
+      for (const r of spendR.results || []) spend += Number(r.metrics?.costMicros || 0) / 1e6;
+      const st = paceStatus(spend, budget, mi);
+      if (st === "over") issues.push({ level: 3, kind: "pacing", text: `Over pace \u2014 \u00a3${money(spend)} of \u00a3${money(budget)} this month` });
+      else if (st === "under") issues.push({ level: 2, kind: "pacing", text: `Under pace \u2014 \u00a3${money(spend)} of \u00a3${money(budget)} this month` });
     }
-    if (drift) issues.push({ level: 1, kind: "cpa", text: `${drift} campaign${drift > 1 ? "s" : ""} with CPA well under target` });
+  } catch { /* non-fatal */ }
+
+  // 5) Asset gaps — serving campaign-level assets vs thresholds on enabled campaigns
+  //    (matches the Assets page: any campaign below a red threshold = red, else amber).
+  try {
+    if (enabledCount) {
+      const camps = {};
+      for (const r of campEnabled) camps[r.campaign.id] = { sitelinks: 0, landscape: 0, square: 0, callouts: 0, snippets: 0 };
+      const assetR = await search("SELECT campaign.id, campaign_asset.field_type, campaign_asset.status, campaign_asset.primary_status, asset.image_asset.full_size.width_pixels, asset.image_asset.full_size.height_pixels FROM campaign_asset WHERE campaign_asset.status = 'ENABLED' AND campaign_asset.field_type IN ('SITELINK','AD_IMAGE','CALLOUT','STRUCTURED_SNIPPET') AND campaign.status = 'ENABLED'");
+      const SERVING = new Set(["ELIGIBLE", "LIMITED"]);
+      for (const r of assetR.results || []) {
+        const c = camps[r.campaign?.id];
+        if (!c) continue;
+        const ps = r.campaignAsset?.primaryStatus;
+        if (ps && !SERVING.has(ps)) continue;
+        switch (r.campaignAsset?.fieldType) {
+          case "SITELINK": c.sitelinks++; break;
+          case "AD_IMAGE": {
+            const w = Number(r.asset?.imageAsset?.fullSize?.widthPixels) || 0;
+            const h = Number(r.asset?.imageAsset?.fullSize?.heightPixels) || 0;
+            if (w && h && (w / h) >= 1.3) c.landscape++; else c.square++;
+            break;
+          }
+          case "CALLOUT": c.callouts++; break;
+          case "STRUCTURED_SNIPPET": c.snippets++; break;
+        }
+      }
+      let red = 0, amber = 0;
+      for (const c of Object.values(camps)) {
+        let lvl = 0;
+        for (const key of ASSET_KEYS) { const L = assetCellLevel(key, c[key]); if (L > lvl) lvl = L; }
+        if (lvl === 2) red++; else if (lvl === 1) amber++;
+      }
+      if (red) issues.push({ level: 3, kind: "assets", text: `${red} campaign${red > 1 ? "s" : ""} missing key assets` });
+      else if (amber) issues.push({ level: 2, kind: "assets", text: `${amber} campaign${amber > 1 ? "s" : ""} with asset gaps` });
+    }
   } catch { /* non-fatal */ }
 
   return { id, name, issues };
+}
+
+// --- shared rule helpers (mirror the dashboard) ---
+
+const ASSET_KEYS = ["sitelinks", "landscape", "square", "callouts", "snippets"];
+
+function assetCellLevel(key, v) {
+  if (key === "sitelinks") return v >= 8 ? 0 : (v >= 1 ? 1 : 2);
+  if (key === "landscape") return v >= 2 ? 0 : (v === 1 ? 1 : 2);
+  if (key === "square") return v >= 5 ? 0 : (v >= 1 ? 1 : 2);
+  if (key === "callouts") return v >= 10 ? 0 : (v >= 1 ? 1 : 2);
+  if (key === "snippets") return v >= 1 ? 0 : 2;
+  return v === 0 ? 2 : 0;
+}
+
+function paceStatus(spend, budget, mi) {
+  if (!budget || budget <= 0) return null;
+  const expected = budget * mi.pace;
+  if ((spend / budget) >= 1) return "over";
+  if (spend > expected * 1.1) return "over";
+  if (spend < expected * 0.9) return "under";
+  return "ontrack";
+}
+
+function monthInfo() {
+  const now = new Date();
+  const daysInMonth = new Date(now.getUTCFullYear(), now.getUTCMonth() + 1, 0).getUTCDate();
+  const dayOfMonth = now.getUTCDate();
+  return { daysInMonth, dayOfMonth, pace: dayOfMonth / daysInMonth };
+}
+
+function money(n) {
+  return Math.round(n || 0).toLocaleString("en-GB");
+}
+
+async function loadBudgets(env) {
+  const budgets = {};
+  try {
+    const list = await env.SESSIONS.list({ prefix: "budget:" });
+    for (const k of list.keys) {
+      const v = await env.SESSIONS.get(k.name);
+      if (v != null) budgets[k.name.slice("budget:".length)] = Number(v);
+    }
+  } catch { /* no budgets → pacing simply won't fire */ }
+  return budgets;
 }
 
 const EMOJI = { 3: "\uD83D\uDD34", 2: "\uD83D\uDFE0", 1: "\uD83D\uDFE1" }; // red / orange / yellow
@@ -166,7 +272,7 @@ function buildSlack(flagged) {
     blocks: [
       { type: "section", text: { type: "mrkdwn", text: header } },
       { type: "section", text: { type: "mrkdwn", text: lines.join("\n") } },
-      { type: "context", elements: [{ type: "mrkdwn", text: "\uD83D\uDD34 disapproved / suspended \u00b7 \uD83D\uDFE0 limited \u00b7 \uD83D\uDFE1 CPA drift" }] },
+      { type: "context", elements: [{ type: "mrkdwn", text: "\uD83D\uDD34 suspended / disapproved / over-pace / missing assets \u00b7 \uD83D\uDFE0 limited / under-pace / asset gaps \u00b7 \uD83D\uDFE1 CPA drift" }] },
     ],
   };
 }
