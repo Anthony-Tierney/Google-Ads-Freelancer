@@ -116,7 +116,7 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
   // 2) Policy — disapproved / limited ads on enabled campaigns
   try {
     const ads = (await search(
-      "SELECT ad_group_ad.policy_summary.approval_status FROM ad_group_ad WHERE ad_group_ad.policy_summary.approval_status != 'APPROVED' AND campaign.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND ad_group_ad.status = 'ENABLED'"
+      "SELECT ad_group_ad.policy_summary.approval_status, campaign.status, ad_group.status, ad_group_ad.status FROM ad_group_ad WHERE ad_group_ad.policy_summary.approval_status != 'APPROVED' AND campaign.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND ad_group_ad.status = 'ENABLED'"
     )).results || [];
     let disapproved = 0, limited = 0;
     for (const r of ads) {
@@ -177,7 +177,7 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
     if (enabledCount) {
       const camps = {};
       for (const r of campEnabled) camps[r.campaign.id] = { sitelinks: 0, landscape: 0, square: 0, callouts: 0, snippets: 0 };
-      const assetR = await search("SELECT campaign.id, campaign_asset.field_type, campaign_asset.status, campaign_asset.primary_status, asset.image_asset.full_size.width_pixels, asset.image_asset.full_size.height_pixels FROM campaign_asset WHERE campaign_asset.status = 'ENABLED' AND campaign_asset.field_type IN ('SITELINK','AD_IMAGE','CALLOUT','STRUCTURED_SNIPPET') AND campaign.status = 'ENABLED'");
+      const assetR = await search("SELECT campaign.id, campaign.status, campaign_asset.field_type, campaign_asset.status, campaign_asset.primary_status, asset.image_asset.full_size.width_pixels, asset.image_asset.full_size.height_pixels FROM campaign_asset WHERE campaign_asset.status = 'ENABLED' AND campaign_asset.field_type IN ('SITELINK','AD_IMAGE','CALLOUT','STRUCTURED_SNIPPET') AND campaign.status = 'ENABLED'");
       const rows = assetR.results || [];
       const SERVING = new Set(["ELIGIBLE", "LIMITED"]);
       let served = 0, skippedPs = 0;
