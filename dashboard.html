@@ -84,6 +84,8 @@
   .nav-warn { display: inline-flex; vertical-align: middle; color: #d97706; margin-left: 5px; }
   .nav-warn.red { color: #dc2626; }
   .nav-warn svg { width: 15px; height: 15px; }
+  .nav-ok { display: inline-flex; vertical-align: middle; color: #16a34a; margin-left: 5px; }
+  .nav-ok svg { width: 15px; height: 15px; }
   
   .main-content { flex: 1; display: flex; flex-direction: column; }
 
@@ -3746,7 +3748,7 @@ function renderAuditTable() {
   document.getElementById("aud-thead").innerHTML = "<tr>" +
     AUDIT_COLS.map(c => '<th class="txt" data-col="' + c.key + '">' + c.label + "</th>").join("") + "</tr>";
   const auditAny = auditState.rows.some(r => !r.loading && ((r.disapproved > 0) || (r.limited > 0) || ((r.accountStatus || "").toUpperCase() === "SUSPENDED")));
-  setNavWarn("auditNavWarn", auditAny ? 2 : 0);
+  updateAuditNav(auditAny);
   persistUi("audit", auditState);
 
   const pageRows = pageSlice(auditState.rows, auditState);
@@ -3884,11 +3886,12 @@ async function loadBudgetPacing(force) {
   const weekRange = "LAST_7_DAYS";
   const rows = [];
   await mapLimit(ACCOUNTS, 4, async (a) => {
-    let spend = 0, dailyBudget = 0, last7 = 0, enabledCount = 0;
+    let spend = 0, dailyBudget = 0, last7 = 0, enabledCount = 0, prevMonthSpend = null;
     try {
-      const [mRes, wRes] = await Promise.all([
+      const [mRes, wRes, pRes] = await Promise.all([
         fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(monthRange), { credentials: "same-origin" }),
         fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(weekRange), { credentials: "same-origin" }),
+        fetch("/api/accountspend?customerId=" + encodeURIComponent(a.id), { credentials: "same-origin" }),
       ]);
       const mData = await mRes.json().catch(() => ({}));
       (mData.campaigns || []).forEach(c => {
@@ -3897,8 +3900,10 @@ async function loadBudgetPacing(force) {
       });
       const wData = await wRes.json().catch(() => ({}));
       (wData.campaigns || []).forEach(c => { last7 += +c.cost || 0; });
+      const pData = await pRes.json().catch(() => ({}));
+      if (pData.lastMonthSpend != null) prevMonthSpend = +pData.lastMonthSpend;
     } catch {}
-    rows.push({ id: a.id, name: a.name || a.formatted, formatted: a.formatted, spend, dailyBudget, last7, hasEnabled: enabledCount > 0 });
+    rows.push({ id: a.id, name: a.name || a.formatted, formatted: a.formatted, spend, dailyBudget, last7, hasEnabled: enabledCount > 0, prevMonthSpend });
   });
 
   rows.sort((x, y) => y.spend - x.spend);
@@ -3965,6 +3970,7 @@ function renderBudgetPacing() {
       bar = '<div class="pace-none">Set a monthly budget to see pacing.' + (suggested ? ' Suggested: ' + fmtCurrency(suggested) + '.' : '') + '</div>';
       foot =
         stat("spend-mtd", "Spend (MTD)", fmtCurrency(r.spend)) +
+        stat("prev-month", "Spend (Previous Month)", r.prevMonthSpend != null ? fmtCurrency(r.prevMonthSpend) : "—") +
         stat("avg7", "Avg. Spend (Last 7 Days)", fmtCurrency(avg7)) +
         stat("projected-month", "Projected (this month)", fmtCurrency(projected)) +
         stat("projected-next30", "Projected (next 30 days)", fmtCurrency(projectedNext30));
@@ -3996,6 +4002,7 @@ function renderBudgetPacing() {
         stat("spend-mtd", "Spend (MTD)", fmtCurrency(r.spend)) +
         stat("pct-budget", "% of budget", spendPct.toFixed(0) + "%") +
         stat("pace", "Pace", verdict, colorClass) +
+        stat("prev-month", "Spend (Previous Month)", r.prevMonthSpend != null ? fmtCurrency(r.prevMonthSpend) : "—") +
         stat("avg7", "Avg. Spend (Last 7 Days)", fmtCurrency(avg7)) +
         stat("projected-month", "Projected (this month)", fmtCurrency(projected)) +
         stat("projected-next30", "Projected (next 30 days)", fmtCurrency(projectedNext30));
@@ -4077,6 +4084,19 @@ function setNavWarn(id, level) {
   if (!el) return;
   el.hidden = level === 0;
   el.classList.toggle("red", level === 2);
+}
+
+const NAV_TRIANGLE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+const NAV_SMILEY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>';
+
+// Policy Issues nav: green smiley when every account is clean, red triangle when any flags exist.
+function updateAuditNav(hasFlags) {
+  const el = document.getElementById("auditNavWarn");
+  if (!el) return;
+  el.hidden = false;
+  el.className = hasFlags ? "nav-warn red" : "nav-ok";
+  el.title = hasFlags ? "Policy issues found" : "No policy issues";
+  el.innerHTML = hasFlags ? NAV_TRIANGLE_SVG : NAV_SMILEY_SVG;
 }
 // Amber(1)/red(2) level for an Assets count cell, mirroring assetCellHtml thresholds.
 function assetCellLevel(key, v) {
@@ -5233,7 +5253,7 @@ function exportBidding(fmt) {
   const rows = biddingState.viewRows || [];
   if (!rows.length) { showToast("Nothing to export."); return; }
   const cols = applyColumnOrder(GLOBAL_ACCOUNT === "ALL" ? BID_COLUMNS : BID_COLUMNS.filter(c => c.key !== "account"), colOrder("bidding"));
-  const header = cols.map(c => c.label);
+  const header = cols.map(c => c.label.replace(/<br>/g, " "));
   const data = rows.map(r => cols.map(c => {
     switch (c.key) {
       case "account": return r.accountName || "";
@@ -5249,6 +5269,7 @@ function exportBidding(fmt) {
         if (r.targetCpa && r.targetCpa > 0) { const pct = (r.cpaAchieved - r.targetCpa) / r.targetCpa * 100; s += " (" + (pct >= 0 ? "+" : "") + pct.toFixed(1) + "%)"; }
         return s;
       }
+      case "cpaLast7": return r.cpaLast7 != null ? fmtCurrency(r.cpaLast7) : "—";
       default: return "";
     }
   }));
@@ -5383,7 +5404,7 @@ const BID_COLUMNS = [
   { key: "lastAdjusted", label: "Last Adjusted", align: "txt", width: 130,
     sort: r => r.lastAdjusted || "",
     cell: r => r.targetCpa == null ? '<span style="color:var(--faint)">—</span>' : (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>') },
-  { key: "cpaAchieved", label: "CPA Achieved (since last adjustment)", align: "num", width: 240, cls: "tabnum",
+  { key: "cpaAchieved", label: "CPA Achieved<br>(since last adjustment)", align: "num", width: 240, cls: "tabnum",
     sort: r => r.cpaAchieved == null ? -1 : r.cpaAchieved,
     cellCls: r => (r.targetCpa && r.targetCpa > 0 && r.cpaAchieved != null && r.cpaAchieved <= r.targetCpa * 0.8) ? "cell-red" : "",
     cell: r => {
@@ -5395,6 +5416,9 @@ const BID_COLUMNS = [
       const icon = off ? ' <span class="sl-warn" title="' + CPA_TOOLTIP + '">' + WARN_TRI_SVG + "</span>" : "";
       return fmtCurrency(r.cpaAchieved) + delta + icon;
     } },
+  { key: "cpaLast7", label: "CPA Achieved<br>(Last 7 Days)", align: "num", width: 200, cls: "tabnum",
+    sort: r => r.cpaLast7 == null ? -1 : r.cpaLast7,
+    cell: r => r.cpaLast7 != null ? fmtCurrency(r.cpaLast7) : '<span style="color:var(--faint)">—</span>' },
 ];
 const biddingState = { rows: [], loaded: false, sort: { key: "account", dir: "asc" }, search: "", filterStatus: new Set(["ENABLED"]), filterName: "", filterNameOp: "contains", errors: [], columnWidths: {}, currentPage: 1, pageSize: 10 };
 const CPA_TOOLTIP = "CPA achieved is 20% or more below the campaign's Target CPA.";
