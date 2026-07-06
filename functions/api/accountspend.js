@@ -27,13 +27,14 @@ export async function onRequestGet(context) {
       env,
       accessToken,
       `customers/${cleanId}/googleAds:search`,
-      { query: "SELECT metrics.cost_micros FROM customer WHERE segments.date DURING LAST_MONTH" }
+      { query: "SELECT campaign.id, metrics.cost_micros FROM campaign WHERE segments.date DURING LAST_MONTH" }
     );
+    // No campaign.status filter → enabled, paused AND removed campaigns are all included.
     let cost = 0;
     for (const r of result.results || []) cost += Number(r.metrics?.costMicros || 0) / 1e6;
     return json({ lastMonthSpend: cost });
   } catch (e) {
-    // Managers have no metrics; anything else we just report as null so the card shows "—".
+    // Managers have no campaigns; anything else we report as null so the card shows "—".
     return json({ lastMonthSpend: null, error: (e && e.message) ? e.message : String(e) });
   }
 }
