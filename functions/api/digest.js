@@ -109,7 +109,7 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
   // Enabled campaigns (with Target CPA) — reused by the CPA, pacing and asset checks.
   let campEnabled = [];
   try {
-    campEnabled = (await search("SELECT campaign.id, campaign.target_cpa.target_cpa_micros, campaign.maximize_conversions.target_cpa_micros FROM campaign WHERE campaign.status = 'ENABLED'")).results || [];
+    campEnabled = (await search("SELECT campaign.id, campaign.name, campaign.target_cpa.target_cpa_micros, campaign.maximize_conversions.target_cpa_micros FROM campaign WHERE campaign.status = 'ENABLED'")).results || [];
   } catch { /* leave empty */ }
   const enabledCount = campEnabled.length;
 
@@ -128,30 +128,51 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
     if (limited) issues.push({ level: 2, kind: "limited", text: `${limited} limited ad${limited > 1 ? "s" : ""}` });
   } catch { /* non-fatal: skip policy for this account */ }
 
-  // 3) CPA drift — enabled campaigns whose 30-day CPA is well under target
+  // 3) CPA drift — enabled campaigns whose CPA since the last Target-CPA change is
+  //    well under target. Mirrors the Bidding Strategies page (last adjustment from
+  //    change_event; achieved CPA summed from that date onward).
   try {
-    const target = {};
+    const target = {}, cname = {};
     for (const r of campEnabled) {
       const micros = r.campaign?.targetCpa?.targetCpaMicros ?? r.campaign?.maximizeConversions?.targetCpaMicros;
-      if (micros != null) target[r.campaign.id] = Number(micros) / 1e6;
+      if (micros != null) { target[r.campaign.id] = Number(micros) / 1e6; cname[r.campaign.id] = r.campaign.name; }
     }
     if (Object.keys(target).length) {
-      const metR = await search("SELECT campaign.id, metrics.cost_micros, metrics.conversions FROM campaign WHERE campaign.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS");
-      const agg = {};
+      const MS_DAY = 86400000;
+      const changeStart = new Date(Date.now() - 28 * MS_DAY).toISOString().slice(0, 10);
+      const changeEnd = new Date(Date.now() + MS_DAY).toISOString().slice(0, 10);
+      const [metR, changeR] = await Promise.all([
+        search("SELECT campaign.id, segments.date, metrics.cost_micros, metrics.conversions FROM campaign WHERE campaign.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS"),
+        search(`SELECT change_event.change_date_time, change_event.campaign, change_event.changed_fields FROM change_event WHERE change_event.change_date_time >= '${changeStart}' AND change_event.change_date_time <= '${changeEnd}' AND change_event.change_resource_type = 'CAMPAIGN' ORDER BY change_event.change_date_time DESC LIMIT 10000`).catch(() => ({ results: [] })),
+      ]);
+      // Most recent Target-CPA change per campaign (results are newest-first).
+      const lastAdj = {};
+      for (const r of changeR.results || []) {
+        const camp = r.changeEvent?.campaign;
+        if (!camp) continue;
+        const cid = camp.split("/").pop();
+        if (lastAdj[cid]) continue;
+        if (!(r.changeEvent?.changedFields || "").toLowerCase().includes("targetcpa")) continue;
+        lastAdj[cid] = (r.changeEvent?.changeDateTime || "").slice(0, 10);
+      }
+      // Daily metrics per campaign, to sum from each campaign's adjustment date.
+      const daily = {};
       for (const r of metR.results || []) {
         const cid = r.campaign?.id;
         if (!cid) continue;
-        (agg[cid] = agg[cid] || { cost: 0, conv: 0 });
-        agg[cid].cost += Number(r.metrics?.costMicros || 0) / 1e6;
-        agg[cid].conv += Number(r.metrics?.conversions || 0);
+        (daily[cid] = daily[cid] || []).push({ date: r.segments?.date, cost: Number(r.metrics?.costMicros || 0) / 1e6, conv: Number(r.metrics?.conversions || 0) });
       }
-      let drift = 0;
       for (const cid of Object.keys(target)) {
-        const a = agg[cid];
-        if (!a || a.conv <= 0) continue;
-        if (a.cost / a.conv <= target[cid] * CPA_UNDER) drift++;
+        const start = lastAdj[cid] || null;
+        let cost = 0, conv = 0;
+        for (const d of daily[cid] || []) { if (start && (d.date || "") < start) continue; cost += d.cost; conv += d.conv; }
+        const cpaAchieved = conv > 0 ? cost / conv : null;
+        const t = target[cid];
+        if (t > 0 && cpaAchieved != null && cpaAchieved <= t * CPA_UNDER) {
+          const when = start ? `on ${fmtShortDate(start)}` : "more than 30 days ago";
+          issues.push({ level: 1, kind: "cpa", text: `${cname[cid]}: The bidding strategy for this campaign was last adjusted ${when}. Since then, it has achieved a CPA of ${fmtCurrency(cpaAchieved)} vs the set target of ${fmtCurrency(t)}. You may wish to bring your target more closely in line with the actual results being achieved.` });
+        }
       }
-      if (drift) issues.push({ level: 1, kind: "cpa", text: `${drift} campaign${drift > 1 ? "s" : ""} with CPA well under target` });
     }
   } catch { /* non-fatal */ }
 
@@ -249,6 +270,12 @@ function assetCellLevel(key, v) {
 }
 
 const fmtCurrency0 = (n) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(Math.round(n || 0));
+const fmtCurrency = (n) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 }).format(n || 0);
+function fmtShortDate(ymd) {
+  const d = new Date(ymd + "T00:00:00");
+  if (isNaN(d.getTime())) return ymd;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
 
 // Budget-pacing alert text — mirrors the dashboard's buildRecommendation exactly, so
 // the Slack line reads the same as the account card's recommendation. Returns
