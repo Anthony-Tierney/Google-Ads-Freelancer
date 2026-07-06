@@ -105,6 +105,12 @@ export async function onRequestGet(context) {
       cost += d.cost;
       conv += d.conv;
     }
+    // CPA achieved over the last 7 available days (from the same daily data).
+    const last7Dates = new Set([...new Set(c.daily.map((d) => d.date))].sort().slice(-7));
+    let cost7 = 0, conv7 = 0;
+    for (const d of c.daily) {
+      if (last7Dates.has(d.date)) { cost7 += d.cost; conv7 += d.conv; }
+    }
     return {
       id: c.id,
       name: c.name,
@@ -114,6 +120,7 @@ export async function onRequestGet(context) {
       targetCpa: c.targetCpa,
       lastAdjusted: c.lastAdjusted,
       cpaAchieved: conv > 0 ? cost / conv : null,
+      cpaLast7: conv7 > 0 ? cost7 / conv7 : null,
     };
   });
 
