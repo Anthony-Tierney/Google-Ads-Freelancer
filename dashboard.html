@@ -2558,6 +2558,7 @@ async function init() {
     routeFromHash();
     saveDataCache(); // cache the account list right away
     loadBudgetPacing(false); // background load so the side-nav pace warning is accurate
+    loadAudit(false); // background load so the Policy Issues nav icon (smiley / triangle) is accurate
     loadLogos(); // background load of account logos for use across pages
   } catch {
     signedIn = false;
@@ -3748,7 +3749,7 @@ function renderAuditTable() {
   document.getElementById("aud-thead").innerHTML = "<tr>" +
     AUDIT_COLS.map(c => '<th class="txt" data-col="' + c.key + '">' + c.label + "</th>").join("") + "</tr>";
   const auditAny = auditState.rows.some(r => !r.loading && ((r.disapproved > 0) || (r.limited > 0) || ((r.accountStatus || "").toUpperCase() === "SUSPENDED")));
-  updateAuditNav(auditAny);
+  if (!auditState.rows.some(r => r.loading)) updateAuditNav(auditAny);
   persistUi("audit", auditState);
 
   const pageRows = pageSlice(auditState.rows, auditState);
@@ -5396,8 +5397,8 @@ const BID_COLUMNS = [
     cell: r => { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<span class="pill ' + cls + '">' + titleCase(r.status) + "</span>"; } },
   { key: "type", label: "Type", align: "txt", width: 120,
     cell: r => titleCase((r.type || "").replace(/_/g, " ")) },
-  { key: "biddingStrategy", label: "Bidding Strategy", align: "txt", width: 180,
-    cell: r => titleCase((r.biddingStrategy || "").replace(/_/g, " ")) },
+  { key: "biddingStrategy", label: "Bidding Strategy", align: "txt", width: 150,
+    cell: r => titleCase((r.biddingStrategy || "").replace(/_/g, " ")).replace(/^Maximize /, "Maximize<br>") },
   { key: "targetCpa", label: "Target CPA", align: "num", width: 120, cls: "tabnum",
     sort: r => r.targetCpa == null ? -1 : r.targetCpa,
     cell: r => r.targetCpa != null ? fmtCurrency(r.targetCpa) : '<span style="color:var(--faint)">—</span>' },
