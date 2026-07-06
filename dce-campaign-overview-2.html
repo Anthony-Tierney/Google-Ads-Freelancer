@@ -1,1549 +1,379 @@
-<!DOCTYPE html>
-<html lang="en-GB">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Ads Structure: DCE</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            background: linear-gradient(135deg, #1a3a5f 0%, #2a5298 100%);
-            color: #3c4043;
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            padding: 40px 20px;
-            display: flex;
-            gap: 30px;
-            align-items: flex-start;
-        }
-        .comparison-view {
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 40px 20px;
-            margin-bottom: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            text-align: center;
-            flex-shrink: 0;
-        }
-        .left-section {
-            flex: 0 0 auto;
-        }
-        .right-section {
-            flex: 1 1 auto;
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 40px 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        .outcome-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        .outcome-table th {
-            background: #4285f4;
-            color: white;
-            font-weight: 700;
-            padding: 12px;
-            text-align: left;
-            border: 1px solid #dadce0;
-            font-size: 14px;
-        }
-        .outcome-table td {
-            padding: 12px;
-            border: 1px solid #dadce0;
-            color: #3c4043;
-            font-size: 14px;
-        }
-        .outcome-table tbody tr:nth-child(odd) {
-            background: #f8f9fa;
-        }
-        .outcome-table tbody tr:hover {
-            background: #e8f0fe;
-        }
-        .top-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            margin-bottom: 0;
-        }
-        .node {
-            padding: 14px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 0.85rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .account  { background: #202124; color: white; font-weight: bold; border: 2px solid #000; min-width: 200px; }
-        .budget   { background: #fef7e0; color: #7d5c00; font-weight: bold; border: 2px dashed #f9ab00; min-width: 140px; }
-        .budget .budget-amount { font-size: 1.1rem; font-weight: 800; margin-top: 4px; color: #e37400; }
-        .search   { background: #e8f0fe; border: 2px solid #4285f4; color: #1967d2; font-weight: bold; position: relative; }
-        .search .prefix {
-            display: block;
-            font-size: 0.7rem;
-            font-weight: 600;
-            opacity: 0.75;
-            margin-bottom: 3px;
-            letter-spacing: 0.03em;
-        }
-        .search .name {
-            display: block;
-            font-size: 0.9rem;
-            font-weight: 800;
-        }
-        .line-v   { width: 2px; background: #dadce0; margin: 0 auto; flex-shrink: 0; }
-        .line-h   { height: 2px; background: #dadce0; }
-        .campaigns-row {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            width: 100%;
-            align-items: flex-start;
-            flex-wrap: wrap;
-        }
-        .campaign-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 200px;
-            flex-shrink: 0;
-        }
-        .campaign-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 2px;
-            min-height: 24px;
-        }
-        .campaign-number {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: #5f6368;
-            color: #fff;
-            font-size: 0.68rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .campaign-budget {
-            background: #fef7e0;
-            color: #7d5c00;
-            border: 2px dashed #f9ab00;
-            border-radius: 6px;
-            padding: 3px 8px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-        .campaign-unit {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-        .adgroup-tree {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            padding-left: 20px;
-            box-sizing: border-box;
-            position: relative;
-        }
-        .adgroup-tree::before {
-            content: '';
-            position: absolute;
-            left: 20px;
-            top: 0;
-            bottom: 12px;
-            width: 2px;
-            background: #dadce0;
-        }
-        .adgroup-unit {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            width: 100%;
-            position: relative;
-            padding-left: 20px;
-            box-sizing: border-box;
-            margin-top: 8px;
-        }
-        .adgroup-unit::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 16px;
-            width: 20px;
-            height: 2px;
-            background: #dadce0;
-        }
-        .ad-group-table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1px solid #bdc1c6;
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-            font-size: 0.75rem;
-        }
-        .ad-group-table th {
-            background: #e8f0fe;
-            color: #1967d2;
-            font-weight: 700;
-            padding: 10px;
-            text-align: center;
-        }
-        .ad-group-table tbody td {
-            background: #f8f9fa;
-            color: #3c4043;
-            font-weight: 600;
-            padding: 8px;
-            text-align: center;
-            border-top: 1px solid #dadce0;
-        }
+// GET /api/digest — runs the cross-account warning checks and posts a digest to Slack.
+//
+// Pages Functions can't be cron-triggered, so a small companion Worker pings this
+// endpoint on a schedule (see /cron-worker). It runs headless using the refresh token
+// saved at login under the fixed KV key `cron:refreshToken`.
+//
+// Auth:   ?key=<CRON_SECRET>  (required)
+// Params: ?dryRun=1  → return the digest as JSON, don't post to Slack (for testing)
+//         ?debug=1   → include per-account errors in the JSON response
+//
+// Checks (enabled campaigns only): suspended account, disapproved ads, limited ads,
+// and CPA drift (achieved CPA well under target — the target likely needs adjusting).
 
-        /* FAQ / collapsible section styles */
-        .faq-section {
-            margin-bottom: 28px;
-        }
-        .faq-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            user-select: none;
-            padding: 0;
-            margin-bottom: 0;
-        }
-        .faq-toggle h1 {
-            margin: 0;
-            color: #202124;
-            font-size: 1.5rem;
-        }
-        .faq-chevron {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #e8f0fe;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.25s ease, background 0.2s;
-            flex-shrink: 0;
-            border: none;
-            cursor: pointer;
-        }
-        .faq-chevron svg {
-            transition: transform 0.25s ease;
-        }
-        .faq-toggle:hover .faq-chevron {
-            background: #d2e3fc;
-        }
-        .faq-body {
-            overflow: hidden;
-            transition: max-height 0.35s ease, opacity 0.3s ease, margin-top 0.3s ease;
-            max-height: 2000px;
-            opacity: 1;
-            margin-top: 16px;
-        }
-        .faq-body.collapsed {
-            max-height: 0;
-            opacity: 0;
-            margin-top: 0;
-        }
-        .faq-chevron.collapsed svg {
-            transform: rotate(-90deg);
-        }
-        .faq-divider {
-            border: none;
-            border-top: 1px solid #dadce0;
-            margin: 16px 0 0 0;
-        }
-        .faq-divider.collapsed {
-            margin: 12px 0 0 0;
-        }
+import { getAccessToken, adsRequest, json, formatId } from "../../shared/google.js";
 
-        /* Actioned column */
-        .actioned-cell {
-            text-align: center;
-            font-size: 18px;
-            color: #1b5e20;
-        }
+const CPA_UNDER = 0.8; // achieved CPA <= target * 0.8 → flag
 
-        /* Tab navigation */
-        .tab-nav {
-            display: flex;
-            gap: 0;
-            margin-bottom: 28px;
-            border-bottom: 2px solid #dadce0;
-        }
-        .tab-btn {
-            background: none;
-            border: none;
-            padding: 10px 22px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #5f6368;
-            cursor: pointer;
-            position: relative;
-            bottom: -2px;
-            border-bottom: 2px solid transparent;
-            transition: color 0.18s, border-color 0.18s;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            letter-spacing: 0.01em;
-        }
-        .tab-btn:hover {
-            color: #1967d2;
-        }
-        .tab-btn.active {
-            color: #1967d2;
-            border-bottom: 2px solid #4285f4;
-        }
-
-        /* Chart panel header row */
-        .chart-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-        .chart-header .panel-title {
-            margin-bottom: 0;
-        }
-        .data-label-toggle {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: 2px solid #dadce0;
-            background: #fff;
-            color: #5f6368;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            transition: background 0.18s, color 0.18s, border-color 0.18s;
-            white-space: nowrap;
-        }
-        .data-label-toggle.active {
-            background: #e8f0fe;
-            color: #1967d2;
-            border-color: #4285f4;
-        }
-        .data-label-toggle:hover {
-            border-color: #4285f4;
-            color: #1967d2;
-        }
-
-        /* Chart panel & Grouped Legend styling */
-        .panel-title {
-            margin: 0 0 16px 0;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #202124;
-        }
-        .chart-wrap {
-            position: relative;
-            height: 340px;
-            width: 100%;
-        }
-        .chart-legend {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin-top: 24px;
-            align-items: center;
-            width: 100%;
-        }
-        .legend-group-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            border: 1px solid #e8f0fe;
-            padding: 10px 18px;
-            border-radius: 30px;
-            background: #f8f9fa;
-            width: fit-content;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .legend-group-title {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #5f6368;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            margin-right: 6px;
-            border-right: 2px solid #dadce0;
-            padding-right: 12px;
-            white-space: nowrap;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 0.83rem;
-            color: #3c4043;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 4px 10px;
-            border-radius: 20px;
-            border: 1px solid transparent;
-            transition: opacity 0.18s, border-color 0.18s, background 0.18s;
-            user-select: none;
-        }
-        .legend-item:hover {
-            border-color: #bdc1c6;
-            background: #fff;
-        }
-        .legend-item.dimmed {
-            opacity: 0.35;
-        }
-
-        /* Globe icon button */
-        .globe-button {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #4285f4;
-            color: white;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            transition: background 0.2s, box-shadow 0.2s;
-            font-size: 20px;
-            z-index: 100;
-        }
-        .globe-button:hover {
-            background: #1967d2;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        #panel-results {
-            position: relative;
-        }
-        
-        /* Map modal */
-        .map-modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            animation: fadeIn 0.3s ease;
-        }
-        .map-modal.show {
-            display: flex;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .map-modal-content {
-            background-color: #fff;
-            margin: auto;
-            padding: 0;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            width: 95%;
-            height: 90%;
-            max-width: 1400px;
-            max-height: 800px;
-            display: flex;
-            flex-direction: column;
-            animation: slideIn 0.3s ease;
-        }
-        @keyframes slideIn {
-            from { transform: translateY(-30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .map-modal-header {
-            padding: 16px 24px;
-            border-bottom: 1px solid #dadce0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .map-modal-header h2 {
-            margin: 0;
-            font-size: 1.25rem;
-            color: #202124;
-        }
-        .map-close-btn {
-            background: none;
-            border: none;
-            font-size: 28px;
-            cursor: pointer;
-            color: #5f6368;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: background 0.2s;
-        }
-        .map-close-btn:hover {
-            background: #f0f0f0;
-        }
-        .map-modal-body {
-            display: flex;
-            flex: 1;
-            gap: 0;
-            overflow: hidden;
-        }
-        .map-table-panel {
-            flex: 0 0 320px;
-            border-right: 1px solid #dadce0;
-            display: flex;
-            flex-direction: column;
-            background: #f8f9fa;
-        }
-        .map-table-header {
-            padding: 12px 16px;
-            background: #e8f0fe;
-            border-bottom: 1px solid #dadce0;
-            flex-shrink: 0;
-        }
-        .map-table-header h3 {
-            margin: 0;
-            font-size: 0.9rem;
-            color: #1967d2;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-        .map-table-wrapper {
-            overflow-y: auto;
-            flex: 1;
-        }
-        .conversion-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        .conversion-table thead {
-            position: sticky;
-            top: 0;
-            background: #e8f0fe;
-            z-index: 10;
-        }
-        .conversion-table th {
-            padding: 10px 12px;
-            text-align: left;
-            font-weight: 700;
-            color: #1967d2;
-            border-bottom: 1px solid #dadce0;
-        }
-        .conversion-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #e8e8e8;
-            color: #3c4043;
-        }
-        .conversion-table tbody tr:hover {
-            background: #f0f0f0;
-        }
-        .conversion-table .city-cell {
-            font-weight: 500;
-        }
-        .conversion-table .conversions-cell {
-            text-align: right;
-            font-weight: 600;
-            color: #1967d2;
-        }
-        #conversionMap {
-            flex: 1;
-        }
-        .leaflet-container {
-            background: #f5f5f5;
-        }
-        .map-legend {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: white;
-            padding: 12px 16px;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            font-size: 12px;
-            z-index: 400;
-        }
-        .legend-item-map {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-        }
-
-        .legend-swatch {
-            width: 13px;
-            height: 13px;
-            border-radius: 3px;
-            display: inline-block;
-            flex-shrink: 0;
-        }
-    </style>
-</head>
-<body>
-<div class="container">
-  <div class="left-section">
-    <section class="comparison-view after">
-
-      <div class="top-row">
-        <div class="node account">Account: DCE</div>
-        <div class="node budget">
-          Monthly Budget
-          <div class="budget-amount">£2,000</div>
-        </div>
-      </div>
-
-      <div class="line-v" style="height:30px; width:2px;"></div>
-      <div class="line-h" style="width:95%; margin:0 auto;"></div>
-
-      <div class="campaigns-row">
-
-      <!-- Campaign 1: DCE Keywords -->
-      <div class="campaign-wrapper">
-        <div class="line-v" style="height:30px;"></div>
-        <div class="campaign-header">
-          <div class="campaign-number">1</div>
-          <div class="campaign-budget">£900</div>
-        </div>
-        <div class="campaign-unit">
-          <div class="node search" style="width:100%; box-sizing:border-box;">
-            <span class="prefix">Search:</span>
-            <span class="name">DCE Searches</span>
-          </div>
-          <div class="adgroup-tree">
-            <div class="adgroup-unit">
-              <table class="ad-group-table"><thead><tr><th>Ad Group</th></tr></thead><tbody><tr><td>DCE</td></tr></tbody></table>
-            </div>
-            <div class="adgroup-unit">
-              <table class="ad-group-table"><thead><tr><th>Ad Group</th></tr></thead><tbody><tr><td>Dust Control Environmental</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Campaign 2: Dust Extraction / Collection -->
-      <div class="campaign-wrapper">
-        <div class="line-v" style="height:30px;"></div>
-        <div class="campaign-header">
-          <div class="campaign-number">2</div>
-          <div class="campaign-budget">£800</div>
-        </div>
-        <div class="campaign-unit">
-          <div class="node search" style="width:100%; box-sizing:border-box; background: #d4edda; border-color: #28a745; color: #155724;">
-            <span class="prefix">Search:</span>
-            <span class="name">Dust Extraction / Collection</span>
-          </div>
-          <div class="adgroup-tree">
-            <div class="adgroup-unit">
-              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Ad Group</th></tr></thead><tbody><tr><td>Dust Extraction for Workshops</td></tr></tbody></table>
-            </div>
-            <div class="adgroup-unit">
-              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Ad Group</th></tr></thead><tbody><tr><td>Dust Collection (general)</td></tr></tbody></table>
-            </div>
-            <div class="adgroup-unit">
-              <table class="ad-group-table"><thead><tr><th style="background: #d4edda; color: #155724;">Ad Group</th></tr></thead><tbody><tr><td>Dust Extraction (general)</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Campaign 3: LEV -->
-      <div class="campaign-wrapper">
-        <div class="line-v" style="height:30px;"></div>
-        <div class="campaign-header">
-          <div class="campaign-number">3</div>
-          <div class="campaign-budget">£300</div>
-        </div>
-        <div class="campaign-unit">
-          <div class="node search" style="width:100%; box-sizing:border-box; background: #fed7aa; border-color: #fb923c; color: #7c2d12;">
-            <span class="prefix">Search:</span>
-            <span class="name">LEV</span>
-          </div>
-          <div class="adgroup-tree">
-            <div class="adgroup-unit">
-              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Ad Group</th></tr></thead><tbody><tr><td>LEV Testing &amp; Servicing</td></tr></tbody></table>
-            </div>
-            <div class="adgroup-unit">
-              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Ad Group</th></tr></thead><tbody><tr><td>LEV Inspections</td></tr></tbody></table>
-            </div>
-            <div class="adgroup-unit">
-              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Ad Group</th></tr></thead><tbody><tr><td>LEV Suppliers</td></tr></tbody></table>
-            </div>
-            <div class="adgroup-unit">
-              <table class="ad-group-table"><thead><tr><th style="background: #fed7aa; color: #7c2d12;">Ad Group</th></tr></thead><tbody><tr><td>LEV Surveys</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-    </section>
-  </div>
-
-  <div class="right-section">
-
-    <!-- Tab Navigation -->
-    <div class="tab-nav">
-      <button class="tab-btn active" id="tab-results" onclick="switchTab('results')">Conversions</button>
-      <button class="tab-btn" id="tab-geo" onclick="switchTab('geo')">Geo Report</button>
-      <button class="tab-btn" id="tab-cpc" onclick="switchTab('cpc')">Cost per Contact</button>
-      <button class="tab-btn" id="tab-adspend" onclick="switchTab('adspend')">Ad Spending</button>
-      <button class="tab-btn" id="tab-summaries" onclick="switchTab('summaries')">Monthly<br>Summaries</button>
-    </div>
-
-    <!-- Results Panel -->
-    <div id="panel-results" class="tab-panel">
-      <div class="chart-header">
-        <h2 class="panel-title">Conversions by Month</h2>
-        <button class="data-label-toggle" id="conversionsLabelToggle" onclick="toggleConversionsLabels()">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
-            <path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          Show Data Labels
-        </button>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="conversionsChart"></canvas>
-      </div>
-      <div class="chart-legend" id="chartLegend"></div>
-    </div>
-
-    <!-- Geo Report Panel -->
-    <div id="panel-geo" class="tab-panel" style="display:none; text-align: center; padding: 40px 0;">
-      <p style="margin-bottom: 20px; font-weight: 600; color: #3c4043;">Click the globe icon below to view your conversions by city (2026 only).</p>
-      <button class="globe-button" onclick="openMapModal()" title="View conversion hotspots on map" style="margin: 0 auto;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M12 22a10 10 0 0 1-10-10" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M2 12h20" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M12 2c-2.21 0-4 4.48-4 10s1.79 10 4 10" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M12 2c2.21 0 4 4.48 4 10s-1.79 10-4 10" stroke="currentColor" stroke-width="1.5"/>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Cost per Contact Panel -->
-    <div id="panel-cpc" class="tab-panel" style="display:none;">
-      <div class="chart-header">
-        <h2 class="panel-title">Cost per Contact by Month</h2>
-        <button class="data-label-toggle active" id="cpcLabelToggle" onclick="toggleCpcLabels()">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
-            <path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          Show Data Labels
-        </button>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="cpcChart"></canvas>
-      </div>
-    </div>
-
-    <!-- Ad Spending Panel -->
-    <div id="panel-adspend" class="tab-panel" style="display:none;">
-      <div class="chart-header">
-        <h2 class="panel-title">Ad Spending by Month</h2>
-        <button class="data-label-toggle active" id="adSpendLabelToggle" onclick="toggleAdSpendLabels()">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
-            <path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          Show Data Labels
-        </button>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="adSpendChart"></canvas>
-      </div>
-    </div>
-
-    <!-- Monthly Summaries Panel -->
-    <div id="panel-summaries" class="tab-panel" style="display:none;">
-    
-      <!-- New June 2026 Section -->
-      <div class="faq-section">
-        <div class="faq-toggle" onclick="toggleFaq('jun2026')">
-          <h1>June 2026 Summary</h1>
-          <div class="faq-chevron collapsed" id="chevron-jun2026">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 6L8 10L12 6" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>
-        <hr class="faq-divider" id="divider-jun2026">
-        <div class="faq-body collapsed" id="body-jun2026">
-          <p style="margin: 10px 0 0 0; font-size: 0.9rem; line-height: 1.5; color: #5f6368;"><strong>Highlights:</strong> In June 2026, the highest no. of monthly Brochure Downloads were recorded for paid media so far (22). The overall cost-per-contact did increase however overall to ~£58 with emails, phone calls, brochure downloads and form submissions considered. The next 1-2 months will be focused on finding the areas of best return for the new, increased monthly ad spend budget of £2,000.</p>
-          <table class="outcome-table">
-            <thead>
-              <tr>
-                <th>Campaign</th>
-                <th>Changes</th>
-                <th>Target Outcome</th>
-                <th>Actioned</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Website</td>
-                <td>Introduce product comparison table</td>
-                <td>Help users decide which DCE product is right for their unique circumstance.</td>
-                <td class="actioned-cell"></td>
-              </tr>
-              <tr>
-                <td>Website</td>
-                <td>Simplify products drop-down menu</td>
-                <td>Help users navigate faster to appropriate categories</td>
-                <td class="actioned-cell"></td>
-              </tr>
-              <tr>
-                <td>Dust Extraction / Collection</td>
-                <td>Create a new Ad Group specifically for 'dust and fume extractors'</td>
-                <td>Drive traffic through an unexplored keyword</td>
-                <td class="actioned-cell"></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- May 2026 Section -->
-      <div class="faq-section">
-        <div class="faq-toggle" onclick="toggleFaq('may2026')">
-          <h1>May 2026 Summary</h1>
-          <div class="faq-chevron collapsed" id="chevron-may2026">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 6L8 10L12 6" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>
-        <hr class="faq-divider" id="divider-may2026">
-        <div class="faq-body collapsed" id="body-may2026">
-          <p style="margin: 10px 0 0 0; font-size: 0.9rem; line-height: 1.5; color: #5f6368;"><strong>Highlights:</strong> In May 2026, the highest no. of monthly email contacts were recorded for paid media so far (8). The overall cost-per-contact remained low at ~£40 with emails, phone calls, brochure downloads and form submissions considered.</p>
-          <table class="outcome-table">
-            <thead>
-              <tr>
-                <th>Campaign</th>
-                <th>Changes</th>
-                <th>Target Outcome</th>
-                <th>Actioned</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Account</td>
-                <td>Further increase budget</td>
-                <td>£2,000pm spend goal</td>
-                <td class="actioned-cell">&#10003;</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- April 2026 Section -->
-      <div class="faq-section">
-        <div class="faq-toggle" onclick="toggleFaq('apr2026')">
-          <h1>April 2026 Summary</h1>
-          <div class="faq-chevron collapsed" id="chevron-apr2026">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 6L8 10L12 6" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>
-        <hr class="faq-divider" id="divider-apr2026">
-        <div class="faq-body collapsed" id="body-apr2026">
-          <table class="outcome-table">
-            <thead>
-              <tr>
-                <th>Campaign</th>
-                <th>Changes</th>
-                <th>Target Outcome</th>
-                <th>Actioned</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>DCE Searches</td>
-                <td>Users in this campaign are <span style="font-weight: bold; color: #1b5e20;">2.24x</span> more likely to convert Mon-Fri vs at the weekend. We will reduce the Ad Schedule for this campaign from 7 days to Mon - Fri only.</td>
-                <td><span style="font-weight: bold; color: #1b5e20;">£194</span> of budget freed up to increase spend on the other non-brand campaigns.</td>
-                <td class="actioned-cell">&#10003;</td>
-              </tr>
-              <tr>
-                <td>Dust Extraction / Collection</td>
-                <td>Removal of Sunday from Ad Schedule to make campaign Mon - Sat only.</td>
-                <td>Small saving of <span style="font-weight: bold; color: #1b5e20;">£25pm</span> which will be reallocated to better converting days.</td>
-                <td class="actioned-cell">&#10003;</td>
-              </tr>
-              <tr>
-                <td></td>
-                <td>Exclusion of some small, non-converting geographic locations.</td>
-                <td><span style="font-weight: bold; color: #1b5e20;">£100</span> freed to reallocate to better performing geographic locations.</td>
-                <td class="actioned-cell">&#10003;</td>
-              </tr>
-              <tr>
-                <td>LEV</td>
-                <td>Users on computers found to be <span style="font-weight: bold; color: #1b5e20;">2.69x</span> more likely to convert Vs users arriving via this campaign on mobile therefore we will adjust the targeting settings for this campaign exclusively for users on desktop devices.</td>
-                <td>~<span style="font-weight: bold; color: #1b5e20;">£100pm</span> saved on mobile users which can be re-allocated to users on desktop devices in the Midlands.</td>
-                <td class="actioned-cell">&#10003;</td>
-              </tr>
-              <tr>
-                <td></td>
-                <td>Users in the Midlands region <span style="font-weight: bold; color: #1b5e20;">3.96x</span> more likely to convert than users in the Yorkshire region for LEV-related keywords. Location targeting going forward will focus exclusively on the Midlands region.</td>
-                <td></td>
-                <td class="actioned-cell">&#10003;</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </div><!-- end panel-summaries -->
-
-  </div>
-</div>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<script>
-  /* ── Tab switching ── */
-  function switchTab(tab) {
-    document.getElementById('panel-results').style.display   = tab === 'results'   ? 'block' : 'none';
-    document.getElementById('panel-geo').style.display       = tab === 'geo'       ? 'block' : 'none';
-    document.getElementById('panel-cpc').style.display       = tab === 'cpc'       ? 'block' : 'none';
-    document.getElementById('panel-adspend').style.display   = tab === 'adspend'   ? 'block' : 'none';
-    document.getElementById('panel-summaries').style.display = tab === 'summaries' ? 'block' : 'none';
-    document.getElementById('tab-results').classList.toggle('active',   tab === 'results');
-    document.getElementById('tab-geo').classList.toggle('active',       tab === 'geo');
-    document.getElementById('tab-cpc').classList.toggle('active',       tab === 'cpc');
-    document.getElementById('tab-adspend').classList.toggle('active',   tab === 'adspend');
-    document.getElementById('tab-summaries').classList.toggle('active', tab === 'summaries');
-  }
-
-  /* ── FAQ toggle ── */
-  function toggleFaq(id) {
-    var body    = document.getElementById('body-'    + id);
-    var chevron = document.getElementById('chevron-' + id);
-    var divider = document.getElementById('divider-' + id);
-    var isCollapsed = body.classList.contains('collapsed');
-    body.classList.toggle('collapsed', !isCollapsed);
-    chevron.classList.toggle('collapsed', !isCollapsed);
-    divider.classList.toggle('collapsed', !isCollapsed);
-  }
-
-  /* ── Stacked bar chart ── */
-  var months = [
-    'Jan 25','Feb 25','Mar 25','Apr 25','May 25','Jun 25',
-    'Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25',
-    'Jan 26','Feb 26','Mar 26','Apr 26','May 26','Jun 26'
-  ];
-
-  var campaigns = [
-    {
-      label: 'Paid Form Submissions',
-      color: '#34a853',
-      group: 'paid',
-      data: [0,5,0,1,1,5,5,7,5,5,5,3,5,5,5,3,4,4]
-    },
-    {
-      label: 'Paid Phone Calls',
-      color: '#fb923c',
-      group: 'paid',
-      data: [0,0,0,0,0,0,0,0,0,0,2,2,4,7,8,12,9,6]
-    },
-    {
-      label: 'Paid Email Enquiries',
-      color: '#ea4335',
-      group: 'paid',
-      data: [0,0,0,0,0,0,0,0,0,0,0,2,2,4,2,5,8,3]
-    },
-    {
-      label: 'Paid Brochure Downloads',
-      color: '#9c27b0',
-      group: 'paid',
-      data: [5,1,8,12,12,7,14,2,3,12,11,10,9,13,14,14,12,22]
+async function mapLimit(items, limit, fn) {
+  const out = [];
+  let i = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) || 1 }, async () => {
+    while (i < items.length) {
+      const idx = i++;
+      out[idx] = await fn(items[idx]);
     }
-  ];
+  });
+  await Promise.all(workers);
+  return out;
+}
 
-  var spendData = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38,2044.70];
+export async function onRequestGet(context) {
+  const { request, env } = context;
+  const url = new URL(request.url);
 
-  var ctx = document.getElementById('conversionsChart').getContext('2d');
-  // Default is false
-  var conversionsLabelsVisible = false;
-  var myChart = new Chart(ctx, {
-    type: 'bar',
-    plugins: [ChartDataLabels],
-    data: {
-      labels: months,
-      datasets: campaigns.map(function(c) {
-        return {
-          label: c.label,
-          data: c.data,
-          backgroundColor: c.color,
-          borderRadius: 3,
-          borderSkipped: false,
-          yAxisID: 'y'
-        };
-      }).concat([{
-        label: 'Ad Spend',
-        data: spendData,
-        type: 'line',
-        borderColor: '#f9ab00',
-        backgroundColor: 'rgba(249,171,0,0.12)',
-        pointBackgroundColor: '#f9ab00',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        borderWidth: 2.5,
-        tension: 0.35,
-        fill: false,
-        yAxisID: 'ySpend',
-        order: -1
-      }])
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        datalabels: {
-          display: function(ctx) {
-            if (!conversionsLabelsVisible) return false;
-            return ctx.dataset.data[ctx.dataIndex] !== 0;
-          },
-          align: function(ctx) { return ctx.dataset.type === 'line' ? 'top' : 'center'; },
-          color: function(ctx) { return ctx.dataset.type === 'line' ? '#f9ab00' : '#fff'; },
-          font: { size: 10, weight: '700', family: "'Segoe UI', Arial, sans-serif" },
-          formatter: function(v, ctx) {
-            if (ctx.dataset.type === 'line') return '£' + v.toLocaleString('en-GB', {maximumFractionDigits:0});
-            return v;
-          }
-        },
-        tooltip: {
-          mode: 'index',
-          callbacks: {
-            label: function(item) {
-              if (item.dataset.label === 'Ad Spend') {
-                return ' Ad Spend: £' + item.parsed.y.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-              }
-              return ' ' + item.dataset.label + ': ' + item.parsed.y;
-            },
-            footer: function(items) {
-              var total = items.reduce(function(s, i) {
-                return i.dataset.label === 'Ad Spend' ? s : s + i.parsed.y;
-              }, 0);
-              return 'Total Conversions: ' + total;
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          stacked: true,
-          grid: { display: false },
-          ticks: { font: { size: 11 }, color: '#5f6368' }
-        },
-        y: {
-          stacked: true,
-          min: 0,
-          max: 80,
-          position: 'left',
-          grid: { color: '#f0f0f0' },
-          ticks: { stepSize: 20, font: { size: 11 }, color: '#5f6368' },
-          title: { display: true, text: 'Conversions', color: '#5f6368', font: { size: 12 } }
-        },
-        ySpend: {
-          type: 'linear',
-          position: 'right',
-          min: 0,
-          max: 2400,
-          grid: { drawOnChartArea: false },
-          ticks: {
-            stepSize: 400,
-            font: { size: 11 },
-            color: '#5f6368',
-            callback: function(val) { return '£' + val.toLocaleString('en-GB'); }
-          },
-          title: { display: true, text: 'Ad Spend (£)', color: '#5f6368', font: { size: 12 } }
-        }
-      }
+  // --- shared-secret auth ---
+  if (!env.CRON_SECRET || url.searchParams.get("key") !== env.CRON_SECRET) {
+    return json({ error: "Unauthorized" }, 401);
+  }
+  const dryRun = url.searchParams.get("dryRun") === "1";
+  const debug = url.searchParams.get("debug") === "1";
+
+  // --- headless auth via the token saved at login ---
+  const refreshToken = await env.SESSIONS.get("cron:refreshToken");
+  if (!refreshToken) {
+    return json({ error: "No stored token. Sign in to the dashboard once so the digest can authenticate." }, 400);
+  }
+  const accessToken = await getAccessToken(env, refreshToken);
+
+  // --- every account this login can reach ---
+  const list = await adsRequest(env, accessToken, "customers:listAccessibleCustomers");
+  const ids = (list.resourceNames || []).map((rn) => rn.split("/")[1]);
+
+  // User-set monthly budgets (for pacing) + where we are in the month.
+  const budgets = await loadBudgets(env);
+  const mi = monthInfo();
+
+  const results = await mapLimit(ids, 5, async (id) => {
+    try {
+      return await auditAccount(env, accessToken, id, budgets, mi);
+    } catch (e) {
+      return { id, name: formatId(id), issues: [], error: (e && e.message) ? e.message : String(e) };
     }
   });
 
-  /* Build interactive DISTINCTLY GROUPED custom legend */
-  var legendEl = document.getElementById('chartLegend');
-  legendEl.innerHTML = '';
+  const flagged = results.filter((a) => a && a.issues.length);
+  const payload = buildSlack(flagged);
 
-  var paidContainer = document.createElement('div');
-  paidContainer.className = 'legend-group-container';
-  paidContainer.innerHTML = '<span class="legend-group-title">Paid Performance</span>';
-
-  campaigns.forEach(function(c, i) {
-    var item = document.createElement('div');
-    item.className = 'legend-item';
-    item.innerHTML = '<span class="legend-swatch" style="background:' + c.color + '"></span>' + c.label;
-    item.addEventListener('click', function() {
-      var meta = myChart.getDatasetMeta(i);
-      meta.hidden = !meta.hidden;
-      item.classList.toggle('dimmed', meta.hidden);
-      myChart.update();
-    });
-    
-    paidContainer.appendChild(item);
-  });
-
-  /* Append Ad Spend item to Paid Grouping container */
-  var spendIndex = campaigns.length;
-  var spendItem = document.createElement('div');
-  spendItem.className = 'legend-item';
-  spendItem.innerHTML = '<span class="legend-swatch" style="background:#f9ab00; height:3px; width:18px; border-radius:2px;"></span>Ad Spend';
-  spendItem.addEventListener('click', function() {
-    var meta = myChart.getDatasetMeta(spendIndex);
-    meta.hidden = !meta.hidden;
-    spendItem.classList.toggle('dimmed', meta.hidden);
-    myChart.update();
-  });
-  paidContainer.appendChild(spendItem);
-
-  legendEl.appendChild(paidContainer);
-  
-  function toggleConversionsLabels() {
-    conversionsLabelsVisible = !conversionsLabelsVisible;
-    var btn = document.getElementById('conversionsLabelToggle');
-    btn.classList.toggle('active', conversionsLabelsVisible);
-    btn.innerHTML = conversionsLabelsVisible
-      ? '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels'
-      : '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels';
-    myChart.update();
-  }
-
-  /* ── Cost per Contact line chart ── */
-  var cpcData = [0,54.93,73.38,47.72,73.11,80.52,55.23,103.78,115.76,45.52,58.87,61.10,53.83,39.80,40.80,32.77,41.01,58.42];
-
-  var cpcCtx = document.getElementById('cpcChart').getContext('2d');
-  var cpcLabelsVisible = true;
-
-  var cpcChart = new Chart(cpcCtx, {
-    type: 'line',
-    plugins: [ChartDataLabels],
-    data: {
-      labels: months,
-      datasets: [{
-        label: 'Cost per Contact',
-        data: cpcData,
-        borderColor: '#4285f4',
-        backgroundColor: 'rgba(66,133,244,0.08)',
-        pointBackgroundColor: cpcData.map(function(v) {
-          if (v === 0)  return 'rgba(0,0,0,0)';
-          if (v >= 100) return '#ea4335';
-          if (v >= 70)  return '#fb923c';
-          if (v >= 50)  return '#f9ab00';
-          return '#34a853';
-        }),
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: cpcData.map(function(v) { return v === 0 ? 0 : 5; }),
-        pointHoverRadius: 7,
-        borderWidth: 2.5,
-        tension: 0.35,
-        fill: true,
-        datalabels: {
-          display: function(ctx) { return cpcLabelsVisible && ctx.dataset.data[ctx.dataIndex] !== 0; },
-          align: 'top',
-          anchor: 'end',
-          offset: 4,
-          font: { size: 10, weight: '700', family: "'Segoe UI', Arial, sans-serif" },
-          color: function(ctx) {
-            var v = ctx.dataset.data[ctx.dataIndex];
-            if (v >= 100) return '#ea4335';
-            if (v >= 70)  return '#fb923c';
-            if (v >= 50)  return '#f9ab00';
-            return '#34a853';
-          },
-          formatter: function(v) { return '£' + v.toFixed(2); }
-        }
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      layout: { padding: { top: 28 } },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: function(item) {
-              return item.parsed.y === 0 ? ' No data' : ' Cost per Contact: £' + item.parsed.y.toFixed(2);
-            }
-          }
-        },
-        datalabels: {}
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { font: { size: 11 }, color: '#5f6368' }
-        },
-        y: {
-          min: 0,
-          max: 120,
-          grid: { color: '#f0f0f0' },
-          ticks: {
-            stepSize: 20,
-            font: { size: 11 },
-            color: '#5f6368',
-            callback: function(val) { return '£' + val; }
-          },
-          title: { display: true, text: 'Cost per Contact (£)', color: '#5f6368', font: { size: 12 } }
-        }
-      }
-    }
-  });
-
-  function toggleCpcLabels() {
-    cpcLabelsVisible = !cpcLabelsVisible;
-    var btn = document.getElementById('cpcLabelToggle');
-    btn.classList.toggle('active', cpcLabelsVisible);
-    btn.innerHTML = cpcLabelsVisible
-      ? '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels'
-      : '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels';
-    cpcChart.update();
-  }
-
-  // ===== MAP FUNCTIONALITY =====
-  const cityCoordinates = {
-    'London': {lat: 51.5074, lng: -0.1278}, 'Wakefield': {lat: 53.6832, lng: -1.4969}, 'Birmingham': {lat: 52.5086, lng: -1.8754},
-    'Manchester': {lat: 53.4808, lng: -2.2426}, 'Leeds': {lat: 53.8008, lng: -1.5491}, 'Darnall': {lat: 53.3700, lng: -1.3700},
-    'Leicester': {lat: 52.6369, lng: -1.1398}, 'Chipping Norton': {lat: 51.9819, lng: -1.5475}, 'Ossett': {lat: 53.6614, lng: -1.5862},
-    'Widnes': {lat: 53.3667, lng: -2.7273}, 'Tamworth': {lat: 52.6386, lng: -1.6947}, 'Penistone': {lat: 53.5044, lng: -1.5931},
-    'Barnsley': {lat: 53.5502, lng: -1.4778}, 'Lancaster': {lat: 54.0459, lng: -2.8007}, 'Bradford': {lat: 53.7954, lng: -1.7592},
-    'Macclesfield': {lat: 53.2596, lng: -2.1291}, 'Scunthorpe': {lat: 53.5848, lng: -0.6455}, 'Belper': {lat: 53.0217, lng: -1.4633},
-    'Portsmouth': {lat: 50.7959, lng: -1.0872}, 'Rochdale': {lat: 53.6089, lng: -2.1564}, 'Worksop': {lat: 53.3036, lng: -1.1219},
-    'Ulverston': {lat: 54.1639, lng: -3.1153}, 'Halifax': {lat: 53.7200, lng: -1.8562}, 'Selby': {lat: 53.8033, lng: -1.1658},
-    'Kingston upon Hull': {lat: 53.7447, lng: -0.3367}, 'Sheffield': {lat: 53.3811, lng: -1.4701}, 'Nottingham': {lat: 52.9548, lng: -1.1581},
-    'Liverpool': {lat: 53.4084, lng: -2.9916}, 'Stoke-on-Trent': {lat: 53.0264, lng: -2.1793}, 'Warrington': {lat: 53.3878, lng: -2.5961},
-    'Reading': {lat: 51.4545, lng: -0.9757}, 'Ipswich': {lat: 52.0534, lng: 1.1446}, 'Lowestoft': {lat: 52.4791, lng: 1.7489},
-    'Harlow': {lat: 51.7603, lng: 0.1034}, 'Hove': {lat: 50.8597, lng: -0.1723}, 'Bath': {lat: 51.3788, lng: -2.3613},
-    'Worcester': {lat: 52.1896, lng: -2.2262}, 'Salford': {lat: 53.4761, lng: -2.2881}, 'Colchester': {lat: 51.8947, lng: 0.9024},
-    'Dagenham': {lat: 51.5424, lng: 0.1767}, 'Sunderland': {lat: 54.9045, lng: -1.3857}, 'Linthwaite': {lat: 53.6500, lng: -1.8500},
-    'Lofthouse': {lat: 53.6800, lng: -1.5800}, 'Staveley': {lat: 53.2200, lng: -1.3800}, 'Ashford': {lat: 51.1454, lng: 0.8752},
-    'Mansfield': {lat: 53.1451, lng: -1.1977}, 'Brighouse': {lat: 53.7000, lng: -1.8000}, 'Wellingborough': {lat: 52.2979, lng: -0.6956},
-    'Stockport': {lat: 53.4062, lng: -2.1616}, 'Bridgwater': {lat: 51.1289, lng: -2.9844}, 'Shepshed': {lat: 52.7476, lng: -1.3055},
-    'Batley': {lat: 53.6460, lng: -1.6540}, 'Middlesbrough': {lat: 54.5773, lng: -1.2390}, 'Cleckheaton': {lat: 53.6600, lng: -1.7800},
-    'Warwick': {lat: 52.2787, lng: -1.5845}, 'Dukinfield': {lat: 53.5067, lng: -2.1367}, 'Ormskirk': {lat: 53.5757, lng: -2.7164},
-    'Kidsgrove': {lat: 53.0835, lng: -2.1500}, 'Royston': {lat: 52.0439, lng: -0.0152}, 'Sudbury': {lat: 52.0443, lng: 0.7270},
-    'Speke': {lat: 53.3656, lng: -2.9167}, 'Gedling': {lat: 52.9700, lng: -1.1300}, 'The Royal Town of Sutton Coldfield': {lat: 52.5642, lng: -1.8254},
-    'West Bromwich': {lat: 52.5092, lng: -2.0082}, 'Bicester': {lat: 51.8957, lng: -1.1580}, 'Fakenham': {lat: 52.8310, lng: 0.8330},
-    'Stanningley': {lat: 53.8100, lng: -1.7200}, 'Sherburn in Elmet': {lat: 53.8000, lng: -1.3300}, 'Ashton-on-Ribble': {lat: 53.7500, lng: -2.7000},
-    'Ellesmere Port': {lat: 53.2651, lng: -2.8117}, 'Stourbridge': {lat: 52.3973, lng: -2.1558}, 'Alfreton': {lat: 53.0450, lng: -1.3800},
-    'Long Eaton': {lat: 52.8900, lng: -1.3300}, 'Aylesford': {lat: 51.2800, lng: 0.4000}, 'Newcastle-under-Lyme': {lat: 53.0110, lng: -2.2150},
-    'Barrow upon Soar': {lat: 52.7300, lng: -1.1700}, 'Cramlington': {lat: 55.0600, lng: -1.4700}, 'Redditch': {lat: 52.3050, lng: -1.9450},
-    'Birchwood': {lat: 53.3400, lng: -2.3700}, 'Cannock': {lat: 52.6900, lng: -1.9800}
-  };
-  
-  const conversionLocations = [
-    {city: 'London', conversions: 17.19},
-    {city: 'Wakefield', conversions: 11.5},
-    {city: 'Birmingham', conversions: 9.0},
-    {city: 'Manchester', conversions: 5.0},
-    {city: 'Leeds', conversions: 4.0},
-    {city: 'Darnall', conversions: 3.0},
-    {city: 'Leicester', conversions: 3.0},
-    {city: 'Tamworth', conversions: 2.89},
-    {city: 'Glenmavis', conversions: 2.0},
-    {city: 'Barnsley', conversions: 2.0},
-    {city: 'Sheffield', conversions: 2.0},
-    {city: 'Bradford', conversions: 2.0},
-    {city: 'Macclesfield', conversions: 2.0},
-    {city: 'Lancaster', conversions: 2.0},
-    {city: 'Penistone', conversions: 2.0},
-    {city: 'Ossett', conversions: 2.0},
-    {city: 'Staveley', conversions: 2.0},
-    {city: 'Ipswich', conversions: 2.0},
-    {city: 'Sherburn in Elmet', conversions: 1.25},
-    {city: 'Royston', conversions: 1.0},
-    {city: 'Scunthorpe', conversions: 1.0},
-    {city: 'Salford', conversions: 1.0},
-    {city: 'Ormskirk', conversions: 1.0},
-    {city: 'Rochdale', conversions: 1.0},
-    {city: 'Shepshed', conversions: 1.0},
-    {city: 'Nottingham', conversions: 1.0},
-    {city: 'Paisley', conversions: 1.0},
-    {city: 'Redditch', conversions: 1.0},
-    {city: 'Alfreton', conversions: 1.0},
-    {city: 'Shetland', conversions: 1.0},
-    {city: 'Smethwick', conversions: 1.0},
-    {city: 'Worcester', conversions: 1.0},
-    {city: 'West Bromwich', conversions: 1.0},
-    {city: 'Washington', conversions: 1.0},
-    {city: 'Warwick', conversions: 1.0},
-    {city: 'Warrington', conversions: 1.0},
-    {city: 'Ulverston', conversions: 1.0},
-    {city: 'The Royal Town of Sutton Coldfield', conversions: 1.0},
-    {city: 'Telford', conversions: 1.0},
-    {city: 'Sunderland', conversions: 1.0},
-    {city: 'Sudbury', conversions: 1.0},
-    {city: 'Stourbridge', conversions: 1.0},
-    {city: 'Stoke-on-Trent', conversions: 1.0},
-    {city: 'Stockport', conversions: 1.0},
-    {city: 'Stanningley', conversions: 1.0},
-    {city: 'Speke', conversions: 1.0},
-    {city: 'Southampton', conversions: 1.0},
-    {city: 'Nairn', conversions: 1.0},
-    {city: 'Newcastle-under-Lyme', conversions: 1.0},
-    {city: 'Long Eaton', conversions: 1.0},
-    {city: 'Middlesbrough', conversions: 1.0},
-    {city: 'Birchwood', conversions: 1.0},
-    {city: 'Cleckheaton', conversions: 1.0},
-    {city: 'Chipping Norton', conversions: 1.0},
-    {city: 'Cannock', conversions: 1.0},
-    {city: 'Broadstairs', conversions: 1.0},
-    {city: 'Bristol', conversions: 1.0},
-    {city: 'Brighouse', conversions: 1.0},
-    {city: 'Bridgwater', conversions: 1.0},
-    {city: 'Bicester', conversions: 1.0},
-    {city: 'Mansfield', conversions: 1.0},
-    {city: 'Belper', conversions: 1.0},
-    {city: 'Batley', conversions: 1.0},
-    {city: 'Bath', conversions: 1.0},
-    {city: 'Barrow upon Soar', conversions: 1.0},
-    {city: 'Aylesford', conversions: 1.0},
-    {city: 'Axminster', conversions: 1.0},
-    {city: 'Ashton-on-Ribble', conversions: 1.0},
-    {city: 'Colchester', conversions: 1.0},
-    {city: 'Cramlington', conversions: 1.0},
-    {city: 'Dagenham', conversions: 1.0},
-    {city: 'East Kilbride', conversions: 1.0},
-    {city: 'Lowestoft', conversions: 1.0},
-    {city: 'Ashford', conversions: 1.0},
-    {city: 'Lofthouse', conversions: 1.0},
-    {city: 'Linthwaite', conversions: 1.0},
-    {city: 'Kingston upon Hull', conversions: 1.0},
-    {city: 'Kidsgrove', conversions: 1.0},
-    {city: 'Keighley', conversions: 1.0},
-    {city: 'Hove', conversions: 1.0},
-    {city: 'Harlow', conversions: 1.0},
-    {city: 'Halifax', conversions: 1.0},
-    {city: 'Glenrothes', conversions: 1.0},
-    {city: 'Gedling', conversions: 1.0},
-    {city: 'Fakenham', conversions: 1.0},
-    {city: 'Ellesmere Port', conversions: 1.0},
-    {city: 'Worksop', conversions: 1.0},
-    {city: 'Reading', conversions: 0.98}
-  ];
-  
-  let conversionMap = null;
-  
-  function populateConversionTable() {
-    const tbody = document.getElementById('conversionTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    const sorted = [...conversionLocations].sort((a, b) => b.conversions - a.conversions);
-    sorted.forEach(loc => {
-      const row = tbody.insertRow();
-      row.innerHTML = '<td class="city-cell">' + loc.city + '</td><td class="conversions-cell">' + Math.round(loc.conversions) + '</td>';
-    });
-  }
-  
-  function openMapModal() {
-    document.getElementById('mapModal').classList.add('show');
-    populateConversionTable();
-    setTimeout(() => initializeMap(), 300);
-  }
-  
-  function closeMapModal() {
-    document.getElementById('mapModal').classList.remove('show');
-    if (conversionMap) {
-      conversionMap.remove();
-      conversionMap = null;
-    }
-  }
-  
-  function initializeMap() {
-    if (conversionMap) return;
-    const mapEl = document.getElementById('conversionMap');
-    if (!mapEl) return;
-    
-    conversionMap = L.map(mapEl).setView([52.3555, -1.1743], 6);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
-      maxZoom: 19,
-      subdomains: 'abcd'
-    }).addTo(conversionMap);
-    
-    const conversions = conversionLocations.map(l => l.conversions);
-    const minConv = Math.min(...conversions);
-    const maxConv = Math.max(...conversions);
-    
-    conversionLocations.forEach(loc => {
-      const coords = cityCoordinates[loc.city];
-      if (coords) {
-        const ratio = (loc.conversions - minConv) / (maxConv - minConv);
-        const color = ratio > 0.7 ? '#ea4335' : ratio > 0.4 ? '#f9ab00' : '#4285f4';
-        const radius = 8 + (loc.conversions / maxConv) * 20;
-        L.circleMarker([coords.lat, coords.lng], {
-          radius: radius, fillColor: color, color: '#fff', weight: 2, opacity: 0.8, fillOpacity: 0.7
-        }).bindPopup(loc.city + '<br/>Conversions: ' + Math.round(loc.conversions)).addTo(conversionMap);
-      }
-    });
-    
-    const legend = L.control({position: 'bottomright'});
-    legend.onAdd = () => {
-      const div = L.DomUtil.create('div', 'map-legend');
-      div.innerHTML = '<strong>Conversion Density</strong><br/><div class="legend-item-map"><div class="legend-color" style="background:#ea4335;"></div>High</div><div class="legend-item-map"><div class="legend-color" style="background:#f9ab00;"></div>Medium</div><div class="legend-item-map"><div class="legend-color" style="background:#4285f4;"></div>Low</div>';
-      return div;
-    };
-    legend.addTo(conversionMap);
-    setTimeout(() => { if (conversionMap) conversionMap.invalidateSize(); }, 300);
-  }
-  
-  document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('mapModal');
-    if (modal) {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeMapModal();
+  let posted = false, slackError;
+  if (!dryRun && flagged.length) {
+    if (!env.SLACK_WEBHOOK_URL) {
+      slackError = "SLACK_WEBHOOK_URL is not configured";
+    } else {
+      const res = await fetch(env.SLACK_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
+      posted = res.ok;
+      if (!res.ok) slackError = "Slack responded " + res.status;
     }
+  }
+
+  return json({
+    ok: true,
+    checkedAt: new Date().toISOString(),
+    accountsChecked: ids.length,
+    flagged: flagged.length,
+    posted,
+    ...(slackError ? { slackError } : {}),
+    ...(dryRun ? { slackPreview: payload } : {}),
+    accounts: (debug ? results : flagged).map((a) => ({ id: a.id, name: a.name, issues: a.issues.map((i) => i.text), ...(a.error ? { error: a.error } : {}), ...(debug && a._assetDiag ? { assetDiag: a._assetDiag } : {}) })),
   });
+}
 
-  /* ── Ad Spending line chart ── */
-  var adSpendMonthly = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38,2044.70];
+// Run the checks for a single account. Returns { id, name, issues:[{level,kind,text}] }.
+async function auditAccount(env, accessToken, id, budgets, mi) {
+  const search = (query) => adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query });
 
-  var adSpendCtx = document.getElementById('adSpendChart').getContext('2d');
-  var adSpendLabelsVisible = true;
-  var adSpendChart = new Chart(adSpendCtx, {
-    type: 'line',
-    plugins: [ChartDataLabels],
-    data: {
-      labels: months,
-      datasets: [{
-        label: 'Ad Spend',
-        data: adSpendMonthly,
-        borderColor: '#f9ab00',
-        backgroundColor: 'rgba(249,171,0,0.08)',
-        pointBackgroundColor: adSpendMonthly.map(function(v) { return v === 0 ? 'rgba(0,0,0,0)' : '#f9ab00'; }),
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: adSpendMonthly.map(function(v) { return v === 0 ? 0 : 5; }),
-        pointHoverRadius: 7,
-        borderWidth: 2.5,
-        tension: 0.35,
-        fill: true,
-        datalabels: {
-          display: function(ctx) { return adSpendLabelsVisible && ctx.dataset.data[ctx.dataIndex] !== 0; },
-          align: 'top',
-          anchor: 'end',
-          offset: 4,
-          font: { size: 10, weight: '700', family: "'Segoe UI', Arial, sans-serif" },
-          color: '#f9ab00',
-          formatter: function(v) { return '£' + v.toFixed(2); }
-        }
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      layout: { padding: { top: 28 } },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: function(item) {
-              return item.parsed.y === 0 ? ' No data' : ' Ad Spend: £' + item.parsed.y.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { font: { size: 11 }, color: '#5f6368' }
-        },
-        y: {
-          min: 0,
-          max: 2400,
-          grid: { color: '#f0f0f0' },
-          ticks: {
-            stepSize: 400,
-            font: { size: 11 },
-            color: '#5f6368',
-            callback: function(val) { return '£' + val.toLocaleString('en-GB'); }
-          },
-          title: { display: true, text: 'Ad Spend (£)', color: '#5f6368', font: { size: 12 } }
+  const cust = (await search("SELECT customer.descriptive_name, customer.manager, customer.status FROM customer LIMIT 1")).results?.[0]?.customer || {};
+  if (cust.manager) return { id, name: cust.descriptiveName || formatId(id), issues: [] }; // MCCs have no campaigns of their own
+  const name = cust.descriptiveName || formatId(id);
+  const issues = [];
+
+  // 1) Account suspended
+  if ((cust.status || "").toUpperCase() === "SUSPENDED") {
+    issues.push({ level: 3, kind: "suspended", text: "Account is SUSPENDED" });
+  }
+
+  // Enabled campaigns (with Target CPA) — reused by the CPA, pacing and asset checks.
+  let campEnabled = [];
+  try {
+    campEnabled = (await search("SELECT campaign.id, campaign.name, campaign.target_cpa.target_cpa_micros, campaign.maximize_conversions.target_cpa_micros FROM campaign WHERE campaign.status = 'ENABLED'")).results || [];
+  } catch { /* leave empty */ }
+  const enabledCount = campEnabled.length;
+
+  // 2) Policy — disapproved / limited ads on enabled campaigns
+  try {
+    const ads = (await search(
+      "SELECT ad_group_ad.policy_summary.approval_status, campaign.status, ad_group.status, ad_group_ad.status FROM ad_group_ad WHERE ad_group_ad.policy_summary.approval_status != 'APPROVED' AND campaign.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND ad_group_ad.status = 'ENABLED'"
+    )).results || [];
+    let disapproved = 0, limited = 0;
+    for (const r of ads) {
+      const s = r.adGroupAd?.policySummary?.approvalStatus;
+      if (s === "DISAPPROVED") disapproved++;
+      else if (s === "APPROVED_LIMITED" || s === "AREA_OF_INTEREST_ONLY") limited++;
+    }
+    if (disapproved) issues.push({ level: 3, kind: "disapproved", text: `${disapproved} disapproved ad${disapproved > 1 ? "s" : ""}` });
+    if (limited) issues.push({ level: 2, kind: "limited", text: `${limited} limited ad${limited > 1 ? "s" : ""}` });
+  } catch { /* non-fatal: skip policy for this account */ }
+
+  // 3) CPA drift — enabled campaigns whose CPA since the last Target-CPA change is
+  //    well under target. Mirrors the Bidding Strategies page (last adjustment from
+  //    change_event; achieved CPA summed from that date onward).
+  try {
+    const target = {}, cname = {};
+    for (const r of campEnabled) {
+      const micros = r.campaign?.targetCpa?.targetCpaMicros ?? r.campaign?.maximizeConversions?.targetCpaMicros;
+      if (micros != null) { target[r.campaign.id] = Number(micros) / 1e6; cname[r.campaign.id] = r.campaign.name; }
+    }
+    if (Object.keys(target).length) {
+      const MS_DAY = 86400000;
+      const changeStart = new Date(Date.now() - 28 * MS_DAY).toISOString().slice(0, 10);
+      const changeEnd = new Date(Date.now() + MS_DAY).toISOString().slice(0, 10);
+      const [metR, changeR] = await Promise.all([
+        search("SELECT campaign.id, segments.date, metrics.cost_micros, metrics.conversions FROM campaign WHERE campaign.status = 'ENABLED' AND segments.date DURING LAST_30_DAYS"),
+        search(`SELECT change_event.change_date_time, change_event.campaign, change_event.changed_fields FROM change_event WHERE change_event.change_date_time >= '${changeStart}' AND change_event.change_date_time <= '${changeEnd}' AND change_event.change_resource_type = 'CAMPAIGN' ORDER BY change_event.change_date_time DESC LIMIT 10000`).catch(() => ({ results: [] })),
+      ]);
+      // Most recent Target-CPA change per campaign (results are newest-first).
+      const lastAdj = {};
+      for (const r of changeR.results || []) {
+        const camp = r.changeEvent?.campaign;
+        if (!camp) continue;
+        const cid = camp.split("/").pop();
+        if (lastAdj[cid]) continue;
+        if (!(r.changeEvent?.changedFields || "").toLowerCase().includes("targetcpa")) continue;
+        lastAdj[cid] = (r.changeEvent?.changeDateTime || "").slice(0, 10);
+      }
+      // Daily metrics per campaign, to sum from each campaign's adjustment date.
+      const daily = {};
+      for (const r of metR.results || []) {
+        const cid = r.campaign?.id;
+        if (!cid) continue;
+        (daily[cid] = daily[cid] || []).push({ date: r.segments?.date, cost: Number(r.metrics?.costMicros || 0) / 1e6, conv: Number(r.metrics?.conversions || 0) });
+      }
+      for (const cid of Object.keys(target)) {
+        const start = lastAdj[cid] || null;
+        let cost = 0, conv = 0;
+        for (const d of daily[cid] || []) { if (start && (d.date || "") < start) continue; cost += d.cost; conv += d.conv; }
+        const cpaAchieved = conv > 0 ? cost / conv : null;
+        const t = target[cid];
+        if (t > 0 && cpaAchieved != null && cpaAchieved <= t * CPA_UNDER) {
+          const when = start ? `on ${fmtShortDate(start)}` : "more than 30 days ago";
+          issues.push({ level: 1, kind: "cpa", text: `${cname[cid]}: The bidding strategy for this campaign was last adjusted ${when}. Since then, it has achieved a CPA of ${fmtCurrency(cpaAchieved)} vs the set target of ${fmtCurrency(t)}. You may wish to bring your target more closely in line with the actual results being achieved.` });
         }
       }
     }
-  });
+  } catch { /* non-fatal */ }
 
-  function toggleAdSpendLabels() {
-    adSpendLabelsVisible = !adSpendLabelsVisible;
-    var btn = document.getElementById('adSpendLabelToggle');
-    btn.classList.toggle('active', adSpendLabelsVisible);
-    btn.innerHTML = adSpendLabelsVisible
-      ? '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels'
-      : '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Show Data Labels';
-    adSpendChart.update();
+  // 4) Budget pacing — spend vs the user-set monthly budget (matches the Budget
+  //    Pacing page: over = red, under = amber; only when a budget is set and the
+  //    account has enabled campaigns).
+  try {
+    const budget = budgets[id] || 0;
+    if (budget > 0 && enabledCount > 0) {
+      const [spendR, last7R] = await Promise.all([
+        search("SELECT metrics.cost_micros FROM campaign WHERE segments.date DURING THIS_MONTH AND campaign.status != 'REMOVED'"),
+        search("SELECT metrics.cost_micros FROM campaign WHERE segments.date DURING LAST_7_DAYS AND campaign.status != 'REMOVED'"),
+      ]);
+      let spend = 0;
+      for (const r of spendR.results || []) spend += Number(r.metrics?.costMicros || 0) / 1e6;
+      let last7 = 0;
+      for (const r of last7R.results || []) last7 += Number(r.metrics?.costMicros || 0) / 1e6;
+      const avgDaily = last7 / 7;
+      const alert = pacingAlert(spend, budget, avgDaily, mi);
+      if (alert) issues.push({ level: alert.level, kind: "pacing", text: alert.text });
+    }
+  } catch { /* non-fatal */ }
+
+  // 5) Asset gaps — serving campaign-level assets vs thresholds on enabled campaigns
+  //    (matches the Assets page: any campaign below a red threshold = red, else amber).
+  let assetDiag = { ran: false };
+  try {
+    if (enabledCount) {
+      const camps = {};
+      for (const r of campEnabled) camps[r.campaign.id] = { sitelinks: 0, landscape: 0, square: 0, callouts: 0, snippets: 0 };
+      const assetR = await search("SELECT campaign.id, campaign.status, campaign_asset.field_type, campaign_asset.status, campaign_asset.primary_status, asset.image_asset.full_size.width_pixels, asset.image_asset.full_size.height_pixels FROM campaign_asset WHERE campaign_asset.status = 'ENABLED' AND campaign_asset.field_type IN ('SITELINK','AD_IMAGE','CALLOUT','STRUCTURED_SNIPPET') AND campaign.status = 'ENABLED'");
+      const rows = assetR.results || [];
+      const SERVING = new Set(["ELIGIBLE", "LIMITED"]);
+      let served = 0, skippedPs = 0;
+      for (const r of rows) {
+        const c = camps[r.campaign?.id];
+        if (!c) continue;
+        const ps = r.campaignAsset?.primaryStatus;
+        if (ps && !SERVING.has(ps)) { skippedPs++; continue; }
+        served++;
+        switch (r.campaignAsset?.fieldType) {
+          case "SITELINK": c.sitelinks++; break;
+          case "AD_IMAGE": {
+            const w = Number(r.asset?.imageAsset?.fullSize?.widthPixels) || 0;
+            const h = Number(r.asset?.imageAsset?.fullSize?.heightPixels) || 0;
+            if (w && h && (w / h) >= 1.3) c.landscape++; else c.square++;
+            break;
+          }
+          case "CALLOUT": c.callouts++; break;
+          case "STRUCTURED_SNIPPET": c.snippets++; break;
+        }
+      }
+      const redByType = {}, amberByType = {};
+      for (const key of ASSET_KEYS) { redByType[key] = 0; amberByType[key] = 0; }
+      let red = 0, amber = 0;
+      for (const c of Object.values(camps)) {
+        let lvl = 0;
+        for (const key of ASSET_KEYS) {
+          const L = assetCellLevel(key, c[key]);
+          if (L === 2) redByType[key]++; else if (L === 1) amberByType[key]++;
+          if (L > lvl) lvl = L;
+        }
+        if (lvl === 2) red++; else if (lvl === 1) amber++;
+      }
+      assetDiag = { ran: true, enabledCampaigns: Object.keys(camps).length, assetRows: rows.length, served, skippedPs, red, amber, redByType, amberByType, sampleRow: rows[0] || null, sampleCounts: Object.values(camps).slice(0, 3) };
+      // Red = missing entirely (0 of that asset). One bullet per asset type.
+      for (const key of ASSET_KEYS) {
+        const n = redByType[key];
+        if (n) issues.push({ level: 3, kind: "assets", text: `${n} campaign${n > 1 ? "s have" : " has"} 0 ${ASSET_LABELS[key]}` });
+      }
+      // Amber = present but below the recommended count.
+      for (const key of ASSET_KEYS) {
+        const n = amberByType[key];
+        if (n) issues.push({ level: 2, kind: "assets", text: `${n} campaign${n > 1 ? "s have" : " has"} fewer than ${GREEN_THRESHOLD[key]} ${ASSET_LABELS[key]}` });
+      }
+    }
+  } catch (e) { assetDiag = { ran: false, error: (e && e.message) ? e.message : String(e) }; }
+
+  return { id, name, issues, _assetDiag: assetDiag };
+}
+
+// --- shared rule helpers (mirror the dashboard) ---
+
+const ASSET_KEYS = ["sitelinks", "landscape", "square", "callouts", "snippets"];
+const ASSET_LABELS = { sitelinks: "Sitelinks", landscape: "Landscape images", square: "Square images", callouts: "Callouts", snippets: "Structured Snippets" };
+const GREEN_THRESHOLD = { sitelinks: 8, landscape: 2, square: 5, callouts: 10, snippets: 1 };
+
+function assetCellLevel(key, v) {
+  if (key === "sitelinks") return v >= 8 ? 0 : (v >= 1 ? 1 : 2);
+  if (key === "landscape") return v >= 2 ? 0 : (v === 1 ? 1 : 2);
+  if (key === "square") return v >= 5 ? 0 : (v >= 1 ? 1 : 2);
+  if (key === "callouts") return v >= 10 ? 0 : (v >= 1 ? 1 : 2);
+  if (key === "snippets") return v >= 1 ? 0 : 2;
+  return v === 0 ? 2 : 0;
+}
+
+const fmtCurrency0 = (n) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(Math.round(n || 0));
+const fmtCurrency = (n) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 }).format(n || 0);
+function fmtShortDate(ymd) {
+  const d = new Date(ymd + "T00:00:00");
+  if (isNaN(d.getTime())) return ymd;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+// Budget-pacing alert text — mirrors the dashboard's buildRecommendation exactly, so
+// the Slack line reads the same as the account card's recommendation. Returns
+// { level, text } for over/under projections, or null when on track.
+function pacingAlert(spend, budget, avg7, mi) {
+  if (!budget || budget <= 0) return null;
+  const remainingDays = Math.max(0, mi.daysInMonth - mi.dayOfMonth);
+  const budgetStr = fmtCurrency0(budget);
+  const days = (n) => n + (n === 1 ? " day" : " days");
+  const projected = spend + avg7 * remainingDays;
+
+  if (remainingDays <= 0) {
+    if (spend > budget) return { level: 3, text: `The month is complete. Final spend of ${fmtCurrency0(spend)} came in ${fmtCurrency0(spend - budget)} over the ${budgetStr} monthly budget.` };
+    if (spend < budget * 0.95) return { level: 2, text: `The month is complete. Final spend of ${fmtCurrency0(spend)} came in ${fmtCurrency0(budget - spend)} under the ${budgetStr} monthly budget.` };
+    return null;
   }
-</script>
 
-<div id="mapModal" class="map-modal">
-  <div class="map-modal-content">
-    <div class="map-modal-header">
-      <h2>Conversion Hotspots - England</h2>
-      <button class="map-close-btn" onclick="closeMapModal()">&times;</button>
-    </div>
-    <div class="map-modal-body">
-      <div class="map-table-panel">
-        <div class="map-table-header">
-          <h3>Conversions by City</h3>
-        </div>
-        <div class="map-table-wrapper">
-          <table class="conversion-table">
-            <thead>
-              <tr>
-                <th>City</th>
-                <th>Conversions</th>
-              </tr>
-            </thead>
-            <tbody id="conversionTableBody">
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div id="conversionMap"></div>
-    </div>
-  </div>
-</div>
+  if (spend >= budget) {
+    return { level: 3, text: `Spend has already passed the ${budgetStr} monthly budget by ${fmtCurrency0(spend - budget)} with ${days(remainingDays)} left. Consider pausing or lowering daily spend to limit further overspend.` };
+  }
 
-</body>
-</html>
+  const requiredDaily = (budget - spend) / remainingDays;
+  const band = budget * 0.05;
+  const diff = projected - budget;
+
+  if (diff > band) {
+    const z = avg7 - requiredDaily;
+    return { level: 3, text: `Based on spending for the past 7 days, this account is projected to overspend by ${fmtCurrency0(diff)} versus the client\u2019s ${budgetStr} monthly budget. Reducing average daily spend by ${fmtCurrency0(z)} \u2014 from ${fmtCurrency0(avg7)} to ${fmtCurrency0(requiredDaily)} per day across the remaining ${days(remainingDays)} \u2014 would bring spend in on budget.` };
+  }
+  if (diff < -band) {
+    const z = requiredDaily - avg7;
+    const impractical = remainingDays <= 7 && (avg7 <= 0 || requiredDaily > avg7 * 1.5);
+    let msg = `Based on spending for the past 7 days, this account is projected to underspend by ${fmtCurrency0(-diff)} versus the client\u2019s ${budgetStr} monthly budget.`;
+    if (impractical) {
+      msg += ` With only ${days(remainingDays)} left, closing the gap would require a disproportionate jump in daily spend, so no budget change is recommended.`;
+    } else {
+      msg += ` Increasing average daily spend by ${fmtCurrency0(z)} \u2014 from ${fmtCurrency0(avg7)} to ${fmtCurrency0(requiredDaily)} per day across the remaining ${days(remainingDays)} \u2014 would use the full budget.`;
+    }
+    return { level: 2, text: msg };
+  }
+  return null;
+}
+
+function monthInfo() {
+  const now = new Date();
+  const daysInMonth = new Date(now.getUTCFullYear(), now.getUTCMonth() + 1, 0).getUTCDate();
+  const dayOfMonth = now.getUTCDate();
+  return { daysInMonth, dayOfMonth, pace: dayOfMonth / daysInMonth };
+}
+
+function money(n) {
+  return Math.round(n || 0).toLocaleString("en-GB");
+}
+
+async function loadBudgets(env) {
+  const budgets = {};
+  try {
+    const list = await env.SESSIONS.list({ prefix: "budget:" });
+    for (const k of list.keys) {
+      const v = await env.SESSIONS.get(k.name);
+      if (v != null) budgets[k.name.slice("budget:".length)] = Number(v);
+    }
+  } catch { /* no budgets → pacing simply won't fire */ }
+  return budgets;
+}
+
+const EMOJI = { 3: "\uD83D\uDD34", 2: "\uD83D\uDFE0", 1: "\uD83D\uDFE1" }; // red / orange / yellow
+
+// Group an account's issues under page-style headings in the Slack message.
+const CATEGORY = { suspended: "Account Status", disapproved: "Policy Issues", limited: "Policy Issues", pacing: "Budget Pacing", cpa: "Bidding Strategies", assets: "Assets" };
+const CATEGORY_ORDER = ["Account Status", "Policy Issues", "Budget Pacing", "Bidding Strategies", "Assets"];
+
+function buildSlack(flagged) {
+  if (!flagged.length) {
+    return { text: "\u2705 AdLytics daily check: all accounts look healthy." };
+  }
+  const top = (a) => Math.max(...a.issues.map((i) => i.level));
+  flagged.sort((a, b) => top(b) - top(a));
+  const header = `*AdLytics \u2014 ${flagged.length} account${flagged.length > 1 ? "s" : ""} need attention*`;
+  const blocks = [{ type: "section", text: { type: "mrkdwn", text: header } }];
+  const textParts = [header];
+  for (const a of flagged) {
+    const byCat = {};
+    for (const i of a.issues) { const cat = CATEGORY[i.kind] || "Other"; (byCat[cat] = byCat[cat] || []).push(i); }
+    const catBlocks = [];
+    for (const cat of CATEGORY_ORDER) {
+      const items = byCat[cat];
+      if (!items || !items.length) continue;
+      items.sort((x, y) => y.level - x.level);
+      const catLevel = Math.max(...items.map((i) => i.level));
+      const bullets = items.map((i) => `\u2022 ${i.text}`).join("\n");
+      catBlocks.push(`${EMOJI[catLevel]} *${cat}:*\n${bullets}`);
+    }
+    // Blank line after the account name and between categories.
+    const section = `*${a.name}*\n\n${catBlocks.join("\n\n")}`;
+    blocks.push({ type: "divider" });
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: section } });
+    textParts.push(section);
+  }
+  return { text: textParts.join("\n\n"), blocks };
+}
