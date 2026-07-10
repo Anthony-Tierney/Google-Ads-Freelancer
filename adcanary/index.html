@@ -74,8 +74,9 @@
   .nav-heading { padding: 13px 16px 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); cursor: default; user-select: none; }
 
   .app-logo { display: flex; align-items: center; gap: 10px; padding: 2px 16px 14px; margin-bottom: 2px; border-bottom: 1px solid var(--line); }
-  .app-logo-mark { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), #7c5cff); display: flex; align-items: center; justify-content: center; color: #fff; flex: none; }
+  .app-logo-mark { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), #7c5cff); display: flex; align-items: center; justify-content: center; color: #fff; flex: none; overflow: hidden; }
   .app-logo-mark svg { width: 17px; height: 17px; }
+  .app-logo-mark img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .app-logo-text { font-size: 16.5px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
   .app-logo-text b { color: var(--accent); font-weight: 700; }
   .nav-settings { margin-top: auto; display: flex; align-items: center; gap: 9px; }
@@ -520,7 +521,7 @@
 <body>
   <aside class="sidebar">
     <div class="app-logo">
-      <span class="app-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg></span>
+      <span class="app-logo-mark"><img src="images/adcanary-logo.png" alt="AdCanary"></span>
       <span class="app-logo-text">Ad<b>Canary</b></span>
     </div>
     <div class="nav-heading">Accounts</div>
