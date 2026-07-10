@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AdCanary — your 24/7 Google Ads monitoring sidekick</title>
+<meta name="description" content="AdCanary keeps an eye on every Google Ads account you manage — budget pacing, policy flags, bidding targets, missing assets and more — with automated Slack and email alerts.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14131f; --muted:#5b5a72; --faint:#9997ad; --line:#e7e5f0;
+    --bg:#faf9fd; --panel:#ffffff;
+    --indigo:#4338ca; --indigo2:#7c5cff;
+    --canary:#f5c518; --canary-deep:#c99400;
+    --amber:#e08e0b; --red:#dc4b4b; --violet:#8b5cf6; --slate:#64748b; --green:#16a34a;
+    --radius:14px; --shadow:0 1px 2px rgba(20,19,31,.04), 0 12px 32px -12px rgba(20,19,31,.10);
+    --sans:'Inter',ui-sans-serif,system-ui,sans-serif;
+    --display:'Space Grotesk',var(--sans);
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;line-height:1.5;}
+  a{color:inherit;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px;}
+
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;z-index:50;background:rgba(250,249,253,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  nav .wrap{height:72px;display:flex;align-items:center;justify-content:space-between;}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--indigo),var(--indigo2));display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;}
+  .brand-mark img{width:100%;height:100%;object-fit:contain;}
+  .brand-text{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-.01em;color:var(--ink);}
+  .brand-text b{color:var(--indigo);font-weight:700;}
+  .nav-right{display:flex;align-items:center;gap:22px;}
+  .nav-link{font-size:14.5px;font-weight:500;color:var(--muted);text-decoration:none;}
+  .nav-link:hover{color:var(--ink);}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--sans);font-weight:600;font-size:14.5px;padding:10px 18px;border-radius:9px;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:filter .15s ease, transform .15s ease;}
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:linear-gradient(135deg,var(--indigo),var(--indigo2));color:#fff;box-shadow:0 6px 20px -6px rgba(67,56,202,.55);}
+  .btn-primary:hover{filter:brightness(1.06);}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+  .btn-ghost:hover{border-color:var(--faint);}
+
+  /* ---------- hero ---------- */
+  .hero{padding:76px 0 64px;}
+  .hero .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--indigo);background:#eeecfd;border:1px solid #ded9fb;padding:6px 12px;border-radius:100px;margin-bottom:22px;}
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--canary);box-shadow:0 0 0 3px rgba(245,197,24,.35);}
+  h1{font-family:var(--display);font-size:clamp(2.3rem,4.4vw,3.4rem);font-weight:700;line-height:1.08;letter-spacing:-.02em;margin:0 0 22px;}
+  h1 .accent{background:linear-gradient(135deg,var(--indigo),var(--indigo2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hero p.lede{font-size:17.5px;color:var(--muted);max-width:480px;margin:0 0 30px;}
+  .cta-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:22px;}
+  .trust-line{font-size:13.5px;color:var(--faint);display:flex;align-items:center;gap:8px;}
+  .trust-line svg{width:15px;height:15px;stroke:var(--indigo);flex:none;}
+  .check-list{list-style:none;margin:0 0 28px;padding:0;display:flex;flex-direction:column;gap:11px;max-width:480px;}
+  .check-list li{display:flex;align-items:flex-start;gap:10px;font-size:15px;color:var(--ink);line-height:1.45;}
+  .check-list svg{width:19px;height:19px;flex:none;margin-top:1.5px;padding:2.5px;border-radius:50%;stroke:var(--green);background:color-mix(in srgb, var(--green) 14%, white);}
+
+  /* ---------- signal panel (hero mockup) ---------- */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:18px;position:relative;}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:2px 6px 14px;border-bottom:1px solid var(--line);margin-bottom:14px;}
+  .panel-head .lbl{font-family:var(--mono);font-size:12px;color:var(--faint);letter-spacing:.03em;}
+  .panel-head .live{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--green);}
+  .live .pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.8s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.5);}50%{box-shadow:0 0 0 6px rgba(22,163,74,0);}}
+  .feed{height:340px;overflow:hidden;position:relative;-webkit-mask-image:linear-gradient(to bottom, transparent 0, black 24px, black calc(100% - 24px), transparent 100%);mask-image:linear-gradient(to bottom, transparent 0, black 24px, black calc(100% - 24px), transparent 100%);}
+  .feed-track{display:flex;flex-direction:column;gap:10px;animation:scrollFeed 16s linear infinite;}
+  @keyframes scrollFeed{0%{transform:translateY(0);}100%{transform:translateY(-50%);}}
+  @media (prefers-reduced-motion: reduce){.feed-track{animation:none;}.live .pulse{animation:none;}}
+  .alert{display:flex;gap:12px;background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--sev);border-radius:10px;padding:11px 13px;}
+  .alert .ic{width:30px;height:30px;border-radius:8px;background:color-mix(in srgb, var(--sev) 14%, white);display:flex;align-items:center;justify-content:center;flex:none;}
+  .alert .ic svg{width:16px;height:16px;stroke:var(--sev);}
+  .alert .body{min-width:0;}
+  .alert .t1{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .alert .t2{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .alert .ts{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--faint);flex:none;align-self:flex-start;}
+
+  /* ---------- footer ---------- */
+  footer{padding:40px 0 48px;border-top:1px solid var(--line);margin-top:24px;}
+  footer .wrap{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+  .f-brand{display:flex;align-items:center;gap:9px;}
+  .f-brand-mark{width:22px;height:22px;border-radius:6px;overflow:hidden;flex:none;}
+  .f-brand-mark img{width:100%;height:100%;object-fit:contain;}
+  footer .copy{font-size:13px;color:var(--faint);}
+  footer .flinks{display:flex;gap:20px;}
+  footer .flinks a{font-size:13.5px;color:var(--muted);text-decoration:none;}
+  footer .flinks a:hover{color:var(--ink);}
+
+  @media (max-width: 900px){
+    .hero .wrap{grid-template-columns:1fr;}
+    .hero{padding:48px 0 40px;}
+  }
+  @media (max-width: 600px){
+    .wrap{padding:0 18px;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/">
+      <span class="brand-mark"><img src="/images/adcanary-logo.png" alt="AdCanary"></span>
+      <span class="brand-text">Ad<b>Canary</b></span>
+    </a>
+    <div class="nav-right">
+      <a class="nav-link" href="/api/auth">Log in</a>
+      <a class="btn btn-primary" href="mailto:hello@adcanary.app?subject=Early%20access%20request">Request early access</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow"><span class="dot"></span>Built by Senior Google Ads Experts for Freelancers &amp; Agencies</span>
+      <h1>Your 24/7 Google Ads Monitoring &amp; Reporting Sidekick.</h1>
+      <p class="lede">AdCanary keeps an eye on every account you manage — budget pacing, policy flags, bidding targets vs reality, missing assets and more.</p>
+      <ul class="check-list">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Get automated Slack or Email alerts on a custom frequency (weekly, daily, hourly etc.)</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Define client monthly budgets &amp; monitor pacing vs targets.</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Compare &amp; benchmark landing page performance and core KPIs across client accounts.</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>New features added weekly!</li>
+      </ul>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="/api/auth">Log in</a>
+        <a class="btn btn-ghost" href="mailto:hello@adcanary.app?subject=Early%20access%20request">Request early access</a>
+      </div>
+      <div class="trust-line">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 8.6 9 10 5.2-1.4 9-5 9-10V6l-9-4z"/></svg>
+        Built by a Google Ads freelancer, for Google Ads freelancers.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="lbl">ACCOUNT MONITOR</span>
+        <span class="live"><span class="pulse"></span>LIVE</span>
+      </div>
+      <div class="feed">
+        <div class="feed-track" id="feedTrack"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<footer>
+  <div class="wrap">
+    <div class="f-brand">
+      <span class="f-brand-mark"><img src="/images/adcanary-logo.png" alt="AdCanary"></span>
+      <span class="copy">AdCanary — a product of Anthony Tierney Ltd</span>
+    </div>
+    <div class="flinks">
+      <a href="/api/auth">Log in</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Icons (stroke-based, 24x24, matches app's existing icon language)
+  const icons = {
+    pacing: '<path d="M12 12 8 8M12 3a9 9 0 1 0 9 9"/><path d="M12 3v3M21 12h-3M5.6 5.6l2.1 2.1"/>',
+    policy: '<path d="M12 2 3 6v6c0 5 3.8 8.6 9 10 5.2-1.4 9-5 9-10V6l-9-4z"/><path d="m9 12 2 2 4-4"/>',
+    assets: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+    cpa: '<path d="M3 17 9 11 13 15 21 7"/><path d="M21 13V7h-6"/>',
+    geo: '<path d="M12 22s7-6.2 7-12A7 7 0 0 0 5 10c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/>',
+    digest: '<path d="M4 4h16v12H8l-4 4V4z"/><path d="M8 9h8M8 12.5h5"/>'
+  };
+
+  const alerts = [
+    {icon:'pacing', sev:'var(--amber)', t1:'Budget pacing', t2:'Client A — Search is 34% ahead of pace', ts:'2m'},
+    {icon:'policy', sev:'var(--red)', t1:'Policy issue', t2:'Client C — 2 ads disapproved', ts:'11m'},
+    {icon:'cpa', sev:'var(--violet)', t1:'CPA drift', t2:'Client B — CPA 28% below target on Brand', ts:'26m'},
+    {icon:'assets', sev:'var(--slate)', t1:'Asset gap', t2:'Client D — 3 ad groups missing sitelinks', ts:'41m'},
+    {icon:'geo', sev:'var(--indigo)', t1:'Geo coverage', t2:'Client E — new city cluster detected', ts:'1h'},
+    {icon:'digest', sev:'var(--green)', t1:'Daily digest sent', t2:'7 accounts checked, 2 need attention', ts:'2h'}
+  ];
+
+  const alertHTML = a => `
+    <div class="alert" style="--sev:${a.sev}">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[a.icon]}</svg></span>
+      <span class="body">
+        <div class="t1">${a.t1}</div>
+        <div class="t2">${a.t2}</div>
+      </span>
+      <span class="ts">${a.ts}</span>
+    </div>`;
+
+  document.getElementById('feedTrack').innerHTML = alerts.concat(alerts).map(alertHTML).join('');
+</script>
+</body>
+</html>
