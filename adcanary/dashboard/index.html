@@ -896,6 +896,13 @@
             </div>
             <div class="grow"></div>
             <div class="toolset">
+              <div class="filters" id="acViewGroup">
+                <button class="filters-btn" id="acViewBtn" aria-haspopup="true" title="Rollup level">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                  View: <span id="acViewLabel">Account-level</span>
+                </button>
+                <div class="pop col-pop" id="acViewPop" hidden></div>
+              </div>
               <div class="filters">
                 <button class="filters-btn" id="acHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -982,7 +989,7 @@
           <div style="display:flex;justify-content:flex-end;margin-top:10px;">
             <div class="pagination" id="acPagination" hidden></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Headline and Description assets from enabled Responsive Search Ads in enabled ad groups/campaigns, aggregated by Campaign + Ad Group + Asset Type + Text (metrics summed where the same asset text is reused across multiple ads in an ad group). CTR, impressions and clicks cover the selected date range at the individual asset level, so they aren't directly comparable to ad-level metrics.</div>
+          <div class="foot-note" style="margin-top:10px;">Headline and Description assets from enabled Responsive Search Ads in enabled ad groups/campaigns. Use View to choose the rollup level — Account-level combines identical copy across every campaign and ad group in the account; Ad-level breaks it back out per individual ad. CTR, impressions and clicks are summed to match whichever level is selected.</div>
         </section>
       </section>
 
@@ -4886,27 +4893,32 @@ function syncLpColsCount() { document.getElementById("lpColsCount").textContent 
 
 /* ============================ Ad Copy page ============================ */
 
-const AC_COLUMNS = [
-  { key: "name", label: "Campaign", align: "txt", width: 200, group: "Columns", cls: "name", locked: true,
-    cell: r => escapeHtml(r.name) },
-  { key: "adGroup", label: "Ad Group", align: "txt", width: 180, group: "Columns", locked: true,
-    cell: r => escapeHtml(r.adGroup || "—") },
-  { key: "assetType", label: "Asset Type", align: "txt", width: 120, group: "Columns", locked: true,
-    sort: r => r.assetType || "",
-    cell: r => '<span class="src-tag ' + (r.assetType === "Headline" ? "src-headline" : "src-description") + '">' + escapeHtml(r.assetType || "") + "</span>" },
-  { key: "text", label: "Ad Copy Text", align: "txt", width: 320, group: "Columns", locked: true,
-    cell: r => { const safe = escapeHtml(r.text || ""); return '<span title="' + safe + '">' + safe + "</span>"; } },
-  { key: "ctr", label: "CTR", align: "num", width: 100, group: "Columns", cls: "tabnum",
-    cell: r => fmtPct(r.ctr || 0) },
-  { key: "impressions", label: "Imp.", align: "num", width: 100, group: "Columns", cls: "tabnum",
-    cell: r => fmtInt(r.impressions || 0) },
-  { key: "clicks", label: "Clicks", align: "num", width: 90, group: "Columns", cls: "tabnum",
-    cell: r => fmtInt(r.clicks || 0) },
-];
+const AC_COL_CAMPAIGN = { key: "name", label: "Campaign", align: "txt", width: 200, cls: "name", always: true,
+  cell: r => escapeHtml(r.name) };
+const AC_COL_ADGROUP = { key: "adGroup", label: "Ad Group", align: "txt", width: 180, always: true,
+  cell: r => escapeHtml(r.adGroup || "—") };
+const AC_COL_AD = { key: "adId", label: "Ad", align: "txt", width: 130, always: true,
+  cell: r => r.adId ? escapeHtml(String(r.adId)) : "—" };
+const AC_COL_ASSETTYPE = { key: "assetType", label: "Asset Type", align: "txt", width: 120, group: "Columns", locked: true,
+  sort: r => r.assetType || "",
+  cell: r => '<span class="src-tag ' + (r.assetType === "Headline" ? "src-headline" : "src-description") + '">' + escapeHtml(r.assetType || "") + "</span>" };
+const AC_COL_TEXT = { key: "text", label: "Ad Copy Text", align: "txt", width: 320, group: "Columns", locked: true,
+  cell: r => { const safe = escapeHtml(r.text || ""); return '<span title="' + safe + '">' + safe + "</span>"; } };
+const AC_COL_CTR = { key: "ctr", label: "CTR", align: "num", width: 100, group: "Columns", cls: "tabnum",
+  cell: r => fmtPct(r.ctr || 0) };
+const AC_COL_IMPR = { key: "impressions", label: "Imp.", align: "num", width: 100, group: "Columns", cls: "tabnum",
+  cell: r => fmtInt(r.impressions || 0) };
+const AC_COL_CLICKS = { key: "clicks", label: "Clicks", align: "num", width: 90, group: "Columns", cls: "tabnum",
+  cell: r => fmtInt(r.clicks || 0) };
+// AC_COLUMNS drives the Columns picker + export — just the columns that are always
+// relevant regardless of rollup level. Campaign/Ad Group/Ad are shown or hidden by
+// view level instead (see renderAdCopyTable's columns() below), not manually toggled.
+const AC_COLUMNS = [AC_COL_ASSETTYPE, AC_COL_TEXT, AC_COL_CTR, AC_COL_IMPR, AC_COL_CLICKS];
+const AC_VIEW_LEVELS = [["account", "Account-level"], ["campaign", "Campaign-level"], ["adgroup", "Ad Group-level"], ["ad", "Ad-level"]];
 const AC_COL_GROUPS = ["Columns"];
 const AC_DEFAULT_VISIBLE = ["ctr", "impressions", "clicks"];
 const AC_ASSETTYPE_BOXES = [["acfTypeHeadline", "Headline"], ["acfTypeDescription", "Description"]];
-const acState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), assetType: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("adcopy") || AC_DEFAULT_VISIBLE), "name", "adGroup", "assetType", "text"]), openColGroups: new Set(["acColsPop_g0"]), heatmap: false, dateRange: { label: "Last 30 Days", days: 30 } };
+const acState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), assetType: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("adcopy") || AC_DEFAULT_VISIBLE), "assetType", "text"]), openColGroups: new Set(["acColsPop_g0"]), heatmap: false, viewLevel: "account", dateRange: { label: "Last 30 Days", days: 30 } };
 
 function populateAcFilterOptions() {
   const inAll = GLOBAL_ACCOUNT === "ALL";
@@ -4927,6 +4939,10 @@ function initAdCopy() {
   const fBtn = document.getElementById("acFiltersBtn");
   if (!fBtn.dataset.wired) {
     fBtn.dataset.wired = "1";
+    const viewBtn = document.getElementById("acViewBtn"), viewPop = document.getElementById("acViewPop");
+    viewBtn.addEventListener("click", e => { e.stopPropagation(); const open = viewPop.hidden; closeAllMenus(); if (open) { renderAcViewPop(); viewPop.hidden = false; } });
+    viewPop.addEventListener("click", e => e.stopPropagation());
+    renderAcViewPop();
     const fMenu = document.getElementById("acFiltersMenu");
     fBtn.addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) { populateAcFilterOptions(); fMenu.hidden = false; } });
     fMenu.addEventListener("click", (e) => e.stopPropagation());
@@ -4996,6 +5012,21 @@ function updateAcFilterCount() {
   markFilterGroup("ac-group-assettype", f.assetType.size);
 }
 
+function renderAcViewPop() {
+  const pop = document.getElementById("acViewPop");
+  pop.innerHTML = AC_VIEW_LEVELS.map(([id, name]) => {
+    const active = acState.viewLevel === id;
+    return '<button class="pop-row" data-acview="' + id + '"><span' + (active ? ' style="color:var(--accent);font-weight:560"' : '') + '>' + escapeHtml(name) + '</span>' + (active ? '<span class="active-dot">\u2713</span>' : '') + '</button>';
+  }).join("");
+  pop.querySelectorAll("[data-acview]").forEach(row => row.addEventListener("click", () => {
+    acState.viewLevel = row.dataset.acview;
+    document.getElementById("acViewLabel").textContent = AC_VIEW_LEVELS.find(([id]) => id === acState.viewLevel)[1];
+    pop.hidden = true;
+    acState.currentPage = 1;
+    renderAdCopyTable();
+  }));
+}
+
 async function loadAdCopy(customerId) {
   acState.account = customerId;
   acState.loadedAccount = customerId;
@@ -5051,26 +5082,52 @@ async function loadAdCopy(customerId) {
 }
 
 function renderAdCopyTable() {
+  const level = acState.viewLevel;
   renderDataTable({
     state: acState,
-    columns: () => acState.account === "ALL"
-      ? [{ key: "account", label: "Account", align: "txt", width: 170, always: true, sort: r => r.accountName || "", cell: r => logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") }, ...AC_COLUMNS]
-      : AC_COLUMNS,
+    columns: () => {
+      const cols = [];
+      if (acState.account === "ALL") cols.push({ key: "account", label: "Account", align: "txt", width: 170, always: true, sort: r => r.accountName || "", cell: r => logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") });
+      if (level === "campaign" || level === "adgroup" || level === "ad") cols.push(AC_COL_CAMPAIGN);
+      if (level === "adgroup" || level === "ad") cols.push(AC_COL_ADGROUP);
+      if (level === "ad") cols.push(AC_COL_AD);
+      return cols.concat(AC_COLUMNS);
+    },
     colOrderKey: "adcopy",
     prefKey: "adcopy",
     heatmap: true,
     ids: { colgroup: "ac-colgroup", thead: "ac-thead", tbody: "ac-tbody", tfoot: "ac-tfoot", pagination: "acPagination" },
     rerender: renderAdCopyTable,
+    // Filter raw per-ad rows first, then roll up to the selected view level, summing
+    // impressions/clicks — the account boundary is always kept in the grouping key
+    // (even at Account-level) so identical copy from different clients never merges.
     rows: () => {
       const f = acState.filters;
       const inAll = acState.account === "ALL";
-      return acState.rows.filter(r => {
+      const filtered = acState.rows.filter(r => {
         if (inAll && f.account.size && !f.account.has(r.accountName || "")) return false;
         if (f.campaign.size && !f.campaign.has(r.name || "")) return false;
         if (f.adGroup.size && !f.adGroup.has(r.adGroup || "")) return false;
         if (f.assetType.size && !f.assetType.has(r.assetType || "")) return false;
         return true;
       });
+      const agg = new Map();
+      filtered.forEach(r => {
+        let key = (r.accountId || "") + "|" + r.assetType + "|" + r.text;
+        if (level === "campaign") key += "|" + r.campaignId;
+        else if (level === "adgroup") key += "|" + r.campaignId + "|" + r.adGroupId;
+        else if (level === "ad") key += "|" + r.campaignId + "|" + r.adGroupId + "|" + r.adId;
+        let row = agg.get(key);
+        if (!row) {
+          row = { accountName: r.accountName, accountId: r.accountId, name: r.name, adGroup: r.adGroup, adId: r.adId, assetType: r.assetType, text: r.text, impressions: 0, clicks: 0 };
+          agg.set(key, row);
+        }
+        row.impressions += r.impressions || 0;
+        row.clicks += r.clicks || 0;
+      });
+      const rows = [...agg.values()];
+      rows.forEach(r => { r.ctr = r.impressions ? r.clicks / r.impressions : 0; });
+      return rows;
     },
     footer: (rows, cols) => {
       const totImpr = rows.reduce((a, r) => a + (r.impressions || 0), 0);
