@@ -1,13 +1,13 @@
 // GET /api/adcopy?customerId=1234567890[&debug=1]
 // Lists Headline and Description text assets from enabled Responsive Search Ads
-// (enabled ad group + campaign), aggregated to Campaign + Ad Group + Asset Type + Text
-// — metrics are summed across any ads within an ad group that happen to reuse the
-// same asset text, since the table shows one row per unique piece of copy, not per ad.
-//   { rows: [{ name, adGroup, assetType, text, impressions, clicks, ctr }], warning?, diag? }
+// (enabled ad group + campaign), at per-ad granularity — the front end rolls these
+// up to whichever view level (Account/Campaign/Ad Group/Ad) the user has selected,
+// summing impressions/clicks and recomputing CTR after aggregation.
+//   { rows: [{ name, campaignId, adGroup, adGroupId, adId, assetType, text, impressions, clicks }], warning?, diag? }
 
 import { getRefreshToken, getAccessToken, adsRequest, json } from "../../shared/google.js";
 
-const VERSION = "v1";
+const VERSION = "v2-per-ad";
 const FIELD_LABEL = { HEADLINE: "Headline", DESCRIPTION: "Description" };
 
 export async function onRequestGet(context) {
@@ -35,6 +35,7 @@ export async function onRequestGet(context) {
     SELECT
       campaign.id, campaign.name,
       ad_group.id, ad_group.name,
+      ad_group_ad.ad.id,
       ad_group_ad_asset_view.field_type,
       asset.id, asset.text_asset.text,
       metrics.clicks, metrics.impressions
@@ -56,23 +57,28 @@ export async function onRequestGet(context) {
 
   if (queryError) return json({ error: "Could not load ad copy: " + queryError, version: VERSION }, 500);
 
-  // Aggregate to Campaign + Ad Group + Asset Type + Text.
+  // Defensive aggregation to per-ad+asset+field_type (the finest grain the front end
+  // ever needs) — collapses any literal duplicate rows the API might return, but
+  // shouldn't otherwise change row count since this is already this view's native grain.
   const agg = new Map();
   results.forEach((r) => {
     const label = FIELD_LABEL[r.adGroupAdAssetView?.fieldType];
     if (!label) return;
     const text = r.asset?.textAsset?.text || "";
-    const key = (r.campaign?.id || "") + "|" + (r.adGroup?.id || "") + "|" + label + "|" + text;
+    const campId = r.campaign?.id || "", campName = r.campaign?.name || "";
+    const agId = r.adGroup?.id || "", agName = r.adGroup?.name || "";
+    const adId = r.adGroupAd?.ad?.id || "";
+    const key = campId + "|" + agId + "|" + adId + "|" + label + "|" + text;
     let row = agg.get(key);
     if (!row) {
-      row = { name: r.campaign?.name || "", adGroup: r.adGroup?.name || "", assetType: label, text, impressions: 0, clicks: 0 };
+      row = { campaignId: campId, name: campName, adGroupId: agId, adGroup: agName, adId, assetType: label, text, impressions: 0, clicks: 0 };
       agg.set(key, row);
     }
     row.impressions += Number(r.metrics?.impressions) || 0;
     row.clicks += Number(r.metrics?.clicks) || 0;
   });
 
-  const rows = [...agg.values()].map((r) => ({ ...r, ctr: r.impressions ? r.clicks / r.impressions : 0 }));
+  const rows = [...agg.values()];
 
   if (debug) {
     return json({ rows, diag: { version: VERSION, rawResultCount: results.length, aggregatedRowCount: rows.length } });
