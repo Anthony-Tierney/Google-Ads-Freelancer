@@ -4141,37 +4141,26 @@ function buildRecommendation(r, budget, mi, avg7, projected) {
     return '<div class="bp-rec ' + cls + '"><span class="rec-lbl">Recommendation:</span> The month is complete. Final spend of <strong>' + fmtCurrency0(r.spend) + '</strong> came in <strong>' + fmtCurrency0(Math.abs(r.spend - budget)) + '</strong> ' + sign + ' the ' + budgetStr + ' monthly budget.</div>';
   }
 
-  if (r.spend >= budget) {
-    return '<div class="bp-rec over"><span class="rec-lbl">Recommendation:</span> Spend has already passed the ' + budgetStr + ' monthly budget by <strong>' + fmtCurrency0(r.spend - budget) + '</strong> with ' + days(remainingDays) + ' left. Consider pausing or lowering daily spend to limit further overspend.</div>';
-  }
-
-  const requiredDaily = (budget - r.spend) / remainingDays;
+  // Ideal daily rate for the remaining days to land exactly on budget.
+  // Floored at 0 — never recommend a negative daily spend (covers the
+  // already-spent-past-budget case without needing a separate branch).
+  const requiredDaily = Math.max(0, (budget - r.spend) / remainingDays);
   const band = budget * 0.05;
   const diff = projected - budget;
+  const overspending = diff >= 0;
+  const z = Math.abs(avg7 - requiredDaily);
 
-  if (diff > band) {
-    const z = avg7 - requiredDaily;
-    return '<div class="bp-rec over"><span class="rec-lbl">Recommendation:</span> Based on spending for the past 7 days, this account is projected to <strong>overspend by ' + fmtCurrency0(diff) + '</strong> versus the client\u2019s ' + budgetStr + ' monthly budget. Reducing average daily spend by <strong>' + fmtCurrency0(z) + '</strong> \u2014 from ' + fmtCurrency0(avg7) + ' to ' + fmtCurrency0(requiredDaily) + ' per day across the remaining ' + days(remainingDays) + ' \u2014 would bring spend in on budget.</div>';
+  // Late in the month, a large jump upward would destabilise bidding/learning —
+  // don't advise a disproportionate increase this close to month end.
+  const impractical = !overspending && remainingDays <= 7 && (avg7 <= 0 || requiredDaily > avg7 * 1.5);
+  if (impractical) {
+    return '<div class="bp-rec under"><span class="rec-lbl">Recommendation:</span> Based on spending for the past 7 days, this account is projected to <strong>underspend by ' + fmtCurrency0(-diff) + '</strong> versus the client\u2019s monthly budget of ' + budgetStr + '. With only ' + days(remainingDays) + ' left, closing the gap would require a disproportionate jump in daily spend, so no budget change is recommended.</div>';
   }
-  if (diff < -band) {
-    const z = requiredDaily - avg7;
-    // A late-month, disproportionate increase would destabilise bidding/learning, so don't advise it.
-    const impractical = remainingDays <= 7 && (avg7 <= 0 || requiredDaily > avg7 * 1.5);
-    let msg = 'Based on spending for the past 7 days, this account is projected to <strong>underspend by ' + fmtCurrency0(-diff) + '</strong> versus the client\u2019s ' + budgetStr + ' monthly budget.';
-    if (impractical) {
-      msg += ' With only ' + days(remainingDays) + ' left, closing the gap would require a disproportionate jump in daily spend, so no budget change is recommended.';
-    } else {
-      msg += ' Increasing average daily spend by <strong>' + fmtCurrency0(z) + '</strong> \u2014 from ' + fmtCurrency0(avg7) + ' to ' + fmtCurrency0(requiredDaily) + ' per day across the remaining ' + days(remainingDays) + ' \u2014 would use the full budget.';
-    }
-    return '<div class="bp-rec under"><span class="rec-lbl">Recommendation:</span> ' + msg + '</div>';
-  }
-  const absDiff = Math.abs(diff);
-  const pctDiff = Math.abs(diff / budget * 100).toFixed(1);
-  const dir = diff > 0 ? "above" : "below";
-  const cmp = Math.round(absDiff) === 0
-    ? "is projected to land almost exactly on the target monthly spend of " + budgetStr
-    : "is <strong>" + fmtCurrency0(absDiff) + "</strong> (" + pctDiff + "%) " + dir + " the target monthly spend of " + budgetStr;
-  return '<div class="bp-rec ontrack"><span class="rec-lbl">Recommendation:</span> Based on the past 7 days, projected spend of <strong>' + fmtCurrency0(projected) + '</strong> ' + cmp + '. Maintain a daily rate of around <strong>' + fmtCurrency0(requiredDaily) + '</strong> per day across the remaining ' + days(remainingDays) + ' to land as close to budget as possible.</div>';
+
+  const cls = diff > band ? "over" : (diff < -band ? "under" : "ontrack");
+  const direction = overspending ? "overspend" : "underspend";
+  const verb = overspending ? "Decreasing" : "Increasing";
+  return '<div class="bp-rec ' + cls + '"><span class="rec-lbl">Recommendation:</span> Based on spending for the past 7 days, this account is projected to <strong>' + direction + ' by ' + fmtCurrency0(Math.abs(diff)) + '</strong> versus the client\u2019s monthly budget of ' + budgetStr + '. ' + verb + ' average daily spend by <strong>' + fmtCurrency0(z) + '</strong> \u2014 from ' + fmtCurrency0(avg7) + ' to ' + fmtCurrency0(requiredDaily) + ' per day across the remaining ' + days(remainingDays) + ' \u2014 would ensure the account gets as close to the target as possible.</div>';
 }
 
 // Small table of accounts with no enabled campaigns this month.
