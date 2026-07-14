@@ -70,8 +70,22 @@
   }
   .nav-item:hover { background: var(--line-soft); }
   .nav-item.active { border-left-color: var(--accent); background: var(--accent-soft); font-weight: 560; }
-  .nav-sub { padding-left: 32px; font-size: 13px; color: var(--muted); }
-  .nav-heading { padding: 13px 16px 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); cursor: default; user-select: none; }
+  .nav-sub { padding-left: 36px; font-size: 13px; color: var(--muted); }
+  .nav-heading {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; padding: 10px 14px 10px 12px; margin: 2px 0 0;
+    font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); background: none; border: none; cursor: pointer;
+    text-align: left; user-select: none; border-radius: 6px;
+    transition: background .15s ease, color .15s ease;
+  }
+  .nav-heading:hover { background: var(--line-soft); color: var(--ink); }
+  .nav-heading .nh-ico { width: 16px; height: 16px; flex: none; stroke: currentColor; }
+  .nav-heading .nh-label { flex: 1; }
+  .nav-heading .nh-chevron { width: 14px; height: 14px; flex: none; stroke: currentColor; transition: transform .2s ease; }
+  .nav-heading.open .nh-chevron { transform: rotate(90deg); }
+  .nav-section-items { overflow: hidden; }
+  .nav-section-items.collapsed { display: none; }
 
   .app-logo { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 16px 18px; margin-bottom: 2px; border-bottom: 1px solid var(--line); }
   .app-logo-mark { width: 120px; height: 120px; border-radius: 28px; background: linear-gradient(135deg, var(--accent), #7c5cff); display: flex; align-items: center; justify-content: center; color: #fff; flex: none; overflow: hidden; }
@@ -81,7 +95,6 @@
   .app-logo-text b { color: var(--accent); font-weight: 700; }
   .nav-settings { margin-top: auto; display: flex; align-items: center; gap: 9px; }
   .nav-ico { width: 17px; height: 17px; flex: none; }
-  .nav-sub::before { content: "└ "; color: var(--faint); margin-right: 2px; }
   .nav-warn { display: inline-flex; vertical-align: middle; color: #d97706; margin-left: 5px; }
   .nav-warn.red { color: #dc2626; }
   .nav-warn svg { width: 15px; height: 15px; }
@@ -526,19 +539,37 @@
       <span class="app-logo-mark"><img src="/images/adcanary-logo.png" alt="AdCanary"></span>
       <span class="app-logo-text">Ad<b>Canary</b></span>
     </div>
-    <div class="nav-heading">Accounts</div>
-    <a href="#" class="nav-item nav-sub" data-page="allaccounts">Account Overview</a>
-    <a href="#" class="nav-item nav-sub" data-page="budgetpacing">Budget Pacing<span class="nav-warn" id="bpNavWarn" hidden title="One or more accounts are off pace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
-    <div class="nav-heading">Campaigns</div>
-    <a href="#" class="nav-item nav-sub" data-page="dashboard">Campaign Overview</a>
-    <a href="#" class="nav-item nav-sub" data-page="underspend">Budgeting<span class="nav-warn" id="usNavWarn" hidden title="Underspending campaigns found"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
-    <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies<span class="nav-warn" id="bidNavWarn" hidden title="CPA running below target on one or more campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
-    <a href="#" class="nav-item nav-sub" data-page="geocoverage">Geo Coverage</a>
-    <div class="nav-heading">Audit</div>
-    <a href="#" class="nav-item nav-sub" data-page="adcopy">Ad Copy</a>
-    <a href="#" class="nav-item nav-sub" data-page="audit">Policy Issues<span class="nav-warn" id="auditNavWarn" hidden title="Policy issues found"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
-    <a href="#" class="nav-item nav-sub" data-page="assets">Assets<span class="nav-warn" id="assetsNavWarn" hidden title="Assets missing or below recommended counts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
-    <a href="#" class="nav-item nav-sub" data-page="landingpages">Landing Pages</a>
+    <button class="nav-heading" data-section="accounts">
+      <svg class="nh-ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="nh-label">Accounts</span>
+      <svg class="nh-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+    <div class="nav-section-items" data-section="accounts">
+      <a href="#" class="nav-item nav-sub" data-page="allaccounts">Account Overview</a>
+      <a href="#" class="nav-item nav-sub" data-page="budgetpacing">Budget Pacing<span class="nav-warn" id="bpNavWarn" hidden title="One or more accounts are off pace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
+    </div>
+    <button class="nav-heading" data-section="campaigns">
+      <svg class="nh-ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg>
+      <span class="nh-label">Campaigns</span>
+      <svg class="nh-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+    <div class="nav-section-items" data-section="campaigns">
+      <a href="#" class="nav-item nav-sub" data-page="dashboard">Campaign Overview</a>
+      <a href="#" class="nav-item nav-sub" data-page="underspend">Budgeting<span class="nav-warn" id="usNavWarn" hidden title="Underspending campaigns found"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
+      <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies<span class="nav-warn" id="bidNavWarn" hidden title="CPA running below target on one or more campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
+      <a href="#" class="nav-item nav-sub" data-page="geocoverage">Geo Coverage</a>
+    </div>
+    <button class="nav-heading" data-section="audit">
+      <svg class="nh-ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 8.6 9 10 5.2-1.4 9-5 9-10V6l-9-4z"/></svg>
+      <span class="nh-label">Audit</span>
+      <svg class="nh-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+    <div class="nav-section-items" data-section="audit">
+      <a href="#" class="nav-item nav-sub" data-page="adcopy">Ad Copy</a>
+      <a href="#" class="nav-item nav-sub" data-page="audit">Policy Issues<span class="nav-warn" id="auditNavWarn" hidden title="Policy issues found"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
+      <a href="#" class="nav-item nav-sub" data-page="assets">Assets<span class="nav-warn" id="assetsNavWarn" hidden title="Assets missing or below recommended counts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
+      <a href="#" class="nav-item nav-sub" data-page="landingpages">Landing Pages</a>
+    </div>
     <a href="#" class="nav-item nav-settings" data-page="settings"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
   </aside>
 
@@ -2574,6 +2605,7 @@ function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   (document.getElementById(page) || document.getElementById('allaccounts')).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  ensureNavSectionOpen(page);
 }
 
 function routeFromHash() {
@@ -2673,10 +2705,57 @@ function onGlobalAccountChange(val) {
   else if (page === "geocoverage") initGeoCoverage();
 }
 
+// ---------- Collapsible nav sections ----------
+const NAV_SECTIONS = ["accounts", "campaigns", "audit"];
+const NAV_OPEN_KEY = "navOpenSections";
+
+function loadNavSections() {
+  try { return new Set(JSON.parse(localStorage.getItem(NAV_OPEN_KEY) || "[]")); }
+  catch { return new Set(); }
+}
+function saveNavSections(open) {
+  localStorage.setItem(NAV_OPEN_KEY, JSON.stringify([...open]));
+}
+function applyNavSections(open) {
+  NAV_SECTIONS.forEach(sec => {
+    const btn = document.querySelector('.nav-heading[data-section="' + sec + '"]');
+    const items = document.querySelector('.nav-section-items[data-section="' + sec + '"]');
+    if (!btn || !items) return;
+    const isOpen = open.has(sec);
+    btn.classList.toggle("open", isOpen);
+    items.classList.toggle("collapsed", !isOpen);
+  });
+}
+function ensureNavSectionOpen(page) {
+  const item = document.querySelector('.nav-item[data-page="' + page + '"]');
+  if (!item) return;
+  const items = item.closest(".nav-section-items");
+  if (!items) return;
+  const sec = items.dataset.section;
+  if (!sec) return;
+  const open = loadNavSections();
+  if (!open.has(sec)) { open.add(sec); saveNavSections(open); applyNavSections(open); }
+}
+
+// Boot: start all collapsed, then open any saved sections.
+applyNavSections(loadNavSections());
+
+document.querySelectorAll('.nav-heading[data-section]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const sec = btn.dataset.section;
+    const open = loadNavSections();
+    open.has(sec) ? open.delete(sec) : open.add(sec);
+    saveNavSections(open);
+    applyNavSections(open);
+  });
+});
+
+// ---------- Nav item routing ----------
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', (e) => {
     e.preventDefault();
     const page = item.dataset.page;
+    ensureNavSectionOpen(page);
     if (location.hash === "#" + page) routeFromHash();
     else location.hash = "#" + page;
   });
