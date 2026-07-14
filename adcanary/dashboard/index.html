@@ -137,6 +137,8 @@
   .src-tag.srcassetgroup { background: rgba(234,88,12,.14); color: #c2410c; }
   .src-tag.srcpromotion { background: rgba(217,70,239,.14); color: #a21caf; }
   .src-tag.srcprice { background: rgba(13,148,136,.14); color: #0f766e; }
+  .src-tag.src-headline { background: rgba(67,56,202,.12); color: var(--accent); }
+  .src-tag.src-description { background: rgba(100,116,139,.14); color: #475569; }
   .acc-logo-wrap { position: relative; display: inline-block; width: 22px; height: 22px; margin-right: 9px; vertical-align: middle; border-radius: 5px; overflow: hidden; flex: none; }
   .acc-logo-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700; color: var(--muted); background: var(--off-bg); border: 1px solid var(--line); border-radius: 5px; }
   .acc-logo-img { position: absolute; inset: 0; width: 22px; height: 22px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 5px; }
@@ -533,6 +535,7 @@
     <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies<span class="nav-warn" id="bidNavWarn" hidden title="CPA running below target on one or more campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
     <a href="#" class="nav-item nav-sub" data-page="geocoverage">Geo Coverage</a>
     <div class="nav-heading">Audit</div>
+    <a href="#" class="nav-item nav-sub" data-page="adcopy">Ad Copy</a>
     <a href="#" class="nav-item nav-sub" data-page="audit">Policy Issues<span class="nav-warn" id="auditNavWarn" hidden title="Policy issues found"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
     <a href="#" class="nav-item nav-sub" data-page="assets">Assets<span class="nav-warn" id="assetsNavWarn" hidden title="Assets missing or below recommended counts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
     <a href="#" class="nav-item nav-sub" data-page="landingpages">Landing Pages</a>
@@ -861,6 +864,125 @@
             <div class="pagination" id="accPagination" hidden></div>
           </div>
           <div class="foot-note" style="margin-top:10px;">Each row aggregates all campaigns in that account for the selected period. Click a header to sort; drag or double-click borders to resize.</div>
+        </section>
+      </section>
+
+      <!-- Ad Copy Page -->
+      <section id="adcopy" class="page">
+        <section id="acSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to audit ad copy performance by asset.</p>
+            <a class="btn-google" href="/api/auth">
+              <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 11v2.8h4.6c-.2 1.2-1.5 3.6-4.6 3.6-2.8 0-5-2.3-5-5.1s2.2-5.1 5-5.1c1.6 0 2.6.7 3.2 1.2l2.2-2.1C17.9 4.9 15.2 4 12 4 6.9 4 2.8 8.1 2.8 13.2S6.9 22.4 12 22.4c5.9 0 9.8-4.1 9.8-9.9 0-.7-.1-1.2-.2-1.7H12z"/></svg>
+              Sign in with Google
+            </a>
+          </div>
+        </section>
+
+        <section id="acSignedIn" hidden>
+          <div class="controls-row account">
+            <div>
+              <label class="field-label" for="acDateSelect">Date range</label>
+              <select id="acDateSelect" onchange="onAcDateRangeChange()">
+                <option value="yesterday">Yesterday</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="14days">Last 14 Days</option>
+                <option value="30days" selected>Last 30 Days</option>
+                <option value="thisMonth">This Month</option>
+                <option value="lastMonth">Last Month</option>
+                <option value="custom">Custom...</option>
+              </select>
+            </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="acHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                  Heatmap
+                </button>
+              </div>
+              <div class="filters" id="acFilterGroup">
+                <button class="filters-btn" id="acFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  Filters <span class="count" id="acFilterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="acFiltersMenu" hidden>
+                  <div class="filter-group-header" id="acfAccountSection" onclick="toggleFilterGroup('ac-group-account', event)">
+                    <span class="toggle">+</span>Account
+                  </div>
+                  <div class="filter-group-items" id="ac-group-account" hidden>
+                    <div class="filter-section">
+                      <div class="filter-checklist" id="acfAccountList"></div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('ac-group-campaign', event)">
+                    <span class="toggle">+</span>Campaign
+                  </div>
+                  <div class="filter-group-items" id="ac-group-campaign" hidden>
+                    <div class="filter-section">
+                      <div class="filter-checklist" id="acfCampaignList"></div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('ac-group-adgroup', event)">
+                    <span class="toggle">+</span>Ad Group
+                  </div>
+                  <div class="filter-group-items" id="ac-group-adgroup" hidden>
+                    <div class="filter-section">
+                      <div class="filter-checklist" id="acfAdGroupList"></div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('ac-group-assettype', event)">
+                    <span class="toggle">+</span>Asset Type
+                  </div>
+                  <div class="filter-group-items" id="ac-group-assettype" hidden>
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="acfTypeHeadline" /><label for="acfTypeHeadline">Headline</label></div>
+                        <div class="check-row"><input type="checkbox" id="acfTypeDescription" /><label for="acfTypeDescription">Description</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetAcFilters()">Reset</button>
+                    <button class="apply" onclick="applyAcFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
+              <div class="filters" id="acExportGroup">
+                <button class="filters-btn" id="acExportBtn" title="Export current view">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                </button>
+                <div class="pop col-pop" id="acExportPop" hidden>
+                  <button class="pop-row" data-acfmt="csv">Download CSV</button>
+                  <button class="pop-row" data-acfmt="pdf">Download PDF</button>
+                  <button class="pop-row" data-acfmt="sheets">Copy for Google Sheets</button>
+                </div>
+              </div>
+              <div class="filters" id="acColsGroup">
+                <button class="filters-btn" id="acColsBtn" aria-haspopup="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
+                  Columns <span class="count" id="acColsCount">0</span>
+                </button>
+                <div class="pop col-pop" id="acColsPop" hidden></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="acWarn" class="as-warn" hidden></div>
+          <div class="panel">
+            <div id="acLoading" class="state" hidden><div class="spinner"></div>Loading ad copy…</div>
+            <div id="acPrompt" class="state"><div class="big">Choose an account</div>Select an account above to audit ad copy performance.</div>
+            <div id="acError" class="state" hidden></div>
+            <div id="acEmpty" class="state" hidden><div class="big">No ad copy</div>No headline or description assets found on enabled ads in enabled ad groups.</div>
+            <div class="scroll"><table id="acTable" hidden>
+              <colgroup id="ac-colgroup"></colgroup><thead id="ac-thead"></thead><tbody id="ac-tbody"></tbody><tfoot id="ac-tfoot"></tfoot>
+            </table></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+            <div class="pagination" id="acPagination" hidden></div>
+          </div>
+          <div class="foot-note" style="margin-top:10px;">Headline and Description assets from enabled Responsive Search Ads in enabled ad groups/campaigns, aggregated by Campaign + Ad Group + Asset Type + Text (metrics summed where the same asset text is reused across multiple ads in an ad group). CTR, impressions and clicks cover the selected date range at the individual asset level, so they aren't directly comparable to ad-level metrics.</div>
         </section>
       </section>
 
@@ -1578,6 +1700,7 @@ function globalRefresh() {
     case "audit": loadAudit(true); break;
     case "assets": loadAssets(GLOBAL_ACCOUNT); break;
     case "landingpages": loadLandingPages(GLOBAL_ACCOUNT); break;
+    case "adcopy": loadAdCopy(GLOBAL_ACCOUNT); break;
     case "underspend": loadUnderspend(true); break;
     case "bidding": loadBidding(true); break;
     case "geocoverage": if (GLOBAL_ACCOUNT !== "ALL") loadGeoCoverage(GLOBAL_ACCOUNT); break;
@@ -1701,7 +1824,7 @@ function persistUi(table, st) {
   uiSave(table, o);
 }
 // Map a table's tbody id to its prefs key, so a column resize can persist widths.
-const TBODY_TO_TBL = { tbody: "campaigns", "acc-tbody": "accounts", "lp-tbody": "landingpages", "assets-tbody": "assets", "us-tbody": "underspend", "bid-tbody": "bidding", "aud-tbody": "audit", "geo-tbody": "geocoverage" };
+const TBODY_TO_TBL = { tbody: "campaigns", "acc-tbody": "accounts", "lp-tbody": "landingpages", "assets-tbody": "assets", "us-tbody": "underspend", "bid-tbody": "bidding", "aud-tbody": "audit", "geo-tbody": "geocoverage", "ac-tbody": "adcopy" };
 // Copy saved prefs onto each state at boot (before the first render of any page).
 function restoreUiPrefs() {
   const apply = (table, st, keys) => {
@@ -1716,6 +1839,7 @@ function restoreUiPrefs() {
   apply("accounts", typeof accState !== "undefined" ? accState : null, ["sort", "pageSize", "columnWidths", "dateRange"]);
   apply("campaigns", typeof state !== "undefined" ? state : null, ["sort", "pageSize", "columnWidths", "dateRange"]);
   apply("landingpages", typeof lpState !== "undefined" ? lpState : null, ["sort", "pageSize", "columnWidths", "dateRange"]);
+  apply("adcopy", typeof acState !== "undefined" ? acState : null, ["sort", "pageSize", "columnWidths", "dateRange"]);
   apply("assets", typeof assetsState !== "undefined" ? assetsState : null, ["sort", "pageSize", "columnWidths"]);
   apply("underspend", typeof underspendState !== "undefined" ? underspendState : null, ["sort", "pageSize", "columnWidths"]);
   apply("bidding", typeof biddingState !== "undefined" ? biddingState : null, ["sort", "pageSize", "columnWidths"]);
@@ -1869,6 +1993,25 @@ function onLpDateRangeChange() {
     lpState.currentPage = 1;
     syncLpDateSelect();
     loadLandingPages(GLOBAL_ACCOUNT);
+  }
+}
+
+function onAcDateRangeChange() {
+  const val = document.getElementById("acDateSelect").value;
+  if (val === "customApplied") return;
+  if (val === "custom") {
+    state.calendarTarget = "ac";
+    state.calendarFromDate = new Date();
+    state.calendarToDate = new Date();
+    document.getElementById("calendarTitle").textContent = "Custom date range";
+    renderCalendar("from");
+    renderCalendar("to");
+    document.getElementById("customDateModal").setAttribute("open", "");
+  } else {
+    acState.dateRange = DATE_PRESET_MAP[val];
+    acState.currentPage = 1;
+    syncAcDateSelect();
+    loadAdCopy(GLOBAL_ACCOUNT);
   }
 }
 
@@ -2063,10 +2206,12 @@ function syncDateSelectEl(selectId, r) {
 function syncDateSelect() { syncDateSelectEl("dateSelect", state.dateRange); }
 function syncAccDateSelect() { syncDateSelectEl("accDateSelect", accState.dateRange); }
 function syncLpDateSelect() { syncDateSelectEl("lpDateSelect", lpState.dateRange); }
+function syncAcDateSelect() { syncDateSelectEl("acDateSelect", acState.dateRange); }
 
 function cancelCustomDate() {
   closeCustomDateModal();
   if (state.calendarTarget === "lp") syncLpDateSelect();
+  else if (state.calendarTarget === "ac") syncAcDateSelect();
   else if (state.calendarTarget === "geo") syncGeoDateSelect();
   else if (state.calendarTarget === "acc") syncAccDateSelect();
   else if (state.calendarTarget !== "compare") syncDateSelect();
@@ -2090,17 +2235,18 @@ function applyCustomDate() {
   // A custom range is global: every page's picker AND data adopt it, so the
   // date range stays consistent as the user moves between pages.
   const dr = { label: from + " to " + to, from, to };
-  state.dateRange = dr; accState.dateRange = dr; lpState.dateRange = dr; geoState.dateRange = dr;
-  state.currentPage = 1; accState.currentPage = 1; lpState.currentPage = 1;
+  state.dateRange = dr; accState.dateRange = dr; lpState.dateRange = dr; geoState.dateRange = dr; acState.dateRange = dr;
+  state.currentPage = 1; accState.currentPage = 1; lpState.currentPage = 1; acState.currentPage = 1;
   closeCustomDateModal();
-  syncDateSelect(); syncAccDateSelect(); syncLpDateSelect(); syncGeoDateSelect();
+  syncDateSelect(); syncAccDateSelect(); syncLpDateSelect(); syncGeoDateSelect(); syncAcDateSelect();
 
   // Pages other than the current one refetch with the new range when next opened.
-  state.loadedAccount = "__stale__"; accState.loaded = false; lpState.loadedAccount = "__stale__"; geoState.loadedAccount = "__stale__";
+  state.loadedAccount = "__stale__"; accState.loaded = false; lpState.loadedAccount = "__stale__"; geoState.loadedAccount = "__stale__"; acState.loadedAccount = "__stale__";
 
   // Reload whichever page the user is on now.
   const t = state.calendarTarget;
   if (t === "lp") loadLandingPages(GLOBAL_ACCOUNT);
+  else if (t === "ac") loadAdCopy(GLOBAL_ACCOUNT);
   else if (t === "geo") loadGeoCoverage(GLOBAL_ACCOUNT);
   else if (t === "acc") loadAllAccounts();
   else { if (state.compareEnabled) updateCompareUI(); loadCampaigns(); }
@@ -2437,6 +2583,7 @@ function routeFromHash() {
   else if (page === "budgetpacing") initBudgetPacing();
   else if (page === "assets") initAssets();
   else if (page === "landingpages") initLandingPages();
+  else if (page === "adcopy") initAdCopy();
   else if (page === "underspend") initUnderspend();
   else if (page === "bidding") initBidding();
   else if (page === "geocoverage") initGeoCoverage();
@@ -2482,6 +2629,11 @@ function resetAccountScopedFilters() {
   savePageFilters("landingpages", { name: lpState.filters.name, nameOp: lpState.filters.nameOp, account: [...lpState.filters.account], campaign: [...lpState.filters.campaign], adGroup: [...lpState.filters.adGroup], url: lpState.filters.url, sources: [...lpState.filters.sources] });
   updateLpFilterCount();
 
+  // Ad Copy — Campaign checklist.
+  acState.filters.campaign = new Set();
+  savePageFilters("adcopy", { account: [...acState.filters.account], campaign: [...acState.filters.campaign], adGroup: [...acState.filters.adGroup], assetType: [...acState.filters.assetType] });
+  updateAcFilterCount();
+
   // Budgeting — Campaign Name.
   underspendState.filterName = ""; underspendState.filterNameOp = "contains";
   setVal("usfName", ""); setVal("usfNameOp", "contains");
@@ -2500,6 +2652,7 @@ function onGlobalAccountChange(val) {
   state.loadedAccount = "__stale__";
   assetsState.loadedAccount = "__stale__";
   lpState.loadedAccount = "__stale__";
+  acState.loadedAccount = "__stale__";
   auditState.loaded = false;
   geoState.loadedAccount = "__stale__";
   const page = currentHashPage();
@@ -2507,6 +2660,7 @@ function onGlobalAccountChange(val) {
   else if (page === "audit") initAudit();
   else if (page === "assets") initAssets();
   else if (page === "landingpages") initLandingPages();
+  else if (page === "adcopy") initAdCopy();
   else if (page === "underspend") { if (underspendState.loaded) renderUnderspendTable(); else initUnderspend(); }
   else if (page === "bidding") { if (biddingState.loaded) renderBiddingTable(); else initBidding(); }
   else if (page === "geocoverage") initGeoCoverage();
@@ -4729,6 +4883,234 @@ function renderLpColsPop() {
   });
 }
 function syncLpColsCount() { document.getElementById("lpColsCount").textContent = lpState.visible.size; }
+
+/* ============================ Ad Copy page ============================ */
+
+const AC_COLUMNS = [
+  { key: "name", label: "Campaign", align: "txt", width: 200, group: "Columns", cls: "name", locked: true,
+    cell: r => escapeHtml(r.name) },
+  { key: "adGroup", label: "Ad Group", align: "txt", width: 180, group: "Columns", locked: true,
+    cell: r => escapeHtml(r.adGroup || "—") },
+  { key: "assetType", label: "Asset Type", align: "txt", width: 120, group: "Columns", locked: true,
+    sort: r => r.assetType || "",
+    cell: r => '<span class="src-tag ' + (r.assetType === "Headline" ? "src-headline" : "src-description") + '">' + escapeHtml(r.assetType || "") + "</span>" },
+  { key: "text", label: "Ad Copy Text", align: "txt", width: 320, group: "Columns", locked: true,
+    cell: r => { const safe = escapeHtml(r.text || ""); return '<span title="' + safe + '">' + safe + "</span>"; } },
+  { key: "ctr", label: "CTR", align: "num", width: 100, group: "Columns", cls: "tabnum",
+    cell: r => fmtPct(r.ctr || 0) },
+  { key: "impressions", label: "Imp.", align: "num", width: 100, group: "Columns", cls: "tabnum",
+    cell: r => fmtInt(r.impressions || 0) },
+  { key: "clicks", label: "Clicks", align: "num", width: 90, group: "Columns", cls: "tabnum",
+    cell: r => fmtInt(r.clicks || 0) },
+];
+const AC_COL_GROUPS = ["Columns"];
+const AC_DEFAULT_VISIBLE = ["ctr", "impressions", "clicks"];
+const AC_ASSETTYPE_BOXES = [["acfTypeHeadline", "Headline"], ["acfTypeDescription", "Description"]];
+const acState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), assetType: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("adcopy") || AC_DEFAULT_VISIBLE), "name", "adGroup", "assetType", "text"]), openColGroups: new Set(["acColsPop_g0"]), heatmap: false, dateRange: { label: "Last 30 Days", days: 30 } };
+
+function populateAcFilterOptions() {
+  const inAll = GLOBAL_ACCOUNT === "ALL";
+  const accHdr = document.getElementById("acfAccountSection");
+  const accItems = document.getElementById("ac-group-account");
+  if (accHdr) accHdr.hidden = !inAll;
+  if (accItems && !inAll) accItems.hidden = true;
+  const distinct = (key) => [...new Set(acState.rows.map(r => r[key]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
+  if (inAll) fillCheckList("acfAccountList", distinct("accountName"), acState.filters.account);
+  fillCheckList("acfCampaignList", distinct("name"), acState.filters.campaign);
+  fillCheckList("acfAdGroupList", distinct("adGroup"), acState.filters.adGroup);
+}
+
+function initAdCopy() {
+  document.getElementById("acSignedOut").hidden = signedIn;
+  document.getElementById("acSignedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  const fBtn = document.getElementById("acFiltersBtn");
+  if (!fBtn.dataset.wired) {
+    fBtn.dataset.wired = "1";
+    const fMenu = document.getElementById("acFiltersMenu");
+    fBtn.addEventListener("click", (e) => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) { populateAcFilterOptions(); fMenu.hidden = false; } });
+    fMenu.addEventListener("click", (e) => e.stopPropagation());
+    const acExportPop = document.getElementById("acExportPop");
+    document.getElementById("acExportBtn").addEventListener("click", e => { e.stopPropagation(); const open = acExportPop.hidden; closeAllMenus(); if (open) acExportPop.hidden = false; });
+    acExportPop.addEventListener("click", e => e.stopPropagation());
+    acExportPop.querySelectorAll("[data-acfmt]").forEach(b => b.addEventListener("click", () => { acExportPop.hidden = true; exportAdCopy(b.dataset.acfmt); }));
+
+    // Columns picker
+    const colsBtn = document.getElementById("acColsBtn"), colsPop = document.getElementById("acColsPop");
+    colsBtn.addEventListener("click", e => { e.stopPropagation(); const open = colsPop.hidden; closeAllMenus(); if (open) { renderAcColsPop(); colsPop.hidden = false; } });
+    colsPop.addEventListener("click", e => e.stopPropagation());
+    syncAcColsCount();
+
+    // Heatmap toggle
+    const heatBtn = document.getElementById("acHeatmapBtn");
+    heatBtn.addEventListener("click", e => { e.stopPropagation(); acState.heatmap = !acState.heatmap; heatBtn.classList.toggle("toggled", acState.heatmap); heatBtn.setAttribute("aria-pressed", acState.heatmap ? "true" : "false"); renderAdCopyTable(); });
+
+    syncAcDateSelect();
+    restoreAcFilters();
+    updateAcFilterCount();
+  }
+  if (acState.loadedAccount !== GLOBAL_ACCOUNT) loadAdCopy(GLOBAL_ACCOUNT);
+  else if (acState.rows.length) { showEl("acLoading", false); showEl("acPrompt", false); showEl("acTable", true); renderAdCopyTable(); }
+  else { showEl("acLoading", false); showEl("acPrompt", false); showEl("acTable", false); showEl("acEmpty", true); }
+}
+
+function restoreAcFilters() {
+  const saved = loadPageFilters("adcopy");
+  if (!saved) return;
+  acState.filters = { account: new Set(Array.isArray(saved.account) ? saved.account : []), campaign: new Set(Array.isArray(saved.campaign) ? saved.campaign : []), adGroup: new Set(Array.isArray(saved.adGroup) ? saved.adGroup : []), assetType: new Set(Array.isArray(saved.assetType) ? saved.assetType : []) };
+  AC_ASSETTYPE_BOXES.forEach(([id, label]) => { document.getElementById(id).checked = acState.filters.assetType.has(label); });
+}
+function applyAcFilters() {
+  const inAll = GLOBAL_ACCOUNT === "ALL";
+  const assetType = new Set();
+  AC_ASSETTYPE_BOXES.forEach(([id, label]) => { if (document.getElementById(id).checked) assetType.add(label); });
+  acState.filters = {
+    account: inAll ? readCheckList("acfAccountList") : acState.filters.account,
+    campaign: readCheckList("acfCampaignList"),
+    adGroup: readCheckList("acfAdGroupList"),
+    assetType,
+  };
+  document.getElementById("acFiltersMenu").hidden = true;
+  acState.currentPage = 1;
+  savePageFilters("adcopy", { account: [...acState.filters.account], campaign: [...acState.filters.campaign], adGroup: [...acState.filters.adGroup], assetType: [...assetType] });
+  updateAcFilterCount();
+  renderAdCopyTable();
+}
+function resetAcFilters() {
+  acState.filters.account = new Set();
+  acState.filters.campaign = new Set();
+  acState.filters.adGroup = new Set();
+  AC_ASSETTYPE_BOXES.forEach(([id]) => { document.getElementById(id).checked = false; });
+  populateAcFilterOptions();
+  applyAcFilters();
+}
+function updateAcFilterCount() {
+  const f = acState.filters;
+  const inAll = GLOBAL_ACCOUNT === "ALL";
+  const n = ((inAll && f.account.size) ? 1 : 0) + (f.campaign.size ? 1 : 0) + (f.adGroup.size ? 1 : 0) + (f.assetType.size ? 1 : 0);
+  const el = document.getElementById("acFilterCount");
+  if (n > 0) { el.textContent = n; el.hidden = false; } else { el.hidden = true; }
+  markFilterGroup("ac-group-account", (inAll && f.account.size) ? f.account.size : 0);
+  markFilterGroup("ac-group-campaign", f.campaign.size);
+  markFilterGroup("ac-group-adgroup", f.adGroup.size);
+  markFilterGroup("ac-group-assettype", f.assetType.size);
+}
+
+async function loadAdCopy(customerId) {
+  acState.account = customerId;
+  acState.loadedAccount = customerId;
+  const dr = encodeURIComponent(dateRangeToGAQL(acState.dateRange));
+  showEl("acLoading", true); showEl("acPrompt", false); showEl("acError", false);
+  showEl("acEmpty", false); showEl("acWarn", false); showEl("acTable", false);
+
+  if (customerId === "ALL") {
+    if (!ACCOUNTS.length) { showEl("acLoading", false); showEl("acEmpty", true); return; }
+    const rows = [], errors = [];
+    await mapLimit(ACCOUNTS, 4, async (a) => {
+      try {
+        const res = await fetch("/api/adcopy?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + dr, { credentials: "same-origin" });
+        const data = await res.json().catch(() => ({}));
+        if (data.error && !data.rows) { errors.push((a.name || a.id) + ": " + data.error); return; }
+        if (data.warning) errors.push((a.name || a.id) + ": " + data.warning);
+        (data.rows || []).forEach(c => { c.accountName = a.name || a.formatted; c.accountId = a.id; rows.push(c); });
+      } catch { errors.push((a.name || a.id) + ": request failed"); }
+    });
+    acState.rows = rows;
+    showEl("acLoading", false);
+    if (errors.length) {
+      const w = document.getElementById("acWarn");
+      w.hidden = false;
+      w.textContent = "Some ad copy data couldn't be read — " + errors.slice(0, 3).join(" · ") + (errors.length > 3 ? " …" : "");
+    }
+    if (!rows.length) { showEl("acEmpty", true); return; }
+    showEl("acTable", true);
+    renderAdCopyTable();
+    setLastRefresh("adcopy");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/adcopy?customerId=" + encodeURIComponent(customerId) + "&dateRange=" + dr, { credentials: "same-origin" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || (data.error && !data.rows)) {
+      showEl("acLoading", false); showEl("acError", true);
+      document.getElementById("acError").innerHTML = '<div class="big">Couldn\'t load ad copy</div>' + escapeHtml(data.error || "Request failed");
+      return;
+    }
+    acState.rows = data.rows || [];
+    showEl("acLoading", false);
+    if (data.warning) { const w = document.getElementById("acWarn"); w.hidden = false; w.textContent = data.warning; }
+    if (!acState.rows.length) { showEl("acEmpty", true); return; }
+    showEl("acTable", true);
+    renderAdCopyTable();
+    setLastRefresh("adcopy");
+  } catch {
+    showEl("acLoading", false); showEl("acError", true);
+    document.getElementById("acError").innerHTML = '<div class="big">Couldn\'t load ad copy</div>Request failed';
+  }
+}
+
+function renderAdCopyTable() {
+  renderDataTable({
+    state: acState,
+    columns: () => acState.account === "ALL"
+      ? [{ key: "account", label: "Account", align: "txt", width: 170, always: true, sort: r => r.accountName || "", cell: r => logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") }, ...AC_COLUMNS]
+      : AC_COLUMNS,
+    colOrderKey: "adcopy",
+    prefKey: "adcopy",
+    heatmap: true,
+    ids: { colgroup: "ac-colgroup", thead: "ac-thead", tbody: "ac-tbody", tfoot: "ac-tfoot", pagination: "acPagination" },
+    rerender: renderAdCopyTable,
+    rows: () => {
+      const f = acState.filters;
+      const inAll = acState.account === "ALL";
+      return acState.rows.filter(r => {
+        if (inAll && f.account.size && !f.account.has(r.accountName || "")) return false;
+        if (f.campaign.size && !f.campaign.has(r.name || "")) return false;
+        if (f.adGroup.size && !f.adGroup.has(r.adGroup || "")) return false;
+        if (f.assetType.size && !f.assetType.has(r.assetType || "")) return false;
+        return true;
+      });
+    },
+    footer: (rows, cols) => {
+      const totImpr = rows.reduce((a, r) => a + (r.impressions || 0), 0);
+      const totClicks = rows.reduce((a, r) => a + (r.clicks || 0), 0);
+      return "<tr>" + cols.map((c, i) => {
+        if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total · ' + rows.length + "</td>";
+        if (c.key === "impressions") return '<td class="num tabnum" data-col="impressions">' + fmtInt(totImpr) + "</td>";
+        if (c.key === "clicks") return '<td class="num tabnum" data-col="clicks">' + fmtInt(totClicks) + "</td>";
+        if (c.key === "ctr") return '<td class="num tabnum" data-col="ctr">' + fmtPct(totImpr ? totClicks / totImpr : 0) + "</td>";
+        return '<td data-col="' + c.key + '"></td>';
+      }).join("") + "</tr>";
+    },
+  });
+}
+
+function renderAcColsPop() {
+  renderGroupedCols("acColsPop", AC_COLUMNS, AC_COL_GROUPS, acState.visible, acState.openColGroups, key => {
+    acState.visible.has(key) ? acState.visible.delete(key) : acState.visible.add(key); setColVisible("adcopy", acState.visible);
+    syncAcColsCount();
+    renderAcColsPop();
+    acState.currentPage = 1;
+    renderAdCopyTable();
+  });
+}
+function syncAcColsCount() { document.getElementById("acColsCount").textContent = acState.visible.size; }
+
+function exportAdCopy(fmt) {
+  const rows = acState.viewRows || [];
+  const cols = acState.viewCols || AC_COLUMNS;
+  if (!rows.length) { showToast("Nothing to export."); return; }
+  const header = cols.map(c => c.label);
+  const data = rows.map(r => cols.map(c => {
+    if (c.key === "account") return r.accountName || "";
+    if (c.key === "adGroup") return r.adGroup || "—";
+    if (c.key === "ctr") return fmtPct(r.ctr || 0);
+    if (c.key === "impressions" || c.key === "clicks") return r[c.key] || 0;
+    return r[c.key] != null ? r[c.key] : "";
+  }));
+  exportMatrix(fmt, "ad-copy-" + new Date().toISOString().slice(0, 10), "Ad Copy", header, data);
+}
 
 // ---------- Geo Coverage ----------
 const GEO_ACCENT = "#10b981";
