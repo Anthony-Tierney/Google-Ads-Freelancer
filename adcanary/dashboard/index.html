@@ -4165,7 +4165,13 @@ function buildRecommendation(r, budget, mi, avg7, projected) {
     }
     return '<div class="bp-rec under"><span class="rec-lbl">Recommendation:</span> ' + msg + '</div>';
   }
-  return '<div class="bp-rec ontrack"><span class="rec-lbl">Recommendation:</span> Based on the past 7 days, projected spend of <strong>' + fmtCurrency0(projected) + '</strong> is in line with the ' + budgetStr + ' monthly budget. Maintain a daily rate of around <strong>' + fmtCurrency0(requiredDaily) + '</strong> per day across the remaining ' + days(remainingDays) + ' to land as close to budget as possible.</div>';
+  const absDiff = Math.abs(diff);
+  const pctDiff = Math.abs(diff / budget * 100).toFixed(1);
+  const dir = diff > 0 ? "above" : "below";
+  const cmp = Math.round(absDiff) === 0
+    ? "is projected to land almost exactly on the target monthly spend of " + budgetStr
+    : "is <strong>" + fmtCurrency0(absDiff) + "</strong> (" + pctDiff + "%) " + dir + " the target monthly spend of " + budgetStr;
+  return '<div class="bp-rec ontrack"><span class="rec-lbl">Recommendation:</span> Based on the past 7 days, projected spend of <strong>' + fmtCurrency0(projected) + '</strong> ' + cmp + '. Maintain a daily rate of around <strong>' + fmtCurrency0(requiredDaily) + '</strong> per day across the remaining ' + days(remainingDays) + ' to land as close to budget as possible.</div>';
 }
 
 // Small table of accounts with no enabled campaigns this month.
