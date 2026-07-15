@@ -470,15 +470,20 @@
   #bpInactiveTable .sub { color: var(--faint); font-size: 12px; }
 
   .pace-wrap { min-width: 220px; position: relative; }
-  .pace-bar-outer { position: relative; padding-top: 22px; }
+  .pace-bar-outer { position: relative; padding-top: 22px; padding-bottom: 32px; }
   .pace-bar { position: relative; height: 14px; background: var(--off-bg); border-radius: 7px; overflow: hidden; }
   .pace-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 7px; transition: width .3s ease; }
   .pace-fill.ontrack { background: #16a34a; }
   .pace-fill.under { background: #d97706; }
   .pace-fill.over { background: #dc2626; }
-  .pace-marker-wrap { position: absolute; top: 0; bottom: 0; transform: translateX(-50%); pointer-events: none; }
+  .pace-marker-wrap { position: absolute; top: 22px; bottom: 32px; transform: translateX(-50%); pointer-events: none; }
   .pace-marker-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 2.5px; background: var(--ink); border-radius: 2px; transform: translateX(-50%); }
   .pace-marker-dot { position: absolute; bottom: -1px; left: 50%; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); transform: translate(-50%, 50%); }
+  .pace-marker-below { position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--muted); pointer-events: none; }
+  .pace-marker-tooltip { position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 11px; color: var(--panel); background: var(--ink); padding: 3px 8px; border-radius: 5px; pointer-events: none; opacity: 0; transition: opacity .15s ease; margin-top: 18px; }
+  .pace-marker-tooltip::before { content: ""; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); border: 4px solid transparent; border-bottom-color: var(--ink); }
+  .pace-marker-wrap:hover .pace-marker-tooltip { opacity: 1; }
+  .pace-marker-wrap:hover { pointer-events: auto; }
   .pace-spend-label { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--panel); padding: 1px 5px; border-radius: 4px; line-height: 1.5; pointer-events: none; }
   .pace-label { margin-top: 7px; font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
   .pace-label .muted { color: var(--muted); }
@@ -4339,6 +4344,8 @@ function renderBudgetPacing() {
           '<div class="pace-marker-wrap" style="left:' + pacePct.toFixed(1) + '%">' +
             '<div class="pace-marker-line"></div>' +
             '<div class="pace-marker-dot"></div>' +
+            '<div class="pace-marker-below">' + fmtCurrency(expectedToDate) + '</div>' +
+            '<div class="pace-marker-tooltip">Target spend</div>' +
           '</div>' +
           '<div class="pace-spend-label" style="left:' + Math.min(fillPct, 99.5).toFixed(1) + '%">' + fmtCurrency(r.spend) + '</div>' +
         '</div>';
