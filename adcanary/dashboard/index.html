@@ -60,9 +60,10 @@
 
   .sidebar {
     width: 200px; background: var(--panel); border-right: 1px solid var(--line);
-    padding: 16px 0; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;
-    position: sticky; top: 0; height: 100vh; align-self: flex-start; overflow-y: auto;
+    padding: 0; display: flex; flex-direction: column; flex-shrink: 0;
+    position: sticky; top: 0; height: 100vh; align-self: flex-start; overflow: hidden;
   }
+  .sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 0 16px; display: flex; flex-direction: column; }
   .nav-item {
     display: block; padding: 10px 16px; color: var(--ink); text-decoration: none;
     font-size: 14px; border-left: 3px solid transparent; cursor: pointer;
@@ -539,6 +540,7 @@
       <span class="app-logo-mark"><img src="/images/adcanary-logo.png" alt="AdCanary"></span>
       <span class="app-logo-text">Ad<b>Canary</b></span>
     </div>
+    <div class="sidebar-nav">
     <button class="nav-heading" data-section="accounts">
       <svg class="nh-ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span class="nh-label">Accounts</span>
@@ -578,6 +580,7 @@
       <a href="#" class="nav-item nav-sub" data-page="budgeting">Budgeting<span class="nav-warn" id="usNavWarn" hidden title="Underspending campaigns found"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
     </div>
     <a href="#" class="nav-item nav-settings" data-page="settings"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
+    </div>
   </aside>
 
   <div class="main-content">
@@ -1850,7 +1853,11 @@ const ACCOUNT_COLUMNS = [
   const W = { currency: 120, percent: 130, int: 110, decimal: 110, roas: 100 };
   ACCOUNT_COLUMNS.forEach(c => {
     if (c.key === "name") { c.width = 260; c.cls = "name"; c.cell = r => logoHtml(r.id, r.name) + escapeHtml(r.name); }
-    else { const key = c.key, type = c.type; c.width = W[type] || 120; c.cls = "tabnum"; c.cell = r => formatCell(type, r[key]); }
+    else {
+      const key = c.key, type = c.type;
+      c.width = W[type] || 120; c.cls = "tabnum";
+      c.cell = r => formatCell(type, r[key]) + (accState.compareEnabled && r._prev ? deltaHtml(key, r[key], r._prev[key]) : "");
+    }
   });
 })();
 const ACCOUNT_GROUPS = ["Account", "Performance", "Conversions", "Efficiency", "Quality"];
@@ -2714,6 +2721,7 @@ function onGlobalAccountChange(val) {
   geoState.loadedAccount = "__stale__";
   const page = currentHashPage();
   if (page === "campaigns") initDashboard();
+  else if (page === "allaccounts") { accState.loaded = false; initAllAccounts(); }
   else if (page === "audit") initAudit();
   else if (page === "assets") initAssets();
   else if (page === "landingpages") initLandingPages();
@@ -3708,7 +3716,8 @@ function wireAccountsControls() {
     else if (v === "previous") { accState.compareEnabled = true; accState.comparePeriod = "previous"; }
     else if (v === "custom") { state.calendarTarget = "acc"; openCompareCustom(); return; }
     updateAccCompareUI();
-    renderAccountsTable();
+    accState.loaded = false;
+    loadAllAccounts();
   }));
 
   syncAccColsCount();
@@ -3721,6 +3730,33 @@ function updateAccCompareUI() {
   if (!label) return;
   label.textContent = accState.compareEnabled ? "Comparing" : "Compare";
   btn.classList.toggle("toggled", !!accState.compareEnabled);
+}
+
+function getAccCompareRange() {
+  if (accState.comparePeriod === "custom" && accState.compareCustom) {
+    return "segments.date >= '" + accState.compareCustom.from + "' AND segments.date <= '" + accState.compareCustom.to + "'";
+  }
+  // Default: mirror the current date range, shifted back by the same number of days.
+  const dr = accState.dateRange;
+  if (dr.from && dr.to) {
+    const msDay = 86400000;
+    const from = new Date(dr.from.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"));
+    const to = new Date(dr.to.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"));
+    const span = Math.round((to - from) / msDay) + 1;
+    const prevTo = new Date(from - msDay);
+    const prevFrom = new Date(prevTo - (span - 1) * msDay);
+    const fmt = d => d.toISOString().slice(0, 10).replace(/-/g, "");
+    return "segments.date >= '" + fmt(prevFrom) + "' AND segments.date <= '" + fmt(prevTo) + "'";
+  }
+  if (dr.days) {
+    const msDay = 86400000;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const prevTo = new Date(today - msDay * (dr.days));
+    const prevFrom = new Date(prevTo - (dr.days - 1) * msDay);
+    const fmt = d => d.toISOString().slice(0, 10).replace(/-/g, "");
+    return "segments.date >= '" + fmt(prevFrom) + "' AND segments.date <= '" + fmt(prevTo) + "'";
+  }
+  return "segments.date DURING LAST_30_DAYS";
 }
 
 function applyAccFilters() {
@@ -3796,17 +3832,27 @@ async function loadAllAccounts() {
 
   if (!ACCOUNTS.length) { loading.hidden = true; document.getElementById("accEmpty").hidden = false; return; }
 
+  const accountsToLoad = GLOBAL_ACCOUNT === "ALL" ? ACCOUNTS : ACCOUNTS.filter(a => a.id === GLOBAL_ACCOUNT);
   const range = rangeToGAQL(accState.dateRange);
+  const cmpRange = accState.compareEnabled ? getAccCompareRange() : null;
   const rows = [];
-  await mapLimit(ACCOUNTS, 4, async (a) => {
+  await mapLimit(accountsToLoad, 4, async (a) => {
     try {
-      const res = await fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(range), { credentials: "same-origin" });
+      const [res, cmpRes] = await Promise.all([
+        fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(range), { credentials: "same-origin" }),
+        cmpRange ? fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(cmpRange), { credentials: "same-origin" }) : Promise.resolve(null),
+      ]);
       const data = await res.json().catch(() => ({}));
       const campaigns = (data.campaigns || []).map(withMetrics);
       const row = aggregateCampaigns(campaigns);
       row.enabledCount = campaigns.filter(c => (c.status || "").toUpperCase() === "ENABLED").length;
       row.hasEnabled = row.enabledCount > 0;
       row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
+      if (cmpRes) {
+        const cmpData = await cmpRes.json().catch(() => ({}));
+        const cmpCampaigns = (cmpData.campaigns || []).map(withMetrics);
+        row._prev = aggregateCampaigns(cmpCampaigns);
+      }
       rows.push(row);
     } catch {
       const row = aggregateCampaigns([]);
