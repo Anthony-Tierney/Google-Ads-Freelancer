@@ -1900,6 +1900,10 @@ function persistUi(table, st) {
   if (!table || !st) return;
   const o = { sort: st.sort, pageSize: st.pageSize, columnWidths: st.columnWidths };
   if (st.dateRange) o.dateRange = st.dateRange;
+  if (st.heatmap !== undefined) o.heatmap = st.heatmap;
+  if (st.compareEnabled !== undefined) o.compareEnabled = st.compareEnabled;
+  if (st.comparePeriod !== undefined) o.comparePeriod = st.comparePeriod;
+  if (st.compareCustom !== undefined) o.compareCustom = st.compareCustom;
   uiSave(table, o);
 }
 // Map a table's tbody id to its prefs key, so a column resize can persist widths.
@@ -1915,10 +1919,10 @@ function restoreUiPrefs() {
       else st[k] = p[k];
     });
   };
-  apply("accounts", typeof accState !== "undefined" ? accState : null, ["sort", "pageSize", "columnWidths", "dateRange"]);
-  apply("campaigns", typeof state !== "undefined" ? state : null, ["sort", "pageSize", "columnWidths", "dateRange"]);
-  apply("landingpages", typeof lpState !== "undefined" ? lpState : null, ["sort", "pageSize", "columnWidths", "dateRange"]);
-  apply("adcopy", typeof acState !== "undefined" ? acState : null, ["sort", "pageSize", "columnWidths", "dateRange"]);
+  apply("accounts", typeof accState !== "undefined" ? accState : null, ["sort", "pageSize", "columnWidths", "dateRange", "heatmap", "compareEnabled", "comparePeriod", "compareCustom"]);
+  apply("campaigns", typeof state !== "undefined" ? state : null, ["sort", "pageSize", "columnWidths", "dateRange", "heatmap", "compareEnabled", "comparePeriod", "compareCustom"]);
+  apply("landingpages", typeof lpState !== "undefined" ? lpState : null, ["sort", "pageSize", "columnWidths", "dateRange", "heatmap"]);
+  apply("adcopy", typeof acState !== "undefined" ? acState : null, ["sort", "pageSize", "columnWidths", "dateRange", "heatmap"]);
   apply("assets", typeof assetsState !== "undefined" ? assetsState : null, ["sort", "pageSize", "columnWidths"]);
   apply("underspend", typeof underspendState !== "undefined" ? underspendState : null, ["sort", "pageSize", "columnWidths"]);
   apply("bidding", typeof biddingState !== "undefined" ? biddingState : null, ["sort", "pageSize", "columnWidths"]);
@@ -2884,7 +2888,9 @@ function showApp(accounts) {
 
   document.getElementById("filtersBtn").addEventListener("click", e => { e.stopPropagation(); closeAllMenus(); document.getElementById("filtersMenu").hidden = !document.getElementById("filtersMenu").hidden; });
   const chBtn = document.getElementById("campHeatmapBtn");
-  if (chBtn && !chBtn.dataset.wired) { chBtn.dataset.wired = "1"; chBtn.addEventListener("click", e => { e.stopPropagation(); state.heatmap = !state.heatmap; chBtn.classList.toggle("toggled", state.heatmap); chBtn.setAttribute("aria-pressed", state.heatmap ? "true" : "false"); renderTable(); }); }
+  if (chBtn && !chBtn.dataset.wired) { chBtn.dataset.wired = "1"; chBtn.addEventListener("click", e => { e.stopPropagation(); state.heatmap = !state.heatmap; chBtn.classList.toggle("toggled", state.heatmap); chBtn.setAttribute("aria-pressed", state.heatmap ? "true" : "false"); persistUi("campaigns", state); renderTable(); }); }
+  if (chBtn) { chBtn.classList.toggle("toggled", !!state.heatmap); chBtn.setAttribute("aria-pressed", state.heatmap ? "true" : "false"); }
+  if (state.compareEnabled) updateCompareUI();
   document.addEventListener("click", closeAllMenus);
   document.getElementById("filtersMenu").addEventListener("click", e => e.stopPropagation());
 
@@ -2897,11 +2903,11 @@ function showApp(accounts) {
     const mode = b.dataset.cmp;
     if (mode === "off") {
       state.compareEnabled = false; state.compareMode = "previous";
-      saveFilters(); updateCompareUI();
+      saveFilters(); updateCompareUI(); persistUi("campaigns", state);
       loadCampaigns();
     } else if (mode === "previous") {
       state.compareEnabled = true; state.compareMode = "previous";
-      saveFilters(); updateCompareUI();
+      saveFilters(); updateCompareUI(); persistUi("campaigns", state);
       loadCampaigns();
     } else if (mode === "custom") {
       openCompareCustom();
@@ -3718,7 +3724,8 @@ function wireAccountsControls() {
   const filtersMenu = document.getElementById("accFiltersMenu");
   document.getElementById("accFiltersBtn").addEventListener("click", e => { e.stopPropagation(); const open = filtersMenu.hidden; closeAllMenus(); if (open) filtersMenu.hidden = false; });
   const ahBtn = document.getElementById("accHeatmapBtn");
-  ahBtn.addEventListener("click", e => { e.stopPropagation(); accState.heatmap = !accState.heatmap; ahBtn.classList.toggle("toggled", accState.heatmap); ahBtn.setAttribute("aria-pressed", accState.heatmap ? "true" : "false"); renderAccountsTable(); });
+  ahBtn.addEventListener("click", e => { e.stopPropagation(); accState.heatmap = !accState.heatmap; ahBtn.classList.toggle("toggled", accState.heatmap); ahBtn.setAttribute("aria-pressed", accState.heatmap ? "true" : "false"); persistUi("accounts", accState); renderAccountsTable(); });
+  ahBtn.classList.toggle("toggled", !!accState.heatmap); ahBtn.setAttribute("aria-pressed", accState.heatmap ? "true" : "false");
   filtersMenu.addEventListener("click", e => e.stopPropagation());
 
   // Compare button — mirrors the campaigns page compare, but stored on accState
@@ -3731,10 +3738,11 @@ function wireAccountsControls() {
     if (v === "off") { accState.compareEnabled = false; accState.comparePeriod = null; }
     else if (v === "previous") { accState.compareEnabled = true; accState.comparePeriod = "previous"; }
     else if (v === "custom") { state.calendarTarget = "acc"; openCompareCustom(); return; }
-    updateAccCompareUI();
+    updateAccCompareUI(); persistUi("accounts", accState);
     accState.loaded = false;
     loadAllAccounts();
   }));
+  updateAccCompareUI();
 
   syncAccColsCount();
   updateAccFilterCount();
@@ -4904,7 +4912,8 @@ function initLandingPages() {
 
     // Heatmap toggle
     const heatBtn = document.getElementById("lpHeatmapBtn");
-    heatBtn.addEventListener("click", e => { e.stopPropagation(); lpState.heatmap = !lpState.heatmap; heatBtn.classList.toggle("toggled", lpState.heatmap); heatBtn.setAttribute("aria-pressed", lpState.heatmap ? "true" : "false"); renderLandingPagesTable(); });
+    heatBtn.addEventListener("click", e => { e.stopPropagation(); lpState.heatmap = !lpState.heatmap; heatBtn.classList.toggle("toggled", lpState.heatmap); heatBtn.setAttribute("aria-pressed", lpState.heatmap ? "true" : "false"); persistUi("landingpages", lpState); renderLandingPagesTable(); });
+    heatBtn.classList.toggle("toggled", !!lpState.heatmap); heatBtn.setAttribute("aria-pressed", lpState.heatmap ? "true" : "false");
 
     syncLpDateSelect();
     restoreLpFilters();
@@ -5174,7 +5183,8 @@ function initAdCopy() {
 
     // Heatmap toggle
     const heatBtn = document.getElementById("acHeatmapBtn");
-    heatBtn.addEventListener("click", e => { e.stopPropagation(); acState.heatmap = !acState.heatmap; heatBtn.classList.toggle("toggled", acState.heatmap); heatBtn.setAttribute("aria-pressed", acState.heatmap ? "true" : "false"); renderAdCopyTable(); });
+    heatBtn.addEventListener("click", e => { e.stopPropagation(); acState.heatmap = !acState.heatmap; heatBtn.classList.toggle("toggled", acState.heatmap); heatBtn.setAttribute("aria-pressed", acState.heatmap ? "true" : "false"); persistUi("adcopy", acState); renderAdCopyTable(); });
+    heatBtn.classList.toggle("toggled", !!acState.heatmap); heatBtn.setAttribute("aria-pressed", acState.heatmap ? "true" : "false");
 
     syncAcDateSelect();
     restoreAcFilters();
