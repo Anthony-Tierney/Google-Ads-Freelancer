@@ -5629,6 +5629,7 @@ async function loadGeoCoverage(customerId) {
     showEl("geoLoading", false);
     updateGeoFilterCount();
     renderGeoCoverage();
+    setLastRefresh("geocoverage");
   } catch (e) {
     showEl("geoLoading", false);
     const el = document.getElementById("geoError"); el.hidden = false; el.innerHTML = '<div class="big">Couldn\u2019t load location targeting</div>' + escapeHtml(e.message || "Please try again.");
@@ -5833,7 +5834,7 @@ async function loadUnderspend(force) {
   underspendState.rows = rows;
   underspendState.errors = errors;
   loading.hidden = true;
-  setLastRefresh("underspend");
+  setLastRefresh("budgeting");
 
   if (errors.length) {
     const w = document.getElementById("usWarn");
