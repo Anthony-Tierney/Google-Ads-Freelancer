@@ -104,11 +104,21 @@ export async function onRequestGet(context) {
     const daysSince = Math.max(1, Math.round((todayMs - startMs) / MS_DAY) + 1);
 
     let totalSpend = 0;
+    let daysActive = 0;
     for (const [d, cost] of Object.entries(c.daily)) {
-      if (d >= windowStart) totalSpend += cost;
+      if (d >= windowStart) {
+        totalSpend += cost;
+        if (cost > 0) daysActive++;
+      }
     }
 
-    const dailySpend = totalSpend / daysSince;
+    // Divide by days the campaign actually served ads, not calendar days.
+    // This avoids false underspend flags for campaigns that don't run 7 days
+    // a week (e.g. Mon-Fri schedules, dayparted campaigns, or new campaigns
+    // that haven't yet filled their full window since the last budget change).
+    // Fall back to 1 if no active days recorded (avoids division by zero).
+    const activeDays = Math.max(1, daysActive);
+    const dailySpend = totalSpend / activeDays;
 
     return {
       id: c.id,
@@ -118,6 +128,7 @@ export async function onRequestGet(context) {
       dailyBudget: c.dailyBudget,
       lastAdjusted: c.lastAdjusted,
       daysSince,
+      daysActive: activeDays,
       dailySpend,
       totalSpend,
     };
