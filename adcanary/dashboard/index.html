@@ -472,7 +472,7 @@
   #bpInactiveTable .sub { color: var(--faint); font-size: 12px; }
 
   .pace-wrap { min-width: 220px; position: relative; }
-  .pace-bar-outer { position: relative; padding-top: 22px; padding-bottom: 32px; }
+  .pace-bar-outer { position: relative; padding-top: 22px; padding-bottom: 32px; overflow: hidden; }
   .pace-bar { position: relative; height: 14px; background: var(--off-bg); border-radius: 7px; overflow: hidden; }
   .pace-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 7px; transition: width .3s ease; }
   .pace-fill.ontrack { background: #16a34a; }
@@ -485,7 +485,7 @@
   .pace-marker-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 11px; color: var(--panel); background: var(--ink); padding: 3px 8px; border-radius: 5px; pointer-events: none; opacity: 0; transition: opacity .15s ease; }
   .pace-marker-tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 4px solid transparent; border-top-color: var(--ink); }
   .pace-marker-wrap:hover .pace-marker-tooltip { opacity: 1; }
-  .pace-spend-label { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--panel); padding: 1px 5px; border-radius: 4px; line-height: 1.5; pointer-events: none; }
+  .pace-spend-label { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--panel); padding: 1px 5px; border-radius: 4px; line-height: 1.5; pointer-events: none; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
   .pace-label { margin-top: 7px; font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
   .pace-label .muted { color: var(--muted); }
   .pace-label .over { color: #dc2626; font-weight: 540; }
@@ -5785,10 +5785,10 @@ const US_COLUMNS = [
       return fmtCurrency(r.dailyBudget) +
         '<br><span style="font-size:11px;color:var(--muted);white-space:normal;display:block;">As this campaign only runs ' + r.daysPerWeek + ' days per week, daily spend will be closer to ' + fmtCurrency(eff) + '</span>';
     } },
-  { key: "lastAdjusted", label: "Last Adjusted", align: "txt", width: 130,
+  { key: "lastAdjusted", label: "Last Adjusted", align: "num", width: 130,
     sort: r => r.lastAdjusted || "",
     cell: r => r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>' },
-  { key: "dailySpend", label: "Daily Spend<br>(active days)", align: "num", width: 220, cls: "tabnum",
+  { key: "dailySpend", label: "Daily Spend<br>(active days)", align: "num", width: 184, cls: "tabnum",
     cell: r => fmtCurrency(r.dailySpend) + '<br><span style="font-size:11px;color:var(--faint);">(since last budget adjustment,<br>active days only)</span>' },
   { key: "pacing", label: "Budget Pacing", align: "txt", width: 200,
     sort: r => { const eff = r.effectiveDailyBudget || r.dailyBudget; return eff > 0 ? r.dailySpend / eff : -1; },
