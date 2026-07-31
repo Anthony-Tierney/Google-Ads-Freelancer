@@ -3372,7 +3372,21 @@ function wireColumnResize(ids, widths, onSort, onReorder) {
     handle.className = "resize-handle";
     handle.addEventListener("mousedown", e => { e.preventDefault(); e.stopPropagation(); startResize(e, th.dataset.col, ids, widths, null); });
     handle.addEventListener("click", e => e.stopPropagation());
-    handle.addEventListener("dblclick", e => { e.preventDefault(); e.stopPropagation(); autoFitColumn(th.dataset.col, ids, widths, null); });
+    handle.addEventListener("dblclick", e => {
+      e.preventDefault(); e.stopPropagation();
+      const k = th.dataset.col;
+      if (k === "account") {
+        widths[k] = 117;
+        const col = document.querySelector("#" + ids.colgroup + " col[data-col='" + k + "']");
+        if (col) col.style.width = "117px";
+      } else if (k === "name") {
+        widths[k] = 164;
+        const col = document.querySelector("#" + ids.colgroup + " col[data-col='" + k + "']");
+        if (col) col.style.width = "164px";
+      } else {
+        autoFitColumn(k, ids, widths, null);
+      }
+    });
     th.appendChild(handle);
     th.addEventListener("click", e => {
       if (e.target.classList.contains("resize-handle")) return;
@@ -6142,6 +6156,24 @@ function renderDataTable(cfg) {
   wireColumnResize(cfg.ids, st.columnWidths,
     (k) => { const s = st.sort; st.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" }; if (cfg.resetPageOnSort) st.currentPage = 1; cfg.rerender(); },
     cfg.colOrderKey ? (keys) => { setColOrder(cfg.colOrderKey, keys); cfg.rerender(); } : null);
+
+  // Auto-fit every column to its content unless the user has already manually
+  // resized it (i.e. it has a saved width in columnWidths).
+  // Exceptions: 'account' is always 117px, 'name'/'campaign' always 164px.
+  cols.forEach(c => {
+    if (c.key === "account") {
+      st.columnWidths[c.key] = 117;
+      const col = document.querySelector("#" + cfg.ids.colgroup + " col[data-col='" + c.key + "']");
+      if (col) col.style.width = "117px";
+    } else if (c.key === "name") {
+      st.columnWidths[c.key] = 164;
+      const col = document.querySelector("#" + cfg.ids.colgroup + " col[data-col='" + c.key + "']");
+      if (col) col.style.width = "164px";
+    } else if (!st.columnWidths[c.key]) {
+      autoFitColumn(c.key, cfg.ids, st.columnWidths, null);
+    }
+  });
+  if (cfg.prefKey) persistUi(cfg.prefKey, st);
 }
 
 const BID_COLUMNS = [
