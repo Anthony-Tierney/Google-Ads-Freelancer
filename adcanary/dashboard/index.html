@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/png" href="/images/adcanary-logo.png" />
+<link rel="apple-touch-icon" href="/images/adcanary-logo.png" />
 <title>AdCanary — Campaign Reporting</title>
 <style>
   :root {
@@ -4530,7 +4532,19 @@ function buildRecommendation(r, budget, mi, avg7, projected) {
   if (remainingDays <= 0) {
     const sign = r.spend > budget ? "over" : "under";
     const cls = r.spend > budget ? "over" : (r.spend < budget * 0.95 ? "under" : "ontrack");
-    return '<div class="bp-rec ' + cls + '"><span class="rec-lbl">Recommendation:</span> The month is complete. Final spend of <strong>' + fmtCurrency0(r.spend) + '</strong> came in <strong>' + fmtCurrency0(Math.abs(r.spend - budget)) + '</strong> ' + sign + ' the ' + budgetStr + ' monthly budget.</div>';
+    const diff = Math.abs(r.spend - budget);
+    const proj30 = avg7 * 30;
+    const requiredDaily30 = budget / 30;
+    let tail = "";
+    if (r.spend > budget) {
+      // Overspent — project forward and give two options
+      tail = ' Based on the projected spend of <strong>' + fmtCurrency0(proj30) + '</strong> for the next 30 days, you will either need to seek more budget from your client for next month, or reduce your current daily average spend from <strong>' + fmtCurrency0(avg7) + '</strong> to <strong>' + fmtCurrency0(requiredDaily30) + '</strong> per day.';
+    } else if (r.spend < budget * 0.95) {
+      // Underspent meaningfully — advise increasing or accepting
+      const direction = proj30 > budget ? "decrease" : "increase";
+      tail = ' Based on the projected spend of <strong>' + fmtCurrency0(proj30) + '</strong> for the next 30 days, you will need to ' + direction + ' your average daily spend from <strong>' + fmtCurrency0(avg7) + '</strong> to <strong>' + fmtCurrency0(requiredDaily30) + '</strong> per day to get closer to the monthly budget of ' + budgetStr + '.';
+    }
+    return '<div class="bp-rec ' + cls + '"><span class="rec-lbl">Recommendation:</span> The month is complete. Final spend of <strong>' + fmtCurrency0(r.spend) + '</strong> came in <strong>' + fmtCurrency0(diff) + '</strong> ' + sign + ' the monthly budget set at ' + budgetStr + '.' + tail + '</div>';
   }
 
   // Ideal daily rate for the remaining days to land exactly on budget.
@@ -5978,7 +5992,13 @@ function exportBidding(fmt) {
       case "name": return r.name || "";
       case "status": return titleCase(r.status || "");
       case "type": return titleCase((r.type || "").replace(/_/g, " "));
-      case "biddingStrategy": return titleCase((r.biddingStrategy || "").replace(/_/g, " "));
+      case "biddingStrategy": {
+        let label = titleCase((r.biddingStrategy || "").replace(/_/g, " "));
+        if (r.targetCpa && r.targetCpa > 0 && /maximis|maximiz|conversions/i.test(r.biddingStrategy || "")) {
+          label += ", target: " + fmtCurrency(r.targetCpa);
+        }
+        return label;
+      }
       case "targetCpa": return r.targetCpa != null ? fmtCurrency(r.targetCpa) : "—";
       case "lastAdjusted": return r.targetCpa == null ? "—" : (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : "30+ days ago");
       case "cpaAchieved": {
@@ -6114,8 +6134,14 @@ const BID_COLUMNS = [
     cell: r => { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<span class="pill ' + cls + '">' + titleCase(r.status) + "</span>"; } },
   { key: "type", label: "Type", align: "txt", width: 120,
     cell: r => titleCase((r.type || "").replace(/_/g, " ")) },
-  { key: "biddingStrategy", label: "Bidding Strategy", align: "txt", width: 150,
-    cell: r => titleCase((r.biddingStrategy || "").replace(/_/g, " ")).replace(/^Maximize /, "Maximize<br>") },
+  { key: "biddingStrategy", label: "Bidding Strategy", align: "txt", width: 180,
+    cell: r => {
+      let label = titleCase((r.biddingStrategy || "").replace(/_/g, " ")).replace(/^Maximize /, "Maximize<br>");
+      if (r.targetCpa && r.targetCpa > 0 && /maximis|maximiz|conversions/i.test(r.biddingStrategy || "")) {
+        label += ', <span style="color:var(--muted)">target: ' + fmtCurrency(r.targetCpa) + '</span>';
+      }
+      return label;
+    } },
   { key: "targetCpa", label: "Target CPA", align: "num", width: 120, cls: "tabnum",
     sort: r => r.targetCpa == null ? -1 : r.targetCpa,
     cell: r => r.targetCpa != null ? fmtCurrency(r.targetCpa) : '<span style="color:var(--faint)">—</span>' },
