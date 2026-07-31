@@ -103,6 +103,30 @@ export async function onRequestGet(context) {
     const startMs = Date.parse(windowStart + "T00:00:00Z");
     const daysSince = Math.max(1, Math.round((todayMs - startMs) / MS_DAY) + 1);
 
+    // Use the full 30-day history to detect which days of the week the campaign
+    // actually runs — not just the window since last budget change, which may be
+    // too short to see the full weekly pattern (e.g. adjusted on a Wednesday).
+    // A day-of-week is considered "active" if the campaign spent on it at least
+    // once in the last 30 days. 0 = Sunday, 1 = Monday, ..., 6 = Saturday.
+    const activeDow = new Set();
+    for (const [d, cost] of Object.entries(c.daily)) {
+      if (cost > 0) {
+        const dow = new Date(d + "T00:00:00Z").getUTCDay();
+        activeDow.add(dow);
+      }
+    }
+
+    // If we have no spend history at all, assume 7-day schedule.
+    const daysPerWeek = activeDow.size > 0 ? activeDow.size : 7;
+
+    // Effective daily budget = what the campaign needs to spend per active day
+    // to fully utilise its weekly budget allocation.
+    // Google's daily budget is a 7-day rolling target, so the weekly total is
+    // dailyBudget × 7. Spread across only the active days:
+    //   effectiveDailyBudget = (dailyBudget × 7) / daysPerWeek
+    const effectiveDailyBudget = (c.dailyBudget * 7) / daysPerWeek;
+
+    // Sum spend and count active days within the measurement window.
     let totalSpend = 0;
     let daysActive = 0;
     for (const [d, cost] of Object.entries(c.daily)) {
@@ -112,11 +136,7 @@ export async function onRequestGet(context) {
       }
     }
 
-    // Divide by days the campaign actually served ads, not calendar days.
-    // This avoids false underspend flags for campaigns that don't run 7 days
-    // a week (e.g. Mon-Fri schedules, dayparted campaigns, or new campaigns
-    // that haven't yet filled their full window since the last budget change).
-    // Fall back to 1 if no active days recorded (avoids division by zero).
+    // Average spend per active day (not per calendar day).
     const activeDays = Math.max(1, daysActive);
     const dailySpend = totalSpend / activeDays;
 
@@ -126,6 +146,8 @@ export async function onRequestGet(context) {
       status: c.status,
       type: c.type,
       dailyBudget: c.dailyBudget,
+      effectiveDailyBudget,
+      daysPerWeek,
       lastAdjusted: c.lastAdjusted,
       daysSince,
       daysActive: activeDays,
