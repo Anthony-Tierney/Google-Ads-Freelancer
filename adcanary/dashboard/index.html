@@ -5783,8 +5783,7 @@ const US_COLUMNS = [
       const isPartial = r.daysPerWeek && r.daysPerWeek < 7;
       if (!isPartial) return fmtCurrency(r.dailyBudget);
       return fmtCurrency(r.dailyBudget) +
-        '<span style="font-size:11px;color:var(--muted);margin-left:4px;" title="Effective daily budget based on ' + r.daysPerWeek + '-day schedule: ' + fmtCurrency(eff) + '">' +
-        '→ ' + fmtCurrency(eff) + ' eff.</span>';
+        '<br><span style="font-size:11px;color:var(--muted);">As this campaign only runs ' + r.daysPerWeek + ' days per week, daily spend will be closer to ' + fmtCurrency(eff) + '</span>';
     } },
   { key: "lastAdjusted", label: "Last Adjusted", align: "txt", width: 130,
     sort: r => r.lastAdjusted || "",
@@ -5994,7 +5993,7 @@ function exportUnderspend(fmt) {
       case "dailyBudget": {
         const eff = r.effectiveDailyBudget || r.dailyBudget;
         return r.daysPerWeek && r.daysPerWeek < 7
-          ? fmtCurrency(r.dailyBudget) + " (" + fmtCurrency(eff) + " eff. " + r.daysPerWeek + "d)"
+          ? fmtCurrency(r.dailyBudget) + " (runs " + r.daysPerWeek + "d/wk, closer to " + fmtCurrency(eff) + "/day)"
           : fmtCurrency(r.dailyBudget);
       }
       case "lastAdjusted": return r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : "30+ days ago";
