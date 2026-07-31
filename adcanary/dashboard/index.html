@@ -6003,8 +6003,7 @@ function exportBidding(fmt) {
         }
         return label;
       }
-      case "targetCpa": return r.targetCpa != null ? fmtCurrency(r.targetCpa) : "—";
-      case "lastAdjusted": return r.targetCpa == null ? "—" : (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : "30+ days ago");
+      case "lastAdjusted": return r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : "30+ days ago";
       case "cpaAchieved": {
         if (r.cpaAchieved == null) return "—";
         let s = fmtCurrency(r.cpaAchieved);
@@ -6146,12 +6145,9 @@ const BID_COLUMNS = [
       }
       return label;
     } },
-  { key: "targetCpa", label: "Target CPA", align: "num", width: 120, cls: "tabnum",
-    sort: r => r.targetCpa == null ? -1 : r.targetCpa,
-    cell: r => r.targetCpa != null ? fmtCurrency(r.targetCpa) : '<span style="color:var(--faint)">—</span>' },
   { key: "lastAdjusted", label: "Last Adjusted", align: "txt", width: 130,
     sort: r => r.lastAdjusted || "",
-    cell: r => r.targetCpa == null ? '<span style="color:var(--faint)">—</span>' : (r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>') },
+    cell: r => r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>' },
   { key: "cpaAchieved", label: "CPA Achieved<br>(since last adjustment)", align: "num", width: 240, cls: "tabnum",
     sort: r => r.cpaAchieved == null ? -1 : r.cpaAchieved,
     cellCls: r => (r.targetCpa && r.targetCpa > 0 && r.cpaAchieved != null && r.cpaAchieved <= r.targetCpa * 0.8) ? "cell-red" : "",
