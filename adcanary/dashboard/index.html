@@ -2858,8 +2858,10 @@ async function init() {
     showApp(data.accounts);
     routeFromHash();
     saveDataCache(); // cache the account list right away
-    loadBudgetPacing(false); // background load so the side-nav pace warning is accurate
-    loadAudit(false); // background load so the Policy Issues nav icon (smiley / triangle) is accurate
+    loadBudgetPacing(false);  // background load so the side-nav pace warning is accurate
+    loadAudit(false);         // background load so the Policy Issues nav icon (smiley / triangle) is accurate
+    loadUnderspend(false);    // background load so the Budgeting nav warning is accurate
+    loadAssets(GLOBAL_ACCOUNT); // background load so the Assets nav warning is accurate
     loadLogos(); // background load of account logos for use across pages
   } catch {
     signedIn = false;
