@@ -2764,9 +2764,15 @@ function onGlobalAccountChange(val) {
 const NAV_SECTIONS = ["accounts", "campaigns", "audit", "tools"];
 const NAV_OPEN_KEY = "navOpenSections";
 
+const NAV_SECTIONS_ALL = ["accounts", "campaigns", "audit", "tools"];
+
 function loadNavSections() {
-  try { return new Set(JSON.parse(localStorage.getItem(NAV_OPEN_KEY) || "[]")); }
-  catch { return new Set(); }
+  try {
+    const stored = localStorage.getItem(NAV_OPEN_KEY);
+    // If no preference has ever been saved, default to all sections open.
+    if (stored === null) return new Set(NAV_SECTIONS_ALL);
+    return new Set(JSON.parse(stored));
+  } catch { return new Set(NAV_SECTIONS_ALL); }
 }
 function saveNavSections(open) {
   localStorage.setItem(NAV_OPEN_KEY, JSON.stringify([...open]));
