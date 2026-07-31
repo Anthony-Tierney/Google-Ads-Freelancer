@@ -1541,7 +1541,7 @@
           <div style="display:flex;justify-content:flex-end;margin-top:10px;">
             <div class="pagination" id="usPagination" hidden></div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Budget Pacing compares average daily spend since the last budget change to the daily budget: 90–119% is On Track (green), 120–149% is Overspending – low risk (orange), and 150%+ is Overspending – high risk (red); below 90% shows as Underspending. Change history only spans the last 30 days, so campaigns not adjusted recently use a rolling 30-day window (shown as "30+ days ago").</div>
+          <div class="foot-note" style="margin-top:10px;">Budget Pacing compares average daily spend (on active days only, since the last budget change) against the campaign's effective daily budget. 90%+ is On Track (green); below 90% is Underspending. The effective daily budget adjusts for campaigns that don't run all 7 days a week. Change history only spans the last 30 days, so campaigns not adjusted recently use a rolling 30-day window (shown as "30+ days ago").</div>
         </section>
       </section>
 
@@ -5768,17 +5768,24 @@ const US_COLUMNS = [
     cell: r => { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<span class="pill ' + cls + '">' + titleCase(r.status) + "</span>"; } },
   { key: "type", label: "Type", align: "txt", width: 110,
     cell: r => titleCase((r.type || "").replace(/_/g, " ")) },
-  { key: "dailyBudget", label: "Daily Budget", align: "num", width: 120, cls: "tabnum",
-    cell: r => fmtCurrency(r.dailyBudget) },
+  { key: "dailyBudget", label: "Daily Budget", align: "num", width: 140, cls: "tabnum",
+    cell: r => {
+      const eff = r.effectiveDailyBudget || r.dailyBudget;
+      const isPartial = r.daysPerWeek && r.daysPerWeek < 7;
+      if (!isPartial) return fmtCurrency(r.dailyBudget);
+      return fmtCurrency(r.dailyBudget) +
+        '<span style="font-size:11px;color:var(--muted);margin-left:4px;" title="Effective daily budget based on ' + r.daysPerWeek + '-day schedule: ' + fmtCurrency(eff) + '">' +
+        '→ ' + fmtCurrency(eff) + ' eff.</span>';
+    } },
   { key: "lastAdjusted", label: "Last Adjusted", align: "txt", width: 130,
     sort: r => r.lastAdjusted || "",
     cell: r => r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>' },
-  { key: "dailySpend", label: "Daily Spend<br>(active days)", align: "num", width: 150, cls: "tabnum",
-    cell: r => fmtCurrency(r.dailySpend) + '<span style="font-size:11px;color:var(--faint);margin-left:5px;">(' + (r.daysActive || r.daysSince || "?") + 'd)</span>' },
+  { key: "dailySpend", label: "Daily Spend<br>(active days)", align: "num", width: 220, cls: "tabnum",
+    cell: r => fmtCurrency(r.dailySpend) + '<span style="font-size:11px;color:var(--faint);margin-left:5px;">(since last budget adjustment, active days only)</span>' },
   { key: "pacing", label: "Budget Pacing", align: "txt", width: 200,
-    sort: r => r.dailyBudget > 0 ? r.dailySpend / r.dailyBudget : -1,
-    cellCls: r => pacingLabel(r.dailySpend, r.dailyBudget, r.status).cls,
-    cell: r => pacingLabel(r.dailySpend, r.dailyBudget, r.status).label },
+    sort: r => { const eff = r.effectiveDailyBudget || r.dailyBudget; return eff > 0 ? r.dailySpend / eff : -1; },
+    cellCls: r => pacingLabel(r.dailySpend, r.effectiveDailyBudget || r.dailyBudget, r.status).cls,
+    cell: r => pacingLabel(r.dailySpend, r.effectiveDailyBudget || r.dailyBudget, r.status).label },
 ];
 const underspendState = { rows: [], loaded: false, sort: { key: "pacing", dir: "desc" }, search: "", filterStatus: new Set(["ENABLED"]), filterName: "", filterNameOp: "contains", errors: [], columnWidths: {}, currentPage: 1, pageSize: 10 };
 
@@ -5894,25 +5901,23 @@ function updateUnderspendNavWarning() {
   for (const r of underspendState.rows) {
     if ((r.status || "").toUpperCase() !== "ENABLED") continue;
     if (GLOBAL_ACCOUNT !== "ALL" && r.accountId !== GLOBAL_ACCOUNT) continue;
-    const c = pacingLabel(r.dailySpend, r.dailyBudget, r.status).cls;
-    if (c === "pace-high") { lvl = 2; break; }
-    if (c === "pace-low") lvl = 1;
+    const eff = r.effectiveDailyBudget || r.dailyBudget;
+    const { cls } = pacingLabel(r.dailySpend, eff, r.status);
+    if (cls === "pace-high") { lvl = 2; break; }
+    if (cls === "pace-low") lvl = 1;
   }
   setNavWarn("usNavWarn", lvl);
 }
 
-// Budget Pacing status from average daily spend vs daily budget.
+// Budget Pacing status from average daily spend vs effective daily budget.
 //   £0.00 spend -> Check Back Later (data not yet meaningful)
-//   90-119% On Track (green) · 120-149% Overspending low (orange) · 150%+ high (red)
-//   below 90% Underspending (neutral) · no budget shows a dash.
+//   90%+ On Track (green) · below 90% Underspending · no budget shows a dash.
 // Plain-text Budget Pacing label (also used by CSV export).
 function pacingLabel(dailySpend, dailyBudget, status) {
   if ((status || "").toUpperCase() === "PAUSED") return { label: "Campaign is paused.", cls: "pace-wait" };
   if (Math.round((dailySpend || 0) * 100) === 0) return { label: "Check Back Later", cls: "pace-wait" };
   if (!dailyBudget || dailyBudget <= 0) return { label: "—", cls: "" };
   const pct = (dailySpend / dailyBudget) * 100;
-  if (pct > 149) return { label: "Overspending (high risk)", cls: "pace-high" };
-  if (pct >= 120) return { label: "Overspending (low risk)", cls: "pace-low" };
   if (pct >= 90) return { label: "On Track", cls: "pace-ok" };
   const under = 100 - pct;
   let underCls = "";
@@ -5977,10 +5982,15 @@ function exportUnderspend(fmt) {
       case "name": return r.name || "";
       case "status": return titleCase(r.status || "");
       case "type": return titleCase((r.type || "").replace(/_/g, " "));
-      case "dailyBudget": return fmtCurrency(r.dailyBudget);
+      case "dailyBudget": {
+        const eff = r.effectiveDailyBudget || r.dailyBudget;
+        return r.daysPerWeek && r.daysPerWeek < 7
+          ? fmtCurrency(r.dailyBudget) + " (" + fmtCurrency(eff) + " eff. " + r.daysPerWeek + "d)"
+          : fmtCurrency(r.dailyBudget);
+      }
       case "lastAdjusted": return r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : "30+ days ago";
       case "dailySpend": return fmtCurrency(r.dailySpend);
-      case "pacing": return pacingLabel(r.dailySpend, r.dailyBudget, r.status).label;
+      case "pacing": return pacingLabel(r.dailySpend, r.effectiveDailyBudget || r.dailyBudget, r.status).label;
       default: return "";
     }
   }));
