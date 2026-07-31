@@ -3374,18 +3374,7 @@ function wireColumnResize(ids, widths, onSort, onReorder) {
     handle.addEventListener("click", e => e.stopPropagation());
     handle.addEventListener("dblclick", e => {
       e.preventDefault(); e.stopPropagation();
-      const k = th.dataset.col;
-      if (k === "account") {
-        widths[k] = 117;
-        const col = document.querySelector("#" + ids.colgroup + " col[data-col='" + k + "']");
-        if (col) col.style.width = "117px";
-      } else if (k === "name") {
-        widths[k] = 164;
-        const col = document.querySelector("#" + ids.colgroup + " col[data-col='" + k + "']");
-        if (col) col.style.width = "164px";
-      } else {
-        autoFitColumn(k, ids, widths, null);
-      }
+      autoFitColumn(th.dataset.col, ids, widths, null);
     });
     th.appendChild(handle);
     th.addEventListener("click", e => {
