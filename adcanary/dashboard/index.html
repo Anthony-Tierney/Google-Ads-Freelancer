@@ -5781,7 +5781,7 @@ const US_COLUMNS = [
     sort: r => r.lastAdjusted || "",
     cell: r => r.lastAdjusted ? fmtShortDate(r.lastAdjusted) : '<span style="color:var(--faint)">30+ days ago</span>' },
   { key: "dailySpend", label: "Daily Spend<br>(active days)", align: "num", width: 220, cls: "tabnum",
-    cell: r => fmtCurrency(r.dailySpend) + '<span style="font-size:11px;color:var(--faint);margin-left:5px;">(since last budget adjustment, active days only)</span>' },
+    cell: r => fmtCurrency(r.dailySpend) + '<br><span style="font-size:11px;color:var(--faint);">(since last budget adjustment,<br>active days only)</span>' },
   { key: "pacing", label: "Budget Pacing", align: "txt", width: 200,
     sort: r => { const eff = r.effectiveDailyBudget || r.dailyBudget; return eff > 0 ? r.dailySpend / eff : -1; },
     cellCls: r => pacingLabel(r.dailySpend, r.effectiveDailyBudget || r.dailyBudget, r.status).cls,
