@@ -5783,7 +5783,7 @@ const US_COLUMNS = [
       const isPartial = r.daysPerWeek && r.daysPerWeek < 7;
       if (!isPartial) return fmtCurrency(r.dailyBudget);
       return fmtCurrency(r.dailyBudget) +
-        '<br><span style="font-size:11px;color:var(--muted);">As this campaign only runs ' + r.daysPerWeek + ' days per week, daily spend will be closer to ' + fmtCurrency(eff) + '</span>';
+        '<br><span style="font-size:11px;color:var(--muted);white-space:normal;display:block;">As this campaign only runs ' + r.daysPerWeek + ' days per week, daily spend will be closer to ' + fmtCurrency(eff) + '</span>';
     } },
   { key: "lastAdjusted", label: "Last Adjusted", align: "txt", width: 130,
     sort: r => r.lastAdjusted || "",
