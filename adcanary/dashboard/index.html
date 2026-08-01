@@ -4373,13 +4373,13 @@ function renderBudgetPacing() {
           '<div class="pace-bar">' +
             '<div class="pace-fill ' + (spendPct >= 100 ? "over" : status) + '" style="width:' + fillPct.toFixed(1) + '%"></div>' +
           '</div>' +
-          '<div class="pace-marker-wrap" style="left:' + Math.min(pacePct, 92).toFixed(1) + '%">' +
+          '<div class="pace-marker-wrap" style="left:' + Math.min(Math.max(pacePct, 8), 92).toFixed(1) + '%">' +
             '<div class="pace-marker-line"></div>' +
             '<div class="pace-marker-dot"></div>' +
             '<div class="pace-marker-below">Target: ' + fmtCurrency(expectedToDate) + '</div>' +
             '<div class="pace-marker-tooltip">Target spend</div>' +
           '</div>' +
-          '<div class="pace-spend-label" style="left:' + Math.min(fillPct, 92).toFixed(1) + '%">' + fmtCurrency(r.spend) + '</div>' +
+          '<div class="pace-spend-label" style="left:' + Math.min(Math.max(fillPct, 8), 92).toFixed(1) + '%">' + fmtCurrency(r.spend) + '</div>' +
         '</div>';
       foot =
         stat("spend-mtd", "Spend (MTD)", fmtCurrency(r.spend)) +
