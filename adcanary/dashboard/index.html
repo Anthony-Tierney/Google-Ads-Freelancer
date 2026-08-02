@@ -4067,6 +4067,14 @@ async function loadAllAccounts() {
 // Current selected campaign value — drives renderAccountsTable
 let _campPickerValue = (() => { try { return localStorage.getItem("campPickerValue_v1") || ""; } catch { return ""; } })();
 const CAMP_PICKER_KEY = "campPickerValue_v1";
+// Restore the label immediately so it's correct before any async loads complete
+(function restoreCampPickerLabel() {
+  if (!_campPickerValue) return;
+  const lbl = document.getElementById("campPickerLabel");
+  if (lbl) { lbl.textContent = _campPickerValue; lbl.title = _campPickerValue; }
+  const fil = document.getElementById("accCampaignFilter");
+  if (fil) fil.value = _campPickerValue;
+})();
 
 function getCampPickerValue() { return _campPickerValue; }
 
@@ -4106,8 +4114,15 @@ function populateAccCampaignFilter() {
 
   function validatePickerValue() {
     if (!_campPickerValue) return;
-    const names = buildCampaigns().map(c => c.name);
-    if (!names.includes(_campPickerValue)) {
+    const all = buildCampaigns();
+    // Only clear if we actually have campaign data and the value isn't in it.
+    // If the list is empty the data hasn't loaded yet — preserve the value.
+    if (all.length === 0) {
+      const lbl = document.getElementById("campPickerLabel");
+      if (lbl && lbl.textContent !== _campPickerValue) { lbl.textContent = _campPickerValue; lbl.title = _campPickerValue; }
+      return;
+    }
+    if (!all.some(c => c.name === _campPickerValue)) {
       _campPickerValue = "";
       try { localStorage.removeItem(CAMP_PICKER_KEY); } catch {}
       const fil = document.getElementById("accCampaignFilter"); if (fil) fil.value = "";
