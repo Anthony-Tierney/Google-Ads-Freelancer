@@ -63,10 +63,13 @@
   .sidebar {
     width: 200px; background: var(--panel); border-right: 1px solid var(--line);
     padding: 0; display: flex; flex-direction: column; flex-shrink: 0;
-    position: sticky; top: 0; height: 100vh; align-self: flex-start; overflow: hidden;
+    position: sticky; top: 0; height: 100vh; align-self: flex-start;
+    overflow: visible;
     transition: width .22s ease;
   }
   .sidebar.collapsed { width: 52px; }
+  .sidebar .app-logo { overflow: hidden; }
+  .sidebar .sidebar-nav { overflow-x: hidden; }
   .sidebar.collapsed .app-logo-text,
   .sidebar.collapsed .nh-label,
   .sidebar.collapsed .nh-chevron,
@@ -80,7 +83,7 @@
   .sidebar.collapsed .app-logo-mark { width: 32px; height: 32px; border-radius: 8px; }
   .sidebar.collapsed .nav-item.nav-settings { justify-content: center; padding: 10px 0; }
   .sidebar-collapse-btn {
-    position: absolute; right: -12px; top: 50%; transform: translateY(-50%);
+    position: absolute; right: -11px; top: 50%; transform: translateY(-50%);
     width: 22px; height: 22px; border-radius: 50%;
     background: var(--panel); border: 1px solid var(--line);
     cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -498,7 +501,7 @@
 
   .pace-wrap { min-width: 220px; position: relative; }
   .pace-bar-outer { position: relative; padding-top: 22px; padding-bottom: 32px; overflow: hidden; }
-  .pace-bar { position: relative; height: 14px; background: var(--off-bg); border-radius: 7px; overflow: hidden; }
+  .pace-bar { position: relative; height: 14px; background: var(--line); border-radius: 7px; overflow: hidden; }
   .pace-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 7px; transition: width .3s ease; }
   .pace-fill.ontrack { background: #16a34a; }
   .pace-fill.under { background: #d97706; }
