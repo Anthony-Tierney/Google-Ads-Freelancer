@@ -640,6 +640,12 @@
           <label class="field-label" for="globalAccountSelect">Account</label>
           <select id="globalAccountSelect"></select>
         </div>
+        <div id="topbarCampaignWrap" hidden>
+          <label class="field-label" for="accCampaignFilter">Campaign</label>
+          <select id="accCampaignFilter" onchange="renderAccountsTable()">
+            <option value="">All campaigns</option>
+          </select>
+        </div>
       </div>
       <div class="refresh-wrap topbar-refresh" id="topbarRefreshWrap" hidden>
         <button class="filters-btn" id="topbarRefreshBtn" title="Refresh data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v5h-5"/></svg>Refresh</button>
@@ -887,12 +893,6 @@
                 <option value="thisMonth">This Month</option>
                 <option value="lastMonth">Last Month</option>
                 <option value="custom">Custom...</option>
-              </select>
-            </div>
-            <div>
-              <label class="field-label" for="accCampaignFilter">Campaign</label>
-              <select id="accCampaignFilter" onchange="renderAccountsTable()">
-                <option value="">All campaigns</option>
               </select>
             </div>
             <div>
@@ -2707,6 +2707,8 @@ function routeFromHash() {
   // The global account selector drives Campaigns + Audit + Tools pages, and also allaccounts.
   const usesGlobal = signedIn && page !== "budgetpacing" && page !== "settings";
   document.getElementById("globalAccountWrap").hidden = !usesGlobal;
+  const campaignWrap = document.getElementById("topbarCampaignWrap");
+  if (campaignWrap) campaignWrap.hidden = page !== "allaccounts";
   document.getElementById("topbarRefreshWrap").hidden = !(signedIn && page !== "settings");
   renderTopbarRefresh();
   if (page === "campaigns") initDashboard();
