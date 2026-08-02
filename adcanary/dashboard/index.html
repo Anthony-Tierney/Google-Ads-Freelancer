@@ -2791,7 +2791,10 @@ function onGlobalAccountChange(val) {
   geoState.loadedAccount = "__stale__";
   const page = currentHashPage();
   if (page === "campaigns") initDashboard();
-  else if (page === "allaccounts") { accState.loaded = false; initAllAccounts(); }
+  else if (page === "allaccounts") { accState.loaded = false; initAllAccounts();
+    // If a single account is selected, also load campaign data for campaign-level view
+    if (GLOBAL_ACCOUNT !== "ALL") loadCampaigns();
+  }
   else if (page === "audit") initAudit();
   else if (page === "assets") initAssets();
   else if (page === "landingpages") initLandingPages();
@@ -3079,6 +3082,11 @@ async function loadCampaigns() {
     document.getElementById("pagination").hidden = false;
     renderTable();
     setLastRefresh("campaigns");
+    // If allaccounts page is active with a single account, its table also needs campaign data
+    if (currentHashPage() === "allaccounts" && GLOBAL_ACCOUNT !== "ALL") {
+      showEl("accLoading", false); showEl("accTable", true); showEl("accPagination", true);
+      renderAccountsTable();
+    }
   } catch (e) {
     document.getElementById("loading").hidden = true;
     document.getElementById("error").hidden = false;
@@ -3770,7 +3778,12 @@ function initAllAccounts() {
   if (!accState.loaded) { accState.loaded = true; loadAllAccounts(); }
   else if (accState.rows.length) {
     showEl("accLoading", false); showEl("accTable", true); showEl("accPagination", true);
-    renderAccountsTable();
+    // If single account selected and no campaign data loaded yet, load it
+    if (GLOBAL_ACCOUNT !== "ALL" && (!state.campaigns || !state.campaigns.length || state.loadedAccount !== GLOBAL_ACCOUNT)) {
+      loadCampaigns();
+    } else {
+      renderAccountsTable();
+    }
   } else { showEl("accLoading", false); showEl("accEmpty", true); }
 }
 
@@ -4048,8 +4061,38 @@ function refreshLogosInView() {
 }
 
 function renderAccountsTable() {
-  accState.search = "";
-  const q = "";
+  const isSingleAccount = GLOBAL_ACCOUNT !== "ALL";
+  const campaignFilter = (document.getElementById("accCampaignFilter") || {}).value || "";
+
+  if (isSingleAccount) {
+    // Campaign-level view — show COLUMNS just like #campaigns page did
+    const rows = (state.campaigns || []).filter(r =>
+      !campaignFilter || r.name === campaignFilter
+    );
+    renderDataTable({
+      state: accState,
+      columns: () => COLUMNS,
+      colOrderKey: "campaigns",
+      prefKey: "campaigns",
+      heatmap: accState.heatmap,
+      resetPageOnSort: true,
+      ids: { colgroup: "acc-colgroup", thead: "acc-thead", tbody: "acc-tbody", tfoot: "acc-tfoot", pagination: "accPagination" },
+      rerender: renderAccountsTable,
+      rows: () => rows,
+      footer: (rows, cols) => {
+        const agg = aggregateCampaigns(rows);
+        return "<tr>" + cols.map((c, i) => {
+          if (i === 0) return '<td class="txt name" data-col="' + c.key + '">Total · ' + rows.length + "</td>";
+          if (c.align === "num") return '<td class="num tabnum" data-col="' + c.key + '">' + formatCell(c.type, agg[c.key]) + "</td>";
+          return '<td data-col="' + c.key + '"></td>';
+        }).join("") + "</tr>";
+      },
+    });
+    return;
+  }
+
+  // Account-level view — existing behaviour
+  const statuses = accState.filterAccountStatus;
   renderDataTable({
     state: accState,
     columns: ACCOUNT_COLUMNS,
@@ -4059,12 +4102,7 @@ function renderAccountsTable() {
     resetPageOnSort: true,
     ids: { colgroup: "acc-colgroup", thead: "acc-thead", tbody: "acc-tbody", tfoot: "acc-tfoot", pagination: "accPagination" },
     rerender: renderAccountsTable,
-    rowVisible: r => {
-      const statuses = accState.filterAccountStatus;
-      const searchMatch = !q || (r.name || "").toLowerCase().includes(q) || (r.formatted || "").includes(q);
-      const statusMatch = statuses.size === 0 ? false : ((r.hasEnabled && statuses.has("active")) || (!r.hasEnabled && statuses.has("inactive")));
-      return searchMatch && statusMatch;
-    },
+    rows: () => accSortedFiltered(),
     footer: (rows, cols) => {
       const tot = accTotals(rows);
       return "<tr>" + cols.map((c, i) => {
