@@ -4063,12 +4063,14 @@ async function loadAllAccounts() {
 }
 
 // Current selected campaign value — drives renderAccountsTable
-let _campPickerValue = "";
+let _campPickerValue = (() => { try { return localStorage.getItem("campPickerValue_v1") || ""; } catch { return ""; } })();
+const CAMP_PICKER_KEY = "campPickerValue_v1";
 
 function getCampPickerValue() { return _campPickerValue; }
 
 function setCampPickerValue(val, label) {
   _campPickerValue = val;
+  try { if (val) localStorage.setItem(CAMP_PICKER_KEY, val); else localStorage.removeItem(CAMP_PICKER_KEY); } catch {}
   document.getElementById("accCampaignFilter").value = val;
   document.getElementById("campPickerLabel").textContent = label || val || "All campaigns";
   document.getElementById("campPickerLabel").title = label || val || "";
@@ -4082,72 +4084,66 @@ function populateAccCampaignFilter() {
   const searchEl = document.getElementById("campPickerSearch");
   if (!btn || !pop) return;
 
-  // When a single account is selected, use state.campaigns (the actual per-account fetch).
-  // When All Accounts, fall back to the aggregated campaignList stored on accState.rows.
-  let allCampaigns = [];
-  if (GLOBAL_ACCOUNT !== "ALL" && state.campaigns && state.campaigns.length) {
+  function buildCampaigns() {
+    const list = [];
     const seen = new Set();
-    state.campaigns.forEach(c => {
-      if (c.name && !seen.has(c.name)) {
-        seen.add(c.name);
-        allCampaigns.push({ name: c.name, status: (c.status || "").toUpperCase() });
-      }
-    });
-    allCampaigns.sort((a, b) => a.name.localeCompare(b.name));
-  } else {
-    const seen = new Set();
-    accState.rows.forEach(r => {
-      (r.campaignList || (r.campaignNames || []).map(n => ({ name: n, status: "ENABLED" }))).forEach(c => {
-        if (!seen.has(c.name)) { seen.add(c.name); allCampaigns.push(c); }
+    if (GLOBAL_ACCOUNT !== "ALL" && state.campaigns && state.campaigns.length) {
+      state.campaigns.forEach(c => {
+        if (c.name && !seen.has(c.name)) { seen.add(c.name); list.push({ name: c.name, status: (c.status || "").toUpperCase() }); }
       });
-    });
-    allCampaigns.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      accState.rows.forEach(r => {
+        (r.campaignList || (r.campaignNames || []).map(n => ({ name: n, status: "ENABLED" }))).forEach(c => {
+          if (c.name && !seen.has(c.name)) { seen.add(c.name); list.push(c); }
+        });
+      });
+    }
+    list.sort((a, b) => a.name.localeCompare(b.name));
+    return list;
   }
 
-  // Reset to All campaigns if current value no longer exists
-  if (_campPickerValue && !seen.has(_campPickerValue)) setCampPickerValue("", "All campaigns");
+  function validatePickerValue() {
+    if (!_campPickerValue) return;
+    const names = buildCampaigns().map(c => c.name);
+    if (!names.includes(_campPickerValue)) {
+      _campPickerValue = "";
+      try { localStorage.removeItem(CAMP_PICKER_KEY); } catch {}
+      const fil = document.getElementById("accCampaignFilter"); if (fil) fil.value = "";
+      const lbl = document.getElementById("campPickerLabel"); if (lbl) { lbl.textContent = "All campaigns"; lbl.title = ""; }
+    } else {
+      const lbl = document.getElementById("campPickerLabel"); if (lbl) { lbl.textContent = _campPickerValue; lbl.title = _campPickerValue; }
+    }
+  }
 
-  const enabled = allCampaigns.filter(c => c.status === "ENABLED");
-  const paused  = allCampaigns.filter(c => c.status !== "ENABLED");
-
-  // Section open/close state
+  validatePickerValue();
   const sections = { enabled: true, paused: false };
 
   function renderList(q) {
     const list = document.getElementById("campPickerList");
     if (!list) return;
+    const all = buildCampaigns();
+    const enabled = all.filter(c => c.status === "ENABLED");
+    const paused  = all.filter(c => c.status !== "ENABLED");
     const lq = q.trim().toLowerCase();
-    const filter = c => !lq || c.name.toLowerCase().includes(lq);
-    const filtEnabled = enabled.filter(filter);
-    const filtPaused  = paused.filter(filter);
-
-    let html = "";
-    // "All campaigns" row
-    html += '<button class="camp-picker-item all-item' + (!_campPickerValue ? " active" : "") + '" data-val="" data-lbl="All campaigns">All campaigns</button>';
-
+    const flt = c => !lq || c.name.toLowerCase().includes(lq);
+    const filtEnabled = enabled.filter(flt);
+    const filtPaused  = paused.filter(flt);
+    let html = '<button class="camp-picker-item all-item' + (!_campPickerValue ? " active" : "") + '" data-val="" data-lbl="All campaigns">All campaigns</button>';
     if (!filtEnabled.length && !filtPaused.length) {
       html += '<div class="camp-picker-empty">No campaigns found</div>';
     } else {
       if (filtEnabled.length) {
-        html += '<div class="camp-picker-section-hdr' + (sections.enabled ? " open" : "") + '" data-sec="enabled">' +
-          '<span>Enabled (' + filtEnabled.length + ')</span>' +
-          '<svg class="cp-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>' +
+        html += '<div class="camp-picker-section-hdr' + (sections.enabled ? " open" : "") + '" data-sec="enabled"><span>Enabled (' + filtEnabled.length + ')</span><svg class="cp-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>' +
           '<div class="camp-picker-section-body' + (sections.enabled ? "" : " collapsed") + '" data-sec-body="enabled">' +
-          filtEnabled.map(c => '<button class="camp-picker-item' + (c.name === _campPickerValue ? " active" : "") + '" data-val="' + escapeHtml(c.name) + '" data-lbl="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</button>').join("") +
-          '</div>';
+          filtEnabled.map(c => '<button class="camp-picker-item' + (c.name === _campPickerValue ? " active" : "") + '" data-val="' + escapeHtml(c.name) + '" data-lbl="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</button>').join("") + '</div>';
       }
       if (filtPaused.length) {
-        html += '<div class="camp-picker-section-hdr' + (sections.paused ? " open" : "") + '" data-sec="paused">' +
-          '<span>Paused (' + filtPaused.length + ')</span>' +
-          '<svg class="cp-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>' +
+        html += '<div class="camp-picker-section-hdr' + (sections.paused ? " open" : "") + '" data-sec="paused"><span>Paused (' + filtPaused.length + ')</span><svg class="cp-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>' +
           '<div class="camp-picker-section-body' + (sections.paused ? "" : " collapsed") + '" data-sec-body="paused">' +
-          filtPaused.map(c => '<button class="camp-picker-item' + (c.name === _campPickerValue ? " active" : "") + '" data-val="' + escapeHtml(c.name) + '" data-lbl="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</button>').join("") +
-          '</div>';
+          filtPaused.map(c => '<button class="camp-picker-item' + (c.name === _campPickerValue ? " active" : "") + '" data-val="' + escapeHtml(c.name) + '" data-lbl="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</button>').join("") + '</div>';
       }
     }
     list.innerHTML = html;
-
-    // Wire section toggle headers
     list.querySelectorAll(".camp-picker-section-hdr").forEach(hdr => {
       hdr.addEventListener("click", () => {
         const sec = hdr.dataset.sec;
@@ -4157,8 +4153,6 @@ function populateAccCampaignFilter() {
         if (body) body.classList.toggle("collapsed", !sections[sec]);
       });
     });
-
-    // Wire item selection
     list.querySelectorAll(".camp-picker-item").forEach(item => {
       item.addEventListener("click", () => {
         setCampPickerValue(item.dataset.val, item.dataset.lbl);
@@ -4168,25 +4162,18 @@ function populateAccCampaignFilter() {
     });
   }
 
-  // Wire button open/close (once)
   if (!btn.dataset.wired) {
     btn.dataset.wired = "1";
     btn.addEventListener("click", e => {
       e.stopPropagation();
       const open = pop.hidden;
       closeAllMenus();
-      if (open) {
-        renderList(searchEl ? searchEl.value : "");
-        pop.hidden = false;
-        if (searchEl) { searchEl.value = ""; searchEl.focus(); }
-      }
+      if (open) { renderList(searchEl ? searchEl.value : ""); pop.hidden = false; if (searchEl) { searchEl.value = ""; searchEl.focus(); } }
     });
     pop.addEventListener("click", e => e.stopPropagation());
     if (searchEl) searchEl.addEventListener("input", () => renderList(searchEl.value));
-  } else {
-    // Re-render list contents when data changes (new account selected)
-    renderList(searchEl ? searchEl.value : "");
   }
+  if (!pop.hidden) renderList(searchEl ? searchEl.value : "");
 }
 
 function accShownColumns() { return ACCOUNT_COLUMNS.filter(c => accState.visible.has(c.key)); }
