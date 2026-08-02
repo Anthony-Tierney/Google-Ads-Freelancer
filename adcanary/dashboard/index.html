@@ -3149,6 +3149,7 @@ async function loadCampaigns() {
     setLastRefresh("campaigns");
     // If allaccounts page is active with a single account, its table also needs campaign data
     if (currentHashPage() === "allaccounts" && GLOBAL_ACCOUNT !== "ALL") {
+      populateAccCampaignFilter();
       showEl("accLoading", false); showEl("accTable", true); showEl("accPagination", true);
       renderAccountsTable();
     }
@@ -4074,15 +4075,27 @@ function populateAccCampaignFilter() {
   const searchEl = document.getElementById("campPickerSearch");
   if (!btn || !pop) return;
 
-  // Collect all campaigns with status from all account rows
-  const allCampaigns = [];
-  const seen = new Set();
-  accState.rows.forEach(r => {
-    (r.campaignList || (r.campaignNames || []).map(n => ({ name: n, status: "ENABLED" }))).forEach(c => {
-      if (!seen.has(c.name)) { seen.add(c.name); allCampaigns.push(c); }
+  // When a single account is selected, use state.campaigns (the actual per-account fetch).
+  // When All Accounts, fall back to the aggregated campaignList stored on accState.rows.
+  let allCampaigns = [];
+  if (GLOBAL_ACCOUNT !== "ALL" && state.campaigns && state.campaigns.length) {
+    const seen = new Set();
+    state.campaigns.forEach(c => {
+      if (c.name && !seen.has(c.name)) {
+        seen.add(c.name);
+        allCampaigns.push({ name: c.name, status: (c.status || "").toUpperCase() });
+      }
     });
-  });
-  allCampaigns.sort((a, b) => a.name.localeCompare(b.name));
+    allCampaigns.sort((a, b) => a.name.localeCompare(b.name));
+  } else {
+    const seen = new Set();
+    accState.rows.forEach(r => {
+      (r.campaignList || (r.campaignNames || []).map(n => ({ name: n, status: "ENABLED" }))).forEach(c => {
+        if (!seen.has(c.name)) { seen.add(c.name); allCampaigns.push(c); }
+      });
+    });
+    allCampaigns.sort((a, b) => a.name.localeCompare(b.name));
+  }
 
   // Reset to All campaigns if current value no longer exists
   if (_campPickerValue && !seen.has(_campPickerValue)) setCampPickerValue("", "All campaigns");
