@@ -132,6 +132,9 @@
   .nav-warn svg { width: 15px; height: 15px; }
   .nav-ok { display: inline-flex; vertical-align: middle; color: #16a34a; margin-left: 5px; }
   .nav-ok svg { width: 15px; height: 15px; }
+  .nav-section-warn { display: inline-flex; vertical-align: middle; color: #d97706; margin-left: 2px; }
+  .nav-section-warn.red { color: #dc2626; }
+  .nav-section-warn svg { width: 13px; height: 13px; }
   
   .main-content { flex: 1; display: flex; flex-direction: column; }
 
@@ -649,6 +652,7 @@
     <button class="nav-heading" data-section="campaigns">
       <svg class="nh-ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg>
       <span class="nh-label">Campaigns</span>
+      <span class="nav-section-warn" id="sectionWarnCampaigns" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
       <svg class="nh-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
     </button>
     <div class="nav-section-items" data-section="campaigns">
@@ -659,6 +663,7 @@
     <button class="nav-heading" data-section="audit">
       <svg class="nh-ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 8.6 9 10 5.2-1.4 9-5 9-10V6l-9-4z"/></svg>
       <span class="nh-label">Audit</span>
+      <span class="nav-section-warn" id="sectionWarnAudit" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
       <svg class="nh-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
     </button>
     <div class="nav-section-items" data-section="audit">
@@ -670,6 +675,7 @@
     <button class="nav-heading" data-section="tools">
       <svg class="nh-ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
       <span class="nh-label">Tools</span>
+      <span class="nav-section-warn" id="sectionWarnTools" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
       <svg class="nh-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
     </button>
     <div class="nav-section-items" data-section="tools">
@@ -2930,6 +2936,7 @@ document.querySelectorAll('.nav-heading[data-section]').forEach(btn => {
     open.has(sec) ? open.delete(sec) : open.add(sec);
     saveNavSections(open);
     applyNavSections(open);
+    syncSectionWarnings();
   });
 });
 
@@ -4789,6 +4796,34 @@ function setNavWarn(id, level) {
   if (!el) return;
   el.hidden = level === 0;
   el.classList.toggle("red", level === 2);
+  syncSectionWarnings();
+}
+
+// Rolls up child page warnings into the section heading warning dot.
+// Only shown when the section is collapsed (so the user knows something needs attention
+// without having to expand the section). Disappears when the section is open.
+function syncSectionWarnings() {
+  // Map: sectionId -> array of child warning element IDs to check
+  const SECTION_WARNS = {
+    campaigns: ["bidNavWarn"],
+    audit:     ["auditNavWarn", "assetsNavWarn"],
+    tools:     ["bpNavWarn", "usNavWarn"],
+  };
+  Object.entries(SECTION_WARNS).forEach(([sec, ids]) => {
+    const sectionEl = document.querySelector('.nav-section-warn[id="sectionWarn' + sec.charAt(0).toUpperCase() + sec.slice(1) + '"]');
+    if (!sectionEl) return;
+    const isOpen = document.querySelector('.nav-heading.open[data-section="' + sec + '"]') !== null;
+    if (isOpen) { sectionEl.hidden = true; return; }
+    let maxLevel = 0;
+    ids.forEach(id => {
+      const child = document.getElementById(id);
+      if (!child || child.hidden) return;
+      if (child.classList.contains("red")) maxLevel = 2;
+      else if (maxLevel < 1) maxLevel = 1;
+    });
+    sectionEl.hidden = maxLevel === 0;
+    sectionEl.classList.toggle("red", maxLevel === 2);
+  });
 }
 
 const NAV_TRIANGLE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
@@ -4802,6 +4837,7 @@ function updateAuditNav(hasFlags) {
   el.className = hasFlags ? "nav-warn red" : "nav-ok";
   el.title = hasFlags ? "Policy issues found" : "No policy issues";
   el.innerHTML = hasFlags ? NAV_TRIANGLE_SVG : NAV_SMILEY_SVG;
+  syncSectionWarnings();
 }
 // Amber(1)/red(2) level for an Assets count cell, mirroring assetCellHtml thresholds.
 function assetCellLevel(key, v) {
