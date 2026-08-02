@@ -2973,6 +2973,7 @@ async function init() {
         updateBpNavWarning();
         updateUnderspendNavWarning();
         updateAssetsNavWarning();
+        updateBiddingNavWarning();
         if (auditState.rows.length && !auditState.rows.some(r => r.loading)) {
           updateAuditNav(auditState.rows.some(r => (r.disapproved > 0) || (r.limited > 0) || ((r.accountStatus || "").toUpperCase() === "SUSPENDED")));
         }
@@ -2997,6 +2998,7 @@ async function init() {
     loadAudit(false);         // background load so the Policy Issues nav icon (smiley / triangle) is accurate
     loadUnderspend(false);    // background load so the Budgeting nav warning is accurate
     loadAssets(GLOBAL_ACCOUNT); // background load so the Assets nav warning is accurate
+    loadBidding(false);       // background load so the Bidding Strategies nav warning is accurate
     loadLogos(); // background load of account logos for use across pages
   } catch {
     signedIn = false;
