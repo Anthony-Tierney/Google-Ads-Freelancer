@@ -149,6 +149,55 @@
   .topbar-account > div { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
   .topbar-account .field-label { margin: 0; white-space: nowrap; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
   .topbar-account select { min-width: 230px; }
+  /* Custom campaign picker */
+  .camp-picker { position: relative; }
+  .camp-picker-btn {
+    display: flex; align-items: center; gap: 6px; min-width: 220px; max-width: 320px;
+    padding: 7px 10px; font: inherit; font-size: 14px; color: var(--ink);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 7px;
+    cursor: pointer; text-align: left; white-space: nowrap; overflow: hidden;
+    transition: border-color .15s;
+  }
+  .camp-picker-btn:hover { border-color: var(--accent); }
+  .camp-picker-btn span { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .camp-picker-btn svg { flex: none; stroke: var(--muted); }
+  .camp-picker-pop {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 200;
+    width: 360px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.14);
+    display: flex; flex-direction: column; max-height: 420px; overflow: hidden;
+  }
+  .camp-picker-search {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-bottom: 1px solid var(--line);
+  }
+  .camp-picker-search svg { flex: none; stroke: var(--faint); }
+  .camp-picker-search input {
+    flex: 1; border: none; background: none; font: inherit; font-size: 13.5px;
+    color: var(--ink); outline: none;
+  }
+  .camp-picker-search input::placeholder { color: var(--faint); }
+  .camp-picker-list { overflow-y: auto; padding: 6px 0; }
+  .camp-picker-item {
+    display: block; width: 100%; padding: 8px 14px; text-align: left;
+    background: none; border: none; font: inherit; font-size: 13px;
+    color: var(--ink); cursor: pointer; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; transition: background .12s;
+  }
+  .camp-picker-item:hover { background: var(--line-soft); }
+  .camp-picker-item.active { color: var(--accent); font-weight: 560; }
+  .camp-picker-item.all-item { font-weight: 560; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  .camp-picker-section-hdr {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 14px 4px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em; color: var(--faint);
+    cursor: pointer; user-select: none;
+  }
+  .camp-picker-section-hdr .cp-chevron { width: 12px; height: 12px; stroke: var(--faint); transition: transform .18s; }
+  .camp-picker-section-hdr.open .cp-chevron { transform: rotate(90deg); }
+  .camp-picker-section-body { overflow: hidden; }
+  .camp-picker-section-body.collapsed { display: none; }
+  .camp-picker-empty { padding: 16px 14px; font-size: 13px; color: var(--faint); text-align: center; }
   .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
   .topbar-refresh { position: relative; align-items: center; }
   .topbar-refresh .last-refresh { position: absolute; top: 100%; left: 0; margin-top: 1px; white-space: nowrap; }
@@ -641,10 +690,22 @@
           <select id="globalAccountSelect"></select>
         </div>
         <div id="topbarCampaignWrap" hidden>
-          <label class="field-label" for="accCampaignFilter">Campaign</label>
-          <select id="accCampaignFilter" onchange="renderAccountsTable()">
-            <option value="">All campaigns</option>
-          </select>
+          <label class="field-label">Campaign</label>
+          <div class="camp-picker" id="campPickerWrap">
+            <button class="camp-picker-btn" id="campPickerBtn" type="button">
+              <span id="campPickerLabel">All campaigns</span>
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+            </button>
+            <div class="camp-picker-pop" id="campPickerPop" hidden>
+              <div class="camp-picker-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" id="campPickerSearch" placeholder="Search campaigns…" autocomplete="off" />
+              </div>
+              <div class="camp-picker-list" id="campPickerList"></div>
+            </div>
+          </div>
+          <!-- Hidden input carries the selected value for renderAccountsTable -->
+          <input type="hidden" id="accCampaignFilter" value="" />
         </div>
       </div>
       <div class="refresh-wrap topbar-refresh" id="topbarRefreshWrap" hidden>
@@ -2791,8 +2852,12 @@ function onGlobalAccountChange(val) {
   geoState.loadedAccount = "__stale__";
   const page = currentHashPage();
   if (page === "campaigns") initDashboard();
-  else if (page === "allaccounts") { accState.loaded = false; initAllAccounts();
-    // If a single account is selected, also load campaign data for campaign-level view
+  else if (page === "allaccounts") { accState.loaded = false;
+    // Reset campaign picker when account changes
+    _campPickerValue = "";
+    const fil = document.getElementById("accCampaignFilter"); if (fil) fil.value = "";
+    const lbl = document.getElementById("campPickerLabel"); if (lbl) lbl.textContent = "All campaigns";
+    initAllAccounts();
     if (GLOBAL_ACCOUNT !== "ALL") loadCampaigns();
   }
   else if (page === "audit") initAudit();
@@ -3011,7 +3076,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -3965,6 +4030,7 @@ async function loadAllAccounts() {
       row.hasEnabled = row.enabledCount > 0;
       row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
       row.campaignNames = campaigns.map(c => c.name || "").filter(Boolean).sort((a, b) => a.localeCompare(b));
+      row.campaignList = campaigns.map(c => ({ name: c.name || "", status: (c.status || "").toUpperCase() })).filter(c => c.name).sort((a, b) => a.name.localeCompare(b.name));
       if (cmpRes) {
         const cmpData = await cmpRes.json().catch(() => ({}));
         const cmpCampaigns = (cmpData.campaigns || []).map(withMetrics);
@@ -3988,22 +4054,126 @@ async function loadAllAccounts() {
   setLastRefresh("allaccounts");
 }
 
+// Current selected campaign value — drives renderAccountsTable
+let _campPickerValue = "";
+
+function getCampPickerValue() { return _campPickerValue; }
+
+function setCampPickerValue(val, label) {
+  _campPickerValue = val;
+  document.getElementById("accCampaignFilter").value = val;
+  document.getElementById("campPickerLabel").textContent = label || val || "All campaigns";
+  document.getElementById("campPickerLabel").title = label || val || "";
+  document.getElementById("campPickerPop").hidden = true;
+  renderAccountsTable();
+}
+
 function populateAccCampaignFilter() {
-  const sel = document.getElementById("accCampaignFilter");
-  if (!sel) return;
-  const current = sel.value;
-  const campaigns = [...new Set(
-    accState.rows.flatMap(r => r.campaignNames || [])
-  )].sort((a, b) => a.localeCompare(b));
-  sel.innerHTML = '<option value="">All campaigns</option>' +
-    campaigns.map(n => '<option value="' + escapeHtml(n) + '"' + (n === current ? " selected" : "") + '>' + escapeHtml(n) + "</option>").join("");
+  const btn = document.getElementById("campPickerBtn");
+  const pop = document.getElementById("campPickerPop");
+  const searchEl = document.getElementById("campPickerSearch");
+  if (!btn || !pop) return;
+
+  // Collect all campaigns with status from all account rows
+  const allCampaigns = [];
+  const seen = new Set();
+  accState.rows.forEach(r => {
+    (r.campaignList || (r.campaignNames || []).map(n => ({ name: n, status: "ENABLED" }))).forEach(c => {
+      if (!seen.has(c.name)) { seen.add(c.name); allCampaigns.push(c); }
+    });
+  });
+  allCampaigns.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Reset to All campaigns if current value no longer exists
+  if (_campPickerValue && !seen.has(_campPickerValue)) setCampPickerValue("", "All campaigns");
+
+  const enabled = allCampaigns.filter(c => c.status === "ENABLED");
+  const paused  = allCampaigns.filter(c => c.status !== "ENABLED");
+
+  // Section open/close state
+  const sections = { enabled: true, paused: false };
+
+  function renderList(q) {
+    const list = document.getElementById("campPickerList");
+    if (!list) return;
+    const lq = q.trim().toLowerCase();
+    const filter = c => !lq || c.name.toLowerCase().includes(lq);
+    const filtEnabled = enabled.filter(filter);
+    const filtPaused  = paused.filter(filter);
+
+    let html = "";
+    // "All campaigns" row
+    html += '<button class="camp-picker-item all-item' + (!_campPickerValue ? " active" : "") + '" data-val="" data-lbl="All campaigns">All campaigns</button>';
+
+    if (!filtEnabled.length && !filtPaused.length) {
+      html += '<div class="camp-picker-empty">No campaigns found</div>';
+    } else {
+      if (filtEnabled.length) {
+        html += '<div class="camp-picker-section-hdr' + (sections.enabled ? " open" : "") + '" data-sec="enabled">' +
+          '<span>Enabled (' + filtEnabled.length + ')</span>' +
+          '<svg class="cp-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>' +
+          '<div class="camp-picker-section-body' + (sections.enabled ? "" : " collapsed") + '" data-sec-body="enabled">' +
+          filtEnabled.map(c => '<button class="camp-picker-item' + (c.name === _campPickerValue ? " active" : "") + '" data-val="' + escapeHtml(c.name) + '" data-lbl="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</button>').join("") +
+          '</div>';
+      }
+      if (filtPaused.length) {
+        html += '<div class="camp-picker-section-hdr' + (sections.paused ? " open" : "") + '" data-sec="paused">' +
+          '<span>Paused (' + filtPaused.length + ')</span>' +
+          '<svg class="cp-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>' +
+          '<div class="camp-picker-section-body' + (sections.paused ? "" : " collapsed") + '" data-sec-body="paused">' +
+          filtPaused.map(c => '<button class="camp-picker-item' + (c.name === _campPickerValue ? " active" : "") + '" data-val="' + escapeHtml(c.name) + '" data-lbl="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</button>').join("") +
+          '</div>';
+      }
+    }
+    list.innerHTML = html;
+
+    // Wire section toggle headers
+    list.querySelectorAll(".camp-picker-section-hdr").forEach(hdr => {
+      hdr.addEventListener("click", () => {
+        const sec = hdr.dataset.sec;
+        sections[sec] = !sections[sec];
+        hdr.classList.toggle("open", sections[sec]);
+        const body = list.querySelector('[data-sec-body="' + sec + '"]');
+        if (body) body.classList.toggle("collapsed", !sections[sec]);
+      });
+    });
+
+    // Wire item selection
+    list.querySelectorAll(".camp-picker-item").forEach(item => {
+      item.addEventListener("click", () => {
+        setCampPickerValue(item.dataset.val, item.dataset.lbl);
+        if (searchEl) searchEl.value = "";
+        renderList("");
+      });
+    });
+  }
+
+  // Wire button open/close (once)
+  if (!btn.dataset.wired) {
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const open = pop.hidden;
+      closeAllMenus();
+      if (open) {
+        renderList(searchEl ? searchEl.value : "");
+        pop.hidden = false;
+        if (searchEl) { searchEl.value = ""; searchEl.focus(); }
+      }
+    });
+    pop.addEventListener("click", e => e.stopPropagation());
+    if (searchEl) searchEl.addEventListener("input", () => renderList(searchEl.value));
+  } else {
+    // Re-render list contents when data changes (new account selected)
+    renderList(searchEl ? searchEl.value : "");
+  }
 }
 
 function accShownColumns() { return ACCOUNT_COLUMNS.filter(c => accState.visible.has(c.key)); }
 
 function accSortedFiltered() {
   const statuses = accState.filterAccountStatus;
-  const campaignFilter = (document.getElementById("accCampaignFilter") || {}).value || "";
+  const campaignFilter = getCampPickerValue();
   return accState.rows.filter(r => {
     let statusMatch;
     if (statuses.size === 0) statusMatch = false;
@@ -4062,7 +4232,7 @@ function refreshLogosInView() {
 
 function renderAccountsTable() {
   const isSingleAccount = GLOBAL_ACCOUNT !== "ALL";
-  const campaignFilter = (document.getElementById("accCampaignFilter") || {}).value || "";
+  const campaignFilter = getCampPickerValue();
 
   if (isSingleAccount) {
     // Campaign-level view — show COLUMNS just like #campaigns page did
