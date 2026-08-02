@@ -136,7 +136,7 @@
   .main-content { flex: 1; display: flex; flex-direction: column; }
 
   .topbar {
-    display: flex; align-items: center; gap: 12px;
+    display: flex; align-items: flex-end; gap: 12px;
     padding: 14px 22px 24px;
     background: var(--panel);
     border-bottom: 1px solid var(--line);
@@ -3951,6 +3951,7 @@ async function loadAllAccounts() {
       row.enabledCount = campaigns.filter(c => (c.status || "").toUpperCase() === "ENABLED").length;
       row.hasEnabled = row.enabledCount > 0;
       row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
+      row.campaignNames = campaigns.map(c => c.name || "").filter(Boolean).sort((a, b) => a.localeCompare(b));
       if (cmpRes) {
         const cmpData = await cmpRes.json().catch(() => ({}));
         const cmpCampaigns = (cmpData.campaigns || []).map(withMetrics);
@@ -3978,9 +3979,8 @@ function populateAccCampaignFilter() {
   const sel = document.getElementById("accCampaignFilter");
   if (!sel) return;
   const current = sel.value;
-  // Collect all unique campaign names across all account rows
   const campaigns = [...new Set(
-    accState.rows.flatMap(r => (r.campaigns || []).map(c => c.name || "").filter(Boolean))
+    accState.rows.flatMap(r => r.campaignNames || [])
   )].sort((a, b) => a.localeCompare(b));
   sel.innerHTML = '<option value="">All campaigns</option>' +
     campaigns.map(n => '<option value="' + escapeHtml(n) + '"' + (n === current ? " selected" : "") + '>' + escapeHtml(n) + "</option>").join("");
@@ -3997,7 +3997,7 @@ function accSortedFiltered() {
     else statusMatch = (r.hasEnabled && statuses.has("active")) || (!r.hasEnabled && statuses.has("inactive"));
     if (!statusMatch) return false;
     if (campaignFilter) {
-      const match = (r.campaigns || []).some(c => (c.name || "") === campaignFilter);
+      const match = (r.campaignNames || []).includes(campaignFilter);
       if (!match) return false;
     }
     return true;
