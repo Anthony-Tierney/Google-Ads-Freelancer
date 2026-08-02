@@ -4180,6 +4180,10 @@ function populateAccCampaignFilter() {
   }
 
   if (!btn.dataset.wired) {
+    // Only wire when the wrapper is visible — prevents closure issues on hard refresh
+    // where the element exists in DOM but parent is still hidden
+    const wrap = document.getElementById("topbarCampaignWrap");
+    if (wrap && wrap.hidden) return;
     btn.dataset.wired = "1";
     btn.addEventListener("click", e => {
       e.stopPropagation();
