@@ -4179,18 +4179,19 @@ function populateAccCampaignFilter() {
     });
   }
 
+  // Wire the button — always re-wire to ensure it works after hard refresh.
+  // Remove any existing listener first to avoid doubles, then re-attach.
+  const oldHandler = btn._campClickHandler;
+  if (oldHandler) btn.removeEventListener("click", oldHandler);
+  btn._campClickHandler = e => {
+    e.stopPropagation();
+    const open = pop.hidden;
+    closeAllMenus();
+    if (open) { renderList(searchEl ? searchEl.value : ""); pop.hidden = false; if (searchEl) { searchEl.value = ""; searchEl.focus(); } }
+  };
+  btn.addEventListener("click", btn._campClickHandler);
   if (!btn.dataset.wired) {
-    // Only wire when the wrapper is visible — prevents closure issues on hard refresh
-    // where the element exists in DOM but parent is still hidden
-    const wrap = document.getElementById("topbarCampaignWrap");
-    if (wrap && wrap.hidden) return;
     btn.dataset.wired = "1";
-    btn.addEventListener("click", e => {
-      e.stopPropagation();
-      const open = pop.hidden;
-      closeAllMenus();
-      if (open) { renderList(searchEl ? searchEl.value : ""); pop.hidden = false; if (searchEl) { searchEl.value = ""; searchEl.focus(); } }
-    });
     pop.addEventListener("click", e => e.stopPropagation());
     if (searchEl) searchEl.addEventListener("input", () => renderList(searchEl.value));
   }
