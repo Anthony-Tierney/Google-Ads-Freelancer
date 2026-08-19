@@ -37,11 +37,12 @@ export async function onRequestGet(context) {
       campaign.id, campaign.name,
       ad_group.id, ad_group.name,
       ad_group_ad.ad.id, ad_group_ad.status,
-      ad_group_ad_asset_view.field_type,
+      ad_group_ad_asset_view.field_type, ad_group_ad_asset_view.status,
       asset.id, asset.text_asset.text,
       metrics.clicks, metrics.impressions
     FROM ad_group_ad_asset_view
     WHERE ad_group_ad_asset_view.field_type IN ('HEADLINE','DESCRIPTION')
+      AND ad_group_ad_asset_view.status != 'REMOVED'
       AND campaign.status = 'ENABLED'
       AND ad_group.status = 'ENABLED'
       AND ad_group_ad.status != 'REMOVED'
