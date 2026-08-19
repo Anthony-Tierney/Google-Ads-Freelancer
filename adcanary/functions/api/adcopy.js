@@ -9,6 +9,7 @@ import { getRefreshToken, getAccessToken, adsRequest, json } from "../../shared/
 
 const VERSION = "v2-per-ad";
 const FIELD_LABEL = { HEADLINE: "Headline", DESCRIPTION: "Description" };
+const STATUS_LABEL = { ENABLED: "Enabled", PAUSED: "Paused" };
 
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -35,7 +36,7 @@ export async function onRequestGet(context) {
     SELECT
       campaign.id, campaign.name,
       ad_group.id, ad_group.name,
-      ad_group_ad.ad.id,
+      ad_group_ad.ad.id, ad_group_ad.status,
       ad_group_ad_asset_view.field_type,
       asset.id, asset.text_asset.text,
       metrics.clicks, metrics.impressions
@@ -43,7 +44,7 @@ export async function onRequestGet(context) {
     WHERE ad_group_ad_asset_view.field_type IN ('HEADLINE','DESCRIPTION')
       AND campaign.status = 'ENABLED'
       AND ad_group.status = 'ENABLED'
-      AND ad_group_ad.status = 'ENABLED'
+      AND ad_group_ad.status != 'REMOVED'
       AND ${dateClause}`;
 
   let results = [];
@@ -68,10 +69,11 @@ export async function onRequestGet(context) {
     const campId = r.campaign?.id || "", campName = r.campaign?.name || "";
     const agId = r.adGroup?.id || "", agName = r.adGroup?.name || "";
     const adId = r.adGroupAd?.ad?.id || "";
+    const adStatus = STATUS_LABEL[r.adGroupAd?.status] || "";
     const key = campId + "|" + agId + "|" + adId + "|" + label + "|" + text;
     let row = agg.get(key);
     if (!row) {
-      row = { campaignId: campId, name: campName, adGroupId: agId, adGroup: agName, adId, assetType: label, text, impressions: 0, clicks: 0 };
+      row = { campaignId: campId, name: campName, adGroupId: agId, adGroup: agName, adId, adStatus, assetType: label, text, impressions: 0, clicks: 0 };
       agg.set(key, row);
     }
     row.impressions += Number(r.metrics?.impressions) || 0;
