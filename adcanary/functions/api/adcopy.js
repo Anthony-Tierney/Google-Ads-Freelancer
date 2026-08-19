@@ -37,12 +37,11 @@ export async function onRequestGet(context) {
       campaign.id, campaign.name,
       ad_group.id, ad_group.name,
       ad_group_ad.ad.id, ad_group_ad.status,
-      ad_group_ad_asset_view.field_type, ad_group_ad_asset_view.status,
+      ad_group_ad_asset_view.field_type, ad_group_ad_asset_view.enabled,
       asset.id, asset.text_asset.text,
       metrics.clicks, metrics.impressions
     FROM ad_group_ad_asset_view
     WHERE ad_group_ad_asset_view.field_type IN ('HEADLINE','DESCRIPTION')
-      AND ad_group_ad_asset_view.status != 'REMOVED'
       AND campaign.status = 'ENABLED'
       AND ad_group.status = 'ENABLED'
       AND ad_group_ad.status != 'REMOVED'
@@ -66,6 +65,7 @@ export async function onRequestGet(context) {
   results.forEach((r) => {
     const label = FIELD_LABEL[r.adGroupAdAssetView?.fieldType];
     if (!label) return;
+    if (r.adGroupAdAssetView?.enabled === false) return; // removed from the latest version of the ad
     const text = r.asset?.textAsset?.text || "";
     const campId = r.campaign?.id || "", campName = r.campaign?.name || "";
     const agId = r.adGroup?.id || "", agName = r.adGroup?.name || "";
