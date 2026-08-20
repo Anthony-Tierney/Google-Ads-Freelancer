@@ -535,6 +535,27 @@
   .bp-stat-value.over { color: #dc2626; }
   .bp-stat-value.under { color: #b45309; }
   .bp-stat-value.ontrack { color: #047857; }
+  .bp-stat-projected-month { position: relative; }
+  .bp-chart-btn { position: absolute; bottom: 5px; right: 5px; width: 24px; height: 24px; padding: 0; border: none; background: none; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 5px; }
+  .bp-chart-btn:hover { background: var(--line-soft); color: var(--accent); }
+  .bp-chart-btn svg { width: 15px; height: 15px; }
+  .bp-chart-modal { position: fixed; inset: 0; background: rgba(15,23,42,.5); display: none; align-items: center; justify-content: center; z-index: 2000; }
+  .bp-chart-modal[open] { display: flex; }
+  .bp-chart-content { background: var(--panel); border-radius: 12px; padding: 18px 22px 22px; max-width: 880px; width: 92%; box-shadow: var(--shadow); }
+  .bp-chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 12px; }
+  .bp-chart-head h3 { margin: 0; font-size: 15px; }
+  .bp-chart-close { border: none; background: none; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; padding: 0 4px; }
+  .bp-chart-summary { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .bp-chart-summary b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .bp-chart-svg { width: 100%; height: auto; display: block; }
+  .bp-bar-past { fill: #10b981; }
+  .bp-bar-future { fill: #3b82f6; }
+  .bp-chart-ylabel, .bp-chart-xlabel { fill: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+  .bp-chart-legend { display: flex; gap: 18px; justify-content: center; margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .bp-chart-legend i { display: inline-block; width: 11px; height: 11px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+  .bp-chart-legend i.past { background: #10b981; }
+  .bp-chart-legend i.future { background: #3b82f6; }
+  .bp-chart-loading { padding: 48px; text-align: center; color: var(--muted); }
   .bp-rec { margin-top: 12px; padding: 11px 14px 11px 13px; border-radius: 9px; background: var(--bg); border: 1px solid var(--line-soft); border-left: 3px solid var(--accent); font-size: 13px; line-height: 1.55; color: var(--ink); }
   .bp-rec.over { border-left-color: #dc2626; }
   .bp-rec.under { border-left-color: #d97706; }
@@ -1088,7 +1109,7 @@
               <div class="filters" id="acFilterGroup">
                 <button class="filters-btn" id="acFiltersBtn" aria-haspopup="true" title="Filters">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                  <span class="count" id="acFilterCount" hidden>0</span>
+                  Filters <span class="count" id="acFilterCount" hidden>0</span>
                 </button>
                 <div class="pop filters-menu" id="acFiltersMenu" hidden>
                   <div class="filter-group-header" id="acfAccountSection" onclick="toggleFilterGroup('ac-group-account', event)">
@@ -1123,17 +1144,6 @@
                       <div class="status-checks">
                         <div class="check-row"><input type="checkbox" id="acfTypeHeadline" /><label for="acfTypeHeadline">Headline</label></div>
                         <div class="check-row"><input type="checkbox" id="acfTypeDescription" /><label for="acfTypeDescription">Description</label></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="filter-group-header" onclick="toggleFilterGroup('ac-group-adstatus', event)">
-                    <span class="toggle">+</span>Ad Status
-                  </div>
-                  <div class="filter-group-items" id="ac-group-adstatus" hidden>
-                    <div class="filter-section">
-                      <div class="status-checks">
-                        <div class="check-row"><input type="checkbox" id="acfStatusEnabled" /><label for="acfStatusEnabled">Enabled</label></div>
-                        <div class="check-row"><input type="checkbox" id="acfStatusPaused" /><label for="acfStatusPaused">Paused</label></div>
                       </div>
                     </div>
                   </div>
@@ -1764,6 +1774,15 @@
         </div>
       </section>
       <!-- Shared custom date-range modal (global so any page can open it) -->
+      <div id="bpChartModal" class="bp-chart-modal" onclick="if(event.target===this)closeProjectionChart()">
+        <div class="bp-chart-content">
+          <div class="bp-chart-head">
+            <h3 id="bpChartTitle">Daily spend &amp; projection</h3>
+            <button class="bp-chart-close" onclick="closeProjectionChart()" aria-label="Close">&times;</button>
+          </div>
+          <div id="bpChartBody"></div>
+        </div>
+      </div>
       <div id="customDateModal" class="calendar-modal">
         <div class="calendar-content">
           <h3 id="calendarTitle">Custom date range</h3>
@@ -2381,6 +2400,105 @@ function closeCustomDateModal() {
   document.getElementById("customDateModal").removeAttribute("open");
 }
 
+// ---- Budget Pacing: daily spend & projection chart ---------------------------
+async function openProjectionChart(accId) {
+  const row = (bpState.rows || []).find(r => String(r.id) === String(accId));
+  if (!row) return;
+  document.getElementById("bpChartTitle").textContent = (row.name || row.formatted || accId) + " — daily spend & projection";
+  document.getElementById("bpChartBody").innerHTML = '<div class="bp-chart-loading">Loading…</div>';
+  document.getElementById("bpChartModal").setAttribute("open", "");
+  const saved = bpState.budgets[accId];
+  const budget = (saved != null && saved !== "") ? Number(saved) : 0;
+  try {
+    const res = await fetch("/api/dailyspend?customerId=" + encodeURIComponent(accId), { credentials: "same-origin" });
+    const data = await res.json();
+    const daily = {};
+    (data.days || []).forEach(d => { daily[d.date] = +d.cost || 0; });
+    document.getElementById("bpChartBody").innerHTML = buildProjectionChart(row, budget, daily);
+  } catch {
+    document.getElementById("bpChartBody").innerHTML = '<div class="bp-chart-loading">Couldn\'t load daily spend for this account.</div>';
+  }
+}
+function closeProjectionChart() { document.getElementById("bpChartModal").removeAttribute("open"); }
+
+function buildProjectionChart(row, budget, daily) {
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayDay = now.getDate();
+  const p2 = n => String(n).padStart(2, "0");
+  const ymd = (y, m, d) => y + "-" + p2(m + 1) + "-" + p2(d);
+
+  // Past days (before today): actual spend → green bars.
+  const bars = [];
+  let greenSum = 0;
+  for (let d = 1; d < todayDay; d++) {
+    const cost = daily[ymd(year, month, d)] || 0;
+    greenSum += cost;
+    bars.push({ day: d, value: cost, future: false });
+  }
+
+  // Day-of-week spend weights from the last 7 available dates — this is what makes the
+  // projection ad-schedule aware: days ads don't run recently show ~£0 and project ~£0.
+  const dates = Object.keys(daily).sort();
+  const weekdayWeight = {};
+  dates.slice(-7).forEach(dt => { weekdayWeight[new Date(dt + "T00:00:00").getDay()] = daily[dt] || 0; });
+
+  // Projected month total (matches the card): MTD spend + run-rate for the remaining days.
+  const avg7 = (row.last7 || 0) / 7;
+  const remainingDays = Math.max(0, daysInMonth - todayDay);
+  const projectedTotal = row.spend + avg7 * remainingDays;
+  const projectedRemaining = Math.max(0, projectedTotal - greenSum); // today..end of month
+
+  // Distribute the remaining spend across today..last day, weighted by the weekday pattern.
+  const futureDays = [];
+  for (let d = todayDay; d <= daysInMonth; d++) futureDays.push(d);
+  let weightSum = 0;
+  futureDays.forEach(d => { weightSum += weekdayWeight[new Date(year, month, d).getDay()] || 0; });
+  futureDays.forEach(d => {
+    const w = weekdayWeight[new Date(year, month, d).getDay()] || 0;
+    const val = weightSum > 0 ? projectedRemaining * w / weightSum : projectedRemaining / futureDays.length;
+    bars.push({ day: d, value: val, future: true });
+  });
+
+  const summary = '<div class="bp-chart-summary">Spent so far: <b>' + fmtCurrency(greenSum) + '</b> · Projected month total: <b>' + fmtCurrency(projectedTotal) + '</b>' + (budget > 0 ? ' · Monthly budget: <b>' + fmtCurrency0(budget) + '</b>' : '') + '</div>';
+  const legend = '<div class="bp-chart-legend"><span><i class="bp-leg past"></i>Actual (to date)</span><span><i class="bp-leg future"></i>Projected</span></div>';
+  return summary + renderBpChartSvg(bars, daysInMonth) + legend;
+}
+
+function renderBpChartSvg(bars, daysInMonth) {
+  const W = 800, H = 320, mL = 58, mR = 14, mT = 14, mB = 30;
+  const pw = W - mL - mR, ph = H - mT - mB;
+  const niceMax = bpNiceCeil(Math.max(1, ...bars.map(b => b.value)));
+  const slot = pw / daysInMonth;
+  const bw = slot * 0.72;
+  const y = v => mT + ph - (v / niceMax) * ph;
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="bp-chart-svg" preserveAspectRatio="xMidYMid meet">';
+  const yticks = 4;
+  for (let t = 0; t <= yticks; t++) {
+    const val = niceMax * t / yticks, yy = y(val);
+    s += '<line x1="' + mL + '" y1="' + yy.toFixed(1) + '" x2="' + (W - mR) + '" y2="' + yy.toFixed(1) + '" stroke="var(--line-soft)" />';
+    s += '<text x="' + (mL - 6) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end" class="bp-chart-ylabel">' + fmtCurrency0(val) + '</text>';
+  }
+  bars.forEach((b, i) => {
+    const bx = mL + i * slot + (slot - bw) / 2;
+    const by = y(b.value), bh = Math.max(0, mT + ph - by);
+    s += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="1.5" class="' + (b.future ? "bp-bar-future" : "bp-bar-past") + '"><title>Day ' + b.day + ': ' + fmtCurrency(b.value) + (b.future ? " (projected)" : "") + '</title></rect>';
+    if (b.day === 1 || b.day === daysInMonth || b.day % 5 === 0) {
+      s += '<text x="' + (mL + i * slot + slot / 2).toFixed(1) + '" y="' + (H - mB + 15) + '" text-anchor="middle" class="bp-chart-xlabel">' + b.day + '</text>';
+    }
+  });
+  s += '</svg>';
+  return s;
+}
+
+function bpNiceCeil(v) {
+  if (v <= 0) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(v))), n = v / mag;
+  const step = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+  return step * mag;
+}
+
 // Human-readable label for a custom range whose from/to are GAQL "YYYYMMDD" strings.
 function prettyRangeLabel(r) {
   const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -2843,7 +2961,7 @@ function resetAccountScopedFilters() {
 
   // Ad Copy — Campaign checklist.
   acState.filters.campaign = new Set();
-  savePageFilters("adcopy", { account: [...acState.filters.account], campaign: [...acState.filters.campaign], adGroup: [...acState.filters.adGroup], assetType: [...acState.filters.assetType], adStatus: [...acState.filters.adStatus] });
+  savePageFilters("adcopy", { account: [...acState.filters.account], campaign: [...acState.filters.campaign], adGroup: [...acState.filters.adGroup], assetType: [...acState.filters.assetType] });
   updateAcFilterCount();
 
   // Budgeting — Campaign Name.
@@ -4659,6 +4777,8 @@ function renderBudgetPacing() {
     const stat = (key, label, value, cls) =>
       '<div class="bp-stat bp-stat-' + key + '"><div class="bp-stat-label">' + label + '</div>' +
       '<div class="bp-stat-value' + (cls ? ' ' + cls : '') + '">' + value + '</div></div>';
+    const projChartBtn = '<button class="bp-chart-btn" title="Daily spend &amp; projection" onclick="openProjectionChart(\'' + r.id + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>';
+    const projectedCard = '<div class="bp-stat bp-stat-projected-month"><div class="bp-stat-label">Projected (this month)</div><div class="bp-stat-value">' + fmtCurrency(projected) + '</div>' + projChartBtn + '</div>';
 
     // Pacing bar + scorecards
     let bar, foot;
@@ -4668,7 +4788,7 @@ function renderBudgetPacing() {
         stat("spend-mtd", "Spend (MTD)", fmtCurrency(r.spend)) +
         stat("prev-month", "Spend (Previous Month)", r.prevMonthSpend != null ? fmtCurrency(r.prevMonthSpend) : "—") +
         stat("avg7", "Avg. Spend (Last 7 Days)", fmtCurrency(avg7)) +
-        stat("projected-month", "Projected (this month)", fmtCurrency(projected)) +
+        projectedCard +
         stat("projected-next30", "Projected (next 30 days)", fmtCurrency(projectedNext30));
     } else {
       const spendPct = (r.spend / budget) * 100;
@@ -4708,7 +4828,7 @@ function renderBudgetPacing() {
         stat("pace", "Pace", verdict, colorClass) +
         stat("prev-month", "Spend (Previous Month)", r.prevMonthSpend != null ? fmtCurrency(r.prevMonthSpend) : "—") +
         stat("avg7", "Avg. Spend (Last 7 Days)", fmtCurrency(avg7)) +
-        stat("projected-month", "Projected (this month)", fmtCurrency(projected)) +
+        projectedCard +
         stat("projected-next30", "Projected (next 30 days)", fmtCurrency(projectedNext30));
     }
 
@@ -5577,8 +5697,7 @@ const AC_VIEW_LEVELS = [["account", "Account-level"], ["campaign", "Campaign-lev
 const AC_COL_GROUPS = ["Columns"];
 const AC_DEFAULT_VISIBLE = ["ctr", "impressions", "clicks"];
 const AC_ASSETTYPE_BOXES = [["acfTypeHeadline", "Headline"], ["acfTypeDescription", "Description"]];
-const AC_ADSTATUS_BOXES = [["acfStatusEnabled", "Enabled"], ["acfStatusPaused", "Paused"]];
-const acState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), assetType: new Set(), adStatus: new Set(["Enabled"]) }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("adcopy") || AC_DEFAULT_VISIBLE), "assetType", "text"]), openColGroups: new Set(["acColsPop_g0"]), heatmap: false, viewLevel: "account", dateRange: { label: "Last 30 Days", days: 30 } };
+const acState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), assetType: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("adcopy") || AC_DEFAULT_VISIBLE), "assetType", "text"]), openColGroups: new Set(["acColsPop_g0"]), heatmap: false, viewLevel: "account", dateRange: { label: "Last 30 Days", days: 30 } };
 
 function populateAcFilterOptions() {
   const inAll = GLOBAL_ACCOUNT === "ALL";
@@ -5633,29 +5752,23 @@ function initAdCopy() {
 
 function restoreAcFilters() {
   const saved = loadPageFilters("adcopy");
-  if (saved) {
-    acState.filters = { account: new Set(Array.isArray(saved.account) ? saved.account : []), campaign: new Set(Array.isArray(saved.campaign) ? saved.campaign : []), adGroup: new Set(Array.isArray(saved.adGroup) ? saved.adGroup : []), assetType: new Set(Array.isArray(saved.assetType) ? saved.assetType : []), adStatus: new Set(Array.isArray(saved.adStatus) ? saved.adStatus : ["Enabled"]) };
-  }
-  // Sync the fixed checkbox groups to the current filter state (restored or default).
+  if (!saved) return;
+  acState.filters = { account: new Set(Array.isArray(saved.account) ? saved.account : []), campaign: new Set(Array.isArray(saved.campaign) ? saved.campaign : []), adGroup: new Set(Array.isArray(saved.adGroup) ? saved.adGroup : []), assetType: new Set(Array.isArray(saved.assetType) ? saved.assetType : []) };
   AC_ASSETTYPE_BOXES.forEach(([id, label]) => { document.getElementById(id).checked = acState.filters.assetType.has(label); });
-  AC_ADSTATUS_BOXES.forEach(([id, label]) => { document.getElementById(id).checked = acState.filters.adStatus.has(label); });
 }
 function applyAcFilters() {
   const inAll = GLOBAL_ACCOUNT === "ALL";
   const assetType = new Set();
   AC_ASSETTYPE_BOXES.forEach(([id, label]) => { if (document.getElementById(id).checked) assetType.add(label); });
-  const adStatus = new Set();
-  AC_ADSTATUS_BOXES.forEach(([id, label]) => { if (document.getElementById(id).checked) adStatus.add(label); });
   acState.filters = {
     account: inAll ? readCheckList("acfAccountList") : acState.filters.account,
     campaign: readCheckList("acfCampaignList"),
     adGroup: readCheckList("acfAdGroupList"),
     assetType,
-    adStatus,
   };
   document.getElementById("acFiltersMenu").hidden = true;
   acState.currentPage = 1;
-  savePageFilters("adcopy", { account: [...acState.filters.account], campaign: [...acState.filters.campaign], adGroup: [...acState.filters.adGroup], assetType: [...assetType], adStatus: [...adStatus] });
+  savePageFilters("adcopy", { account: [...acState.filters.account], campaign: [...acState.filters.campaign], adGroup: [...acState.filters.adGroup], assetType: [...assetType] });
   updateAcFilterCount();
   renderAdCopyTable();
 }
@@ -5664,21 +5777,19 @@ function resetAcFilters() {
   acState.filters.campaign = new Set();
   acState.filters.adGroup = new Set();
   AC_ASSETTYPE_BOXES.forEach(([id]) => { document.getElementById(id).checked = false; });
-  AC_ADSTATUS_BOXES.forEach(([id, label]) => { document.getElementById(id).checked = label === "Enabled"; });
   populateAcFilterOptions();
   applyAcFilters();
 }
 function updateAcFilterCount() {
   const f = acState.filters;
   const inAll = GLOBAL_ACCOUNT === "ALL";
-  const n = ((inAll && f.account.size) ? 1 : 0) + (f.campaign.size ? 1 : 0) + (f.adGroup.size ? 1 : 0) + (f.assetType.size ? 1 : 0) + (f.adStatus.size ? 1 : 0);
+  const n = ((inAll && f.account.size) ? 1 : 0) + (f.campaign.size ? 1 : 0) + (f.adGroup.size ? 1 : 0) + (f.assetType.size ? 1 : 0);
   const el = document.getElementById("acFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; } else { el.hidden = true; }
   markFilterGroup("ac-group-account", (inAll && f.account.size) ? f.account.size : 0);
   markFilterGroup("ac-group-campaign", f.campaign.size);
   markFilterGroup("ac-group-adgroup", f.adGroup.size);
   markFilterGroup("ac-group-assettype", f.assetType.size);
-  markFilterGroup("ac-group-adstatus", f.adStatus.size);
 }
 
 function renderAcViewPop() {
@@ -5778,7 +5889,6 @@ function renderAdCopyTable() {
         if (f.campaign.size && !f.campaign.has(r.name || "")) return false;
         if (f.adGroup.size && !f.adGroup.has(r.adGroup || "")) return false;
         if (f.assetType.size && !f.assetType.has(r.assetType || "")) return false;
-        if (f.adStatus.size && !f.adStatus.has(r.adStatus || "")) return false;
         return true;
       });
       const agg = new Map();
