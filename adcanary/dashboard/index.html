@@ -550,7 +550,13 @@
   .bp-chart-svg { width: 100%; height: auto; display: block; }
   .bp-bar-past { fill: #10b981; }
   .bp-bar-future { fill: #3b82f6; }
-  .bp-chart-ylabel, .bp-chart-xlabel { fill: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+  .bp-chart-ylabel { fill: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+  .bp-chart-xlabel { fill: var(--muted); font-size: 9px; font-variant-numeric: tabular-nums; }
+  .bp-chart-axis-title { fill: var(--muted); font-size: 11px; font-weight: 560; }
+  .bp-chart-wrap { position: relative; }
+  .bp-chart-tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--panel); font-size: 12px; padding: 4px 8px; border-radius: 6px; white-space: nowrap; z-index: 5; box-shadow: var(--shadow); }
+  .bp-chart-tip b { font-variant-numeric: tabular-nums; }
+  .bp-chart-tip .bp-tip-proj { opacity: .7; }
   .bp-chart-legend { display: flex; gap: 18px; justify-content: center; margin-top: 8px; font-size: 12px; color: var(--muted); }
   .bp-chart-legend i { display: inline-block; width: 11px; height: 11px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
   .bp-chart-legend i.past { background: #10b981; }
@@ -2463,34 +2469,50 @@ function buildProjectionChart(row, budget, daily) {
 
   const summary = '<div class="bp-chart-summary">Spent so far: <b>' + fmtCurrency(greenSum) + '</b> · Projected month total: <b>' + fmtCurrency(projectedTotal) + '</b>' + (budget > 0 ? ' · Monthly budget: <b>' + fmtCurrency0(budget) + '</b>' : '') + '</div>';
   const legend = '<div class="bp-chart-legend"><span><i class="bp-leg past"></i>Actual (to date)</span><span><i class="bp-leg future"></i>Projected</span></div>';
-  return summary + renderBpChartSvg(bars, daysInMonth) + legend;
+  return summary + '<div class="bp-chart-wrap"><div class="bp-chart-tip" id="bpChartTip" hidden></div>' + renderBpChartSvg(bars, daysInMonth) + '</div>' + legend;
 }
 
 function renderBpChartSvg(bars, daysInMonth) {
-  const W = 800, H = 320, mL = 58, mR = 14, mT = 14, mB = 30;
+  const W = 820, H = 350, mL = 66, mR = 14, mT = 14, mB = 50;
   const pw = W - mL - mR, ph = H - mT - mB;
   const niceMax = bpNiceCeil(Math.max(1, ...bars.map(b => b.value)));
   const slot = pw / daysInMonth;
-  const bw = slot * 0.72;
+  const bw = slot * 0.74;
   const y = v => mT + ph - (v / niceMax) * ph;
   let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="bp-chart-svg" preserveAspectRatio="xMidYMid meet">';
   const yticks = 4;
   for (let t = 0; t <= yticks; t++) {
     const val = niceMax * t / yticks, yy = y(val);
     s += '<line x1="' + mL + '" y1="' + yy.toFixed(1) + '" x2="' + (W - mR) + '" y2="' + yy.toFixed(1) + '" stroke="var(--line-soft)" />';
-    s += '<text x="' + (mL - 6) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end" class="bp-chart-ylabel">' + fmtCurrency0(val) + '</text>';
+    s += '<text x="' + (mL - 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end" class="bp-chart-ylabel">' + fmtCurrency0(val) + '</text>';
   }
   bars.forEach((b, i) => {
     const bx = mL + i * slot + (slot - bw) / 2;
     const by = y(b.value), bh = Math.max(0, mT + ph - by);
-    s += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="1.5" class="' + (b.future ? "bp-bar-future" : "bp-bar-past") + '"><title>Day ' + b.day + ': ' + fmtCurrency(b.value) + (b.future ? " (projected)" : "") + '</title></rect>';
-    if (b.day === 1 || b.day === daysInMonth || b.day % 5 === 0) {
-      s += '<text x="' + (mL + i * slot + slot / 2).toFixed(1) + '" y="' + (H - mB + 15) + '" text-anchor="middle" class="bp-chart-xlabel">' + b.day + '</text>';
-    }
+    const tipVal = Math.round(b.value * 100) / 100;
+    s += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="1.5" class="' + (b.future ? "bp-bar-future" : "bp-bar-past") + '" onmousemove="bpBarTip(event,' + b.day + ',' + tipVal + ',' + (b.future ? 1 : 0) + ')" onmouseleave="bpBarTipHide()"></rect>';
+    s += '<text x="' + (mL + i * slot + slot / 2).toFixed(1) + '" y="' + (mT + ph + 14) + '" text-anchor="middle" class="bp-chart-xlabel">' + b.day + '</text>';
   });
+  // Axis titles
+  s += '<text x="' + (mL + pw / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" class="bp-chart-axis-title">Day of month</text>';
+  const yc = (mT + ph / 2).toFixed(1);
+  s += '<text x="15" y="' + yc + '" text-anchor="middle" transform="rotate(-90 15 ' + yc + ')" class="bp-chart-axis-title">Daily spend</text>';
   s += '</svg>';
   return s;
 }
+
+function bpBarTip(e, day, value, future) {
+  const tip = document.getElementById("bpChartTip");
+  if (!tip) return;
+  tip.innerHTML = 'Day ' + day + ' &middot; <b>' + fmtCurrency(value) + '</b>' + (future ? ' <span class="bp-tip-proj">projected</span>' : '');
+  tip.hidden = false;
+  const wrap = tip.parentElement.getBoundingClientRect();
+  let left = e.clientX - wrap.left + 12;
+  if (left > wrap.width - 140) left = e.clientX - wrap.left - 140;
+  tip.style.left = Math.max(0, left) + "px";
+  tip.style.top = (e.clientY - wrap.top - 4) + "px";
+}
+function bpBarTipHide() { const t = document.getElementById("bpChartTip"); if (t) t.hidden = true; }
 
 function bpNiceCeil(v) {
   if (v <= 0) return 1;
