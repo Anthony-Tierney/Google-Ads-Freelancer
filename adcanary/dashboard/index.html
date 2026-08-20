@@ -4491,23 +4491,32 @@ function renderAccountsTable() {
     return;
   }
 
-  // Account-level view — existing behaviour
-  const statuses = accState.filterAccountStatus;
+  // All accounts — flat campaign table across every account (Account + Campaign columns).
+  const as = accState.filterAccountStatus, cs = accState.filterCampaignStatus;
+  const flat = [];
+  for (const acc of accState.rows) {
+    if (as.size && !as.has(acc.hasEnabled ? "active" : "inactive")) continue;
+    for (const c of (acc._campaigns || [])) {
+      if (cs.size && !cs.has((c.status || "").toUpperCase())) continue;
+      flat.push(Object.assign({}, c, { account: acc.name }));
+    }
+  }
   renderDataTable({
     state: accState,
-    columns: ACCOUNT_COLUMNS,
-    colOrderKey: "accounts",
+    columns: () => [{ ...ACCOUNT_COL, always: true }, ...COLUMNS],
+    colOrderKey: "campaigns",
     prefKey: "accounts",
-    heatmap: true,
+    heatmap: accState.heatmap,
     resetPageOnSort: true,
     ids: { colgroup: "acc-colgroup", thead: "acc-thead", tbody: "acc-tbody", tfoot: "acc-tfoot", pagination: "accPagination" },
     rerender: renderAccountsTable,
-    rows: () => accSortedFiltered(),
+    rows: () => flat,
     footer: (rows, cols) => {
-      const tot = accTotals(rows);
+      const agg = aggregateCampaigns(rows);
       return "<tr>" + cols.map((c, i) => {
-        if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total · ' + rows.length + "</td>";
-        return '<td class="num tabnum" data-col="' + c.key + '">' + formatCell(c.type, tot[c.key]) + "</td>";
+        if (i === 0) return '<td class="txt name" data-col="' + c.key + '">Total · ' + rows.length + "</td>";
+        if (c.align === "num") return '<td class="num tabnum" data-col="' + c.key + '">' + formatCell(c.type, agg[c.key]) + "</td>";
+        return '<td data-col="' + c.key + '"></td>';
       }).join("") + "</tr>";
     },
   });
