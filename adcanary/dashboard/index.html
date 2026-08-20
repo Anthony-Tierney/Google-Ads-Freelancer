@@ -4464,8 +4464,10 @@ function renderAccountsTable() {
 
   if (isSingleAccount) {
     // Campaign-level view — show COLUMNS just like #campaigns page did
+    const cs = accState.filterCampaignStatus;
     const rows = (state.campaigns || []).filter(r =>
-      !campaignFilter || r.name === campaignFilter
+      (!campaignFilter || r.name === campaignFilter) &&
+      (!cs.size || cs.has((r.status || "").toUpperCase()))
     );
     renderDataTable({
       state: accState,
