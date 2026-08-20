@@ -4532,8 +4532,8 @@ function renderAccColsPop() {
 function syncAccColsCount() { document.getElementById("accColsCount").textContent = accState.visible.size; }
 
 function accExport(fmt) {
-  const cols = accShownColumns();
-  const rows = accSortedFiltered();
+  const cols = accState.viewCols || [];
+  const rows = accState.viewRows || [];
   if (!rows.length) return;
   const fileBase = "all-accounts-" + (accState.dateRange.label || "").replace(/[^a-z0-9]+/gi, "-").toLowerCase().replace(/^-|-$/g, "");
 
