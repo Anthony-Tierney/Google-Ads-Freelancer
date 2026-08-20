@@ -1030,6 +1030,19 @@
                       <div class="foot-note" style="margin-top:8px;">Active = at least one enabled campaign.</div>
                     </div>
                   </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('acc-group-campstatus', event)">
+                    <span class="toggle">−</span>Campaign Status
+                  </div>
+                  <div class="filter-group-items" id="acc-group-campstatus">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="accCampEnabled" checked /><label for="accCampEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="accCampPaused" /><label for="accCampPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="accCampRemoved" /><label for="accCampRemoved">Removed</label></div>
+                      </div>
+                      <div class="foot-note" style="margin-top:8px;">Account metrics reflect only campaigns with the selected status.</div>
+                    </div>
+                  </div>
                   <div class="filter-buttons">
                     <button onclick="resetAccFilters()">Reset</button>
                     <button class="apply" onclick="applyAccFilters()">Apply</button>
@@ -2090,6 +2103,7 @@ const accState = {
   currentPage: 1,
   search: "",
   filterAccountStatus: new Set(["active"]),
+  filterCampaignStatus: new Set(["ENABLED"]),
   openColGroups: new Set(["accColsPop_g0"]),
   columnWidths: {},
   loaded: false,
@@ -4016,10 +4030,18 @@ function initAllAccounts() {
 // Restore saved Account Status filter selection.
 function restoreAccFilters() {
   const saved = loadPageFilters("accounts");
-  if (!saved || !saved.status) return;
-  accState.filterAccountStatus = new Set(saved.status);
-  document.getElementById("accStatusActive").checked = saved.status.includes("active");
-  document.getElementById("accStatusInactive").checked = saved.status.includes("inactive");
+  if (saved && saved.status) {
+    accState.filterAccountStatus = new Set(saved.status);
+    document.getElementById("accStatusActive").checked = saved.status.includes("active");
+    document.getElementById("accStatusInactive").checked = saved.status.includes("inactive");
+  }
+  if (saved && Array.isArray(saved.campStatus)) {
+    accState.filterCampaignStatus = new Set(saved.campStatus);
+  }
+  // Sync the Campaign Status checkboxes to current state (restored or default Enabled).
+  document.getElementById("accCampEnabled").checked = accState.filterCampaignStatus.has("ENABLED");
+  document.getElementById("accCampPaused").checked = accState.filterCampaignStatus.has("PAUSED");
+  document.getElementById("accCampRemoved").checked = accState.filterCampaignStatus.has("REMOVED");
   updateAccFilterCount();
 }
 
@@ -4101,14 +4123,34 @@ function getAccCompareRange() {
   return "segments.date DURING LAST_30_DAYS";
 }
 
+// Re-aggregate every account row's metrics (and compare period) from its raw campaigns,
+// keeping only campaigns whose status matches the Campaign Status filter.
+function reaggAccRows() {
+  const st = accState.filterCampaignStatus;
+  const keep = c => !st.size || st.has((c.status || "").toUpperCase());
+  for (const row of accState.rows) {
+    if (row._campaigns) {
+      const agg = aggregateCampaigns(row._campaigns.filter(keep));
+      for (const k in agg) row[k] = agg[k];
+    }
+    if (row._prevCampaigns) row._prev = aggregateCampaigns(row._prevCampaigns.filter(keep));
+  }
+}
+
 function applyAccFilters() {
   accState.filterAccountStatus = new Set([
     document.getElementById("accStatusActive").checked ? "active" : null,
     document.getElementById("accStatusInactive").checked ? "inactive" : null,
   ].filter(Boolean));
+  accState.filterCampaignStatus = new Set([
+    document.getElementById("accCampEnabled").checked ? "ENABLED" : null,
+    document.getElementById("accCampPaused").checked ? "PAUSED" : null,
+    document.getElementById("accCampRemoved").checked ? "REMOVED" : null,
+  ].filter(Boolean));
   accState.currentPage = 1;
   document.getElementById("accFiltersMenu").hidden = true;
-  savePageFilters("accounts", { status: [...accState.filterAccountStatus] });
+  savePageFilters("accounts", { status: [...accState.filterAccountStatus], campStatus: [...accState.filterCampaignStatus] });
+  reaggAccRows();
   updateAccFilterCount();
   renderAccountsTable();
 }
@@ -4116,11 +4158,14 @@ function applyAccFilters() {
 function resetAccFilters() {
   document.getElementById("accStatusActive").checked = true;
   document.getElementById("accStatusInactive").checked = false;
+  document.getElementById("accCampEnabled").checked = true;
+  document.getElementById("accCampPaused").checked = false;
+  document.getElementById("accCampRemoved").checked = false;
   applyAccFilters();
 }
 
 function updateAccFilterCount() {
-  const n = accState.filterAccountStatus.size;
+  const n = accState.filterAccountStatus.size + accState.filterCampaignStatus.size;
   const el = document.getElementById("accFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
@@ -4187,6 +4232,7 @@ async function loadAllAccounts() {
       const data = await res.json().catch(() => ({}));
       const campaigns = (data.campaigns || []).map(withMetrics);
       const row = aggregateCampaigns(campaigns);
+      row._campaigns = campaigns;
       row.enabledCount = campaigns.filter(c => (c.status || "").toUpperCase() === "ENABLED").length;
       row.hasEnabled = row.enabledCount > 0;
       row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
@@ -4195,6 +4241,7 @@ async function loadAllAccounts() {
       if (cmpRes) {
         const cmpData = await cmpRes.json().catch(() => ({}));
         const cmpCampaigns = (cmpData.campaigns || []).map(withMetrics);
+        row._prevCampaigns = cmpCampaigns;
         row._prev = aggregateCampaigns(cmpCampaigns);
       }
       rows.push(row);
@@ -4207,6 +4254,7 @@ async function loadAllAccounts() {
   });
 
   accState.rows = rows;
+  reaggAccRows();
   loading.hidden = true;
   document.getElementById("accTable").hidden = false;
   document.getElementById("accPagination").hidden = false;
