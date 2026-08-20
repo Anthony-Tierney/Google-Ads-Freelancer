@@ -1043,6 +1043,74 @@
                       <div class="foot-note" style="margin-top:8px;">Account metrics reflect only campaigns with the selected status.</div>
                     </div>
                   </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('acc-group-name', event)">
+                    <span class="toggle">+</span>Campaign Name
+                  </div>
+                  <div class="filter-group-items" id="acc-group-name" hidden>
+                    <div class="filter-section cnf">
+                      <select id="accfNameOp" class="cnf-op"></select>
+                      <label class="cnf-sublabel">Any of the following values</label>
+                      <textarea id="accfName" class="cnf-value" autocomplete="off" placeholder="Value" rows="3"></textarea>
+                      <div class="cnf-hint">Enter one value per line</div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('acc-group-type', event)">
+                    <span class="toggle">+</span>Campaign Type
+                  </div>
+                  <div class="filter-group-items" id="acc-group-type" hidden>
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="accTypeSearch" value="SEARCH" /><label for="accTypeSearch">Search</label></div>
+                        <div class="check-row"><input type="checkbox" id="accTypeDisplay" value="DISPLAY" /><label for="accTypeDisplay">Display</label></div>
+                        <div class="check-row"><input type="checkbox" id="accTypeShopping" value="SHOPPING" /><label for="accTypeShopping">Shopping</label></div>
+                        <div class="check-row"><input type="checkbox" id="accTypePmax" value="PERFORMANCE_MAX" /><label for="accTypePmax">Performance Max</label></div>
+                        <div class="check-row"><input type="checkbox" id="accTypeVideo" value="VIDEO" /><label for="accTypeVideo">Video</label></div>
+                        <div class="check-row"><input type="checkbox" id="accTypeApp" value="APP" /><label for="accTypeApp">App</label></div>
+                        <div class="check-row"><input type="checkbox" id="accTypeSmart" value="SMART" /><label for="accTypeSmart">Smart</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('acc-group-impr', event)">
+                    <span class="toggle">+</span>Impressions
+                  </div>
+                  <div class="filter-group-items" id="acc-group-impr" hidden>
+                    <div class="filter-section">
+                      <div class="fnum-row">
+                        <select id="accfImpOp" class="fnum-op">
+                          <option value=">=">&ge;</option>
+                          <option value=">">></option>
+                          <option value="=">=</option>
+                          <option value="!=">&ne;</option>
+                          <option value="<">&lt;</option>
+                          <option value="<=">&le;</option>
+                        </select>
+                        <div class="fnum-input">
+                          <input type="number" id="accfImpValue" placeholder="Amount" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('acc-group-cost', event)">
+                    <span class="toggle">+</span>Cost
+                  </div>
+                  <div class="filter-group-items" id="acc-group-cost" hidden>
+                    <div class="filter-section">
+                      <div class="fnum-row">
+                        <select id="accfCostOp" class="fnum-op">
+                          <option value=">=">&ge;</option>
+                          <option value=">">></option>
+                          <option value="=">=</option>
+                          <option value="!=">&ne;</option>
+                          <option value="<">&lt;</option>
+                          <option value="<=">&le;</option>
+                        </select>
+                        <div class="fnum-input">
+                          <span class="fnum-prefix">£</span>
+                          <input type="number" id="accfCostValue" placeholder="Amount" step="0.01" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <div class="filter-buttons">
                     <button onclick="resetAccFilters()">Reset</button>
                     <button class="apply" onclick="applyAccFilters()">Apply</button>
@@ -2104,6 +2172,10 @@ const accState = {
   search: "",
   filterAccountStatus: new Set(["active"]),
   filterCampaignStatus: new Set(["ENABLED"]),
+  filterCampName: "", filterCampNameOp: "contains",
+  filterChannelType: new Set(),
+  filterImpOp: ">=", filterImpValue: 0,
+  filterCostOp: ">=", filterCostValue: 0,
   openColGroups: new Set(["accColsPop_g0"]),
   columnWidths: {},
   loaded: false,
@@ -4029,19 +4101,35 @@ function initAllAccounts() {
 
 // Restore saved Account Status filter selection.
 function restoreAccFilters() {
+  const opEl = document.getElementById("accfNameOp");
+  if (opEl && !opEl.options.length) opEl.innerHTML = TEXT_OP_OPTIONS;
   const saved = loadPageFilters("accounts");
-  if (saved && saved.status) {
-    accState.filterAccountStatus = new Set(saved.status);
-    document.getElementById("accStatusActive").checked = saved.status.includes("active");
-    document.getElementById("accStatusInactive").checked = saved.status.includes("inactive");
+  if (saved) {
+    if (saved.status) {
+      accState.filterAccountStatus = new Set(saved.status);
+      document.getElementById("accStatusActive").checked = saved.status.includes("active");
+      document.getElementById("accStatusInactive").checked = saved.status.includes("inactive");
+    }
+    if (Array.isArray(saved.campStatus)) accState.filterCampaignStatus = new Set(saved.campStatus);
+    accState.filterCampName = saved.name || "";
+    accState.filterCampNameOp = saved.nameOp || "contains";
+    if (Array.isArray(saved.types)) accState.filterChannelType = new Set(saved.types);
+    accState.filterImpOp = saved.impOp || ">=";
+    accState.filterImpValue = saved.impValue || 0;
+    accState.filterCostOp = saved.costOp || ">=";
+    accState.filterCostValue = saved.costValue || 0;
   }
-  if (saved && Array.isArray(saved.campStatus)) {
-    accState.filterCampaignStatus = new Set(saved.campStatus);
-  }
-  // Sync the Campaign Status checkboxes to current state (restored or default Enabled).
+  // Sync every input to the current state (restored or default).
   document.getElementById("accCampEnabled").checked = accState.filterCampaignStatus.has("ENABLED");
   document.getElementById("accCampPaused").checked = accState.filterCampaignStatus.has("PAUSED");
   document.getElementById("accCampRemoved").checked = accState.filterCampaignStatus.has("REMOVED");
+  document.getElementById("accfName").value = accState.filterCampName;
+  document.getElementById("accfNameOp").value = accState.filterCampNameOp;
+  ACC_TYPE_BOXES.forEach(([id, val]) => { document.getElementById(id).checked = accState.filterChannelType.has(val); });
+  document.getElementById("accfImpOp").value = accState.filterImpOp;
+  document.getElementById("accfImpValue").value = accState.filterImpValue || "";
+  document.getElementById("accfCostOp").value = accState.filterCostOp;
+  document.getElementById("accfCostValue").value = accState.filterCostValue || "";
   updateAccFilterCount();
 }
 
@@ -4125,6 +4213,28 @@ function getAccCompareRange() {
 
 // Re-aggregate every account row's metrics (and compare period) from its raw campaigns,
 // keeping only campaigns whose status matches the Campaign Status filter.
+const ACC_TYPE_BOXES = [["accTypeSearch", "SEARCH"], ["accTypeDisplay", "DISPLAY"], ["accTypeShopping", "SHOPPING"], ["accTypePmax", "PERFORMANCE_MAX"], ["accTypeVideo", "VIDEO"], ["accTypeApp", "APP"], ["accTypeSmart", "SMART"]];
+
+function accNumOp(op, v, target) {
+  if (op === ">=") return v >= target;
+  if (op === ">") return v > target;
+  if (op === "=") return v === target;
+  if (op === "!=") return v !== target;
+  if (op === "<") return v < target;
+  if (op === "<=") return v <= target;
+  return true;
+}
+
+// Does a campaign pass the Overview page's campaign filters (name / type / status / impressions / cost)?
+function accCampMatches(c) {
+  if (!matchTextFilter(c.name, accState.filterCampNameOp, accState.filterCampName)) return false;
+  if (accState.filterChannelType.size && !accState.filterChannelType.has(c.channelType)) return false;
+  if (accState.filterCampaignStatus.size && !accState.filterCampaignStatus.has((c.status || "").toUpperCase())) return false;
+  if (accState.filterImpValue > 0 && !accNumOp(accState.filterImpOp, c.impressions, accState.filterImpValue)) return false;
+  if (accState.filterCostValue > 0 && !accNumOp(accState.filterCostOp, c.cost, accState.filterCostValue)) return false;
+  return true;
+}
+
 function reaggAccRows() {
   const st = accState.filterCampaignStatus;
   const keep = c => !st.size || st.has((c.status || "").toUpperCase());
@@ -4147,9 +4257,20 @@ function applyAccFilters() {
     document.getElementById("accCampPaused").checked ? "PAUSED" : null,
     document.getElementById("accCampRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
+  accState.filterCampName = document.getElementById("accfName").value;
+  accState.filterCampNameOp = document.getElementById("accfNameOp").value;
+  accState.filterChannelType = new Set(ACC_TYPE_BOXES.map(([id]) => document.getElementById(id)).filter(el => el.checked).map(el => el.value));
+  accState.filterImpOp = document.getElementById("accfImpOp").value;
+  accState.filterImpValue = parseFloat(document.getElementById("accfImpValue").value) || 0;
+  accState.filterCostOp = document.getElementById("accfCostOp").value;
+  accState.filterCostValue = parseFloat(document.getElementById("accfCostValue").value) || 0;
   accState.currentPage = 1;
   document.getElementById("accFiltersMenu").hidden = true;
-  savePageFilters("accounts", { status: [...accState.filterAccountStatus], campStatus: [...accState.filterCampaignStatus] });
+  savePageFilters("accounts", {
+    status: [...accState.filterAccountStatus], campStatus: [...accState.filterCampaignStatus],
+    name: accState.filterCampName, nameOp: accState.filterCampNameOp, types: [...accState.filterChannelType],
+    impOp: accState.filterImpOp, impValue: accState.filterImpValue, costOp: accState.filterCostOp, costValue: accState.filterCostValue,
+  });
   reaggAccRows();
   updateAccFilterCount();
   renderAccountsTable();
@@ -4161,11 +4282,21 @@ function resetAccFilters() {
   document.getElementById("accCampEnabled").checked = true;
   document.getElementById("accCampPaused").checked = false;
   document.getElementById("accCampRemoved").checked = false;
+  document.getElementById("accfName").value = "";
+  document.getElementById("accfNameOp").value = "contains";
+  ACC_TYPE_BOXES.forEach(([id]) => { document.getElementById(id).checked = false; });
+  document.getElementById("accfImpOp").value = ">=";
+  document.getElementById("accfImpValue").value = "";
+  document.getElementById("accfCostOp").value = ">=";
+  document.getElementById("accfCostValue").value = "";
   applyAccFilters();
 }
 
 function updateAccFilterCount() {
-  const n = accState.filterAccountStatus.size + accState.filterCampaignStatus.size;
+  let n = accState.filterAccountStatus.size + accState.filterCampaignStatus.size + accState.filterChannelType.size;
+  if ((accState.filterCampName || "").trim()) n++;
+  if (accState.filterImpValue > 0) n++;
+  if (accState.filterCostValue > 0) n++;
   const el = document.getElementById("accFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; }
   else { el.hidden = true; }
@@ -4464,10 +4595,8 @@ function renderAccountsTable() {
 
   if (isSingleAccount) {
     // Campaign-level view — show COLUMNS just like #campaigns page did
-    const cs = accState.filterCampaignStatus;
     const rows = (state.campaigns || []).filter(r =>
-      (!campaignFilter || r.name === campaignFilter) &&
-      (!cs.size || cs.has((r.status || "").toUpperCase()))
+      (!campaignFilter || r.name === campaignFilter) && accCampMatches(r)
     );
     renderDataTable({
       state: accState,
@@ -4492,12 +4621,12 @@ function renderAccountsTable() {
   }
 
   // All accounts — flat campaign table across every account (Account + Campaign columns).
-  const as = accState.filterAccountStatus, cs = accState.filterCampaignStatus;
+  const as = accState.filterAccountStatus;
   const flat = [];
   for (const acc of accState.rows) {
     if (as.size && !as.has(acc.hasEnabled ? "active" : "inactive")) continue;
     for (const c of (acc._campaigns || [])) {
-      if (cs.size && !cs.has((c.status || "").toUpperCase())) continue;
+      if (!accCampMatches(c)) continue;
       flat.push(Object.assign({}, c, { account: acc.name }));
     }
   }
