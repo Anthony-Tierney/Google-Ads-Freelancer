@@ -1,4 +1,4 @@
-// Tiny scheduled Worker whose only job is to ping the AdLytics digest endpoint on a
+// Tiny scheduled Worker whose only job is to ping the AdCanary digest endpoint on a
 // schedule. (Cloudflare Pages Functions can't be cron-triggered, so the schedule lives
 // here in a Worker and the actual work happens in /api/digest on the Pages app.)
 //
@@ -27,6 +27,6 @@ async function runDigest(env, dryRun) {
   const u = new URL(env.DIGEST_URL);
   u.searchParams.set("key", env.CRON_SECRET);
   if (dryRun) u.searchParams.set("dryRun", "1");
-  const res = await fetch(u.toString(), { headers: { "User-Agent": "AdLytics-Cron/1.0" } });
+  const res = await fetch(u.toString(), { headers: { "User-Agent": "AdCanary-Cron/1.0" } });
   return await res.text();
 }
