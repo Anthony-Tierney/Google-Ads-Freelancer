@@ -685,7 +685,6 @@
       <svg class="nh-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
     </button>
     <div class="nav-section-items" data-section="campaigns">
-      <a href="#" class="nav-item nav-sub" data-page="campaigns">Campaign Overview</a>
       <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies<span class="nav-warn" id="bidNavWarn" hidden title="CPA running below target on one or more campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
       <a href="#" class="nav-item nav-sub" data-page="geocoverage">Geo Coverage</a>
     </div>
@@ -2118,7 +2117,6 @@ const ACCOUNT_COLUMNS = [
     }
   });
 })();
-const ACCOUNT_GROUPS = ["Account", "Performance", "Conversions", "Efficiency", "Quality"];
 const ACCOUNT_DEFAULT_VISIBLE = ["name","clicks","cost","conversions","convRate","cpa","convValue","roas"];
 
 let ACCOUNTS = [];
@@ -4565,30 +4563,6 @@ function populateAccCampaignFilter() {
     if (searchEl) searchEl.addEventListener("input", () => renderList(searchEl.value));
   }
   if (!pop.hidden) renderList(searchEl ? searchEl.value : "");
-}
-
-function accShownColumns() { return ACCOUNT_COLUMNS.filter(c => accState.visible.has(c.key)); }
-
-function accSortedFiltered() {
-  const statuses = accState.filterAccountStatus;
-  const campaignFilter = getCampPickerValue();
-  return accState.rows.filter(r => {
-    let statusMatch;
-    if (statuses.size === 0) statusMatch = false;
-    else statusMatch = (r.hasEnabled && statuses.has("active")) || (!r.hasEnabled && statuses.has("inactive"));
-    if (!statusMatch) return false;
-    if (campaignFilter) {
-      const match = (r.campaignNames || []).includes(campaignFilter);
-      if (!match) return false;
-    }
-    return true;
-  })
-    .sort((a, b) => {
-      const { key, dir } = accState.sort, sign = dir === "asc" ? 1 : -1;
-      const av = a[key], bv = b[key];
-      if (typeof av === "string") return String(av).localeCompare(String(bv)) * sign;
-      return ((av || 0) - (bv || 0)) * sign;
-    });
 }
 
 function accTotals(rows) { return aggregateCampaigns(rows); }
