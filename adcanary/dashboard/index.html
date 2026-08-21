@@ -2071,7 +2071,7 @@ const COLUMNS = [
   COLUMNS.forEach(c => {
     if (c.key === "name") { c.width = 260; c.cls = "name"; c.cell = r => escapeHtml(r.name); }
     else if (c.type === "status") { c.width = 110; c.cell = r => { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<span class="pill ' + cls + '">' + titleCase(r.status) + "</span>"; }; }
-    else if (c.align === "num") { const key = c.key, type = c.type; c.width = W[type] || 120; c.cls = "tabnum"; c.cell = r => formatCell(type, r[key]) + ((state.compareEnabled || accState.compareEnabled) && r._prev && key !== "budget" ? deltaHtml(key, r[key], r._prev[key]) : ""); }
+    else if (c.align === "num") { const key = c.key, type = c.type; c.width = W[type] || 120; c.cls = "tabnum"; c.cell = r => formatCell(type, r[key]) + (comparingNow() && r._prev && key !== "budget" ? deltaHtml(key, r[key], r._prev[key]) : ""); }
     else { const key = c.key, type = c.type; c.width = W[type] || 120; c.cell = r => formatCell(type, r[key]); }
   });
 })();
@@ -3004,6 +3004,12 @@ function initTheme() {
 function currentHashPage() {
   const h = (location.hash || "").replace(/^#/, "");
   return (document.getElementById(h) && document.querySelector('.nav-item[data-page="' + h + '"]')) ? h : "allaccounts";
+}
+
+// The metric-cell deltas follow whichever page you're on: Overview uses its own
+// Compare toggle, every other page uses the campaigns Compare toggle.
+function comparingNow() {
+  return currentHashPage() === "allaccounts" ? accState.compareEnabled : state.compareEnabled;
 }
 
 function showPage(page) {
