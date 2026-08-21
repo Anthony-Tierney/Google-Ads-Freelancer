@@ -88,7 +88,7 @@ export async function onRequestGet(context) {
     posted,
     ...(slackError ? { slackError } : {}),
     ...(dryRun ? { slackPreview: payload } : {}),
-    accounts: (debug ? results : flagged).map((a) => ({ id: a.id, name: a.name, issues: a.issues.map((i) => i.text), ...(a.error ? { error: a.error } : {}), ...(debug && a._assetDiag ? { assetDiag: a._assetDiag } : {}) })),
+    accounts: (debug ? results : flagged).map((a) => ({ id: a.id, name: a.name, issues: a.issues.map((i) => i.text), ...(a.error ? { error: a.error } : {}) })),
   });
 }
 
@@ -198,21 +198,17 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
 
   // 5) Asset gaps — serving campaign-level assets vs thresholds on enabled campaigns
   //    (matches the Assets page: any campaign below a red threshold = red, else amber).
-  let assetDiag = { ran: false };
   try {
     if (enabledCount) {
       const camps = {};
       for (const r of campEnabled) camps[r.campaign.id] = { sitelinks: 0, landscape: 0, square: 0, callouts: 0, snippets: 0 };
       const assetR = await search("SELECT campaign.id, campaign.status, campaign_asset.field_type, campaign_asset.status, campaign_asset.primary_status, asset.image_asset.full_size.width_pixels, asset.image_asset.full_size.height_pixels FROM campaign_asset WHERE campaign_asset.status = 'ENABLED' AND campaign_asset.field_type IN ('SITELINK','AD_IMAGE','CALLOUT','STRUCTURED_SNIPPET') AND campaign.status = 'ENABLED'");
-      const rows = assetR.results || [];
       const SERVING = new Set(["ELIGIBLE", "LIMITED"]);
-      let served = 0, skippedPs = 0;
-      for (const r of rows) {
+      for (const r of assetR.results || []) {
         const c = camps[r.campaign?.id];
         if (!c) continue;
         const ps = r.campaignAsset?.primaryStatus;
-        if (ps && !SERVING.has(ps)) { skippedPs++; continue; }
-        served++;
+        if (ps && !SERVING.has(ps)) continue;
         switch (r.campaignAsset?.fieldType) {
           case "SITELINK": c.sitelinks++; break;
           case "AD_IMAGE": {
@@ -227,17 +223,12 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
       }
       const redByType = {}, amberByType = {};
       for (const key of ASSET_KEYS) { redByType[key] = 0; amberByType[key] = 0; }
-      let red = 0, amber = 0;
       for (const c of Object.values(camps)) {
-        let lvl = 0;
         for (const key of ASSET_KEYS) {
           const L = assetCellLevel(key, c[key]);
           if (L === 2) redByType[key]++; else if (L === 1) amberByType[key]++;
-          if (L > lvl) lvl = L;
         }
-        if (lvl === 2) red++; else if (lvl === 1) amber++;
       }
-      assetDiag = { ran: true, enabledCampaigns: Object.keys(camps).length, assetRows: rows.length, served, skippedPs, red, amber, redByType, amberByType, sampleRow: rows[0] || null, sampleCounts: Object.values(camps).slice(0, 3) };
       // Red = missing entirely (0 of that asset). One bullet per asset type.
       for (const key of ASSET_KEYS) {
         const n = redByType[key];
@@ -249,9 +240,9 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
         if (n) issues.push({ level: 2, kind: "assets", text: `${n} campaign${n > 1 ? "s have" : " has"} fewer than ${GREEN_THRESHOLD[key]} ${ASSET_LABELS[key]}` });
       }
     }
-  } catch (e) { assetDiag = { ran: false, error: (e && e.message) ? e.message : String(e) }; }
+  } catch { /* non-fatal */ }
 
-  return { id, name, issues, _assetDiag: assetDiag };
+  return { id, name, issues };
 }
 
 // --- shared rule helpers (mirror the dashboard) ---
@@ -350,11 +341,11 @@ const CATEGORY_ORDER = ["Account Status", "Policy Issues", "Budget Pacing", "Bid
 
 function buildSlack(flagged) {
   if (!flagged.length) {
-    return { text: "\u2705 AdLytics daily check: all accounts look healthy." };
+    return { text: "\u2705 AdCanary daily check: all accounts look healthy." };
   }
   const top = (a) => Math.max(...a.issues.map((i) => i.level));
   flagged.sort((a, b) => top(b) - top(a));
-  const header = `*AdLytics \u2014 ${flagged.length} account${flagged.length > 1 ? "s" : ""} need attention*`;
+  const header = `*AdCanary \u2014 ${flagged.length} account${flagged.length > 1 ? "s" : ""} need attention*`;
   const blocks = [{ type: "section", text: { type: "mrkdwn", text: header } }];
   const textParts = [header];
   for (const a of flagged) {
