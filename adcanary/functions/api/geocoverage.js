@@ -112,12 +112,12 @@ export async function onRequestGet(context) {
   // The Ads API has no geometry for geo target constants, so this is the shape source.
   const geomDiag = [];
   const uniq = new Map(); // geoTargetConstant -> first location row
-  locations.forEach((l) => { if (l.geoTargetConstant && !uniq.has(l.geoTargetConstant)) uniq.set(l.geoTargetConstant, l); });
+  [...locations, ...excluded].forEach((l) => { if (l.geoTargetConstant && !uniq.has(l.geoTargetConstant)) uniq.set(l.geoTargetConstant, l); });
   const targets = [...uniq.values()].slice(0, 30);
   for (const l of targets) {
     const g = await geocodeBoundary(l.canonical || l.name);
     geomDiag.push({ name: l.name, status: g.status, type: g.geometry?.type });
-    locations.forEach((row) => {
+    [...locations, ...excluded].forEach((row) => {
       if (row.geoTargetConstant === l.geoTargetConstant) { row.geometry = g.geometry || null; row.center = g.center || null; }
     });
   }
