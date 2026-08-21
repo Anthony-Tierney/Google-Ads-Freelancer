@@ -132,6 +132,7 @@
   .nav-warn svg { width: 15px; height: 15px; }
   .nav-ok { display: inline-flex; vertical-align: middle; color: #16a34a; margin-left: 5px; }
   .nav-ok svg { width: 15px; height: 15px; }
+  .acc-cmp-dates { position: absolute; top: calc(100% + 3px); left: 2px; font-size: 10.5px; line-height: 1.2; color: var(--muted); white-space: nowrap; pointer-events: none; }
   .nav-section-warn { display: inline-flex; vertical-align: middle; color: #d97706; margin-left: 2px; }
   .nav-section-warn.red { color: #dc2626; }
   .nav-section-warn svg { width: 13px; height: 13px; }
@@ -1002,6 +1003,7 @@
                   <button class="pop-row" data-acccmp="previous">Previous period</button>
                   <button class="pop-row" data-acccmp="custom">Custom range…</button>
                 </div>
+                <div class="acc-cmp-dates" id="accCmpDates" hidden></div>
               </div>
             </div>
             <div class="grow"></div>
@@ -4200,6 +4202,20 @@ function updateAccCompareUI() {
   if (!label) return;
   label.textContent = accState.compareEnabled ? "Comparing" : "Compare";
   btn.classList.toggle("toggled", !!accState.compareEnabled);
+  const dates = document.getElementById("accCmpDates");
+  if (dates) {
+    if (accState.compareEnabled) { dates.textContent = "vs " + accCompareRangeLabel(); dates.hidden = false; }
+    else { dates.hidden = true; }
+  }
+}
+
+// Human-readable version of the comparison period (parsed from the GAQL range).
+function accCompareRangeLabel() {
+  const clause = getAccCompareRange();
+  const m = clause.match(/>= '(\d{8})' AND segments\.date <= '(\d{8})'/);
+  if (!m) return clause.replace("segments.date DURING ", "").replace(/_/g, " ").toLowerCase();
+  const fmt = ymd => new Date(ymd.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return fmt(m[1]) + " \u2013 " + fmt(m[2]);
 }
 
 function getAccCompareRange() {
