@@ -1127,6 +1127,13 @@
                   <button class="pop-row" data-accfmt="sheets">Copy for Google Sheets</button>
                 </div>
               </div>
+              <div class="filters" id="accountsViewsGroup">
+                <button class="filters-btn" id="accViewsBtn" aria-haspopup="true">
+                  <span id="accViewsLabel">Views</span>
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+                </button>
+                <div class="pop col-pop" id="accViewsPop" hidden></div>
+              </div>
               <div class="filters" id="accountsColsGroup">
                 <button class="filters-btn" id="accColsBtn" aria-haspopup="true">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
@@ -2064,7 +2071,7 @@ const COLUMNS = [
   COLUMNS.forEach(c => {
     if (c.key === "name") { c.width = 260; c.cls = "name"; c.cell = r => escapeHtml(r.name); }
     else if (c.type === "status") { c.width = 110; c.cell = r => { const s = (r.status || "").toLowerCase(); const cls = ["enabled", "paused", "removed"].includes(s) ? s : "other"; return '<span class="pill ' + cls + '">' + titleCase(r.status) + "</span>"; }; }
-    else if (c.align === "num") { const key = c.key, type = c.type; c.width = W[type] || 120; c.cls = "tabnum"; c.cell = r => formatCell(type, r[key]) + (state.compareEnabled && r._prev && key !== "budget" ? deltaHtml(key, r[key], r._prev[key]) : ""); }
+    else if (c.align === "num") { const key = c.key, type = c.type; c.width = W[type] || 120; c.cls = "tabnum"; c.cell = r => formatCell(type, r[key]) + ((state.compareEnabled || accState.compareEnabled) && r._prev && key !== "budget" ? deltaHtml(key, r[key], r._prev[key]) : ""); }
     else { const key = c.key, type = c.type; c.width = W[type] || 120; c.cell = r => formatCell(type, r[key]); }
   });
 })();
@@ -2164,7 +2171,8 @@ function restoreUiPrefs() {
 
 const accState = {
   rows: [],
-  visible: new Set(savedColVisible("accounts") || ACCOUNT_DEFAULT_VISIBLE),
+  visible: new Set([...(savedColVisible("accounts") || ACCOUNT_DEFAULT_VISIBLE), "status", "channelType", "budget"]),
+  views: loadAccViews(), activeView: null,
   sort: { key: "cost", dir: "desc" },
   dateRange: { label: "Last 30 Days", days: 30 },
   pageSize: 10,
@@ -3322,7 +3330,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -4136,6 +4144,10 @@ function restoreAccFilters() {
 function wireAccountsControls() {
   const colsBtn = document.getElementById("accColsBtn"), colsPop = document.getElementById("accColsPop");
   colsBtn.addEventListener("click", e => { e.stopPropagation(); const open = colsPop.hidden; closeAllMenus(); if (open) { renderAccColsPop(); colsPop.hidden = false; } });
+  const accViewsBtn = document.getElementById("accViewsBtn"), accViewsPop = document.getElementById("accViewsPop");
+  accViewsBtn.addEventListener("click", e => { e.stopPropagation(); const open = accViewsPop.hidden; closeAllMenus(); if (open) { renderAccViewsPop(); accViewsPop.hidden = false; } });
+  accViewsPop.addEventListener("click", e => e.stopPropagation());
+  renderAccViewsLabel();
   colsPop.addEventListener("click", e => e.stopPropagation());
 
   const exportPop = document.getElementById("accExportPop");
@@ -4374,6 +4386,10 @@ async function loadAllAccounts() {
         const cmpCampaigns = (cmpData.campaigns || []).map(withMetrics);
         row._prevCampaigns = cmpCampaigns;
         row._prev = aggregateCampaigns(cmpCampaigns);
+        // Per-campaign previous-period match, so compare deltas render on the flat/campaign view.
+        const prevById = {};
+        for (const pc of cmpCampaigns) prevById[pc.id != null ? pc.id : pc.name] = pc;
+        for (const cc of campaigns) cc._prev = prevById[cc.id != null ? cc.id : cc.name] || null;
       }
       rows.push(row);
     } catch {
@@ -4652,10 +4668,58 @@ function renderAccountsTable() {
 }
 
 function renderAccColsPop() {
-  renderGroupedCols("accColsPop", ACCOUNT_COLUMNS, ACCOUNT_GROUPS, accState.visible, accState.openColGroups, key => {
+  renderGroupedCols("accColsPop", COLUMNS, ["Settings", "Performance", "Conversions", "Efficiency", "Quality", "Market Position"], accState.visible, accState.openColGroups, key => {
     accState.visible.has(key) ? accState.visible.delete(key) : accState.visible.add(key); setColVisible("accounts", accState.visible);
+    accState.activeView = null; renderAccViewsLabel();
     syncAccColsCount(); renderAccColsPop(); renderAccountsTable();
   });
+}
+
+// ---- Account Overview saved column views ----
+const ACC_VIEWS_KEY = "adcanary_acc_views";
+function loadAccViews() {
+  try { return JSON.parse(localStorage.getItem(ACC_VIEWS_KEY) || "[]"); } catch { return []; }
+}
+function saveAccCustomViews() {
+  try { localStorage.setItem(ACC_VIEWS_KEY, JSON.stringify(accState.views)); } catch {}
+}
+function renderAccViewsPop() {
+  const pop = document.getElementById("accViewsPop");
+  const list = accState.views.map(v =>
+    '<button class="pop-row" data-view="' + v.id + '"><span' + (accState.activeView === v.id ? ' style="color:var(--accent);font-weight:560"' : '') + '>' + escapeHtml(v.name) + '</span>' + (accState.activeView === v.id ? '<span class="active-dot">\u2713</span>' : '') + '</button>').join("");
+  pop.innerHTML = list + '<div class="pop-div"></div><button class="pop-row pop-add" id="accAddViewBtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><path d="M8 3v10M3 8h10"/></svg>Save current columns as view</button>';
+  pop.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => applyAccView(b.dataset.view)));
+  document.getElementById("accAddViewBtn").addEventListener("click", showAccViewNameInput);
+}
+function showAccViewNameInput() {
+  const pop = document.getElementById("accViewsPop");
+  const row = document.createElement("div");
+  row.className = "name-row";
+  row.innerHTML = '<input type="text" placeholder="View name" maxlength="40" /><button>Save</button>';
+  pop.replaceChild(row, document.getElementById("accAddViewBtn"));
+  const input = row.querySelector("input"); input.focus();
+  const save = () => {
+    const name = input.value.trim(); if (!name) return;
+    const id = "av_" + Date.now();
+    accState.views.push({ id, name, columns: [...accState.visible] });
+    accState.activeView = id; saveAccCustomViews();
+    renderAccViewsLabel(); renderAccViewsPop();
+  };
+  row.querySelector("button").addEventListener("click", save);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") save(); });
+}
+function applyAccView(id) {
+  const v = accState.views.find(x => x.id === id); if (!v) return;
+  accState.visible = new Set([...v.columns, "status", "channelType", "budget"]); // keep pinned campaign columns
+  setColVisible("accounts", accState.visible);
+  accState.activeView = id;
+  document.getElementById("accViewsPop").hidden = true;
+  syncAccColsCount(); renderAccViewsLabel(); renderAccountsTable();
+}
+function renderAccViewsLabel() {
+  const v = accState.views.find(x => x.id === accState.activeView);
+  const el = document.getElementById("accViewsLabel");
+  if (el) el.textContent = v ? v.name : "Views";
 }
 
 function syncAccColsCount() { document.getElementById("accColsCount").textContent = accState.visible.size; }
