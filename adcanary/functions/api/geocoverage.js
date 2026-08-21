@@ -146,7 +146,7 @@ async function geocodeBoundary(query) {
   let out;
   try {
     const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&polygon_geojson=1&limit=1&countrycodes=gb,ie&q=" + encodeURIComponent(query);
-    const res = await fetch(url, { headers: { "User-Agent": "AdLytics/1.0 (https://anthonytierney.co.uk)", "Accept-Language": "en-GB" } });
+    const res = await fetch(url, { headers: { "User-Agent": "AdCanary/1.0 (https://adcanary.app)", "Accept-Language": "en-GB" } });
     if (!res.ok) out = { status: "http_" + res.status };
     else {
       const arr = await res.json();
