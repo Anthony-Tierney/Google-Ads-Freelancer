@@ -1623,6 +1623,7 @@
             <div id="geoPrompt" class="state"><div class="big">Choose an account</div>Select an account above to map its location targeting.</div>
             <div id="geoError" class="state" hidden></div>
             <div id="geoWarn" class="as-warn" hidden></div>
+            <div id="geoCapNotice" class="as-warn" hidden></div>
             <div id="geoLayout" class="geo-layout" hidden>
               <div class="geo-side" id="geoSide">
                 <div class="geo-table-wrap">
@@ -6382,6 +6383,7 @@ async function loadGeoCoverage(customerId) {
     geoState.radius = data.radius || [];
     geoState.locations = data.locations || [];
     geoState.excluded = data.excluded || [];
+    geoState.geoCap = data.geoCap || null;
     // Refresh the campaign universe; keep the user's name selection where it still applies,
     // otherwise default to all campaigns selected (status filter handles the enabled-only default).
     const newAll = new Set([...geoState.radius, ...geoState.locations, ...geoState.excluded].map(r => r.campaign).filter(Boolean));
@@ -6409,6 +6411,16 @@ function renderGeoCoverage() {
   const locations = geoState.locations.filter(geoRowVisible);
   const excluded = geoState.excluded.filter(geoRowVisible);
   showEl("geoLayout", true);
+  // Cap notice — the map only geocodes boundaries for the first N named/excluded locations.
+  const capEl = document.getElementById("geoCapNotice");
+  const gc = geoState.geoCap;
+  if (gc && gc.uniqueTargets > gc.cap) {
+    const undrawn = gc.uniqueTargets - gc.cap;
+    capEl.textContent = "Map limit reached: this account has " + gc.uniqueTargets + " named/excluded locations, but only the first " + gc.cap + " can be drawn as boundaries — " + undrawn + " " + (undrawn === 1 ? "isn't" : "aren't") + " shown on the map. All locations are still listed in the table.";
+    capEl.hidden = false;
+  } else {
+    capEl.hidden = true;
+  }
   if (geoState.sideWidth) document.getElementById("geoSide").style.flexBasis = geoState.sideWidth + "px";
 
   // ----- left table: every targeted location + clicks -----
