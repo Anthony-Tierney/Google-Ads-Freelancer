@@ -134,6 +134,13 @@
   .nav-ok svg { width: 15px; height: 15px; }
   .acc-cmp-dates { position: absolute; top: calc(100% + 5px); left: 2px; font-size: 10.5px; line-height: 1.2; color: var(--muted); white-space: nowrap; pointer-events: none; }
   path.geo-excl-shape { fill: url(#geoHatch) !important; }
+  .rep-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 4px; }
+  .rep-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .rep-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 6px; }
+  .rep-sub { text-transform: none; letter-spacing: 0; color: var(--faint); }
+  .rep-value { font-size: 22px; font-weight: 640; font-variant-numeric: tabular-nums; color: var(--ink); }
+  @media (max-width: 1100px) { .rep-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 700px) { .rep-grid { grid-template-columns: repeat(2, 1fr); } }
   .controls-row:has(.acc-cmp-dates:not([hidden])) { padding-bottom: 16px; }
   .nav-section-warn { display: inline-flex; vertical-align: middle; color: #d97706; margin-left: 2px; }
   .nav-section-warn.red { color: #dc2626; }
@@ -956,10 +963,34 @@
 
       <!-- Reporting Page (placeholder) -->
       <section id="reporting" class="page">
-        <div class="state" style="padding-top:80px;">
-          <div class="big">Reporting</div>
-          <p>This page is coming soon.</p>
-        </div>
+        <section id="repSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to see your reporting overview.</p>
+            <a class="btn-google" href="/api/auth">
+              <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 11v2.8h4.6c-.2 1.2-1.5 3.6-4.6 3.6-2.8 0-5-2.3-5-5.1s2.2-5.1 5-5.1c1.6 0 2.6.7 3.2 1.2l2.2-2.1C17.9 4.9 15.2 4 12 4 6.9 4 2.8 8.1 2.8 13.2S6.9 22.4 12 22.4c5.9 0 9.8-4.1 9.8-9.9 0-.7-.1-1.2-.2-1.7H12z"/></svg>
+              Sign in with Google
+            </a>
+          </div>
+        </section>
+        <section id="repSignedIn" hidden>
+          <div class="controls-row">
+            <div>
+              <label class="field-label" for="repDateSelect">Date range</label>
+              <select id="repDateSelect" onchange="loadReporting()">
+                <option value="yesterday">Yesterday</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="30days" selected>Last 30 Days</option>
+                <option value="thismonth">This Month</option>
+                <option value="lastmonth">Last Month</option>
+              </select>
+            </div>
+          </div>
+          <div id="repLoading" class="state"><div class="spinner"></div>Loading reporting…</div>
+          <div id="repError" class="state" hidden></div>
+          <div id="repCards" class="rep-grid" hidden></div>
+          <div class="foot-note" style="margin-top:14px;">Account-level totals for the selected account and date range. Search impression share and click share are averaged across accounts weighted by impressions when "All Accounts" is selected.</div>
+        </section>
       </section>
 
       <!-- All Accounts Page -->
@@ -2020,6 +2051,7 @@ function globalRefresh() {
     case "budgeting": loadUnderspend(true); break;
     case "bidding": loadBidding(true); break;
     case "geocoverage": if (GLOBAL_ACCOUNT !== "ALL") loadGeoCoverage(GLOBAL_ACCOUNT); break;
+    case "reporting": loadReporting(); break;
   }
 }
 const TYPE_CHECKBOXES = [
@@ -3027,7 +3059,7 @@ function routeFromHash() {
   const usesGlobal = signedIn && page !== "budgetpacing" && page !== "settings";
   document.getElementById("globalAccountWrap").hidden = !usesGlobal;
   const campaignWrap = document.getElementById("topbarCampaignWrap");
-  if (campaignWrap) campaignWrap.hidden = page !== "allaccounts";
+  if (campaignWrap) campaignWrap.hidden = !(page === "allaccounts" || page === "reporting");
   document.getElementById("topbarRefreshWrap").hidden = !(signedIn && page !== "settings");
   renderTopbarRefresh();
   if (page === "campaigns") initDashboard();
@@ -3040,6 +3072,7 @@ function routeFromHash() {
   else if (page === "budgeting") initUnderspend();
   else if (page === "bidding") initBidding();
   else if (page === "geocoverage") initGeoCoverage();
+  else if (page === "reporting") initReporting();
 }
 
 function initDashboard() {
@@ -3056,6 +3089,68 @@ function initDashboard() {
     showEl("loading", false); showEl("prompt", false); showEl("error", false); showEl("table", false); showEl("pagination", false);
     showEl("empty", true);
   }
+}
+
+// ---------- Reporting page ----------
+function initReporting() {
+  document.getElementById("repSignedOut").hidden = signedIn;
+  document.getElementById("repSignedIn").hidden = !signedIn;
+  if (signedIn) loadReporting();
+}
+
+function repDateClause() {
+  const el = document.getElementById("repDateSelect");
+  const v = el ? el.value : "30days";
+  const map = {
+    yesterday: "segments.date DURING YESTERDAY",
+    "7days": "segments.date DURING LAST_7_DAYS",
+    "30days": "segments.date DURING LAST_30_DAYS",
+    thismonth: "segments.date DURING THIS_MONTH",
+    lastmonth: "segments.date DURING LAST_MONTH",
+  };
+  return map[v] || map["30days"];
+}
+
+async function loadReporting() {
+  if (!signedIn) { initReporting(); return; }
+  document.getElementById("repSignedOut").hidden = true;
+  document.getElementById("repSignedIn").hidden = false;
+  showEl("repError", false); showEl("repCards", false); showEl("repLoading", true);
+  try {
+    const res = await fetch("/api/reporting?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(repDateClause()), { credentials: "same-origin" });
+    if (res.status === 401) { showSignedOut(); return; }
+    const d = await res.json();
+    if (d.error) throw new Error(d.error);
+    renderReportingCards(d);
+    showEl("repLoading", false); showEl("repCards", true);
+    setLastRefresh("reporting");
+  } catch (e) {
+    showEl("repLoading", false);
+    const el = document.getElementById("repError"); el.hidden = false;
+    el.innerHTML = '<div class="big">Couldn\u2019t load reporting</div>' + escapeHtml(e.message || "Please try again.");
+  }
+}
+
+function renderReportingCards(d) {
+  const avgCpc = d.clicks ? d.cost / d.clicks : 0;
+  const ctr = d.impressions ? d.clicks / d.impressions : 0;
+  const cpa = d.conversions ? d.cost / d.conversions : 0;
+  const convRate = d.clicks ? d.conversions / d.clicks : 0;
+  const cards = [
+    ["Clicks", "Traffic", fmtInt(d.clicks)],
+    ["Avg. CPC", "", fmtCurrency(avgCpc)],
+    ["Cost", "Ad Spend", fmtCurrency(d.cost)],
+    ["CTR", "Click-Through Rate", fmtPct(ctr)],
+    ["Impressions", "", fmtInt(d.impressions)],
+    ["Conversions", "", fmtDec(d.conversions)],
+    ["Cost / Conv.", "CPA", fmtCurrency(cpa)],
+    ["Conv. Rate", "", fmtPct(convRate)],
+    ["Search Imp. Share", "", d.searchImpShare != null ? fmtPct(d.searchImpShare) : "\u2014"],
+    ["Click Share", "", d.searchClickShare != null ? fmtPct(d.searchClickShare) : "\u2014"],
+  ];
+  document.getElementById("repCards").innerHTML = cards.map(c =>
+    '<div class="rep-card"><div class="rep-label">' + c[0] + (c[1] ? ' <span class="rep-sub">' + c[1] + "</span>" : "") + '</div><div class="rep-value">' + c[2] + "</div></div>"
+  ).join("");
 }
 
 // Global account selection changed — refresh whatever the user is currently looking at,
@@ -3125,6 +3220,7 @@ function onGlobalAccountChange(val) {
   else if (page === "budgeting") { if (underspendState.loaded) renderUnderspendTable(); else initUnderspend(); }
   else if (page === "bidding") { if (biddingState.loaded) renderBiddingTable(); else initBidding(); }
   else if (page === "geocoverage") initGeoCoverage();
+  else if (page === "reporting") loadReporting();
 }
 
 // ---------- Sidebar collapse ----------
