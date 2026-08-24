@@ -30,7 +30,8 @@ export async function onRequestGet(context) {
 
   const url = new URL(request.url);
   const customerId = url.searchParams.get("customerId") || "ALL";
-  const dateClause = url.searchParams.get("dateRange") || "segments.date DURING LAST_30_DAYS";
+  const drParam = url.searchParams.get("dateRange") || "LAST_30_DAYS";
+  const dateClause = /segments\.date/i.test(drParam) ? drParam : "segments.date DURING " + drParam;
   const campaign = url.searchParams.get("campaign") || "";
 
   const accessToken = await getAccessToken(env, refreshToken);
