@@ -977,12 +977,14 @@
           <div class="controls-row">
             <div>
               <label class="field-label" for="repDateSelect">Date range</label>
-              <select id="repDateSelect" onchange="loadReporting()">
+              <select id="repDateSelect" onchange="onRepDateRangeChange()">
                 <option value="yesterday">Yesterday</option>
                 <option value="7days">Last 7 Days</option>
+                <option value="14days">Last 14 Days</option>
                 <option value="30days" selected>Last 30 Days</option>
-                <option value="thismonth">This Month</option>
-                <option value="lastmonth">Last Month</option>
+                <option value="thisMonth">This Month</option>
+                <option value="lastMonth">Last Month</option>
+                <option value="custom">Custom...</option>
               </select>
             </div>
           </div>
@@ -2191,15 +2193,37 @@ function restoreUiPrefs() {
       else st[k] = p[k];
     });
   };
-  apply("accounts", typeof accState !== "undefined" ? accState : null, ["sort", "pageSize", "columnWidths", "dateRange", "heatmap", "compareEnabled", "comparePeriod", "compareCustom"]);
-  apply("campaigns", typeof state !== "undefined" ? state : null, ["sort", "pageSize", "columnWidths", "dateRange", "heatmap", "compareEnabled", "comparePeriod", "compareCustom"]);
-  apply("landingpages", typeof lpState !== "undefined" ? lpState : null, ["sort", "pageSize", "columnWidths", "dateRange", "heatmap"]);
-  apply("adcopy", typeof acState !== "undefined" ? acState : null, ["sort", "pageSize", "columnWidths", "dateRange", "heatmap"]);
+  apply("accounts", typeof accState !== "undefined" ? accState : null, ["sort", "pageSize", "columnWidths", "heatmap", "compareEnabled", "comparePeriod", "compareCustom"]);
+  apply("campaigns", typeof state !== "undefined" ? state : null, ["sort", "pageSize", "columnWidths", "heatmap", "compareEnabled", "comparePeriod", "compareCustom"]);
+  apply("landingpages", typeof lpState !== "undefined" ? lpState : null, ["sort", "pageSize", "columnWidths", "heatmap"]);
+  apply("adcopy", typeof acState !== "undefined" ? acState : null, ["sort", "pageSize", "columnWidths", "heatmap"]);
   apply("assets", typeof assetsState !== "undefined" ? assetsState : null, ["sort", "pageSize", "columnWidths"]);
   apply("underspend", typeof underspendState !== "undefined" ? underspendState : null, ["sort", "pageSize", "columnWidths"]);
   apply("bidding", typeof biddingState !== "undefined" ? biddingState : null, ["sort", "pageSize", "columnWidths"]);
   apply("audit", typeof auditState !== "undefined" ? auditState : null, ["pageSize", "columnWidths"]);
-  apply("geocoverage", typeof geoState !== "undefined" ? geoState : null, ["sort", "columnWidths", "dateRange", "sideWidth"]);
+  apply("geocoverage", typeof geoState !== "undefined" ? geoState : null, ["sort", "columnWidths", "sideWidth"]);
+}
+
+// Shared date range across every page (any category). Chosen on one page, it applies
+// everywhere and persists across sessions.
+let SHARED_DATE_RANGE = (() => {
+  try { const r = JSON.parse(localStorage.getItem("sharedDateRange")); if (r && (r.days || r.type || (r.from && r.to))) return r; } catch {}
+  return { label: "Last 30 Days", days: 30 };
+})();
+function setSharedDateRange(dr) {
+  SHARED_DATE_RANGE = dr;
+  try { localStorage.setItem("sharedDateRange", JSON.stringify(dr)); } catch {}
+  if (typeof state !== "undefined") { state.dateRange = dr; state.currentPage = 1; state.loadedAccount = "__stale__"; }
+  if (typeof accState !== "undefined") { accState.dateRange = dr; accState.currentPage = 1; accState.loaded = false; }
+  if (typeof lpState !== "undefined") { lpState.dateRange = dr; lpState.currentPage = 1; lpState.loadedAccount = "__stale__"; }
+  if (typeof acState !== "undefined") { acState.dateRange = dr; acState.currentPage = 1; acState.loadedAccount = "__stale__"; }
+  if (typeof geoState !== "undefined") { geoState.dateRange = dr; geoState.loadedAccount = "__stale__"; }
+  syncAllDateSelects();
+}
+function syncAllDateSelects() {
+  [["dateSelect", "syncDateSelect"], ["accDateSelect", "syncAccDateSelect"], ["lpDateSelect", "syncLpDateSelect"], ["acDateSelect", "syncAcDateSelect"], ["geoDateSelect", "syncGeoDateSelect"], ["repDateSelect", "syncRepDateSelect"]].forEach(([id]) => {
+    if (document.getElementById(id)) syncDateSelectEl(id, SHARED_DATE_RANGE);
+  });
 }
 
 const accState = {
@@ -2207,7 +2231,7 @@ const accState = {
   visible: new Set(savedColVisible("accounts") || ACCOUNT_DEFAULT_VISIBLE),
   views: loadAccViews(), activeView: null,
   sort: { key: "cost", dir: "desc" },
-  dateRange: { label: "Last 30 Days", days: 30 },
+  dateRange: SHARED_DATE_RANGE,
   pageSize: 10,
   currentPage: 1,
   search: "",
@@ -2243,7 +2267,7 @@ const state = {
   filterStatus: new Set(["ENABLED"]),
   views: loadViews(),
   activeView: "default",
-  dateRange: { label: "Last 30 Days", days: 30 },
+  dateRange: SHARED_DATE_RANGE,
   pageSize: 10,
   currentPage: 1,
   calendarFromDate: new Date(),
@@ -2350,9 +2374,7 @@ function onLpDateRangeChange() {
     renderCalendar("to");
     document.getElementById("customDateModal").setAttribute("open", "");
   } else {
-    lpState.dateRange = DATE_PRESET_MAP[val];
-    lpState.currentPage = 1;
-    syncLpDateSelect();
+    setSharedDateRange(DATE_PRESET_MAP[val]);
     loadLandingPages(GLOBAL_ACCOUNT);
   }
 }
@@ -2369,9 +2391,7 @@ function onAcDateRangeChange() {
     renderCalendar("to");
     document.getElementById("customDateModal").setAttribute("open", "");
   } else {
-    acState.dateRange = DATE_PRESET_MAP[val];
-    acState.currentPage = 1;
-    syncAcDateSelect();
+    setSharedDateRange(DATE_PRESET_MAP[val]);
     loadAdCopy(GLOBAL_ACCOUNT);
   }
 }
@@ -2445,9 +2465,7 @@ function onDateRangeChange() {
     renderCalendar('to');
     document.getElementById("customDateModal").setAttribute("open", "");
   } else {
-    state.dateRange = map[val];
-    state.currentPage = 1;
-    syncDateSelect();
+    setSharedDateRange(map[val]);
     if (state.compareEnabled) updateCompareUI();
     loadCampaigns();
   }
@@ -2681,6 +2699,7 @@ function syncDateSelectEl(selectId, r) {
 
 function syncDateSelect() { syncDateSelectEl("dateSelect", state.dateRange); }
 function syncAccDateSelect() { syncDateSelectEl("accDateSelect", accState.dateRange); }
+function syncRepDateSelect() { syncDateSelectEl("repDateSelect", SHARED_DATE_RANGE); }
 function syncLpDateSelect() { syncDateSelectEl("lpDateSelect", lpState.dateRange); }
 function syncAcDateSelect() { syncDateSelectEl("acDateSelect", acState.dateRange); }
 
@@ -2690,6 +2709,7 @@ function cancelCustomDate() {
   else if (state.calendarTarget === "ac") syncAcDateSelect();
   else if (state.calendarTarget === "geo") syncGeoDateSelect();
   else if (state.calendarTarget === "acc") syncAccDateSelect();
+  else if (state.calendarTarget === "rep") syncRepDateSelect();
   else if (state.calendarTarget !== "compare") syncDateSelect();
 }
 
@@ -2711,13 +2731,8 @@ function applyCustomDate() {
   // A custom range is global: every page's picker AND data adopt it, so the
   // date range stays consistent as the user moves between pages.
   const dr = { label: from + " to " + to, from, to };
-  state.dateRange = dr; accState.dateRange = dr; lpState.dateRange = dr; geoState.dateRange = dr; acState.dateRange = dr;
-  state.currentPage = 1; accState.currentPage = 1; lpState.currentPage = 1; acState.currentPage = 1;
   closeCustomDateModal();
-  syncDateSelect(); syncAccDateSelect(); syncLpDateSelect(); syncGeoDateSelect(); syncAcDateSelect();
-
-  // Pages other than the current one refetch with the new range when next opened.
-  state.loadedAccount = "__stale__"; accState.loaded = false; lpState.loadedAccount = "__stale__"; geoState.loadedAccount = "__stale__"; acState.loadedAccount = "__stale__";
+  setSharedDateRange(dr);
 
   // Reload whichever page the user is on now.
   const t = state.calendarTarget;
@@ -2725,6 +2740,7 @@ function applyCustomDate() {
   else if (t === "ac") loadAdCopy(GLOBAL_ACCOUNT);
   else if (t === "geo") loadGeoCoverage(GLOBAL_ACCOUNT);
   else if (t === "acc") loadAllAccounts();
+  else if (t === "rep") loadReporting();
   else { if (state.compareEnabled) updateCompareUI(); loadCampaigns(); }
 }
 
@@ -3106,11 +3122,29 @@ function initReporting() {
   document.getElementById("repSignedOut").hidden = signedIn;
   document.getElementById("repSignedIn").hidden = !signedIn;
   if (!signedIn) return;
+  syncRepDateSelect();
   populateAccCampaignFilter();
   // Ensure the picker has this account's campaigns. loadCampaigns re-populates the picker
   // and reloads the scorecards on completion (see its tail), so return here.
   if (GLOBAL_ACCOUNT !== "ALL" && state.loadedAccount !== GLOBAL_ACCOUNT) { loadCampaigns(); return; }
   loadReporting();
+}
+
+function onRepDateRangeChange() {
+  const val = document.getElementById("repDateSelect").value;
+  if (val === "customApplied") return;
+  if (val === "custom") {
+    state.calendarTarget = "rep";
+    state.calendarFromDate = new Date();
+    state.calendarToDate = new Date();
+    document.getElementById("calendarTitle").textContent = "Custom date range";
+    renderCalendar("from");
+    renderCalendar("to");
+    document.getElementById("customDateModal").setAttribute("open", "");
+  } else {
+    setSharedDateRange(periodMapToRange(val));
+    loadReporting();
+  }
 }
 
 function repDateClause() {
@@ -3133,7 +3167,7 @@ async function loadReporting() {
   showEl("repError", false); showEl("repCards", false); showEl("repLoading", true);
   try {
     const campaign = getCampPickerValue();
-    const params = "customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(repDateClause()) + (campaign ? "&campaign=" + encodeURIComponent(campaign) : "");
+    const params = "customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(rangeToGAQL(SHARED_DATE_RANGE)) + (campaign ? "&campaign=" + encodeURIComponent(campaign) : "");
     const res = await fetch("/api/reporting?" + params, { credentials: "same-origin" });
     if (res.status === 401) { showSignedOut(); return; }
     const d = await res.json();
@@ -4465,9 +4499,7 @@ function onAccDateRangeChange() {
     renderCalendar("to");
     document.getElementById("customDateModal").setAttribute("open", "");
   } else {
-    accState.dateRange = periodMapToRange(val);
-    accState.currentPage = 1;
-    syncAccDateSelect();
+    setSharedDateRange(periodMapToRange(val));
     loadAllAccounts();
   }
 }
@@ -5752,7 +5784,7 @@ const LP_COLUMNS = [
 const LP_COL_GROUPS = ["Columns"];
 const LP_DEFAULT_VISIBLE = ["name", "source", "finalUrl", "clicks", "convRate"];
 const LP_VIEW_LEVELS = [["url", "URL-level"], ["adgroup", "Ad Group-level"], ["campaign", "Campaign-level"]];
-const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { name: "", nameOp: "contains", account: new Set(), campaign: new Set(), adGroup: new Set(), url: "", sources: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("landingpages") || LP_DEFAULT_VISIBLE), "name", "source", "finalUrl"]), openColGroups: new Set(["lpColsPop_g0"]), heatmap: false, viewLevel: "url", dateRange: { label: "Last 30 Days", days: 30 } };
+const lpState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { name: "", nameOp: "contains", account: new Set(), campaign: new Set(), adGroup: new Set(), url: "", sources: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("landingpages") || LP_DEFAULT_VISIBLE), "name", "source", "finalUrl"]), openColGroups: new Set(["lpColsPop_g0"]), heatmap: false, viewLevel: "url", dateRange: SHARED_DATE_RANGE };
 
 const LP_SOURCE_BOXES = [["lpfSrcAd", "Ad"], ["lpfSrcAssetGroup", "Asset Group"], ["lpfSrcSitelink", "Sitelink"], ["lpfSrcPromotion", "Promotion"], ["lpfSrcPrice", "Price"]];
 
@@ -6086,7 +6118,7 @@ const AC_VIEW_LEVELS = [["account", "Account-level"], ["campaign", "Campaign-lev
 const AC_COL_GROUPS = ["Columns"];
 const AC_DEFAULT_VISIBLE = ["ctr", "impressions", "clicks"];
 const AC_ASSETTYPE_BOXES = [["acfTypeHeadline", "Headline"], ["acfTypeDescription", "Description"]];
-const acState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), assetType: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("adcopy") || AC_DEFAULT_VISIBLE), "assetType", "text"]), openColGroups: new Set(["acColsPop_g0"]), heatmap: false, viewLevel: "account", dateRange: { label: "Last 30 Days", days: 30 } };
+const acState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), assetType: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("adcopy") || AC_DEFAULT_VISIBLE), "assetType", "text"]), openColGroups: new Set(["acColsPop_g0"]), heatmap: false, viewLevel: "account", dateRange: SHARED_DATE_RANGE };
 
 function populateAcFilterOptions() {
   const inAll = GLOBAL_ACCOUNT === "ALL";
@@ -6366,7 +6398,7 @@ function nearestPlace(lat, lng) {
   for (const [n, la, lo] of UK_GAZETTEER) { const dy = la - lat, dx = (lo - lng) * cl, d = dy * dy + dx * dx; if (d < bd) { bd = d; best = n; } }
   return best;
 }
-const geoState = { loadedAccount: null, radius: [], locations: [], excluded: [], map: null, layer: null, dateRange: { label: "Last 30 Days", days: 30 }, filters: { names: new Set(), status: new Set(["ENABLED"]) }, allCampaigns: new Set(), campaignStatus: new Map(), columnWidths: {}, sort: { key: "clicks", dir: "desc" }, wired: false };
+const geoState = { loadedAccount: null, radius: [], locations: [], excluded: [], map: null, layer: null, dateRange: SHARED_DATE_RANGE, filters: { names: new Set(), status: new Set(["ENABLED"]) }, allCampaigns: new Set(), campaignStatus: new Map(), columnWidths: {}, sort: { key: "clicks", dir: "desc" }, wired: false };
 const GEO_COLS = [{ key: "label", label: "Targeted Location", align: "txt", width: 250 }, { key: "clicks", label: "Clicks", align: "clk", width: 90 }, { key: "conversions", label: "Conv.", align: "clk", width: 90 }];
 
 function geoRowVisible(r) {
@@ -6481,8 +6513,7 @@ function onGeoDateRangeChange() {
     renderCalendar("to");
     document.getElementById("customDateModal").setAttribute("open", "");
   } else {
-    geoState.dateRange = DATE_PRESET_MAP[val];
-    syncGeoDateSelect();
+    setSharedDateRange(DATE_PRESET_MAP[val]);
     loadGeoCoverage(GLOBAL_ACCOUNT);
   }
 }
