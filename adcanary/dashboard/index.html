@@ -4735,6 +4735,7 @@ function renderAccountsTable() {
   for (const acc of accState.rows) {
     if (as.size && !as.has(acc.hasEnabled ? "active" : "inactive")) continue;
     for (const c of (acc._campaigns || [])) {
+      if (campaignFilter && c.name !== campaignFilter) continue;
       if (!accCampMatches(c)) continue;
       flat.push(Object.assign({}, c, { account: acc.name }));
     }
