@@ -3213,6 +3213,12 @@ function resetAccountScopedFilters() {
 function onGlobalAccountChange(val) {
   GLOBAL_ACCOUNT = val;
   try { localStorage.setItem("globalAccount", val); } catch {}
+  // Campaign selection is account-specific — always clear it when the account changes,
+  // on every page (the campaign picker is shared across the Accounts category).
+  _campPickerValue = "";
+  try { localStorage.removeItem(CAMP_PICKER_KEY); } catch {}
+  { const fil = document.getElementById("accCampaignFilter"); if (fil) fil.value = ""; }
+  { const lbl = document.getElementById("campPickerLabel"); if (lbl) { lbl.textContent = "All campaigns"; lbl.title = ""; } }
   resetAccountScopedFilters();
   state.loadedAccount = "__stale__";
   assetsState.loadedAccount = "__stale__";
@@ -3223,10 +3229,6 @@ function onGlobalAccountChange(val) {
   const page = currentHashPage();
   if (page === "campaigns") initDashboard();
   else if (page === "allaccounts") { accState.loaded = false;
-    // Reset campaign picker when account changes
-    _campPickerValue = "";
-    const fil = document.getElementById("accCampaignFilter"); if (fil) fil.value = "";
-    const lbl = document.getElementById("campPickerLabel"); if (lbl) lbl.textContent = "All campaigns";
     initAllAccounts();
     if (GLOBAL_ACCOUNT !== "ALL") loadCampaigns();
   }
