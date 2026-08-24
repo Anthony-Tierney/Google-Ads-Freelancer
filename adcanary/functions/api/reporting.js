@@ -1,9 +1,9 @@
 // GET /api/reporting?customerId=ALL|<id>&dateRange=<gaql date clause>
-// Account-level totals for the Reporting scorecards. Uses FROM customer so impression
-// share / click share come back correctly (they can't be summed from campaigns).
-// For ALL accounts: additive metrics are summed; impression/click share are
-// impressions-weighted averages across accounts.
-//   { clicks, impressions, cost, conversions, searchImpShare, searchClickShare, accounts }
+// Account-level totals for the Reporting scorecards.
+// Core metrics and impression/click share are queried SEPARATELY so that if the share
+// fields aren't valid FROM customer, the core scorecards still populate. Any query error
+// is surfaced in _errors for debugging.
+//   { clicks, impressions, cost, conversions, searchImpShare, searchClickShare, accounts, _errors? }
 
 import { getRefreshToken, getAccessToken, adsRequest, json } from "../../shared/google.js";
 
@@ -37,20 +37,28 @@ export async function onRequestGet(context) {
     ids = [customerId.replace(/-/g, "")];
   }
 
-  const query = `SELECT metrics.clicks, metrics.impressions, metrics.cost_micros, metrics.conversions, metrics.search_impression_share, metrics.search_click_share FROM customer WHERE ${dateClause}`;
+  const coreQuery = `SELECT metrics.clicks, metrics.impressions, metrics.cost_micros, metrics.conversions FROM customer WHERE ${dateClause}`;
+  const shareQuery = `SELECT metrics.impressions, metrics.search_impression_share, metrics.search_click_share FROM customer WHERE ${dateClause}`;
 
-  const rows = await mapLimit(ids, 5, async (id) => {
+  const results = await mapLimit(ids, 5, async (id) => {
+    const out = { core: null, share: null, err: [] };
     try {
-      const r = await adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query });
-      return r.results?.[0]?.metrics || null;
-    } catch {
-      return null; // managers / no-access accounts just drop out
-    }
+      const r = await adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query: coreQuery });
+      out.core = r.results?.[0]?.metrics || null;
+    } catch (e) { out.err.push("core: " + String(e && e.message ? e.message : e).slice(0, 160)); }
+    try {
+      const r = await adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query: shareQuery });
+      out.share = r.results?.[0]?.metrics || null;
+    } catch (e) { out.err.push("share: " + String(e && e.message ? e.message : e).slice(0, 160)); }
+    return out;
   });
 
   let clicks = 0, impressions = 0, cost = 0, conversions = 0;
   let impShareW = 0, clickShareW = 0, shareWeight = 0, accounts = 0;
-  for (const m of rows) {
+  const errors = [];
+  for (const row of results) {
+    if (row.err.length) errors.push(...row.err);
+    const m = row.core;
     if (!m) continue;
     accounts++;
     const imp = Number(m.impressions) || 0;
@@ -58,13 +66,18 @@ export async function onRequestGet(context) {
     impressions += imp;
     cost += (Number(m.costMicros) || 0) / 1e6;
     conversions += Number(m.conversions) || 0;
-    if (m.searchImpressionShare != null && imp > 0) { impShareW += Number(m.searchImpressionShare) * imp; shareWeight += imp; }
-    if (m.searchClickShare != null && imp > 0) { clickShareW += Number(m.searchClickShare) * imp; }
+    const s = row.share;
+    if (s && imp > 0) {
+      if (s.searchImpressionShare != null) { impShareW += Number(s.searchImpressionShare) * imp; shareWeight += imp; }
+      if (s.searchClickShare != null) { clickShareW += Number(s.searchClickShare) * imp; }
+    }
   }
 
-  return json({
+  const payload = {
     clicks, impressions, cost, conversions, accounts,
     searchImpShare: shareWeight > 0 ? impShareW / shareWeight : null,
     searchClickShare: shareWeight > 0 ? clickShareW / shareWeight : null,
-  });
+  };
+  if (errors.length) payload._errors = errors.slice(0, 6);
+  return json(payload);
 }
