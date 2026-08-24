@@ -3045,6 +3045,16 @@ function comparingNow() {
   return currentHashPage() === "allaccounts" ? accState.compareEnabled : state.compareEnabled;
 }
 
+// Pages under the "Accounts" menu category share the account + campaign selection.
+// Add future Accounts-category pages to this list.
+const ACCOUNTS_PAGES = ["allaccounts", "reporting"];
+function isAccountsPage(p) { return ACCOUNTS_PAGES.includes(p || currentHashPage()); }
+function refreshAccountsPage() {
+  const p = currentHashPage();
+  if (p === "allaccounts") renderAccountsTable();
+  else if (p === "reporting") loadReporting();
+}
+
 function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   (document.getElementById(page) || document.getElementById('allaccounts')).classList.add('active');
@@ -3059,7 +3069,7 @@ function routeFromHash() {
   const usesGlobal = signedIn && page !== "budgetpacing" && page !== "settings";
   document.getElementById("globalAccountWrap").hidden = !usesGlobal;
   const campaignWrap = document.getElementById("topbarCampaignWrap");
-  if (campaignWrap) campaignWrap.hidden = page !== "allaccounts";
+  if (campaignWrap) campaignWrap.hidden = !isAccountsPage(page);
   document.getElementById("topbarRefreshWrap").hidden = !(signedIn && page !== "settings");
   renderTopbarRefresh();
   if (page === "campaigns") initDashboard();
@@ -3095,7 +3105,12 @@ function initDashboard() {
 function initReporting() {
   document.getElementById("repSignedOut").hidden = signedIn;
   document.getElementById("repSignedIn").hidden = !signedIn;
-  if (signedIn) loadReporting();
+  if (!signedIn) return;
+  populateAccCampaignFilter();
+  // Ensure the picker has this account's campaigns. loadCampaigns re-populates the picker
+  // and reloads the scorecards on completion (see its tail), so return here.
+  if (GLOBAL_ACCOUNT !== "ALL" && state.loadedAccount !== GLOBAL_ACCOUNT) { loadCampaigns(); return; }
+  loadReporting();
 }
 
 function repDateClause() {
@@ -3117,7 +3132,9 @@ async function loadReporting() {
   document.getElementById("repSignedIn").hidden = false;
   showEl("repError", false); showEl("repCards", false); showEl("repLoading", true);
   try {
-    const res = await fetch("/api/reporting?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(repDateClause()), { credentials: "same-origin" });
+    const campaign = getCampPickerValue();
+    const params = "customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(repDateClause()) + (campaign ? "&campaign=" + encodeURIComponent(campaign) : "");
+    const res = await fetch("/api/reporting?" + params, { credentials: "same-origin" });
     if (res.status === 401) { showSignedOut(); return; }
     const d = await res.json();
     if (d.error) throw new Error(d.error);
@@ -3220,7 +3237,7 @@ function onGlobalAccountChange(val) {
   else if (page === "budgeting") { if (underspendState.loaded) renderUnderspendTable(); else initUnderspend(); }
   else if (page === "bidding") { if (biddingState.loaded) renderBiddingTable(); else initBidding(); }
   else if (page === "geocoverage") initGeoCoverage();
-  else if (page === "reporting") loadReporting();
+  else if (page === "reporting") initReporting();
 }
 
 // ---------- Sidebar collapse ----------
@@ -3509,6 +3526,9 @@ async function loadCampaigns() {
       populateAccCampaignFilter();
       showEl("accLoading", false); showEl("accTable", true); showEl("accPagination", true);
       renderAccountsTable();
+    } else if (currentHashPage() === "reporting") {
+      populateAccCampaignFilter();
+      loadReporting();
     }
   } catch (e) {
     document.getElementById("loading").hidden = true;
@@ -4548,7 +4568,7 @@ function setCampPickerValue(val, label) {
   document.getElementById("campPickerLabel").textContent = label || val || "All campaigns";
   document.getElementById("campPickerLabel").title = label || val || "";
   document.getElementById("campPickerPop").hidden = true;
-  renderAccountsTable();
+  refreshAccountsPage();
 }
 
 function populateAccCampaignFilter() {
