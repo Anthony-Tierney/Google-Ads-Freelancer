@@ -1,9 +1,12 @@
-// GET /api/reporting?customerId=ALL|<id>&dateRange=<gaql date clause>
-// Account-level totals for the Reporting scorecards.
-// Core metrics and impression/click share are queried SEPARATELY so that if the share
-// fields aren't valid FROM customer, the core scorecards still populate. Any query error
-// is surfaced in _errors for debugging.
-//   { clicks, impressions, cost, conversions, searchImpShare, searchClickShare, accounts, _errors? }
+// GET /api/reporting?customerId=ALL|<id>&dateRange=<gaql date clause>&campaign=<name>
+// Scorecard totals for the Reporting page.
+//   • No campaign  → account-level (FROM customer). Core metrics and impression/click
+//     share are separate queries, so core still populates if share isn't valid
+//     FROM customer.
+//   • With campaign → campaign-level (FROM campaign WHERE campaign.name = ...). Impression
+//     share IS valid here; if the campaign name occurs in several accounts they're summed
+//     (share impressions-weighted).
+//   Returns { clicks, impressions, cost, conversions, searchImpShare, searchClickShare, accounts, _errors? }
 
 import { getRefreshToken, getAccessToken, adsRequest, json } from "../../shared/google.js";
 
@@ -17,6 +20,8 @@ async function mapLimit(items, limit, fn) {
   return out;
 }
 
+const escGaql = (s) => String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+
 export async function onRequestGet(context) {
   const { request, env } = context;
 
@@ -26,6 +31,7 @@ export async function onRequestGet(context) {
   const url = new URL(request.url);
   const customerId = url.searchParams.get("customerId") || "ALL";
   const dateClause = url.searchParams.get("dateRange") || "segments.date DURING LAST_30_DAYS";
+  const campaign = url.searchParams.get("campaign") || "";
 
   const accessToken = await getAccessToken(env, refreshToken);
 
@@ -37,39 +43,52 @@ export async function onRequestGet(context) {
     ids = [customerId.replace(/-/g, "")];
   }
 
-  const coreQuery = `SELECT metrics.clicks, metrics.impressions, metrics.cost_micros, metrics.conversions FROM customer WHERE ${dateClause}`;
-  const shareQuery = `SELECT metrics.impressions, metrics.search_impression_share, metrics.search_click_share FROM customer WHERE ${dateClause}`;
-
-  const results = await mapLimit(ids, 5, async (id) => {
-    const out = { core: null, share: null, err: [] };
-    try {
-      const r = await adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query: coreQuery });
-      out.core = r.results?.[0]?.metrics || null;
-    } catch (e) { out.err.push("core: " + String(e && e.message ? e.message : e).slice(0, 160)); }
-    try {
-      const r = await adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query: shareQuery });
-      out.share = r.results?.[0]?.metrics || null;
-    } catch (e) { out.err.push("share: " + String(e && e.message ? e.message : e).slice(0, 160)); }
-    return out;
-  });
-
   let clicks = 0, impressions = 0, cost = 0, conversions = 0;
   let impShareW = 0, clickShareW = 0, shareWeight = 0, accounts = 0;
   const errors = [];
-  for (const row of results) {
-    if (row.err.length) errors.push(...row.err);
-    const m = row.core;
-    if (!m) continue;
-    accounts++;
+
+  const addMetrics = (m) => {
     const imp = Number(m.impressions) || 0;
     clicks += Number(m.clicks) || 0;
     impressions += imp;
     cost += (Number(m.costMicros) || 0) / 1e6;
     conversions += Number(m.conversions) || 0;
-    const s = row.share;
-    if (s && imp > 0) {
-      if (s.searchImpressionShare != null) { impShareW += Number(s.searchImpressionShare) * imp; shareWeight += imp; }
-      if (s.searchClickShare != null) { clickShareW += Number(s.searchClickShare) * imp; }
+    if (m.searchImpressionShare != null && imp > 0) { impShareW += Number(m.searchImpressionShare) * imp; shareWeight += imp; }
+    if (m.searchClickShare != null && imp > 0) { clickShareW += Number(m.searchClickShare) * imp; }
+  };
+
+  if (campaign) {
+    // Campaign-level — FROM campaign supports impression share directly.
+    const q = `SELECT metrics.clicks, metrics.impressions, metrics.cost_micros, metrics.conversions, metrics.search_impression_share, metrics.search_click_share FROM campaign WHERE campaign.name = '${escGaql(campaign)}' AND ${dateClause}`;
+    const results = await mapLimit(ids, 5, async (id) => {
+      try {
+        const r = await adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query: q });
+        return r.results || [];
+      } catch (e) { errors.push("campaign: " + String(e && e.message ? e.message : e).slice(0, 160)); return []; }
+    });
+    for (const rows of results) {
+      let matched = false;
+      for (const row of rows) { if (row.metrics) { addMetrics(row.metrics); matched = true; } }
+      if (matched) accounts++;
+    }
+  } else {
+    // Account-level — FROM customer, core + share split so core survives share failure.
+    const coreQuery = `SELECT metrics.clicks, metrics.impressions, metrics.cost_micros, metrics.conversions FROM customer WHERE ${dateClause}`;
+    const shareQuery = `SELECT metrics.impressions, metrics.search_impression_share, metrics.search_click_share FROM customer WHERE ${dateClause}`;
+    const results = await mapLimit(ids, 5, async (id) => {
+      const out = { core: null, share: null };
+      try { const r = await adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query: coreQuery }); out.core = r.results?.[0]?.metrics || null; }
+      catch (e) { errors.push("core: " + String(e && e.message ? e.message : e).slice(0, 160)); }
+      try { const r = await adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query: shareQuery }); out.share = r.results?.[0]?.metrics || null; }
+      catch (e) { errors.push("share: " + String(e && e.message ? e.message : e).slice(0, 160)); }
+      return out;
+    });
+    for (const row of results) {
+      const m = row.core; if (!m) continue;
+      accounts++;
+      const merged = { ...m };
+      if (row.share) { merged.searchImpressionShare = row.share.searchImpressionShare; merged.searchClickShare = row.share.searchClickShare; }
+      addMetrics(merged);
     }
   }
 
