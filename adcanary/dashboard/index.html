@@ -1275,6 +1275,17 @@
                       </div>
                     </div>
                   </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('ac-group-adtext', event)">
+                    <span class="toggle">+</span>Ad Text
+                  </div>
+                  <div class="filter-group-items" id="ac-group-adtext" hidden>
+                    <div class="filter-section cnf">
+                      <select id="acfAdTextOp" class="cnf-op"></select>
+                      <label class="cnf-sublabel">Any of the following values</label>
+                      <textarea id="acfAdText" class="cnf-value" autocomplete="off" placeholder="Value" rows="3"></textarea>
+                      <div class="cnf-hint">Enter one value per line</div>
+                    </div>
+                  </div>
                   <div class="filter-buttons">
                     <button onclick="resetAcFilters()">Reset</button>
                     <button class="apply" onclick="applyAcFilters()">Apply</button>
@@ -6118,7 +6129,7 @@ const AC_VIEW_LEVELS = [["account", "Account-level"], ["campaign", "Campaign-lev
 const AC_COL_GROUPS = ["Columns"];
 const AC_DEFAULT_VISIBLE = ["ctr", "impressions", "clicks"];
 const AC_ASSETTYPE_BOXES = [["acfTypeHeadline", "Headline"], ["acfTypeDescription", "Description"]];
-const acState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), assetType: new Set() }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("adcopy") || AC_DEFAULT_VISIBLE), "assetType", "text"]), openColGroups: new Set(["acColsPop_g0"]), heatmap: false, viewLevel: "account", dateRange: SHARED_DATE_RANGE };
+const acState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), assetType: new Set(), adText: "", adTextOp: "contains" }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("adcopy") || AC_DEFAULT_VISIBLE), "assetType", "text"]), openColGroups: new Set(["acColsPop_g0"]), heatmap: false, viewLevel: "account", dateRange: SHARED_DATE_RANGE };
 
 function populateAcFilterOptions() {
   const inAll = GLOBAL_ACCOUNT === "ALL";
@@ -6172,10 +6183,14 @@ function initAdCopy() {
 }
 
 function restoreAcFilters() {
+  const opEl = document.getElementById("acfAdTextOp");
+  if (opEl && !opEl.options.length) opEl.innerHTML = TEXT_OP_OPTIONS;
   const saved = loadPageFilters("adcopy");
-  if (!saved) return;
-  acState.filters = { account: new Set(Array.isArray(saved.account) ? saved.account : []), campaign: new Set(Array.isArray(saved.campaign) ? saved.campaign : []), adGroup: new Set(Array.isArray(saved.adGroup) ? saved.adGroup : []), assetType: new Set(Array.isArray(saved.assetType) ? saved.assetType : []) };
+  if (!saved) { if (opEl) opEl.value = acState.filters.adTextOp; return; }
+  acState.filters = { account: new Set(Array.isArray(saved.account) ? saved.account : []), campaign: new Set(Array.isArray(saved.campaign) ? saved.campaign : []), adGroup: new Set(Array.isArray(saved.adGroup) ? saved.adGroup : []), assetType: new Set(Array.isArray(saved.assetType) ? saved.assetType : []), adText: saved.adText || "", adTextOp: saved.adTextOp || "contains" };
   AC_ASSETTYPE_BOXES.forEach(([id, label]) => { document.getElementById(id).checked = acState.filters.assetType.has(label); });
+  document.getElementById("acfAdText").value = acState.filters.adText;
+  if (opEl) opEl.value = acState.filters.adTextOp;
 }
 function applyAcFilters() {
   const inAll = GLOBAL_ACCOUNT === "ALL";
@@ -6186,10 +6201,12 @@ function applyAcFilters() {
     campaign: readCheckList("acfCampaignList"),
     adGroup: readCheckList("acfAdGroupList"),
     assetType,
+    adText: document.getElementById("acfAdText").value,
+    adTextOp: document.getElementById("acfAdTextOp").value,
   };
   document.getElementById("acFiltersMenu").hidden = true;
   acState.currentPage = 1;
-  savePageFilters("adcopy", { account: [...acState.filters.account], campaign: [...acState.filters.campaign], adGroup: [...acState.filters.adGroup], assetType: [...assetType] });
+  savePageFilters("adcopy", { account: [...acState.filters.account], campaign: [...acState.filters.campaign], adGroup: [...acState.filters.adGroup], assetType: [...assetType], adText: acState.filters.adText, adTextOp: acState.filters.adTextOp });
   updateAcFilterCount();
   renderAdCopyTable();
 }
@@ -6198,19 +6215,23 @@ function resetAcFilters() {
   acState.filters.campaign = new Set();
   acState.filters.adGroup = new Set();
   AC_ASSETTYPE_BOXES.forEach(([id]) => { document.getElementById(id).checked = false; });
+  document.getElementById("acfAdText").value = "";
+  document.getElementById("acfAdTextOp").value = "contains";
   populateAcFilterOptions();
   applyAcFilters();
 }
 function updateAcFilterCount() {
   const f = acState.filters;
   const inAll = GLOBAL_ACCOUNT === "ALL";
-  const n = ((inAll && f.account.size) ? 1 : 0) + (f.campaign.size ? 1 : 0) + (f.adGroup.size ? 1 : 0) + (f.assetType.size ? 1 : 0);
+  const adTextOn = (f.adText || "").trim() ? 1 : 0;
+  const n = ((inAll && f.account.size) ? 1 : 0) + (f.campaign.size ? 1 : 0) + (f.adGroup.size ? 1 : 0) + (f.assetType.size ? 1 : 0) + adTextOn;
   const el = document.getElementById("acFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; } else { el.hidden = true; }
   markFilterGroup("ac-group-account", (inAll && f.account.size) ? f.account.size : 0);
   markFilterGroup("ac-group-campaign", f.campaign.size);
   markFilterGroup("ac-group-adgroup", f.adGroup.size);
   markFilterGroup("ac-group-assettype", f.assetType.size);
+  markFilterGroup("ac-group-adtext", adTextOn);
 }
 
 function renderAcViewPop() {
@@ -6310,6 +6331,7 @@ function renderAdCopyTable() {
         if (f.campaign.size && !f.campaign.has(r.name || "")) return false;
         if (f.adGroup.size && !f.adGroup.has(r.adGroup || "")) return false;
         if (f.assetType.size && !f.assetType.has(r.assetType || "")) return false;
+        if (!matchTextFilter(r.text, f.adTextOp, f.adText)) return false;
         return true;
       });
       const agg = new Map();
