@@ -3074,12 +3074,14 @@ function comparingNow() {
 
 // Pages under the "Accounts" menu category share the account + campaign selection.
 // Add future Accounts-category pages to this list.
-const ACCOUNTS_PAGES = ["allaccounts", "reporting"];
+// Pages that show the shared account + campaign topbar picker.
+const ACCOUNTS_PAGES = ["allaccounts", "reporting", "adcopy"];
 function isAccountsPage(p) { return ACCOUNTS_PAGES.includes(p || currentHashPage()); }
 function refreshAccountsPage() {
   const p = currentHashPage();
   if (p === "allaccounts") renderAccountsTable();
   else if (p === "reporting") loadReporting();
+  else if (p === "adcopy") renderAdCopyTable();
 }
 
 function showPage(page) {
@@ -4625,7 +4627,11 @@ function populateAccCampaignFilter() {
   function buildCampaigns() {
     const list = [];
     const seen = new Set();
-    if (GLOBAL_ACCOUNT !== "ALL" && state.campaigns && state.campaigns.length) {
+    if (currentHashPage() === "adcopy") {
+      (acState.rows || []).forEach(r => {
+        if (r.name && !seen.has(r.name)) { seen.add(r.name); list.push({ name: r.name, status: (r.status || "ENABLED").toUpperCase() }); }
+      });
+    } else if (GLOBAL_ACCOUNT !== "ALL" && state.campaigns && state.campaigns.length) {
       state.campaigns.forEach(c => {
         if (c.name && !seen.has(c.name)) { seen.add(c.name); list.push({ name: c.name, status: (c.status || "").toUpperCase() }); }
       });
@@ -6304,6 +6310,7 @@ async function loadAdCopy(customerId) {
 }
 
 function renderAdCopyTable() {
+  if (document.getElementById("campPickerBtn")) populateAccCampaignFilter();
   const level = acState.viewLevel;
   renderDataTable({
     state: acState,
@@ -6332,6 +6339,7 @@ function renderAdCopyTable() {
         if (f.adGroup.size && !f.adGroup.has(r.adGroup || "")) return false;
         if (f.assetType.size && !f.assetType.has(r.assetType || "")) return false;
         if (!matchTextFilter(r.text, f.adTextOp, f.adText)) return false;
+        { const camp = getCampPickerValue(); if (camp && (r.name || "") !== camp) return false; }
         return true;
       });
       const agg = new Map();
