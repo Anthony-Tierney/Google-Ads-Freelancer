@@ -29,7 +29,10 @@ export async function onRequestGet(context) {
   const url = new URL(request.url);
   const customerId = url.searchParams.get("customerId") || "ALL";
   const drParam = url.searchParams.get("dateRange") || "LAST_30_DAYS";
-  const dateClause = /segments\.date/i.test(drParam) ? drParam : "segments.date DURING " + drParam;
+  // The app builds custom-range clauses with bare YYYYMMDD dates, but GAQL date literals
+  // require dashes (YYYY-MM-DD). Normalize any 8-digit quoted date so those ranges work.
+  const drFixed = drParam.replace(/'(\d{4})(\d{2})(\d{2})'/g, "'$1-$2-$3'");
+  const dateClause = /segments\.date/i.test(drFixed) ? drFixed : "segments.date DURING " + drFixed;
   const campaign = url.searchParams.get("campaign") || "";
 
   const accessToken = await getAccessToken(env, refreshToken);
