@@ -60,15 +60,24 @@ export async function onRequestGet(context) {
   };
 
   if (campaign) {
-    // Campaign-level — FROM campaign supports impression share, so one query per account.
-    const q = `SELECT segments.date, metrics.clicks, metrics.impressions, metrics.cost_micros, metrics.conversions, metrics.search_impression_share, metrics.search_click_share FROM campaign WHERE campaign.name = '${escGaql(campaign)}' AND ${dateClause}`;
+    // Campaign-level. Split core from share: impression-share fields are Search-only and can
+    // drop rows (or error) where they don't apply — e.g. non-Search campaigns, or a date range
+    // spanning dates before the campaign had impression-share data. Core must survive that.
+    const safe = escGaql(campaign);
+    const coreQuery = `SELECT segments.date, metrics.clicks, metrics.impressions, metrics.cost_micros, metrics.conversions FROM campaign WHERE campaign.name = '${safe}' AND ${dateClause}`;
+    const shareQuery = `SELECT segments.date, metrics.impressions, metrics.search_impression_share, metrics.search_click_share FROM campaign WHERE campaign.name = '${safe}' AND ${dateClause}`;
     const results = await mapLimit(ids, 5, async (id) => {
-      try { const r = await adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query: q }); return r.results || []; }
-      catch (e) { errors.push("campaign: " + String(e && e.message ? e.message : e).slice(0, 160)); return []; }
+      const out = { core: [], share: [] };
+      try { const r = await adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query: coreQuery }); out.core = r.results || []; }
+      catch (e) { errors.push("campaign core: " + String(e && e.message ? e.message : e).slice(0, 160)); }
+      try { const r = await adsRequest(env, accessToken, `customers/${id}/googleAds:search`, { query: shareQuery }); out.share = r.results || []; }
+      catch (e) { errors.push("campaign share: " + String(e && e.message ? e.message : e).slice(0, 160)); }
+      return out;
     });
-    for (const rows of results) {
-      if (rows.length) accounts++;
-      for (const row of rows) { const d = row.segments?.date, m = row.metrics; if (m) { addCore(d, m); addShare(d, m); } }
+    for (const { core, share } of results) {
+      if (core.length) accounts++;
+      for (const row of core) { if (row.metrics) addCore(row.segments?.date, row.metrics); }
+      for (const row of share) { if (row.metrics) addShare(row.segments?.date, row.metrics); }
     }
   } else {
     // Account-level — FROM customer, core + share split so core survives share failure.
