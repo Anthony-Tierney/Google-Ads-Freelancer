@@ -135,7 +135,18 @@
   .acc-cmp-dates { position: absolute; top: calc(100% + 5px); left: 2px; font-size: 10.5px; line-height: 1.2; color: var(--muted); white-space: nowrap; pointer-events: none; }
   path.geo-excl-shape { fill: url(#geoHatch) !important; }
   .rep-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 4px; }
-  .rep-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .rep-card { display: block; width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; cursor: pointer; font: inherit; color: inherit; transition: border-color .12s, background .12s; }
+  .rep-card:hover { border-color: var(--accent); }
+  .rep-card.on { border-color: var(--accent); background: var(--accent-soft); }
+  .rep-card.on .rep-value { color: var(--accent); }
+  .rep-chart-wrap { margin-top: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 16px; }
+  .rep-chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 12px; }
+  .rep-chart-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .rep-chart-body-wrap { position: relative; }
+  .rep-bar { fill: var(--accent); transition: opacity .1s; }
+  .rep-bar:hover { opacity: .82; }
+  .rep-chart-tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--panel); font-size: 12px; padding: 4px 8px; border-radius: 6px; white-space: nowrap; z-index: 5; box-shadow: var(--shadow); }
+  .rep-chart-empty { padding: 40px; text-align: center; color: var(--muted); }
   .rep-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 6px; }
   .rep-sub { text-transform: none; letter-spacing: 0; color: var(--faint); }
   .rep-value { font-size: 22px; font-weight: 640; font-variant-numeric: tabular-nums; color: var(--ink); }
@@ -991,6 +1002,18 @@
           <div id="repLoading" class="state"><div class="spinner"></div>Loading reporting…</div>
           <div id="repError" class="state" hidden></div>
           <div id="repCards" class="rep-grid" hidden></div>
+          <div id="repChartWrap" class="rep-chart-wrap" hidden>
+            <div class="rep-chart-head">
+              <div class="rep-chart-title" id="repChartTitle">Cost</div>
+              <select id="repGranSelect" onchange="onRepGranChange()">
+                <option value="day">Day</option>
+                <option value="week">Week</option>
+                <option value="month" selected>Month</option>
+                <option value="quarter">Quarter</option>
+              </select>
+            </div>
+            <div class="rep-chart-body-wrap"><div class="rep-chart-tip" id="repChartTip" hidden></div><div id="repChartBody"></div></div>
+          </div>
           <div class="foot-note" style="margin-top:14px;">Account-level totals for the selected account and date range. Search impression share and click share are averaged across accounts weighted by impressions when "All Accounts" is selected.</div>
         </section>
       </section>
@@ -3185,8 +3208,11 @@ async function loadReporting() {
     if (res.status === 401) { showSignedOut(); return; }
     const d = await res.json();
     if (d.error) throw new Error(d.error);
-    renderReportingCards(d);
+    repSeries = d.series || [];
+    renderReportingCards();
+    renderReportingChart();
     showEl("repLoading", false); showEl("repCards", true);
+    document.getElementById("repChartWrap").hidden = false;
     setLastRefresh("reporting");
   } catch (e) {
     showEl("repLoading", false);
@@ -3195,7 +3221,124 @@ async function loadReporting() {
   }
 }
 
-function renderReportingCards(d) {
+// Reporting metrics — each computes from a bucket of summed daily values.
+const REP_METRICS = [
+  { key: "clicks", label: "Clicks", sub: "Traffic", fmt: fmtInt, val: b => b.clicks },
+  { key: "avgcpc", label: "Avg. CPC", sub: "", fmt: fmtCurrency, val: b => b.clicks ? b.cost / b.clicks : 0 },
+  { key: "cost", label: "Cost", sub: "Ad Spend", fmt: fmtCurrency, val: b => b.cost },
+  { key: "ctr", label: "CTR", sub: "Click-Through Rate", fmt: fmtPct, val: b => b.impressions ? b.clicks / b.impressions : 0 },
+  { key: "impressions", label: "Impressions", sub: "", fmt: fmtInt, val: b => b.impressions },
+  { key: "conversions", label: "Conversions", sub: "", fmt: fmtDec, val: b => b.conversions },
+  { key: "cpa", label: "Cost / Conv.", sub: "CPA", fmt: fmtCurrency, val: b => b.conversions ? b.cost / b.conversions : 0 },
+  { key: "convrate", label: "Conv. Rate", sub: "", fmt: fmtPct, val: b => b.clicks ? b.conversions / b.clicks : 0 },
+  { key: "impshare", label: "Search Imp. Share", sub: "", fmt: fmtPct, val: b => b.shareWeight ? b.impShareW / b.shareWeight : null },
+  { key: "clickshare", label: "Click Share", sub: "", fmt: fmtPct, val: b => b.shareWeight ? b.clickShareW / b.shareWeight : null },
+];
+const REP_BUCKET_KEYS = ["clicks", "impressions", "cost", "conversions", "impShareW", "clickShareW", "shareWeight"];
+let repSeries = [];
+let repSelectedMetric = "cost";
+let repGranularity = "month";
+
+function repSumBucket(list) {
+  const t = { clicks: 0, impressions: 0, cost: 0, conversions: 0, impShareW: 0, clickShareW: 0, shareWeight: 0 };
+  list.forEach(b => REP_BUCKET_KEYS.forEach(k => t[k] += b[k] || 0));
+  return t;
+}
+
+function selectRepMetric(key) {
+  repSelectedMetric = key;
+  renderReportingCards();
+  renderReportingChart();
+}
+function onRepGranChange() {
+  repGranularity = document.getElementById("repGranSelect").value;
+  renderReportingChart();
+}
+
+function renderReportingCards() {
+  const total = repSumBucket(repSeries);
+  document.getElementById("repCards").innerHTML = REP_METRICS.map(m => {
+    const v = m.val(total);
+    const on = m.key === repSelectedMetric;
+    return '<button class="rep-card' + (on ? " on" : "") + '" data-metric="' + m.key + '" onclick="selectRepMetric(\'' + m.key + '\')">' +
+      '<div class="rep-label">' + m.label + (m.sub ? ' <span class="rep-sub">' + m.sub + "</span>" : "") + "</div>" +
+      '<div class="rep-value">' + (v == null ? "\u2014" : m.fmt(v)) + "</div></button>";
+  }).join("");
+}
+
+function repBucketKey(dateStr, gran) {
+  const dt = new Date(dateStr + "T00:00:00");
+  const y = dt.getFullYear();
+  if (gran === "day") return { sortKey: dateStr, label: dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) };
+  if (gran === "week") {
+    const off = (dt.getDay() + 6) % 7; // Monday = 0
+    const mon = new Date(dt); mon.setDate(dt.getDate() - off);
+    const key = mon.getFullYear() + "-" + String(mon.getMonth() + 1).padStart(2, "0") + "-" + String(mon.getDate()).padStart(2, "0");
+    return { sortKey: key, label: mon.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) };
+  }
+  if (gran === "quarter") { const q = Math.floor(dt.getMonth() / 3) + 1; return { sortKey: y + "-" + q, label: "Q" + q + " " + y }; }
+  return { sortKey: y + "-" + String(dt.getMonth() + 1).padStart(2, "0"), label: dt.toLocaleDateString("en-GB", { month: "short", year: "numeric" }) };
+}
+
+function repBucketize(series, gran) {
+  const groups = new Map();
+  series.forEach(d => {
+    const k = repBucketKey(d.date, gran);
+    let g = groups.get(k.sortKey);
+    if (!g) { g = { label: k.label, sortKey: k.sortKey, clicks: 0, impressions: 0, cost: 0, conversions: 0, impShareW: 0, clickShareW: 0, shareWeight: 0 }; groups.set(k.sortKey, g); }
+    REP_BUCKET_KEYS.forEach(key => g[key] += d[key] || 0);
+  });
+  return [...groups.values()].sort((a, b) => a.sortKey < b.sortKey ? -1 : a.sortKey > b.sortKey ? 1 : 0);
+}
+
+function renderReportingChart() {
+  const metric = REP_METRICS.find(m => m.key === repSelectedMetric) || REP_METRICS[0];
+  document.getElementById("repChartTitle").textContent = metric.label + (metric.sub ? " (" + metric.sub + ")" : "");
+  const buckets = repBucketize(repSeries, repGranularity);
+  const bars = buckets.map(b => ({ label: b.label, value: metric.val(b) }));
+  document.getElementById("repChartBody").innerHTML = renderRepChartSvg(bars, metric);
+}
+
+function renderRepChartSvg(bars, metric) {
+  if (!bars.length) return '<div class="rep-chart-empty">No data for this range.</div>';
+  const W = 900, H = 300, mL = 70, mR = 14, mT = 14, mB = 44;
+  const pw = W - mL - mR, ph = H - mT - mB;
+  const vals = bars.map(b => b.value == null ? 0 : b.value);
+  const niceMax = bpNiceCeil(Math.max(0.0000001, ...vals));
+  const slot = pw / bars.length;
+  const bw = Math.min(slot * 0.7, 54);
+  const y = v => mT + ph - (v / niceMax) * ph;
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="bp-chart-svg" preserveAspectRatio="xMidYMid meet">';
+  for (let t = 0; t <= 4; t++) {
+    const val = niceMax * t / 4, yy = y(val);
+    s += '<line x1="' + mL + '" y1="' + yy.toFixed(1) + '" x2="' + (W - mR) + '" y2="' + yy.toFixed(1) + '" stroke="var(--line-soft)" />';
+    s += '<text x="' + (mL - 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end" class="bp-chart-ylabel">' + metric.fmt(val) + "</text>";
+  }
+  const step = bars.length <= 16 ? 1 : Math.ceil(bars.length / 16);
+  bars.forEach((b, i) => {
+    const v = b.value == null ? 0 : b.value;
+    const bx = mL + i * slot + (slot - bw) / 2, by = y(v), bh = Math.max(0, mT + ph - by);
+    s += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="2" class="rep-bar" data-tip="' + escapeHtml(b.label + ": " + (b.value == null ? "\u2014" : metric.fmt(b.value))) + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"></rect>';
+    if (i % step === 0) s += '<text x="' + (mL + i * slot + slot / 2).toFixed(1) + '" y="' + (mT + ph + 15) + '" text-anchor="middle" class="bp-chart-xlabel">' + escapeHtml(b.label) + "</text>";
+  });
+  s += "</svg>";
+  return s;
+}
+
+function repBarTip(e, rect) {
+  const tip = document.getElementById("repChartTip");
+  if (!tip) return;
+  tip.textContent = rect.getAttribute("data-tip");
+  tip.hidden = false;
+  const wrap = tip.parentElement.getBoundingClientRect();
+  let left = e.clientX - wrap.left + 12;
+  if (left > wrap.width - 140) left = e.clientX - wrap.left - 140;
+  tip.style.left = Math.max(0, left) + "px";
+  tip.style.top = (e.clientY - wrap.top - 4) + "px";
+}
+function repBarTipHide() { const t = document.getElementById("repChartTip"); if (t) t.hidden = true; }
+
+function renderReportingCards_OLD(d) {
   const avgCpc = d.clicks ? d.cost / d.clicks : 0;
   const ctr = d.impressions ? d.clicks / d.impressions : 0;
   const cpa = d.conversions ? d.cost / d.conversions : 0;
