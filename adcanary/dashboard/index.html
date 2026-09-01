@@ -141,6 +141,17 @@
   .rep-card.on .rep-value { color: var(--accent); }
   .rep-chart-wrap { margin-top: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 16px; }
   .rep-chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 12px; }
+  .rep-chart-tools { display: flex; align-items: center; gap: 8px; }
+  .rep-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+  .rep-seg-btn { border: none; background: var(--panel); padding: 5px 9px; cursor: pointer; color: var(--muted); display: inline-flex; align-items: center; }
+  .rep-seg-btn svg { width: 15px; height: 15px; }
+  .rep-seg-btn + .rep-seg-btn { border-left: 1px solid var(--line); }
+  .rep-seg-btn.on { background: var(--accent-soft); color: var(--accent); }
+  .rep-tool-btn { border: 1px solid var(--line); background: var(--panel); border-radius: 7px; padding: 5px 9px; cursor: pointer; color: var(--muted); display: inline-flex; align-items: center; }
+  .rep-tool-btn svg { width: 15px; height: 15px; }
+  .rep-tool-btn.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .rep-dot { fill: var(--accent); }
+  .rep-datalabel { fill: var(--ink); font-size: 9.5px; font-variant-numeric: tabular-nums; }
   .rep-chart-title { font-size: 14px; font-weight: 600; color: var(--ink); }
   .rep-chart-body-wrap { position: relative; }
   .rep-bar { fill: var(--accent); transition: opacity .1s; }
@@ -1005,12 +1016,19 @@
           <div id="repChartWrap" class="rep-chart-wrap" hidden>
             <div class="rep-chart-head">
               <div class="rep-chart-title" id="repChartTitle">Cost</div>
-              <select id="repGranSelect" onchange="onRepGranChange()">
-                <option value="day">Day</option>
-                <option value="week">Week</option>
-                <option value="month" selected>Month</option>
-                <option value="quarter">Quarter</option>
-              </select>
+              <div class="rep-chart-tools">
+                <div class="rep-seg">
+                  <button id="repTypeBars" class="rep-seg-btn on" title="Bars" onclick="setRepChartType('bars')"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="11" width="4" height="9" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="16" y="3" width="4" height="17" rx="1"/></svg></button>
+                  <button id="repTypeLines" class="rep-seg-btn" title="Lines" onclick="setRepChartType('lines')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 16 9 9 13 13 21 4"/></svg></button>
+                </div>
+                <button id="repLabelsBtn" class="rep-tool-btn" title="Show data labels" onclick="toggleRepLabels()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><line x1="7" y1="7" x2="7" y2="7"/></svg></button>
+                <select id="repGranSelect" onchange="onRepGranChange()">
+                  <option value="day">Day</option>
+                  <option value="week">Week</option>
+                  <option value="month" selected>Month</option>
+                  <option value="quarter">Quarter</option>
+                </select>
+              </div>
             </div>
             <div class="rep-chart-body-wrap"><div class="rep-chart-tip" id="repChartTip" hidden></div><div id="repChartBody"></div></div>
           </div>
@@ -3238,6 +3256,40 @@ const REP_BUCKET_KEYS = ["clicks", "impressions", "cost", "conversions", "impSha
 let repSeries = [];
 let repSelectedMetric = "cost";
 let repGranularity = "month";
+let repChartType = "bars";
+let repShowLabels = false;
+
+function setRepChartType(t) {
+  repChartType = t;
+  document.getElementById("repTypeBars").classList.toggle("on", t === "bars");
+  document.getElementById("repTypeLines").classList.toggle("on", t === "lines");
+  renderReportingChart();
+}
+function toggleRepLabels() {
+  repShowLabels = !repShowLabels;
+  document.getElementById("repLabelsBtn").classList.toggle("on", repShowLabels);
+  renderReportingChart();
+}
+
+function parseRepDate(s) {
+  s = String(s);
+  if (/^\d{8}$/.test(s)) return new Date(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8));
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(s);
+}
+// The actual start/end dates of the selected range, so the chart's x-axis can span the
+// full range even where there's no data.
+function repRangeBounds() {
+  const r = SHARED_DATE_RANGE || {};
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  if (r.from && r.to) return { start: parseRepDate(r.from), end: parseRepDate(r.to) };
+  if (r.type === "thisMonth") return { start: new Date(today.getFullYear(), today.getMonth(), 1), end: today };
+  if (r.type === "lastMonth") return { start: new Date(today.getFullYear(), today.getMonth() - 1, 1), end: new Date(today.getFullYear(), today.getMonth(), 0) };
+  const days = r.days || 30;
+  const end = new Date(today); end.setDate(today.getDate() - 1);
+  const start = new Date(today); start.setDate(today.getDate() - days);
+  return { start, end };
+}
 
 function repSumBucket(list) {
   const t = { clicks: 0, impressions: 0, cost: 0, conversions: 0, impShareW: 0, clickShareW: 0, shareWeight: 0 };
@@ -3294,32 +3346,65 @@ function repBucketize(series, gran) {
 function renderReportingChart() {
   const metric = REP_METRICS.find(m => m.key === repSelectedMetric) || REP_METRICS[0];
   document.getElementById("repChartTitle").textContent = metric.label + (metric.sub ? " (" + metric.sub + ")" : "");
-  const buckets = repBucketize(repSeries, repGranularity);
-  const bars = buckets.map(b => ({ label: b.label, value: metric.val(b) }));
+  // Build every bucket across the selected range (zero-filled) so the x-axis starts on the
+  // range's start date even where the campaign had no data.
+  const b = repRangeBounds();
+  const p2 = n => String(n).padStart(2, "0");
+  const map = new Map();
+  const emptyBucket = (k) => ({ label: k.label, sortKey: k.sortKey, clicks: 0, impressions: 0, cost: 0, conversions: 0, impShareW: 0, clickShareW: 0, shareWeight: 0 });
+  if (b.start <= b.end) {
+    for (let d = new Date(b.start); d <= b.end; d.setDate(d.getDate() + 1)) {
+      const ds = d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate());
+      const k = repBucketKey(ds, repGranularity);
+      if (!map.has(k.sortKey)) map.set(k.sortKey, emptyBucket(k));
+    }
+  }
+  repSeries.forEach(dp => {
+    const k = repBucketKey(dp.date, repGranularity);
+    let g = map.get(k.sortKey);
+    if (!g) { g = emptyBucket(k); map.set(k.sortKey, g); }
+    REP_BUCKET_KEYS.forEach(key => g[key] += dp[key] || 0);
+  });
+  const buckets = [...map.values()].sort((a, c) => a.sortKey < c.sortKey ? -1 : a.sortKey > c.sortKey ? 1 : 0);
+  const bars = buckets.map(bk => ({ label: bk.label, value: metric.val(bk) }));
   document.getElementById("repChartBody").innerHTML = renderRepChartSvg(bars, metric);
 }
 
 function renderRepChartSvg(bars, metric) {
   if (!bars.length) return '<div class="rep-chart-empty">No data for this range.</div>';
-  const W = 900, H = 300, mL = 70, mR = 14, mT = 14, mB = 44;
+  const W = 900, H = 300, mL = 70, mR = 14, mT = 22, mB = 44;
   const pw = W - mL - mR, ph = H - mT - mB;
   const vals = bars.map(b => b.value == null ? 0 : b.value);
   const niceMax = bpNiceCeil(Math.max(0.0000001, ...vals));
   const slot = pw / bars.length;
   const bw = Math.min(slot * 0.7, 54);
-  const y = v => mT + ph - (v / niceMax) * ph;
+  const y = v => mT + ph - ((v || 0) / niceMax) * ph;
+  const cx = i => mL + i * slot + slot / 2;
+  const lineMode = repChartType === "lines";
+  const step = bars.length <= 16 ? 1 : Math.ceil(bars.length / 16);
   let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="bp-chart-svg" preserveAspectRatio="xMidYMid meet">';
   for (let t = 0; t <= 4; t++) {
     const val = niceMax * t / 4, yy = y(val);
     s += '<line x1="' + mL + '" y1="' + yy.toFixed(1) + '" x2="' + (W - mR) + '" y2="' + yy.toFixed(1) + '" stroke="var(--line-soft)" />';
     s += '<text x="' + (mL - 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end" class="bp-chart-ylabel">' + metric.fmt(val) + "</text>";
   }
-  const step = bars.length <= 16 ? 1 : Math.ceil(bars.length / 16);
+  if (lineMode) {
+    const pts = bars.map((b, i) => cx(i).toFixed(1) + "," + y(b.value == null ? 0 : b.value).toFixed(1)).join(" ");
+    s += '<polyline points="' + pts + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />';
+  }
   bars.forEach((b, i) => {
     const v = b.value == null ? 0 : b.value;
-    const bx = mL + i * slot + (slot - bw) / 2, by = y(v), bh = Math.max(0, mT + ph - by);
-    s += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="2" class="rep-bar" data-tip="' + escapeHtml(b.label + ": " + (b.value == null ? "\u2014" : metric.fmt(b.value))) + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"></rect>';
-    if (i % step === 0) s += '<text x="' + (mL + i * slot + slot / 2).toFixed(1) + '" y="' + (mT + ph + 15) + '" text-anchor="middle" class="bp-chart-xlabel">' + escapeHtml(b.label) + "</text>";
+    const tip = escapeHtml(b.label + ": " + (b.value == null ? "\u2014" : metric.fmt(b.value)));
+    if (lineMode) {
+      s += '<circle cx="' + cx(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="3" class="rep-dot" data-tip="' + tip + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"></circle>';
+    } else {
+      const bx = mL + i * slot + (slot - bw) / 2, by = y(v), bh = Math.max(0, mT + ph - by);
+      s += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="2" class="rep-bar" data-tip="' + tip + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"></rect>';
+    }
+    if (repShowLabels && i % step === 0 && b.value != null) {
+      s += '<text x="' + cx(i).toFixed(1) + '" y="' + (y(v) - 5).toFixed(1) + '" text-anchor="middle" class="rep-datalabel">' + metric.fmt(b.value) + "</text>";
+    }
+    if (i % step === 0) s += '<text x="' + cx(i).toFixed(1) + '" y="' + (mT + ph + 15) + '" text-anchor="middle" class="bp-chart-xlabel">' + escapeHtml(b.label) + "</text>";
   });
   s += "</svg>";
   return s;
