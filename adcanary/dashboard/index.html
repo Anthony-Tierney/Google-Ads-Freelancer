@@ -1695,10 +1695,12 @@
           <div id="cannEmpty" class="state" hidden><div class="big">No cannibalization found</div>No search term triggered more than one campaign in this period.</div>
           <div id="cannWrap" hidden>
             <div class="cann-summary" id="cannSummary"></div>
-            <table class="cann-table">
-              <thead><tr><th>Search Term</th><th class="num">Campaigns</th><th class="num">Impressions</th><th class="num">Clicks</th><th class="num">Cost</th><th class="num">Conv.</th></tr></thead>
-              <tbody id="cannBody"></tbody>
-            </table>
+            <div class="scroll"><table id="cannTable">
+              <colgroup id="cann-colgroup"></colgroup><thead id="cann-thead"></thead><tbody id="cann-tbody"></tbody><tfoot id="cann-tfoot"></tfoot>
+            </table></div>
+            <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+              <div class="pagination" id="cannPagination" hidden></div>
+            </div>
           </div>
         </section>
       </section>
@@ -6838,7 +6840,9 @@ function onGeoDateRangeChange() {
 function syncGeoDateSelect() { syncDateSelectEl("geoDateSelect", geoState.dateRange); }
 
 // ---------- Cannibalization ----------
-const cannState = { terms: [] };
+const CANN_COL_KEYS = ["term", "campaign", "competing", "share", "impressions", "clicks", "cost", "conversions"];
+const cannState = { terms: [], rows: [], sort: { key: "termImpressions", dir: "desc" }, columnWidths: {}, currentPage: 1, pageSize: 25, visible: new Set(CANN_COL_KEYS), heatmap: false };
+try { const p = uiGet("cannibalization"); if (p) { if (p.sort) cannState.sort = p.sort; if (p.columnWidths) cannState.columnWidths = p.columnWidths; if (p.pageSize) cannState.pageSize = p.pageSize; } } catch {}
 function syncCannDateSelect() { syncDateSelectEl("cannDateSelect", SHARED_DATE_RANGE); }
 function initCannibalization() {
   document.getElementById("cannSignedOut").hidden = signedIn;
@@ -6890,23 +6894,54 @@ async function loadCannibalization() {
 }
 function renderCannibalization() {
   const terms = cannState.terms;
-  document.getElementById("cannSummary").textContent = terms.length + " search term" + (terms.length === 1 ? "" : "s") + " triggered more than one campaign in this period.";
-  document.getElementById("cannBody").innerHTML = terms.map((t, i) => {
-    const main = '<tr class="cann-row" onclick="toggleCannRow(' + i + ')"><td class="cann-term"><span class="cann-caret">\u203A</span>' + escapeHtml(t.term) + '</td>' +
-      '<td class="num"><span class="cann-badge">' + t.campaignCount + '</span></td>' +
-      '<td class="num tabnum">' + fmtInt(t.impressions) + '</td><td class="num tabnum">' + fmtInt(t.clicks) + '</td>' +
-      '<td class="num tabnum">' + fmtCurrency0(t.cost) + '</td><td class="num tabnum">' + fmtInt(t.conversions) + "</td></tr>";
-    const detail = '<tr class="cann-detail" id="cann-detail-' + i + '" hidden><td colspan="6"><div class="cann-camps">' +
-      t.campaigns.map(c => '<div class="cann-camp"><span class="cann-camp-name">' + escapeHtml(c.name) + '</span><span class="cann-camp-m">' + fmtInt(c.impressions) + " impr · " + fmtInt(c.clicks) + " clicks · " + fmtCurrency0(c.cost) + " · " + fmtInt(c.conversions) + " conv</span></div>").join("") +
-      "</div></td></tr>";
-    return main + detail;
-  }).join("");
-}
-function toggleCannRow(i) {
-  const el = document.getElementById("cann-detail-" + i);
-  if (!el) return;
-  el.hidden = !el.hidden;
-  if (el.previousElementSibling) el.previousElementSibling.classList.toggle("open", !el.hidden);
+  document.getElementById("cannSummary").textContent = terms.length + " search term" + (terms.length === 1 ? "" : "s") + " triggered more than one campaign in this period. Each row is one campaign competing for that term.";
+  // Flatten: one row per (search term x campaign), carrying the term totals so it can be sorted by them.
+  cannState.rows = [];
+  terms.forEach(t => t.campaigns.forEach(c => cannState.rows.push({
+    term: t.term, campaign: c.name, competing: t.campaignCount,
+    share: t.impressions ? c.impressions / t.impressions : 0,
+    impressions: c.impressions, clicks: c.clicks, cost: c.cost, conversions: c.conversions,
+    termImpressions: t.impressions,
+  })));
+  renderDataTable({
+    state: cannState,
+    columns: [
+      { key: "term", label: "Search Term", align: "txt", width: 240, always: true, cls: "name", sort: r => r.term, cell: r => escapeHtml(r.term) },
+      { key: "campaign", label: "Campaign", align: "txt", width: 300, always: true, sort: r => r.campaign, cell: r => escapeHtml(r.campaign) },
+      { key: "competing", label: "Competing<br>Campaigns", align: "num", width: 110, always: true, cls: "tabnum", cell: r => '<span class="cann-badge">' + r.competing + "</span>" },
+      { key: "share", label: "Share of Term<br>Impressions", align: "num", width: 120, always: true, cls: "tabnum", cell: r => fmtPct(r.share) },
+      { key: "impressions", label: "Impressions", align: "num", width: 110, always: true, cls: "tabnum", cell: r => fmtInt(r.impressions) },
+      { key: "clicks", label: "Clicks", align: "num", width: 90, always: true, cls: "tabnum", cell: r => fmtInt(r.clicks) },
+      { key: "cost", label: "Cost", align: "num", width: 100, always: true, cls: "tabnum", cell: r => fmtCurrency0(r.cost) },
+      { key: "conversions", label: "Conv.", align: "num", width: 80, always: true, cls: "tabnum", cell: r => fmtInt(r.conversions) },
+    ],
+    colOrderKey: "cannibalization",
+    prefKey: "cannibalization",
+    heatmap: false,
+    resetPageOnSort: true,
+    ids: { colgroup: "cann-colgroup", thead: "cann-thead", tbody: "cann-tbody", tfoot: "cann-tfoot", pagination: "cannPagination" },
+    rerender: renderCannibalization,
+    rows: () => {
+      const { key, dir } = cannState.sort, sign = dir === "asc" ? 1 : -1;
+      return cannState.rows.slice().sort((a, b) => {
+        const av = a[key], bv = b[key];
+        let c = typeof av === "string" ? String(av).localeCompare(String(bv)) : ((av || 0) - (bv || 0));
+        if (c === 0 && key !== "term") c = a.term.localeCompare(b.term) * -sign; // keep a term's campaigns together
+        return c * sign;
+      });
+    },
+    footer: (rows, cols) => {
+      const sum = k => rows.reduce((a, r) => a + (r[k] || 0), 0);
+      return "<tr>" + cols.map((c, i) => {
+        if (i === 0) return '<td class="txt name" data-col="' + c.key + '">Total \u00b7 ' + rows.length + " rows</td>";
+        if (c.key === "impressions") return '<td class="num tabnum" data-col="impressions">' + fmtInt(sum("impressions")) + "</td>";
+        if (c.key === "clicks") return '<td class="num tabnum" data-col="clicks">' + fmtInt(sum("clicks")) + "</td>";
+        if (c.key === "cost") return '<td class="num tabnum" data-col="cost">' + fmtCurrency0(sum("cost")) + "</td>";
+        if (c.key === "conversions") return '<td class="num tabnum" data-col="conversions">' + fmtInt(sum("conversions")) + "</td>";
+        return '<td data-col="' + c.key + '"></td>';
+      }).join("") + "</tr>";
+    },
+  });
 }
 
 async function loadGeoCoverage(customerId) {
