@@ -172,22 +172,7 @@
   .cann-fix-tag { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 6px; font-size: 10.5px; font-weight: 600; background: #dcfce7; color: #15803d; vertical-align: 1px; }
   .cann-hide-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); align-self: flex-end; padding-bottom: 9px; cursor: pointer; }
   .cann-summary { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
-  .cann-table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-  .cann-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 12px 14px; border-bottom: 1px solid var(--line); }
-  .cann-table th.num, .cann-table td.num { text-align: right; }
-  .cann-table td { padding: 11px 14px; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
-  .cann-row { cursor: pointer; }
-  .cann-row:hover { background: var(--accent-soft); }
-  .cann-term { font-weight: 500; }
-  .cann-caret { display: inline-block; width: 14px; color: var(--muted); transition: transform .12s; }
-  .cann-row.open .cann-caret { transform: rotate(90deg); }
   .cann-badge { display: inline-block; min-width: 20px; padding: 1px 7px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 12px; }
-  .cann-detail td { background: var(--line-soft); padding: 0; }
-  .cann-camps { padding: 4px 14px 10px 28px; }
-  .cann-camp { display: flex; justify-content: space-between; gap: 16px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 12.5px; }
-  .cann-camp:last-child { border-bottom: none; }
-  .cann-camp-name { color: var(--ink); }
-  .cann-camp-m { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .rep-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 6px; }
   .rep-sub { text-transform: none; letter-spacing: 0; color: var(--faint); }
   .rep-value { font-size: 22px; font-weight: 640; font-variant-numeric: tabular-nums; color: var(--ink); }
@@ -1688,7 +1673,7 @@
           </div>
         </section>
         <section id="cannSignedIn" hidden>
-          <div class="controls-row">
+          <div class="controls-row account">
             <div>
               <label class="field-label" for="cannDateSelect">Date range</label>
               <select id="cannDateSelect" onchange="onCannDateRangeChange()">
@@ -1702,19 +1687,74 @@
               </select>
             </div>
             <label class="cann-hide-toggle"><input type="checkbox" id="cannHideResolved" checked onchange="onCannHideResolved(this)" /> Hide resolved terms</label>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="cannHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                  Heatmap
+                </button>
+              </div>
+              <div class="filters" id="cannFilterGroup">
+                <button class="filters-btn" id="cannFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <span class="count" id="cannFilterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="cannFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('cann-group-campstatus', event)">
+                    <span class="toggle">−</span>Campaign Status
+                  </div>
+                  <div class="filter-group-items" id="cann-group-campstatus">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="cannCampEnabled" checked /><label for="cannCampEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="cannCampPaused" /><label for="cannCampPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="cannCampRemoved" /><label for="cannCampRemoved">Removed</label></div>
+                      </div>
+                      <div class="foot-note" style="margin-top:8px;">Only campaigns with the selected status count as competing.</div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('cann-group-impr', event)">
+                    <span class="toggle">−</span>Impressions
+                  </div>
+                  <div class="filter-group-items" id="cann-group-impr">
+                    <div class="filter-section">
+                      <div class="fnum-row">
+                        <select id="cannfImpOp" class="fnum-op">
+                          <option value=">=">&ge;</option>
+                          <option value=">">></option>
+                          <option value="=">=</option>
+                          <option value="!=">&ne;</option>
+                          <option value="<">&lt;</option>
+                          <option value="<=">&le;</option>
+                        </select>
+                        <div class="fnum-input">
+                          <input type="number" id="cannfImpValue" placeholder="Amount" />
+                        </div>
+                      </div>
+                      <div class="foot-note" style="margin-top:8px;">Total impressions for the search term.</div>
+                    </div>
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetCannFilters()">Reset</button>
+                    <button class="apply" onclick="applyCannFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div id="cannPrompt" class="state" hidden><div class="big">Select an account</div>Choose a single account above to see which of its campaigns compete for the same search terms.</div>
-          <div id="cannLoading" class="state"><div class="spinner"></div>Analysing search terms…</div>
-          <div id="cannError" class="state" hidden></div>
-          <div id="cannEmpty" class="state" hidden><div class="big">No cannibalization found</div>No search term triggered more than one campaign in this period.</div>
-          <div id="cannWrap" hidden>
-            <div class="cann-summary" id="cannSummary"></div>
-            <div class="scroll"><table id="cannTable">
+          <div class="cann-summary" id="cannSummary" hidden></div>
+          <div class="panel">
+            <div id="cannPrompt" class="state" hidden><div class="big">Select an account</div>Choose a single account above to see which of its campaigns compete for the same search terms.</div>
+            <div id="cannLoading" class="state" hidden><div class="spinner"></div>Analysing search terms…</div>
+            <div id="cannError" class="state" hidden></div>
+            <div id="cannEmpty" class="state" hidden><div class="big">No cannibalization found</div>No search term triggered more than one campaign in this period.</div>
+            <div class="scroll"><table id="cannTable" hidden>
               <colgroup id="cann-colgroup"></colgroup><thead id="cann-thead"></thead><tbody id="cann-tbody"></tbody><tfoot id="cann-tfoot"></tfoot>
             </table></div>
-            <div style="display:flex;justify-content:flex-end;margin-top:10px;">
-              <div class="pagination" id="cannPagination" hidden></div>
-            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+            <div class="pagination" id="cannPagination" hidden></div>
           </div>
         </section>
       </section>
@@ -2175,7 +2215,7 @@ function globalRefresh() {
     case "budgeting": loadUnderspend(true); break;
     case "bidding": loadBidding(true); break;
     case "geocoverage": if (GLOBAL_ACCOUNT !== "ALL") loadGeoCoverage(GLOBAL_ACCOUNT); break;
-    case "cannibalization": if (GLOBAL_ACCOUNT !== "ALL") loadCannibalization(); break;
+    case "cannibalization": if (GLOBAL_ACCOUNT !== "ALL") loadCannibalization(true); break;
     case "reporting": loadReporting(); break;
   }
 }
@@ -3802,7 +3842,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -6878,8 +6918,9 @@ function cannCampsAutoWidth(terms) {
   const tagRoom = terms.some(t => t.campaigns.some(c => c.active === false)) ? 96 : 0;
   return Math.min(1200, Math.ceil(max) + 54 + 36 + tagRoom);
 }
-const cannState = { terms: [], rows: [], sort: { key: "impressions", dir: "desc" }, columnWidths: {}, currentPage: 1, pageSize: 25, visible: new Set(CANN_COL_KEYS), heatmap: false, hideResolved: true };
-try { const p = uiGet("cannibalization"); if (p) { if (p.sort && CANN_COL_KEYS.includes(p.sort.key)) cannState.sort = p.sort; if (p.columnWidths) cannState.columnWidths = p.columnWidths; if (p.pageSize) cannState.pageSize = p.pageSize; if (p.autoCampsWidth) cannState.autoCampsWidth = p.autoCampsWidth; if (typeof p.hideResolved === "boolean") cannState.hideResolved = p.hideResolved; } } catch {}
+const cannState = { terms: [], rows: [], sort: { key: "impressions", dir: "desc" }, columnWidths: {}, currentPage: 1, pageSize: 25, visible: new Set(CANN_COL_KEYS), heatmap: false, hideResolved: true, loadedKey: null,
+  filterCampaignStatus: new Set(["ENABLED"]), filterImpOp: ">", filterImpValue: 10 };
+try { const p = uiGet("cannibalization"); if (p) { if (p.sort && CANN_COL_KEYS.includes(p.sort.key)) cannState.sort = p.sort; if (p.columnWidths) cannState.columnWidths = p.columnWidths; if (p.pageSize) cannState.pageSize = p.pageSize; if (p.autoCampsWidth) cannState.autoCampsWidth = p.autoCampsWidth; if (typeof p.hideResolved === "boolean") cannState.hideResolved = p.hideResolved; if (typeof p.heatmap === "boolean") cannState.heatmap = p.heatmap; } } catch {}
 function onCannHideResolved(el) { cannState.hideResolved = el.checked; uiSave("cannibalization", { hideResolved: el.checked }); cannState.currentPage = 1; renderCannibalization(); }
 function syncCannDateSelect() { syncDateSelectEl("cannDateSelect", SHARED_DATE_RANGE); }
 function initCannibalization() {
@@ -6887,7 +6928,64 @@ function initCannibalization() {
   document.getElementById("cannSignedIn").hidden = !signedIn;
   if (!signedIn) return;
   syncCannDateSelect();
-  loadCannibalization();
+  wireCannToolbar();
+  loadCannibalization(false);
+}
+
+// ---- Toolkit: heatmap + filters (same behaviour as other pages) ----
+function wireCannToolbar() {
+  const btn = document.getElementById("cannFiltersBtn");
+  if (!btn || btn.dataset.wired) return;
+  btn.dataset.wired = "1";
+  const menu = document.getElementById("cannFiltersMenu");
+  btn.addEventListener("click", e => { e.stopPropagation(); const open = menu.hidden; closeAllMenus(); if (open) menu.hidden = false; });
+  menu.addEventListener("click", e => e.stopPropagation());
+  const hb = document.getElementById("cannHeatmapBtn");
+  hb.addEventListener("click", e => { e.stopPropagation(); cannState.heatmap = !cannState.heatmap; hb.classList.toggle("toggled", cannState.heatmap); hb.setAttribute("aria-pressed", cannState.heatmap ? "true" : "false"); persistUi("cannibalization", cannState); renderCannibalization(); });
+  hb.classList.toggle("toggled", !!cannState.heatmap); hb.setAttribute("aria-pressed", cannState.heatmap ? "true" : "false");
+  restoreCannFilters();
+}
+function restoreCannFilters() {
+  const saved = loadPageFilters("cannibalization");
+  if (saved) {
+    if (Array.isArray(saved.campStatus)) cannState.filterCampaignStatus = new Set(saved.campStatus);
+    if (saved.impOp) cannState.filterImpOp = saved.impOp;
+    if (typeof saved.impValue === "number") cannState.filterImpValue = saved.impValue;
+  }
+  const s = cannState.filterCampaignStatus;
+  document.getElementById("cannCampEnabled").checked = s.has("ENABLED");
+  document.getElementById("cannCampPaused").checked = s.has("PAUSED");
+  document.getElementById("cannCampRemoved").checked = s.has("REMOVED");
+  document.getElementById("cannfImpOp").value = cannState.filterImpOp;
+  document.getElementById("cannfImpValue").value = cannState.filterImpValue || "";
+  updateCannFilterCount();
+}
+function applyCannFilters() {
+  cannState.filterCampaignStatus = new Set([
+    document.getElementById("cannCampEnabled").checked ? "ENABLED" : null,
+    document.getElementById("cannCampPaused").checked ? "PAUSED" : null,
+    document.getElementById("cannCampRemoved").checked ? "REMOVED" : null,
+  ].filter(Boolean));
+  cannState.filterImpOp = document.getElementById("cannfImpOp").value;
+  cannState.filterImpValue = parseFloat(document.getElementById("cannfImpValue").value) || 0;
+  cannState.currentPage = 1;
+  document.getElementById("cannFiltersMenu").hidden = true;
+  savePageFilters("cannibalization", { campStatus: [...cannState.filterCampaignStatus], impOp: cannState.filterImpOp, impValue: cannState.filterImpValue });
+  updateCannFilterCount();
+  if (cannState.loadedKey) renderCannibalization();
+}
+function resetCannFilters() {
+  document.getElementById("cannCampEnabled").checked = true;
+  document.getElementById("cannCampPaused").checked = false;
+  document.getElementById("cannCampRemoved").checked = false;
+  document.getElementById("cannfImpOp").value = ">";
+  document.getElementById("cannfImpValue").value = 10;
+  applyCannFilters();
+}
+function updateCannFilterCount() {
+  const n = cannState.filterCampaignStatus.size + (cannState.filterImpValue > 0 ? 1 : 0);
+  const el = document.getElementById("cannFilterCount");
+  if (n > 0) { el.textContent = n; el.hidden = false; } else { el.hidden = true; }
 }
 function onCannDateRangeChange() {
   const val = document.getElementById("cannDateSelect").value;
@@ -6902,16 +7000,20 @@ function onCannDateRangeChange() {
     document.getElementById("customDateModal").setAttribute("open", "");
   } else {
     setSharedDateRange(DATE_PRESET_MAP[val]);
-    loadCannibalization();
+    loadCannibalization(false);
   }
 }
-async function loadCannibalization() {
+// force = true re-fetches (Refresh button). Otherwise the last result is reused while the
+// account and date range are unchanged, so navigating away and back doesn't re-fetch.
+async function loadCannibalization(force) {
   if (!signedIn) { initCannibalization(); return; }
   document.getElementById("cannSignedOut").hidden = true;
   document.getElementById("cannSignedIn").hidden = false;
   const show = (id, on) => { const el = document.getElementById(id); if (el) el.hidden = !on; };
-  ["cannPrompt", "cannLoading", "cannError", "cannEmpty", "cannWrap"].forEach(id => show(id, false));
+  ["cannPrompt", "cannLoading", "cannError", "cannEmpty", "cannTable", "cannSummary", "cannPagination"].forEach(id => show(id, false));
   if (GLOBAL_ACCOUNT === "ALL") { show("cannPrompt", true); return; }
+  const key = GLOBAL_ACCOUNT + "|" + rangeToGAQL(SHARED_DATE_RANGE);
+  if (!force && cannState.loadedKey === key) { showCannResults(); return; }
   show("cannLoading", true);
   try {
     const res = await fetch("/api/cannibalization?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(rangeToGAQL(SHARED_DATE_RANGE)), { credentials: "same-origin" });
@@ -6920,22 +7022,49 @@ async function loadCannibalization() {
     show("cannLoading", false);
     if (data.error && !(data.terms && data.terms.length)) { if (data.error === "Select a single account") { show("cannPrompt", true); return; } throw new Error(data.detail || data.error); }
     cannState.terms = data.terms || [];
-    if (!cannState.terms.length) { show("cannEmpty", true); return; }
-    renderCannibalization();
-    show("cannWrap", true);
+    cannState.loadedKey = key;
+    cannState.currentPage = 1;
     setLastRefresh("cannibalization");
+    showCannResults();
   } catch (e) {
     show("cannLoading", false);
     const el = document.getElementById("cannError"); el.hidden = false;
     el.innerHTML = '<div class="big">Couldn\u2019t analyse search terms</div>' + escapeHtml(e.message || "Please try again.");
   }
 }
+function showCannResults() {
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.hidden = !on; };
+  if (!cannState.terms.length) { show("cannEmpty", true); return; }
+  show("cannTable", true); show("cannSummary", true);
+  renderCannibalization();
+}
+// Apply the Campaign Status + Impressions filters. Campaigns outside the selected statuses
+// don't count as competing; a term needs 2+ remaining campaigns to stay in the list, and
+// its totals / resolution are recalculated from those campaigns.
+function cannFilteredTerms() {
+  const st = cannState.filterCampaignStatus;
+  const out = [];
+  cannState.terms.forEach(t => {
+    const camps = t.campaigns.filter(c => !st.size || st.has((c.status || "ENABLED").toUpperCase()));
+    if (camps.length < 2) return;
+    const sum = k => camps.reduce((a, c) => a + (c[k] || 0), 0);
+    const impressions = sum("impressions");
+    if (cannState.filterImpValue > 0 && !accNumOp(cannState.filterImpOp, impressions, cannState.filterImpValue)) return;
+    const activeCount = camps.filter(c => c.active !== false).length;
+    out.push(Object.assign({}, t, {
+      campaigns: camps, campaignCount: camps.length, activeCount,
+      resolution: activeCount <= 1 ? "resolved" : activeCount < camps.length ? "partial" : "open",
+      impressions, clicks: sum("clicks"), cost: sum("cost"), conversions: sum("conversions"),
+    }));
+  });
+  return out;
+}
 function renderCannibalization() {
-  const terms = cannState.terms;
+  const terms = cannFilteredTerms();
   const nRes = terms.filter(t => t.resolution === "resolved").length;
   const nPart = terms.filter(t => t.resolution === "partial").length;
   const cb = document.getElementById("cannHideResolved"); if (cb) cb.checked = cannState.hideResolved;
-  document.getElementById("cannSummary").textContent = terms.length + " search term" + (terms.length === 1 ? "" : "s") + " triggered more than one campaign in this period" +
+  document.getElementById("cannSummary").textContent = terms.length + " search term" + (terms.length === 1 ? "" : "s") + " match your filters and triggered more than one campaign in this period" +
     (nRes || nPart ? " \u00b7 " + nRes + " resolved since (negatives / paused), " + nPart + " partly fixed" : "") +
     (cannState.hideResolved && nRes ? " \u00b7 resolved terms hidden" : "") + ".";
   // One row per search term; the Campaigns column lists every campaign competing for it.
@@ -6971,7 +7100,7 @@ function renderCannibalization() {
     ],
     colOrderKey: "cannibalization",
     prefKey: "cannibalization",
-    heatmap: false,
+    heatmap: true,
     resetPageOnSort: true,
     ids: { colgroup: "cann-colgroup", thead: "cann-thead", tbody: "cann-tbody", tfoot: "cann-tfoot", pagination: "cannPagination" },
     rerender: renderCannibalization,
