@@ -166,6 +166,11 @@
   .cann-pri-high { background: #fee2e2; color: #b91c1c; }
   .cann-pri-medium { background: #ffedd5; color: #c2410c; }
   .cann-pri-low { background: #e0f2fe; color: #0369a1; }
+  .cann-pri-resolved { background: #dcfce7; color: #15803d; }
+  .cann-list-item.off .cann-list-name { text-decoration: line-through; color: var(--muted); }
+  .cann-list-item.off .cann-list-share { opacity: .6; }
+  .cann-fix-tag { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 6px; font-size: 10.5px; font-weight: 600; background: #dcfce7; color: #15803d; vertical-align: 1px; }
+  .cann-hide-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); align-self: flex-end; padding-bottom: 9px; cursor: pointer; }
   .cann-summary { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
   .cann-table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
   .cann-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 12px 14px; border-bottom: 1px solid var(--line); }
@@ -1696,6 +1701,7 @@
                 <option value="custom">Custom...</option>
               </select>
             </div>
+            <label class="cann-hide-toggle"><input type="checkbox" id="cannHideResolved" checked onchange="onCannHideResolved(this)" /> Hide resolved terms</label>
           </div>
           <div id="cannPrompt" class="state" hidden><div class="big">Select an account</div>Choose a single account above to see which of its campaigns compete for the same search terms.</div>
           <div id="cannLoading" class="state"><div class="spinner"></div>Analysing search terms…</div>
@@ -6851,9 +6857,14 @@ function syncGeoDateSelect() { syncDateSelectEl("geoDateSelect", geoState.dateRa
 const CANN_COL_KEYS = ["term", "priority", "campaignCount", "impressions", "clicks", "cost", "conversions"];
 // Priority from how evenly a term's impressions split across campaigns (top campaign's share):
 //   top >= 90% -> Low (negligible, e.g. 95/5) · 80-90% -> Medium (e.g. 85/15) · < 80% -> High (e.g. 70/30)
-const CANN_PRIORITY = { 3: "High", 2: "Medium", 1: "Low" };
+const CANN_PRIORITY = { 3: "High", 2: "Medium", 1: "Low", 0: "Resolved" };
+// Resolved = at most one campaign can still show for the term (negatives added / paused).
+// Otherwise the split is measured across the campaigns that can STILL compete.
 function cannPriorityRank(t) {
-  const top = t.impressions ? (t.campaigns[0] ? t.campaigns[0].impressions : 0) / t.impressions : 1;
+  if (t.resolution === "resolved") return 0;
+  const act = t.campaigns.filter(c => c.active !== false);
+  const tot = act.reduce((a, c) => a + c.impressions, 0);
+  const top = tot ? (act[0] ? act[0].impressions : 0) / tot : 1;
   return top >= 0.9 ? 1 : top >= 0.8 ? 2 : 3;
 }
 // Default width for the Competing Campaigns column: the longest single campaign name
@@ -6864,10 +6875,12 @@ function cannCampsAutoWidth(terms) {
   const font = (cs.fontWeight || "400") + " " + cs.fontSize + " " + cs.fontFamily;
   let max = measureText("Competing Campaigns", font);
   terms.forEach(t => t.campaigns.forEach(c => { max = Math.max(max, measureText(c.name, font)); }));
-  return Math.min(1200, Math.ceil(max) + 54 + 36);
+  const tagRoom = terms.some(t => t.campaigns.some(c => c.active === false)) ? 96 : 0;
+  return Math.min(1200, Math.ceil(max) + 54 + 36 + tagRoom);
 }
-const cannState = { terms: [], rows: [], sort: { key: "impressions", dir: "desc" }, columnWidths: {}, currentPage: 1, pageSize: 25, visible: new Set(CANN_COL_KEYS), heatmap: false };
-try { const p = uiGet("cannibalization"); if (p) { if (p.sort && CANN_COL_KEYS.includes(p.sort.key)) cannState.sort = p.sort; if (p.columnWidths) cannState.columnWidths = p.columnWidths; if (p.pageSize) cannState.pageSize = p.pageSize; if (p.autoCampsWidth) cannState.autoCampsWidth = p.autoCampsWidth; } } catch {}
+const cannState = { terms: [], rows: [], sort: { key: "impressions", dir: "desc" }, columnWidths: {}, currentPage: 1, pageSize: 25, visible: new Set(CANN_COL_KEYS), heatmap: false, hideResolved: true };
+try { const p = uiGet("cannibalization"); if (p) { if (p.sort && CANN_COL_KEYS.includes(p.sort.key)) cannState.sort = p.sort; if (p.columnWidths) cannState.columnWidths = p.columnWidths; if (p.pageSize) cannState.pageSize = p.pageSize; if (p.autoCampsWidth) cannState.autoCampsWidth = p.autoCampsWidth; if (typeof p.hideResolved === "boolean") cannState.hideResolved = p.hideResolved; } } catch {}
+function onCannHideResolved(el) { cannState.hideResolved = el.checked; uiSave("cannibalization", { hideResolved: el.checked }); cannState.currentPage = 1; renderCannibalization(); }
 function syncCannDateSelect() { syncDateSelectEl("cannDateSelect", SHARED_DATE_RANGE); }
 function initCannibalization() {
   document.getElementById("cannSignedOut").hidden = signedIn;
@@ -6919,9 +6932,14 @@ async function loadCannibalization() {
 }
 function renderCannibalization() {
   const terms = cannState.terms;
-  document.getElementById("cannSummary").textContent = terms.length + " search term" + (terms.length === 1 ? "" : "s") + " triggered more than one campaign in this period.";
+  const nRes = terms.filter(t => t.resolution === "resolved").length;
+  const nPart = terms.filter(t => t.resolution === "partial").length;
+  const cb = document.getElementById("cannHideResolved"); if (cb) cb.checked = cannState.hideResolved;
+  document.getElementById("cannSummary").textContent = terms.length + " search term" + (terms.length === 1 ? "" : "s") + " triggered more than one campaign in this period" +
+    (nRes || nPart ? " \u00b7 " + nRes + " resolved since (negatives / paused), " + nPart + " partly fixed" : "") +
+    (cannState.hideResolved && nRes ? " \u00b7 resolved terms hidden" : "") + ".";
   // One row per search term; the Campaigns column lists every campaign competing for it.
-  cannState.rows = terms.map(t => ({
+  cannState.rows = terms.filter(t => !(cannState.hideResolved && t.resolution === "resolved")).map(t => ({
     term: t.term, campaigns: t.campaigns, campaignCount: t.campaignCount, priority: cannPriorityRank(t),
     impressions: t.impressions, clicks: t.clicks, cost: t.cost, conversions: t.conversions,
   }));
@@ -6941,8 +6959,10 @@ function renderCannibalization() {
       { key: "campaignCount", label: "Competing Campaigns", align: "txt", width: 420, always: true, cls: "cann-list",
         cell: r => '<span class="cann-badge">' + r.campaignCount + "</span>" + r.campaigns.map(c => {
           const share = r.impressions ? c.impressions / r.impressions : 0;
-          return '<div class="cann-list-item" title="' + escapeHtml(c.name + " \u2014 " + fmtInt(c.impressions) + " impr, " + fmtInt(c.clicks) + " clicks, " + fmtCurrency0(c.cost) + ", " + fmtInt(c.conversions) + " conv") + '">' +
-            '<span class="cann-list-share">' + fmtPct(share) + "</span>" + escapeHtml(c.name) + "</div>";
+          const off = c.active === false;
+          const tag = off ? '<span class="cann-fix-tag">' + (/paused|removed/i.test(c.reason) ? "Paused" : "Negative") + "</span>" : "";
+          return '<div class="cann-list-item' + (off ? " off" : "") + '" title="' + escapeHtml(c.name + " \u2014 " + fmtInt(c.impressions) + " impr, " + fmtInt(c.clicks) + " clicks, " + fmtCurrency0(c.cost) + ", " + fmtInt(c.conversions) + " conv" + (off ? "\nNo longer competing: " + c.reason : "")) + '">' +
+            '<span class="cann-list-share">' + fmtPct(share) + "</span>" + tag + '<span class="cann-list-name">' + escapeHtml(c.name) + "</span></div>";
         }).join("") },
       { key: "impressions", label: "Impressions", align: "num", width: 110, always: true, cls: "tabnum", cell: r => fmtInt(r.impressions) },
       { key: "clicks", label: "Clicks", align: "num", width: 90, always: true, cls: "tabnum", cell: r => fmtInt(r.clicks) },
