@@ -136,7 +136,7 @@ export async function onRequestGet(context) {
     if (camps.size < 2) continue;
     const campaigns = [...camps.values()].sort((a, b) => b.impressions - a.impressions).map((c) => {
       const reason = blockedReason(c, term);
-      return { name: c.name, impressions: c.impressions, clicks: c.clicks, cost: c.cost, conversions: c.conversions, active: !reason, reason: reason || "" };
+      return { name: c.name, status: c.status || "", impressions: c.impressions, clicks: c.clicks, cost: c.cost, conversions: c.conversions, active: !reason, reason: reason || "" };
     });
     const activeCount = campaigns.filter((c) => c.active).length;
     const resolution = activeCount <= 1 ? "resolved" : activeCount < campaigns.length ? "partial" : "open";
