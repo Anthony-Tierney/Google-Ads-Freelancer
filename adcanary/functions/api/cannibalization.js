@@ -49,7 +49,7 @@ export async function onRequestGet(context) {
       if (camps.size < 2) continue;
       const campaigns = [...camps.values()].sort((a, b) => b.impressions - a.impressions);
       const sum = (k) => campaigns.reduce((a, c) => a + c[k], 0);
-      terms.push({ term, campaignCount: campaigns.size, impressions: sum("impressions"), clicks: sum("clicks"), cost: sum("cost"), conversions: sum("conversions"), campaigns });
+      terms.push({ term, campaignCount: campaigns.length, impressions: sum("impressions"), clicks: sum("clicks"), cost: sum("cost"), conversions: sum("conversions"), campaigns });
     }
     terms.sort((a, b) => b.impressions - a.impressions);
 
