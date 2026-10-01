@@ -162,6 +162,10 @@
   .cann-list .cann-badge { margin-bottom: 4px; }
   .cann-list-item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.6; }
   .cann-list-share { display: inline-block; min-width: 54px; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+  .cann-pri { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+  .cann-pri-high { background: #fee2e2; color: #b91c1c; }
+  .cann-pri-medium { background: #ffedd5; color: #c2410c; }
+  .cann-pri-low { background: #e0f2fe; color: #0369a1; }
   .cann-summary { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
   .cann-table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
   .cann-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 12px 14px; border-bottom: 1px solid var(--line); }
@@ -6844,9 +6848,26 @@ function onGeoDateRangeChange() {
 function syncGeoDateSelect() { syncDateSelectEl("geoDateSelect", geoState.dateRange); }
 
 // ---------- Cannibalization ----------
-const CANN_COL_KEYS = ["term", "campaignCount", "impressions", "clicks", "cost", "conversions"];
+const CANN_COL_KEYS = ["term", "priority", "campaignCount", "impressions", "clicks", "cost", "conversions"];
+// Priority from how evenly a term's impressions split across campaigns (top campaign's share):
+//   top >= 90% -> Low (negligible, e.g. 95/5) · 80-90% -> Medium (e.g. 85/15) · < 80% -> High (e.g. 70/30)
+const CANN_PRIORITY = { 3: "High", 2: "Medium", 1: "Low" };
+function cannPriorityRank(t) {
+  const top = t.impressions ? (t.campaigns[0] ? t.campaigns[0].impressions : 0) / t.impressions : 1;
+  return top >= 0.9 ? 1 : top >= 0.8 ? 2 : 3;
+}
+// Default width for the Competing Campaigns column: the longest single campaign name
+// (plus the share prefix and cell padding), measured across ALL terms.
+function cannCampsAutoWidth(terms) {
+  const ref = document.querySelector("tbody td") || document.body;
+  const cs = getComputedStyle(ref);
+  const font = (cs.fontWeight || "400") + " " + cs.fontSize + " " + cs.fontFamily;
+  let max = measureText("Competing Campaigns", font);
+  terms.forEach(t => t.campaigns.forEach(c => { max = Math.max(max, measureText(c.name, font)); }));
+  return Math.min(1200, Math.ceil(max) + 54 + 36);
+}
 const cannState = { terms: [], rows: [], sort: { key: "impressions", dir: "desc" }, columnWidths: {}, currentPage: 1, pageSize: 25, visible: new Set(CANN_COL_KEYS), heatmap: false };
-try { const p = uiGet("cannibalization"); if (p) { if (p.sort && CANN_COL_KEYS.includes(p.sort.key)) cannState.sort = p.sort; if (p.columnWidths) cannState.columnWidths = p.columnWidths; if (p.pageSize) cannState.pageSize = p.pageSize; } } catch {}
+try { const p = uiGet("cannibalization"); if (p) { if (p.sort && CANN_COL_KEYS.includes(p.sort.key)) cannState.sort = p.sort; if (p.columnWidths) cannState.columnWidths = p.columnWidths; if (p.pageSize) cannState.pageSize = p.pageSize; if (p.autoCampsWidth) cannState.autoCampsWidth = p.autoCampsWidth; } } catch {}
 function syncCannDateSelect() { syncDateSelectEl("cannDateSelect", SHARED_DATE_RANGE); }
 function initCannibalization() {
   document.getElementById("cannSignedOut").hidden = signedIn;
@@ -6901,13 +6922,22 @@ function renderCannibalization() {
   document.getElementById("cannSummary").textContent = terms.length + " search term" + (terms.length === 1 ? "" : "s") + " triggered more than one campaign in this period.";
   // One row per search term; the Campaigns column lists every campaign competing for it.
   cannState.rows = terms.map(t => ({
-    term: t.term, campaigns: t.campaigns, campaignCount: t.campaignCount,
+    term: t.term, campaigns: t.campaigns, campaignCount: t.campaignCount, priority: cannPriorityRank(t),
     impressions: t.impressions, clicks: t.clicks, cost: t.cost, conversions: t.conversions,
   }));
+  // Width rule: fit the longest campaign name unless the user has resized the column
+  // (a stored width that differs from the last auto width = a user preference).
+  const autoW = cannCampsAutoWidth(terms);
+  const curW = cannState.columnWidths.campaignCount;
+  if (curW == null || curW === cannState.autoCampsWidth) cannState.columnWidths.campaignCount = autoW;
+  cannState.autoCampsWidth = autoW;
+  uiSave("cannibalization", { autoCampsWidth: autoW });
   renderDataTable({
     state: cannState,
     columns: [
       { key: "term", label: "Search Term", align: "txt", width: 260, always: true, cls: "name", sort: r => r.term, cell: r => escapeHtml(r.term) },
+      { key: "priority", label: "Priority", align: "txt", width: 100, always: true, sort: r => r.priority,
+        cell: r => '<span class="cann-pri cann-pri-' + CANN_PRIORITY[r.priority].toLowerCase() + '">' + CANN_PRIORITY[r.priority] + "</span>" },
       { key: "campaignCount", label: "Competing Campaigns", align: "txt", width: 420, always: true, cls: "cann-list",
         cell: r => '<span class="cann-badge">' + r.campaignCount + "</span>" + r.campaigns.map(c => {
           const share = r.impressions ? c.impressions / r.impressions : 0;
