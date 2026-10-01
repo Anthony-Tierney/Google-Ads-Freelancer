@@ -158,6 +158,23 @@
   .rep-bar:hover { opacity: .82; }
   .rep-chart-tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--panel); font-size: 12px; padding: 4px 8px; border-radius: 6px; white-space: nowrap; z-index: 5; box-shadow: var(--shadow); }
   .rep-chart-empty { padding: 40px; text-align: center; color: var(--muted); }
+  .cann-summary { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .cann-table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .cann-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .cann-table th.num, .cann-table td.num { text-align: right; }
+  .cann-table td { padding: 11px 14px; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
+  .cann-row { cursor: pointer; }
+  .cann-row:hover { background: var(--accent-soft); }
+  .cann-term { font-weight: 500; }
+  .cann-caret { display: inline-block; width: 14px; color: var(--muted); transition: transform .12s; }
+  .cann-row.open .cann-caret { transform: rotate(90deg); }
+  .cann-badge { display: inline-block; min-width: 20px; padding: 1px 7px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 12px; }
+  .cann-detail td { background: var(--line-soft); padding: 0; }
+  .cann-camps { padding: 4px 14px 10px 28px; }
+  .cann-camp { display: flex; justify-content: space-between; gap: 16px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 12.5px; }
+  .cann-camp:last-child { border-bottom: none; }
+  .cann-camp-name { color: var(--ink); }
+  .cann-camp-m { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .rep-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 6px; }
   .rep-sub { text-transform: none; letter-spacing: 0; color: var(--faint); }
   .rep-value { font-size: 22px; font-weight: 640; font-variant-numeric: tabular-nums; color: var(--ink); }
@@ -723,6 +740,7 @@
     <div class="nav-section-items" data-section="audit">
       <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies<span class="nav-warn" id="bidNavWarn" hidden title="CPA running below target on one or more campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
       <a href="#" class="nav-item nav-sub" data-page="geocoverage">Geo Coverage</a>
+      <a href="#" class="nav-item nav-sub" data-page="cannibalization">Cannibalization</a>
       <a href="#" class="nav-item nav-sub" data-page="adcopy">Ad Copy</a>
       <a href="#" class="nav-item nav-sub" data-page="audit">Policy Issues<span class="nav-warn" id="auditNavWarn" hidden title="Policy issues found"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
       <a href="#" class="nav-item nav-sub" data-page="assets">Assets<span class="nav-warn" id="assetsNavWarn" hidden title="Assets missing or below recommended counts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
@@ -1648,6 +1666,42 @@
       </section>
 
       <!-- Geo Coverage Page -->
+      <section id="cannibalization" class="page">
+        <section id="cannSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to audit campaign cannibalization.</p>
+            <a class="btn-primary" href="/api/auth">Sign in with Google</a>
+          </div>
+        </section>
+        <section id="cannSignedIn" hidden>
+          <div class="controls-row">
+            <div>
+              <label class="field-label" for="cannDateSelect">Date range</label>
+              <select id="cannDateSelect" onchange="onCannDateRangeChange()">
+                <option value="yesterday">Yesterday</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="14days">Last 14 Days</option>
+                <option value="30days" selected>Last 30 Days</option>
+                <option value="thisMonth">This Month</option>
+                <option value="lastMonth">Last Month</option>
+                <option value="custom">Custom...</option>
+              </select>
+            </div>
+          </div>
+          <div id="cannPrompt" class="state" hidden><div class="big">Select an account</div>Choose a single account above to see which of its campaigns compete for the same search terms.</div>
+          <div id="cannLoading" class="state"><div class="spinner"></div>Analysing search terms…</div>
+          <div id="cannError" class="state" hidden></div>
+          <div id="cannEmpty" class="state" hidden><div class="big">No cannibalization found</div>No search term triggered more than one campaign in this period.</div>
+          <div id="cannWrap" hidden>
+            <div class="cann-summary" id="cannSummary"></div>
+            <table class="cann-table">
+              <thead><tr><th>Search Term</th><th class="num">Campaigns</th><th class="num">Impressions</th><th class="num">Clicks</th><th class="num">Cost</th><th class="num">Conv.</th></tr></thead>
+              <tbody id="cannBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
       <section id="geocoverage" class="page">
         <section id="geoSignedOut" hidden>
           <div class="gate">
@@ -2105,6 +2159,7 @@ function globalRefresh() {
     case "budgeting": loadUnderspend(true); break;
     case "bidding": loadBidding(true); break;
     case "geocoverage": if (GLOBAL_ACCOUNT !== "ALL") loadGeoCoverage(GLOBAL_ACCOUNT); break;
+    case "cannibalization": if (GLOBAL_ACCOUNT !== "ALL") loadCannibalization(); break;
     case "reporting": loadReporting(); break;
   }
 }
@@ -2762,6 +2817,7 @@ function cancelCustomDate() {
   else if (state.calendarTarget === "geo") syncGeoDateSelect();
   else if (state.calendarTarget === "acc") syncAccDateSelect();
   else if (state.calendarTarget === "rep") syncRepDateSelect();
+  else if (state.calendarTarget === "cann") syncCannDateSelect();
   else if (state.calendarTarget !== "compare") syncDateSelect();
 }
 
@@ -2793,6 +2849,7 @@ function applyCustomDate() {
   else if (t === "geo") loadGeoCoverage(GLOBAL_ACCOUNT);
   else if (t === "acc") loadAllAccounts();
   else if (t === "rep") loadReporting();
+  else if (t === "cann") loadCannibalization();
   else { if (state.compareEnabled) updateCompareUI(); loadCampaigns(); }
 }
 
@@ -3152,6 +3209,7 @@ function routeFromHash() {
   else if (page === "budgeting") initUnderspend();
   else if (page === "bidding") initBidding();
   else if (page === "geocoverage") initGeoCoverage();
+  else if (page === "cannibalization") initCannibalization();
   else if (page === "reporting") initReporting();
 }
 
@@ -3514,6 +3572,7 @@ function onGlobalAccountChange(val) {
   else if (page === "budgeting") { if (underspendState.loaded) renderUnderspendTable(); else initUnderspend(); }
   else if (page === "bidding") { if (biddingState.loaded) renderBiddingTable(); else initBidding(); }
   else if (page === "geocoverage") initGeoCoverage();
+  else if (page === "cannibalization") initCannibalization();
   else if (page === "reporting") initReporting();
 }
 
@@ -6777,6 +6836,78 @@ function onGeoDateRangeChange() {
 }
 
 function syncGeoDateSelect() { syncDateSelectEl("geoDateSelect", geoState.dateRange); }
+
+// ---------- Cannibalization ----------
+const cannState = { terms: [] };
+function syncCannDateSelect() { syncDateSelectEl("cannDateSelect", SHARED_DATE_RANGE); }
+function initCannibalization() {
+  document.getElementById("cannSignedOut").hidden = signedIn;
+  document.getElementById("cannSignedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  syncCannDateSelect();
+  loadCannibalization();
+}
+function onCannDateRangeChange() {
+  const val = document.getElementById("cannDateSelect").value;
+  if (val === "customApplied") return;
+  if (val === "custom") {
+    state.calendarTarget = "cann";
+    state.calendarFromDate = new Date();
+    state.calendarToDate = new Date();
+    document.getElementById("calendarTitle").textContent = "Custom date range";
+    renderCalendar("from");
+    renderCalendar("to");
+    document.getElementById("customDateModal").setAttribute("open", "");
+  } else {
+    setSharedDateRange(DATE_PRESET_MAP[val]);
+    loadCannibalization();
+  }
+}
+async function loadCannibalization() {
+  if (!signedIn) { initCannibalization(); return; }
+  document.getElementById("cannSignedOut").hidden = true;
+  document.getElementById("cannSignedIn").hidden = false;
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.hidden = !on; };
+  ["cannPrompt", "cannLoading", "cannError", "cannEmpty", "cannWrap"].forEach(id => show(id, false));
+  if (GLOBAL_ACCOUNT === "ALL") { show("cannPrompt", true); return; }
+  show("cannLoading", true);
+  try {
+    const res = await fetch("/api/cannibalization?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(rangeToGAQL(SHARED_DATE_RANGE)), { credentials: "same-origin" });
+    if (res.status === 401) { showSignedOut(); return; }
+    const data = await res.json();
+    show("cannLoading", false);
+    if (data.error && !(data.terms && data.terms.length)) { if (data.error === "Select a single account") { show("cannPrompt", true); return; } throw new Error(data.detail || data.error); }
+    cannState.terms = data.terms || [];
+    if (!cannState.terms.length) { show("cannEmpty", true); return; }
+    renderCannibalization();
+    show("cannWrap", true);
+    setLastRefresh("cannibalization");
+  } catch (e) {
+    show("cannLoading", false);
+    const el = document.getElementById("cannError"); el.hidden = false;
+    el.innerHTML = '<div class="big">Couldn\u2019t analyse search terms</div>' + escapeHtml(e.message || "Please try again.");
+  }
+}
+function renderCannibalization() {
+  const terms = cannState.terms;
+  document.getElementById("cannSummary").textContent = terms.length + " search term" + (terms.length === 1 ? "" : "s") + " triggered more than one campaign in this period.";
+  document.getElementById("cannBody").innerHTML = terms.map((t, i) => {
+    const main = '<tr class="cann-row" onclick="toggleCannRow(' + i + ')"><td class="cann-term"><span class="cann-caret">\u203A</span>' + escapeHtml(t.term) + '</td>' +
+      '<td class="num"><span class="cann-badge">' + t.campaignCount + '</span></td>' +
+      '<td class="num tabnum">' + fmtInt(t.impressions) + '</td><td class="num tabnum">' + fmtInt(t.clicks) + '</td>' +
+      '<td class="num tabnum">' + fmtCurrency0(t.cost) + '</td><td class="num tabnum">' + fmtInt(t.conversions) + "</td></tr>";
+    const detail = '<tr class="cann-detail" id="cann-detail-' + i + '" hidden><td colspan="6"><div class="cann-camps">' +
+      t.campaigns.map(c => '<div class="cann-camp"><span class="cann-camp-name">' + escapeHtml(c.name) + '</span><span class="cann-camp-m">' + fmtInt(c.impressions) + " impr · " + fmtInt(c.clicks) + " clicks · " + fmtCurrency0(c.cost) + " · " + fmtInt(c.conversions) + " conv</span></div>").join("") +
+      "</div></td></tr>";
+    return main + detail;
+  }).join("");
+}
+function toggleCannRow(i) {
+  const el = document.getElementById("cann-detail-" + i);
+  if (!el) return;
+  el.hidden = !el.hidden;
+  if (el.previousElementSibling) el.previousElementSibling.classList.toggle("open", !el.hidden);
+}
 
 async function loadGeoCoverage(customerId) {
   geoState.loadedAccount = customerId;
