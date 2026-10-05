@@ -1,13 +1,14 @@
 // GET /api/adcopy?customerId=1234567890[&debug=1]
-// Lists Headline and Description text assets from enabled Responsive Search Ads
-// (enabled ad group + campaign), at per-ad granularity — the front end rolls these
+// Lists Headline and Description text assets from Responsive Search Ads in any
+// non-removed campaign / ad group / ad, tagged with all three statuses so the front end
+// can filter them (defaults: Enabled only), at per-ad granularity — the front end rolls these
 // up to whichever view level (Account/Campaign/Ad Group/Ad) the user has selected,
 // summing impressions/clicks and recomputing CTR after aggregation.
-//   { rows: [{ name, campaignId, adGroup, adGroupId, adId, assetType, text, impressions, clicks }], warning?, diag? }
+//   { rows: [{ name, campaignId, campaignStatus, adGroup, adGroupId, adGroupStatus, adId, adStatus, assetType, text, impressions, clicks }], warning?, diag? }
 
 import { getRefreshToken, getAccessToken, adsRequest, json } from "../../shared/google.js";
 
-const VERSION = "v2-per-ad";
+const VERSION = "v3-statuses";
 const FIELD_LABEL = { HEADLINE: "Headline", DESCRIPTION: "Description" };
 const STATUS_LABEL = { ENABLED: "Enabled", PAUSED: "Paused" };
 
@@ -34,16 +35,16 @@ export async function onRequestGet(context) {
 
   const query = `
     SELECT
-      campaign.id, campaign.name,
-      ad_group.id, ad_group.name,
+      campaign.id, campaign.name, campaign.status,
+      ad_group.id, ad_group.name, ad_group.status,
       ad_group_ad.ad.id, ad_group_ad.status,
       ad_group_ad_asset_view.field_type, ad_group_ad_asset_view.enabled,
       asset.id, asset.text_asset.text,
       metrics.clicks, metrics.impressions
     FROM ad_group_ad_asset_view
     WHERE ad_group_ad_asset_view.field_type IN ('HEADLINE','DESCRIPTION')
-      AND campaign.status = 'ENABLED'
-      AND ad_group.status = 'ENABLED'
+      AND campaign.status != 'REMOVED'
+      AND ad_group.status != 'REMOVED'
       AND ad_group_ad.status != 'REMOVED'
       AND ${dateClause}`;
 
@@ -71,10 +72,12 @@ export async function onRequestGet(context) {
     const agId = r.adGroup?.id || "", agName = r.adGroup?.name || "";
     const adId = r.adGroupAd?.ad?.id || "";
     const adStatus = STATUS_LABEL[r.adGroupAd?.status] || "";
+    const campaignStatus = STATUS_LABEL[r.campaign?.status] || "";
+    const adGroupStatus = STATUS_LABEL[r.adGroup?.status] || "";
     const key = campId + "|" + agId + "|" + adId + "|" + label + "|" + text;
     let row = agg.get(key);
     if (!row) {
-      row = { campaignId: campId, name: campName, adGroupId: agId, adGroup: agName, adId, adStatus, assetType: label, text, impressions: 0, clicks: 0 };
+      row = { campaignId: campId, name: campName, campaignStatus, adGroupId: agId, adGroup: agName, adGroupStatus, adId, adStatus, assetType: label, text, impressions: 0, clicks: 0 };
       agg.set(key, row);
     }
     row.impressions += Number(r.metrics?.impressions) || 0;
