@@ -1320,6 +1320,39 @@
                       <div class="filter-checklist" id="acfAdGroupList"></div>
                     </div>
                   </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('ac-group-campstatus', event)">
+                    <span class="toggle">+</span>Campaign Status
+                  </div>
+                  <div class="filter-group-items" id="ac-group-campstatus" hidden>
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="acfCampStatEnabled" checked /><label for="acfCampStatEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="acfCampStatPaused" /><label for="acfCampStatPaused">Paused</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('ac-group-agstatus', event)">
+                    <span class="toggle">+</span>Ad Group Status
+                  </div>
+                  <div class="filter-group-items" id="ac-group-agstatus" hidden>
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="acfAgStatEnabled" checked /><label for="acfAgStatEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="acfAgStatPaused" /><label for="acfAgStatPaused">Paused</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('ac-group-adstatus', event)">
+                    <span class="toggle">+</span>Ad Status
+                  </div>
+                  <div class="filter-group-items" id="ac-group-adstatus" hidden>
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="acfAdStatEnabled" checked /><label for="acfAdStatEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="acfAdStatPaused" /><label for="acfAdStatPaused">Paused</label></div>
+                      </div>
+                    </div>
+                  </div>
                   <div class="filter-group-header" onclick="toggleFilterGroup('ac-group-assettype', event)">
                     <span class="toggle">+</span>Asset Type
                   </div>
@@ -4984,7 +5017,7 @@ function populateAccCampaignFilter() {
     const seen = new Set();
     if (currentHashPage() === "adcopy") {
       (acState.rows || []).forEach(r => {
-        if (r.name && !seen.has(r.name)) { seen.add(r.name); list.push({ name: r.name, status: (r.status || "ENABLED").toUpperCase() }); }
+        if (r.name && !seen.has(r.name)) { seen.add(r.name); list.push({ name: r.name, status: (r.campaignStatus || "Enabled").toUpperCase() }); }
       });
     } else if (GLOBAL_ACCOUNT !== "ALL" && state.campaigns && state.campaigns.length) {
       state.campaigns.forEach(c => {
@@ -6490,7 +6523,13 @@ const AC_VIEW_LEVELS = [["account", "Account-level"], ["campaign", "Campaign-lev
 const AC_COL_GROUPS = ["Columns"];
 const AC_DEFAULT_VISIBLE = ["ctr", "impressions", "clicks"];
 const AC_ASSETTYPE_BOXES = [["acfTypeHeadline", "Headline"], ["acfTypeDescription", "Description"]];
-const acState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), assetType: new Set(), adText: "", adTextOp: "contains" }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("adcopy") || AC_DEFAULT_VISIBLE), "assetType", "text"]), openColGroups: new Set(["acColsPop_g0"]), heatmap: false, viewLevel: "account", dateRange: SHARED_DATE_RANGE };
+// Status filters: [state key, checkbox id prefix]. Values are "Enabled" / "Paused"; default Enabled.
+const AC_STATUS_FILTERS = [["campStatus", "acfCampStat"], ["agStatus", "acfAgStat"], ["adStatus", "acfAdStat"]];
+const acStatusFromBoxes = (prefix) => new Set(["Enabled", "Paused"].filter(s => document.getElementById(prefix + s).checked));
+function acSyncStatusBoxes() {
+  AC_STATUS_FILTERS.forEach(([key, prefix]) => ["Enabled", "Paused"].forEach(s => { document.getElementById(prefix + s).checked = acState.filters[key].has(s); }));
+}
+const acState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), assetType: new Set(), adText: "", adTextOp: "contains", campStatus: new Set(["Enabled"]), agStatus: new Set(["Enabled"]), adStatus: new Set(["Enabled"]) }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("adcopy") || AC_DEFAULT_VISIBLE), "assetType", "text"]), openColGroups: new Set(["acColsPop_g0"]), heatmap: false, viewLevel: "account", dateRange: SHARED_DATE_RANGE };
 
 function populateAcFilterOptions() {
   const inAll = GLOBAL_ACCOUNT === "ALL";
@@ -6547,11 +6586,13 @@ function restoreAcFilters() {
   const opEl = document.getElementById("acfAdTextOp");
   if (opEl && !opEl.options.length) opEl.innerHTML = TEXT_OP_OPTIONS;
   const saved = loadPageFilters("adcopy");
-  if (!saved) { if (opEl) opEl.value = acState.filters.adTextOp; return; }
-  acState.filters = { account: new Set(Array.isArray(saved.account) ? saved.account : []), campaign: new Set(Array.isArray(saved.campaign) ? saved.campaign : []), adGroup: new Set(Array.isArray(saved.adGroup) ? saved.adGroup : []), assetType: new Set(Array.isArray(saved.assetType) ? saved.assetType : []), adText: saved.adText || "", adTextOp: saved.adTextOp || "contains" };
+  if (!saved) { if (opEl) opEl.value = acState.filters.adTextOp; acSyncStatusBoxes(); return; }
+  acState.filters = { account: new Set(Array.isArray(saved.account) ? saved.account : []), campaign: new Set(Array.isArray(saved.campaign) ? saved.campaign : []), adGroup: new Set(Array.isArray(saved.adGroup) ? saved.adGroup : []), assetType: new Set(Array.isArray(saved.assetType) ? saved.assetType : []), adText: saved.adText || "", adTextOp: saved.adTextOp || "contains",
+    campStatus: new Set(Array.isArray(saved.campStatus) ? saved.campStatus : ["Enabled"]), agStatus: new Set(Array.isArray(saved.agStatus) ? saved.agStatus : ["Enabled"]), adStatus: new Set(Array.isArray(saved.adStatus) ? saved.adStatus : ["Enabled"]) };
   AC_ASSETTYPE_BOXES.forEach(([id, label]) => { document.getElementById(id).checked = acState.filters.assetType.has(label); });
   document.getElementById("acfAdText").value = acState.filters.adText;
   if (opEl) opEl.value = acState.filters.adTextOp;
+  acSyncStatusBoxes();
 }
 function applyAcFilters() {
   const inAll = GLOBAL_ACCOUNT === "ALL";
@@ -6564,10 +6605,13 @@ function applyAcFilters() {
     assetType,
     adText: document.getElementById("acfAdText").value,
     adTextOp: document.getElementById("acfAdTextOp").value,
+    campStatus: acStatusFromBoxes("acfCampStat"),
+    agStatus: acStatusFromBoxes("acfAgStat"),
+    adStatus: acStatusFromBoxes("acfAdStat"),
   };
   document.getElementById("acFiltersMenu").hidden = true;
   acState.currentPage = 1;
-  savePageFilters("adcopy", { account: [...acState.filters.account], campaign: [...acState.filters.campaign], adGroup: [...acState.filters.adGroup], assetType: [...assetType], adText: acState.filters.adText, adTextOp: acState.filters.adTextOp });
+  savePageFilters("adcopy", { account: [...acState.filters.account], campaign: [...acState.filters.campaign], adGroup: [...acState.filters.adGroup], assetType: [...assetType], adText: acState.filters.adText, adTextOp: acState.filters.adTextOp, campStatus: [...acState.filters.campStatus], agStatus: [...acState.filters.agStatus], adStatus: [...acState.filters.adStatus] });
   updateAcFilterCount();
   renderAdCopyTable();
 }
@@ -6578,6 +6622,7 @@ function resetAcFilters() {
   AC_ASSETTYPE_BOXES.forEach(([id]) => { document.getElementById(id).checked = false; });
   document.getElementById("acfAdText").value = "";
   document.getElementById("acfAdTextOp").value = "contains";
+  AC_STATUS_FILTERS.forEach(([, prefix]) => { document.getElementById(prefix + "Enabled").checked = true; document.getElementById(prefix + "Paused").checked = false; });
   populateAcFilterOptions();
   applyAcFilters();
 }
@@ -6585,7 +6630,8 @@ function updateAcFilterCount() {
   const f = acState.filters;
   const inAll = GLOBAL_ACCOUNT === "ALL";
   const adTextOn = (f.adText || "").trim() ? 1 : 0;
-  const n = ((inAll && f.account.size) ? 1 : 0) + (f.campaign.size ? 1 : 0) + (f.adGroup.size ? 1 : 0) + (f.assetType.size ? 1 : 0) + adTextOn;
+  const n = ((inAll && f.account.size) ? 1 : 0) + (f.campaign.size ? 1 : 0) + (f.adGroup.size ? 1 : 0) + (f.assetType.size ? 1 : 0) + adTextOn
+    + (f.campStatus.size ? 1 : 0) + (f.agStatus.size ? 1 : 0) + (f.adStatus.size ? 1 : 0);
   const el = document.getElementById("acFilterCount");
   if (n > 0) { el.textContent = n; el.hidden = false; } else { el.hidden = true; }
   markFilterGroup("ac-group-account", (inAll && f.account.size) ? f.account.size : 0);
@@ -6593,6 +6639,9 @@ function updateAcFilterCount() {
   markFilterGroup("ac-group-adgroup", f.adGroup.size);
   markFilterGroup("ac-group-assettype", f.assetType.size);
   markFilterGroup("ac-group-adtext", adTextOn);
+  markFilterGroup("ac-group-campstatus", f.campStatus.size);
+  markFilterGroup("ac-group-agstatus", f.agStatus.size);
+  markFilterGroup("ac-group-adstatus", f.adStatus.size);
 }
 
 function renderAcViewPop() {
@@ -6693,6 +6742,9 @@ function renderAdCopyTable() {
         if (f.campaign.size && !f.campaign.has(r.name || "")) return false;
         if (f.adGroup.size && !f.adGroup.has(r.adGroup || "")) return false;
         if (f.assetType.size && !f.assetType.has(r.assetType || "")) return false;
+        if (f.campStatus.size && !f.campStatus.has(r.campaignStatus || "Enabled")) return false;
+        if (f.agStatus.size && !f.agStatus.has(r.adGroupStatus || "Enabled")) return false;
+        if (f.adStatus.size && !f.adStatus.has(r.adStatus || "Enabled")) return false;
         if (!matchTextFilter(r.text, f.adTextOp, f.adText)) return false;
         { const camp = getCampPickerValue(); if (camp && (r.name || "") !== camp) return false; }
         return true;
