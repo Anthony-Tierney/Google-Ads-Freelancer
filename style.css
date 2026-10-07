@@ -321,8 +321,8 @@ a.hero-rating:hover {
 }
 
 .hero-rating-google {
-  width: 46px;
-  height: 46px;
+  width: 36px;
+  height: 36px;
   max-width: none;
   flex-shrink: 0;
   object-fit: contain;
