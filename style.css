@@ -350,6 +350,11 @@ img {
   left: -35px;
 }
 
+.floating-card-3 {
+  bottom: 21px;
+  right: -103px;
+}
+
 .clients-section {
   max-width: 1200px;
   margin: 5rem auto;
@@ -2406,6 +2411,10 @@ input[type=range]::-moz-range-thumb:hover {
     bottom: 20px;
     left: -10px;
   }
+  .floating-card-3 {
+    bottom: 20px;
+    right: -85px;
+  }
   .calculator-container {
     flex-direction: column;
   }
@@ -2562,6 +2571,10 @@ input[type=range]::-moz-range-thumb:hover {
   .floating-card-2 {
     bottom: -40px;
     left: -25px;
+  }
+  .floating-card-3 {
+    bottom: -40px;
+    right: -100px;
   }
   .contact-info {
     flex-direction: column;
@@ -2910,6 +2923,10 @@ input[type=range]::-moz-range-thumb:hover {
   .floating-card-2 {
     bottom: -40px;
     left: -25px;
+  }
+  .floating-card-3 {
+    bottom: -40px;
+    right: -95px;
   }
 }
 
