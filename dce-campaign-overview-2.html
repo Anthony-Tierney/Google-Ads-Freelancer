@@ -1515,10 +1515,9 @@
     if (!mapEl) return;
     
     conversionMap = L.map(mapEl).setView([52.3555, -1.1743], 6);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
-      maxZoom: 19,
-      subdomains: 'abcd'
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
     }).addTo(conversionMap);
     
     const conversions = conversionLocations.map(l => l.conversions);
