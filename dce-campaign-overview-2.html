@@ -787,6 +787,44 @@
     <!-- Monthly Summaries Panel -->
     <div id="panel-summaries" class="tab-panel" style="display:none;">
     
+      <!-- New September 2026 Section -->
+      <div class="faq-section">
+        <div class="faq-toggle" onclick="toggleFaq('sep2026')">
+          <h1>September 2026 Summary</h1>
+          <div class="faq-chevron collapsed" id="chevron-sep2026">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 6L8 10L12 6" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <hr class="faq-divider" id="divider-sep2026">
+        <div class="faq-body collapsed" id="body-sep2026">
+          <p style="margin: 10px 0 0 0; font-size: 0.9rem; line-height: 1.5; color: #5f6368;"><strong>Highlights:</strong> Conversions (points of contact) decreased month-on-month between August and September 2026 from 49 to 32. However, it was noted that August 2026 was a record month.</p>
+          <p style="margin: 10px 0 0 0; font-size: 0.9rem; line-height: 1.5; color: #5f6368;">Cost-per-contact rose from £33.98 to £61.09, aligning with performance levels seen in June/July.</p>
+          <p style="margin: 10px 0 0 0; font-size: 0.9rem; line-height: 1.5; color: #5f6368;">Cost-per-contact decreased significantly year-on-year from £115.76 in September 2025 - which was noted to be the worst performing month last year.</p>
+          <p style="margin: 10px 0 0 0; font-size: 0.9rem; line-height: 1.5; color: #5f6368;">On a positive note, September's 32 contacts were still higher than July's 28 and included 6 phone calls and 6 email enquiries from PPC, alongside 4 form submissions and 16 brochure downloads.</p>
+          <p style="margin: 10px 0 0 0; font-size: 0.9rem; line-height: 1.5; color: #5f6368;">It should be noted that the overall cost per contact decreases significantly from £61.09 to £43.74 (-28%) when looking at the account's performance excluding the LEV campaign - which inflates the overall cost per conversion for the account as a whole.</p>
+        </div>
+      </div>
+
+      <!-- New August 2026 Section -->
+      <div class="faq-section">
+        <div class="faq-toggle" onclick="toggleFaq('aug2026')">
+          <h1>August 2026 Summary</h1>
+          <div class="faq-chevron collapsed" id="chevron-aug2026">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 6L8 10L12 6" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <hr class="faq-divider" id="divider-aug2026">
+        <div class="faq-body collapsed" id="body-aug2026">
+          <p style="margin: 10px 0 0 0; font-size: 0.9rem; line-height: 1.5; color: #5f6368;"><strong>Highlights:</strong> Conversions (points of contact) rose by 75% month-on-month between July and August from 28 to a record 49, while ad spend increased only marginally by 2%.</p>
+          <p style="margin: 10px 0 0 0; font-size: 0.9rem; line-height: 1.5; color: #5f6368;">As a result, cost-per-contact dropped significantly by 42%, from £58.23 to £33.98.</p>
+          <p style="margin: 10px 0 0 0; font-size: 0.9rem; line-height: 1.5; color: #5f6368;">Form submissions, brochure downloads and clicks to email from PPC achieved record highs.</p>
+        </div>
+      </div>
+
       <!-- New July 2026 Section -->
       <div class="faq-section">
         <div class="faq-toggle" onclick="toggleFaq('jul2026')">
@@ -981,7 +1019,7 @@
     'Jan 25','Feb 25','Mar 25','Apr 25','May 25','Jun 25',
     'Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25',
     'Jan 26','Feb 26','Mar 26','Apr 26','May 26','Jun 26',
-    'Jul 26','Aug 26'
+    'Jul 26','Aug 26','Sep 26'
   ];
 
   var campaigns = [
@@ -989,29 +1027,29 @@
       label: 'Paid Form Submissions',
       color: '#34a853',
       group: 'paid',
-      data: [0,5,0,1,1,5,5,7,5,5,5,3,5,5,5,3,4,4,7,6]
+      data: [0,5,0,1,1,5,5,7,5,5,5,3,5,5,5,3,4,4,7,8,4]
     },
     {
       label: 'Paid Phone Calls',
       color: '#fb923c',
       group: 'paid',
-      data: [0,0,0,0,0,0,0,0,0,0,2,2,4,7,8,12,9,6,5,8]
+      data: [0,0,0,0,0,0,0,0,0,0,2,2,4,7,8,12,9,6,5,9,6]
     },
     {
       label: 'Paid Email Enquiries',
       color: '#ea4335',
       group: 'paid',
-      data: [0,0,0,0,0,0,0,0,0,0,0,2,2,4,2,5,8,3,1,6]
+      data: [0,0,0,0,0,0,0,0,0,0,0,2,2,4,2,5,8,3,1,8,6]
     },
     {
       label: 'Paid Brochure Downloads',
       color: '#9c27b0',
       group: 'paid',
-      data: [5,1,8,12,12,7,14,2,3,12,11,10,9,13,14,14,12,22,15,16]
+      data: [5,1,8,12,12,7,14,2,3,12,11,10,9,13,14,14,12,22,15,24,16]
     }
   ];
 
-  var spendData = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38,2044.70,1630.44,1107.80];
+  var spendData = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38,2044.70,1630.44,1664.96,1954.88];
 
   var ctx = document.getElementById('conversionsChart').getContext('2d');
   // Default is false
@@ -1165,7 +1203,7 @@
   }
 
   /* ── Cost per Contact line chart ── */
-  var cpcData = [0,54.93,73.38,47.72,73.11,80.52,55.23,103.78,115.76,45.52,58.87,61.10,53.83,39.80,40.80,32.77,41.01,58.42,58.23,30.77];
+  var cpcData = [0,54.93,73.38,47.72,73.11,80.52,55.23,103.78,115.76,45.52,58.87,61.10,53.83,39.80,40.80,32.77,41.01,58.42,58.23,33.98,61.09];
 
   var cpcCtx = document.getElementById('cpcChart').getContext('2d');
   var cpcLabelsVisible = true;
@@ -1299,123 +1337,148 @@
     'Shetland': {lat: 60.3510, lng: -1.2860}, 'Shrewsbury': {lat: 52.7069, lng: -2.7529}, 'Smethwick': {lat: 52.4890, lng: -1.9660},
     'Somercotes': {lat: 53.0790, lng: -1.3480}, 'Southampton': {lat: 50.9097, lng: -1.4044}, 'St Helens': {lat: 53.4530, lng: -2.7370},
     'Telford': {lat: 52.6784, lng: -2.4453}, 'Thorne': {lat: 53.6120, lng: -0.9540}, 'Washington': {lat: 54.8990, lng: -1.5150},
-    'Wolverhampton': {lat: 52.5870, lng: -2.1290}
+    'Wolverhampton': {lat: 52.5870, lng: -2.1290},
+    'Ripon': {lat: 54.1360, lng: -1.5230}, 'Stalybridge': {lat: 53.4830, lng: -2.0530}, 'Droitwich Spa': {lat: 52.2680, lng: -2.1550},
+    'Derby': {lat: 52.9225, lng: -1.4746}, 'Oxford': {lat: 51.7520, lng: -1.2577},
+    'Barton-upon-Humber': {lat: 53.684, lng: -0.441}, 'Congleton': {lat: 53.162, lng: -2.213}, 'Coventry': {lat: 52.4068, lng: -1.5197}, 'Croft': {lat: 52.574, lng: -1.224}, 'Dewsbury': {lat: 53.691, lng: -1.629}, 'Ilkeston': {lat: 52.972, lng: -1.303}, 'Kirkby in Ashfield': {lat: 53.099, lng: -1.249}, 'Londonderry': {lat: 54.9966, lng: -7.3086}, 'Loughborough': {lat: 52.7721, lng: -1.2062}, 'Malvern': {lat: 52.112, lng: -2.326}, 'Normanton': {lat: 53.7, lng: -1.419}, 'Peterborough': {lat: 52.5695, lng: -0.2405}, 'Pontefract': {lat: 53.691, lng: -1.312}, 'Preston': {lat: 53.7632, lng: -2.7031}, 'Waterlooville': {lat: 50.88, lng: -1.03}, 'Wyke': {lat: 53.737, lng: -1.749}
   };
   
   const conversionLocations = [
-    {city: 'London', conversions: 18.19},
-    {city: 'Wakefield', conversions: 15.5},
-    {city: 'Birmingham', conversions: 10.0},
-    {city: 'Manchester', conversions: 7.0},
+    {city: 'London', conversions: 21.18},
+    {city: 'Wakefield', conversions: 19.5},
+    {city: 'Birmingham', conversions: 11.0},
+    {city: 'Manchester', conversions: 9.0},
+    {city: 'Leeds', conversions: 8.0},
+    {city: 'Bradford', conversions: 5.0},
     {city: 'Darnall', conversions: 5.0},
-    {city: 'Leeds', conversions: 4.0},
     {city: 'Tamworth', conversions: 3.89},
+    {city: 'Ossett', conversions: 3.0},
+    {city: 'Sheffield', conversions: 3.0},
     {city: 'Barnsley', conversions: 3.0},
+    {city: 'Huddersfield', conversions: 3.0},
     {city: 'Leicester', conversions: 3.0},
-    {city: 'Haslingden', conversions: 2.0},
-    {city: 'Redditch', conversions: 2.0},
-    {city: 'Southampton', conversions: 2.0},
-    {city: 'Glenmavis', conversions: 2.0},
-    {city: 'Headington', conversions: 2.0},
+    {city: 'Chipping Norton', conversions: 2.0},
+    {city: 'Ripon', conversions: 2.0},
     {city: 'Bristol', conversions: 2.0},
-    {city: 'Sheffield', conversions: 2.0},
-    {city: 'Macclesfield', conversions: 2.0},
+    {city: 'Salford', conversions: 2.0},
+    {city: 'Somercotes', conversions: 2.0},
+    {city: 'Lancaster', conversions: 2.0},
     {city: 'Stoke-on-Trent', conversions: 2.0},
     {city: 'Ipswich', conversions: 2.0},
-    {city: 'Warwick', conversions: 2.0},
-    {city: 'Ossett', conversions: 2.0},
-    {city: 'Lancaster', conversions: 2.0},
     {city: 'Doncaster', conversions: 2.0},
-    {city: 'Bradford', conversions: 2.0},
+    {city: 'Warwick', conversions: 2.0},
+    {city: 'Macclesfield', conversions: 2.0},
+    {city: 'Headington', conversions: 2.0},
     {city: 'Penistone', conversions: 2.0},
     {city: 'Staveley', conversions: 2.0},
+    {city: 'Haslingden', conversions: 2.0},
+    {city: 'Southampton', conversions: 2.0},
+    {city: 'Redditch', conversions: 2.0},
+    {city: 'Glenmavis', conversions: 2.0},
+    {city: 'Derby', conversions: 2.0},
+    {city: 'Liverpool', conversions: 2.0},
+    {city: 'Bicester', conversions: 2.0},
+    {city: 'Congleton', conversions: 2.0},
     {city: 'Kidsgrove', conversions: 2.0},
-    {city: 'Somercotes', conversions: 2.0},
     {city: 'Sherburn in Elmet', conversions: 1.25},
-    {city: 'Fakenham', conversions: 1.0},
-    {city: 'Hereford', conversions: 1.0},
-    {city: 'Thorne', conversions: 1.0},
+    {city: 'Wyke', conversions: 1.01},
+    {city: 'Ulverston', conversions: 1.0},
+    {city: 'Glenrothes', conversions: 1.0},
+    {city: 'Stalybridge', conversions: 1.0},
+    {city: 'Newark-on-Trent', conversions: 1.0},
+    {city: 'Rochdale', conversions: 1.0},
+    {city: 'Belper', conversions: 1.0},
+    {city: 'Linthwaite', conversions: 1.0},
+    {city: 'Peterborough', conversions: 1.0},
+    {city: 'Huntingdon', conversions: 1.0},
+    {city: 'Worksop', conversions: 1.0},
+    {city: 'Coventry', conversions: 1.0},
+    {city: 'Londonderry', conversions: 1.0},
+    {city: 'Wolverhampton', conversions: 1.0},
+    {city: 'Worcester', conversions: 1.0},
+    {city: 'Croft', conversions: 1.0},
+    {city: 'Sunderland', conversions: 1.0},
+    {city: 'Stockport', conversions: 1.0},
+    {city: 'Brighouse', conversions: 1.0},
+    {city: 'Scunthorpe', conversions: 1.0},
+    {city: 'Malvern', conversions: 1.0},
+    {city: 'Oldham', conversions: 1.0},
+    {city: 'Kingston upon Hull', conversions: 1.0},
+    {city: 'Preston', conversions: 1.0},
+    {city: 'Barton-upon-Humber', conversions: 1.0},
+    {city: 'Brownhills', conversions: 1.0},
+    {city: 'Armthorpe', conversions: 1.0},
+    {city: 'Colchester', conversions: 1.0},
+    {city: 'Cleckheaton', conversions: 1.0},
+    {city: 'Mansfield', conversions: 1.0},
+    {city: 'Ashford', conversions: 1.0},
+    {city: 'Paisley', conversions: 1.0},
+    {city: 'Bath', conversions: 1.0},
+    {city: 'Fareham', conversions: 1.0},
+    {city: 'Birchwood', conversions: 1.0},
+    {city: 'Droitwich Spa', conversions: 1.0},
+    {city: 'Kirkby in Ashfield', conversions: 1.0},
+    {city: 'Shetland', conversions: 1.0},
+    {city: 'St Helens', conversions: 1.0},
+    {city: 'Middlesbrough', conversions: 1.0},
+    {city: 'Gedling', conversions: 1.0},
+    {city: 'Ambrosden', conversions: 1.0},
+    {city: 'Moreton-in-Marsh', conversions: 1.0},
+    {city: 'Cramlington', conversions: 1.0},
+    {city: 'Cannock', conversions: 1.0},
+    {city: 'Nairn', conversions: 1.0},
+    {city: 'Telford', conversions: 1.0},
+    {city: 'Speke', conversions: 1.0},
+    {city: 'East Kilbride', conversions: 1.0},
+    {city: 'Halesowen', conversions: 1.0},
+    {city: 'Ormskirk', conversions: 1.0},
+    {city: 'Loughborough', conversions: 1.0},
+    {city: 'Lowestoft', conversions: 1.0},
+    {city: 'Bridgwater', conversions: 1.0},
+    {city: 'Shepshed', conversions: 1.0},
+    {city: 'Normanton', conversions: 1.0},
+    {city: 'Batley', conversions: 1.0},
+    {city: 'Smethwick', conversions: 1.0},
+    {city: 'Alfreton', conversions: 1.0},
+    {city: 'Stourbridge', conversions: 1.0},
+    {city: 'Sudbury', conversions: 1.0},
+    {city: 'Dagenham', conversions: 1.0},
     {city: 'Accrington', conversions: 1.0},
-    {city: 'Aylesford', conversions: 1.0},
-    {city: 'Barrow upon Soar', conversions: 1.0},
-    {city: 'Long Eaton', conversions: 1.0},
-    {city: 'Newcastle-under-Lyme', conversions: 1.0},
+    {city: 'Hove', conversions: 1.0},
+    {city: 'Stanningley', conversions: 1.0},
+    {city: 'Hereford', conversions: 1.0},
+    {city: 'Oxford', conversions: 1.0},
+    {city: 'Fakenham', conversions: 1.0},
     {city: 'Kingswinford', conversions: 1.0},
+    {city: 'Broadstairs', conversions: 1.0},
+    {city: 'Halifax', conversions: 1.0},
+    {city: 'Dordon', conversions: 1.0},
+    {city: 'Ashton-on-Ribble', conversions: 1.0},
+    {city: 'Long Eaton', conversions: 1.0},
+    {city: 'Barrow upon Soar', conversions: 1.0},
+    {city: 'Newcastle-under-Lyme', conversions: 1.0},
+    {city: 'Aylesford', conversions: 1.0},
     {city: 'Harlow', conversions: 1.0},
     {city: 'Royston', conversions: 1.0},
     {city: 'Ashbourne', conversions: 1.0},
-    {city: 'Telford', conversions: 1.0},
-    {city: 'Stanningley', conversions: 1.0},
-    {city: 'Bridgwater', conversions: 1.0},
-    {city: 'Shepshed', conversions: 1.0},
-    {city: 'Belper', conversions: 1.0},
-    {city: 'Mansfield', conversions: 1.0},
-    {city: 'Ashford', conversions: 1.0},
-    {city: 'Huddersfield', conversions: 1.0},
-    {city: 'Brighouse', conversions: 1.0},
-    {city: 'Rochdale', conversions: 1.0},
-    {city: 'Cramlington', conversions: 1.0},
-    {city: 'Broadstairs', conversions: 1.0},
-    {city: 'Halifax', conversions: 1.0},
-    {city: 'Ambrosden', conversions: 1.0},
-    {city: 'Gedling', conversions: 1.0},
-    {city: 'Salford', conversions: 1.0},
-    {city: 'Lowestoft', conversions: 1.0},
-    {city: 'Hove', conversions: 1.0},
+    {city: 'Pontefract', conversions: 1.0},
     {city: 'Lofthouse', conversions: 1.0},
-    {city: 'Dordon', conversions: 1.0},
-    {city: 'East Kilbride', conversions: 1.0},
-    {city: 'Colchester', conversions: 1.0},
-    {city: 'Bicester', conversions: 1.0},
-    {city: 'The Royal Town of Sutton Coldfield', conversions: 1.0},
-    {city: 'West Bromwich', conversions: 1.0},
-    {city: 'Peterlee', conversions: 1.0},
-    {city: 'Halesowen', conversions: 1.0},
-    {city: 'Ormskirk', conversions: 1.0},
-    {city: 'Hapton', conversions: 1.0},
-    {city: 'Ashton-on-Ribble', conversions: 1.0},
-    {city: 'Newark-on-Trent', conversions: 1.0},
-    {city: 'Moreton-in-Marsh', conversions: 1.0},
-    {city: 'Cannock', conversions: 1.0},
-    {city: 'Nairn', conversions: 1.0},
-    {city: 'Batley', conversions: 1.0},
-    {city: 'Smethwick', conversions: 1.0},
-    {city: 'Speke', conversions: 1.0},
-    {city: 'Bridgnorth', conversions: 1.0},
-    {city: 'Axminster', conversions: 1.0},
-    {city: 'Keighley', conversions: 1.0},
-    {city: 'Oldham', conversions: 1.0},
-    {city: 'Shetland', conversions: 1.0},
-    {city: 'St Helens', conversions: 1.0},
-    {city: 'Linthwaite', conversions: 1.0},
-    {city: 'Kingston upon Hull', conversions: 1.0},
-    {city: 'Chipping Norton', conversions: 1.0},
-    {city: 'Armthorpe', conversions: 1.0},
-    {city: 'Middlesbrough', conversions: 1.0},
-    {city: 'Cleckheaton', conversions: 1.0},
-    {city: 'Scunthorpe', conversions: 1.0},
-    {city: 'Ulverston', conversions: 1.0},
-    {city: 'Sudbury', conversions: 1.0},
-    {city: 'Dagenham', conversions: 1.0},
-    {city: 'Glenrothes', conversions: 1.0},
-    {city: 'Bath', conversions: 1.0},
-    {city: 'Paisley', conversions: 1.0},
-    {city: 'Brownhills', conversions: 1.0},
-    {city: 'Worksop', conversions: 1.0},
-    {city: 'Stourbridge', conversions: 1.0},
-    {city: 'Alfreton', conversions: 1.0},
-    {city: 'Fareham', conversions: 1.0},
-    {city: 'Wolverhampton', conversions: 1.0},
-    {city: 'Worcester', conversions: 1.0},
-    {city: 'Sunderland', conversions: 1.0},
-    {city: 'Stockport', conversions: 1.0},
     {city: 'Nottingham', conversions: 1.0},
     {city: 'Washington', conversions: 1.0},
-    {city: 'Huntingdon', conversions: 1.0},
-    {city: 'Warrington', conversions: 1.0},
-    {city: 'Birchwood', conversions: 1.0},
-    {city: 'Ellesmere Port', conversions: 1.0},
+    {city: 'Ilkeston', conversions: 1.0},
+    {city: 'Thorne', conversions: 1.0},
     {city: 'Shrewsbury', conversions: 1.0},
+    {city: 'Ellesmere Port', conversions: 1.0},
+    {city: 'Peterlee', conversions: 1.0},
+    {city: 'West Bromwich', conversions: 1.0},
+    {city: 'The Royal Town of Sutton Coldfield', conversions: 1.0},
+    {city: 'Hapton', conversions: 1.0},
+    {city: 'Axminster', conversions: 1.0},
+    {city: 'Keighley', conversions: 1.0},
+    {city: 'Bridgnorth', conversions: 1.0},
+    {city: 'Waterlooville', conversions: 1.0},
+    {city: 'Warrington', conversions: 1.0},
+    {city: 'Dewsbury', conversions: 0.99},
     {city: 'Reading', conversions: 0.98},
   ];
   
@@ -1494,7 +1557,7 @@
   });
 
   /* ── Ad Spending line chart ── */
-  var adSpendMonthly = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38,2044.70,1630.44,1107.80];
+  var adSpendMonthly = [0,274.67,440.28,381.73,950.39,966.21,1049.29,934.06,926.04,773.91,1059.74,1038.73,1076.54,1154.22,1183.29,1114.22,1353.38,2044.70,1630.44,1664.96,1954.88];
 
   var adSpendCtx = document.getElementById('adSpendChart').getContext('2d');
   var adSpendLabelsVisible = true;
