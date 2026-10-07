@@ -310,10 +310,22 @@ img {
   margin-top: 1.75rem;
 }
 
+a.hero-rating {
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+a.hero-rating:hover {
+  opacity: 0.85;
+  transform: translateY(-2px);
+}
+
 .hero-rating-google {
-  font-size: 2.4rem;
-  color: #ffffff;
-  line-height: 1;
+  width: 46px;
+  height: 46px;
+  max-width: none;
+  flex-shrink: 0;
+  object-fit: contain;
 }
 
 .hero-rating-details {
