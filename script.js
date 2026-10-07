@@ -828,17 +828,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => {
-                if (response.ok) {
+            .then(async response => {
+                // FIX: read the response body so a rejection returned with a 200 status
+                // ({ success: false }) is treated as an error, not a success
+                let result = {};
+                try { result = await response.json(); } catch (_) {}
+
+                if (response.ok && result.success !== false) {
                     const redirectTo = contactForm.querySelector('input[name="redirectTo"]').value;
                     window.location.href = redirectTo;
                 } else {
-                    return response.json().then(errorData => {
-                        throw new Error(errorData.message || 'Form submission failed.');
-                    });
+                    throw new Error(result.message || `Form submission failed (${response.status}).`);
                 }
             })
             .catch(error => {
+                // FIX: log the real error and make the status box visible again
+                // (it was hidden with an inline display:none at the start of submit)
+                console.error('Contact form error:', error);
+                formStatus.style.display = 'block';
                 formStatus.className = 'show error';
                 formStatus.textContent = 'Error: ' + (error.message || 'There was an issue sending your message. Please try again.');
             })
