@@ -302,6 +302,43 @@ img {
   flex-wrap: wrap;
 }
 
+/* Hero Google rating badge */
+.hero-rating {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 1.75rem;
+}
+
+.hero-rating-google {
+  font-size: 2.4rem;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.hero-rating-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hero-rating-stars {
+  display: flex;
+  gap: 3px;
+  color: #FFD700;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.hero-rating-text {
+  margin: 6px 0 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #ffffff;
+  opacity: 0.9;
+}
+
 .headshot-container {
   position: relative;
   width: 306px;
@@ -1114,6 +1151,7 @@ img {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   width: 94.85px;
+  text-align: center;
 }
 
 .case-study-front h3 {
@@ -2556,6 +2594,9 @@ input[type=range]::-moz-range-thumb:hover {
     width: 100%;
     max-width: 300px;
   }
+  .hero-rating {
+    justify-content: center;
+  }
   .clients-scroll-track {
     animation-duration: 20s;
   }
@@ -2570,7 +2611,7 @@ input[type=range]::-moz-range-thumb:hover {
   }
   .floating-card-2 {
     bottom: -40px;
-    left: -25px;
+    left: -100px;
   }
   .floating-card-3 {
     bottom: -40px;
@@ -2922,7 +2963,7 @@ input[type=range]::-moz-range-thumb:hover {
   }
   .floating-card-2 {
     bottom: -40px;
-    left: -25px;
+    left: -95px;
   }
   .floating-card-3 {
     bottom: -40px;
