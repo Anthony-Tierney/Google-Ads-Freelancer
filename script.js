@@ -842,18 +842,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                // FIX: log the real error and make the status box visible again
-                // (it was hidden with an inline display:none at the start of submit)
                 console.error('Contact form error:', error);
+
+                // FALLBACK: a TypeError means the request never got a response
+                // ("Load failed" in Safari, "Failed to fetch" in Chrome) - usually a
+                // content blocker, privacy setting or dropped connection. Fall back to
+                // a standard form POST, which Static Forms accepts and which redirects
+                // to the thank-you page via the redirectTo field.
+                if (error instanceof TypeError && !contactForm.dataset.fallbackUsed) {
+                    contactForm.dataset.fallbackUsed = 'true';
+                    HTMLFormElement.prototype.submit.call(contactForm);
+                    return;
+                }
+
+                // Make the status box visible again (it was hidden with an inline
+                // display:none at the start of submit) and show a friendly message
                 formStatus.style.display = 'block';
                 formStatus.className = 'show error';
-                formStatus.textContent = 'Error: ' + (error.message || 'There was an issue sending your message. Please try again.');
-            })
-            .finally(() => {
+                formStatus.textContent = (error instanceof TypeError)
+                    ? 'Sorry, your message couldn\'t be sent. Please check your connection and try again, or email enquiries@anthonytierney.co.uk.'
+                    : 'Error: ' + (error.message || 'There was an issue sending your message. Please try again.');
+                resetButton();
+            });
+
+            function resetButton() {
                 if (formSpinner) formSpinner.style.display = 'none';
                 if (buttonText) buttonText.textContent = 'Send Message';
                 submitButton.disabled = false;
-            });
+            }
         });
     }
     // --- END: CONTACT FORM VALIDATION & SUBMISSION ---
