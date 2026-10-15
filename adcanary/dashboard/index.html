@@ -7283,9 +7283,23 @@ function renderGeoCoverage() {
   // ----- right map -----
   if (!geoState.map) {
     geoState.map = L.map("geoMap", { scrollWheelZoom: true }).setView([54.0, -2.5], 6); // UK
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: "&copy; OpenStreetMap &copy; CARTO", maxZoom: 19, subdomains: "abcd",
-    }).addTo(geoState.map);
+    // Basemap: OpenStreetMap tiles (no API key). CARTO's free tiles started requiring a key.
+    // If the primary source starts failing, swap once to a fallback so the map stays usable.
+    const GEO_TILE_SOURCES = [
+      { url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", opts: { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxZoom: 19 } },
+      { url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png", opts: { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, tiles by HOT', maxZoom: 19, subdomains: "abc" } },
+    ];
+    let tileIdx = 0, tileErrors = 0;
+    const addTiles = () => {
+      const src = GEO_TILE_SOURCES[tileIdx];
+      const layer = L.tileLayer(src.url, src.opts).addTo(geoState.map);
+      layer.on("tileerror", () => {
+        if (++tileErrors < 4 || tileIdx >= GEO_TILE_SOURCES.length - 1) return;
+        geoState.map.removeLayer(layer); tileIdx++; tileErrors = 0; addTiles();
+      });
+      layer.on("tileload", () => { tileErrors = 0; });
+    };
+    addTiles();
   }
   geoState.map.invalidateSize();
   if (geoState.layer) { geoState.layer.remove(); geoState.layer = null; }
