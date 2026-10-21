@@ -1826,6 +1826,12 @@
                 <option value="custom">Custom...</option>
               </select>
             </div>
+            <div class="filters">
+                <button class="filters-btn" id="geoHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                  Heatmap
+                </button>
+              </div>
             <div class="filters" id="geoFilterGroup">
                 <button class="filters-btn" id="geoFiltersBtn" aria-haspopup="true" title="Filters">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -1856,6 +1862,13 @@
                     <button class="apply" onclick="applyGeoFilters()">Apply</button>
                   </div>
                 </div>
+              </div>
+              <div class="filters" id="geoColsGroup">
+                <button class="filters-btn" id="geoColsBtn" aria-haspopup="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
+                  Columns <span class="count" id="geoColsCount">0</span>
+                </button>
+                <div class="pop col-pop" id="geoColsPop" hidden></div>
               </div>
           </div>
           <div class="panel">
@@ -2409,7 +2422,7 @@ function restoreUiPrefs() {
   apply("underspend", typeof underspendState !== "undefined" ? underspendState : null, ["sort", "pageSize", "columnWidths"]);
   apply("bidding", typeof biddingState !== "undefined" ? biddingState : null, ["sort", "pageSize", "columnWidths"]);
   apply("audit", typeof auditState !== "undefined" ? auditState : null, ["pageSize", "columnWidths"]);
-  apply("geocoverage", typeof geoState !== "undefined" ? geoState : null, ["sort", "columnWidths", "sideWidth"]);
+  apply("geocoverage", typeof geoState !== "undefined" ? geoState : null, ["sort", "columnWidths", "sideWidth", "heatmap"]);
 }
 
 // Shared date range across every page (any category). Chosen on one page, it applies
@@ -3887,7 +3900,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -6836,7 +6849,29 @@ function nearestPlace(lat, lng) {
   return best;
 }
 const geoState = { loadedAccount: null, radius: [], locations: [], excluded: [], map: null, layer: null, dateRange: SHARED_DATE_RANGE, filters: { names: new Set(), status: new Set(["ENABLED"]) }, allCampaigns: new Set(), campaignStatus: new Map(), columnWidths: {}, sort: { key: "clicks", dir: "desc" }, wired: false };
-const GEO_COLS = [{ key: "label", label: "Targeted Location", align: "txt", width: 250 }, { key: "clicks", label: "Clicks", align: "clk", width: 90 }, { key: "conversions", label: "Conv.", align: "clk", width: 90 }];
+// Geo table columns. Targeted Location is always shown; the metrics are chosen via the Columns popup.
+const GEO_COLUMNS = [
+  { key: "label", label: "Targeted Location", align: "txt", width: 250, locked: true },
+  { key: "clicks", label: "Clicks", align: "clk", width: 90, group: "Metrics", fmt: r => fmtInt(r.clicks) },
+  { key: "cost", label: "Cost", align: "clk", width: 100, group: "Metrics", fmt: r => fmtCurrency(r.cost) },
+  { key: "avgCpc", label: "Avg. CPC", align: "clk", width: 95, group: "Metrics", fmt: r => fmtCurrency(r.avgCpc) },
+  { key: "conversions", label: "Conv.", align: "clk", width: 90, group: "Metrics", fmt: r => fmtDec(r.conversions) },
+  { key: "convRate", label: "Conv. Rate", align: "clk", width: 100, group: "Metrics", fmt: r => fmtPct(r.convRate) },
+  { key: "cpa", label: "Cost / Conv.", align: "clk", width: 110, group: "Metrics", fmt: r => r.conversions ? fmtCurrency(r.cpa) : "\u2014" },
+];
+const GEO_DEFAULT_VISIBLE = ["clicks", "conversions", "cpa"];
+geoState.visible = new Set(savedColVisible("geocoverage") || GEO_DEFAULT_VISIBLE);
+geoState.openColGroups = new Set(["geoColsPop_g0"]);
+geoState.heatmap = !!geoState.heatmap;
+function geoShownCols() { return GEO_COLUMNS.filter(c => c.locked || geoState.visible.has(c.key)); }
+function syncGeoColsCount() { document.getElementById("geoColsCount").textContent = geoState.visible.size; }
+function renderGeoColsPop() {
+  renderGroupedCols("geoColsPop", GEO_COLUMNS.filter(c => !c.locked), ["Metrics"], geoState.visible, geoState.openColGroups, key => {
+    geoState.visible.has(key) ? geoState.visible.delete(key) : geoState.visible.add(key);
+    setColVisible("geocoverage", geoState.visible);
+    syncGeoColsCount(); renderGeoColsPop(); renderGeoCoverage();
+  });
+}
 
 function geoRowVisible(r) {
   const f = geoState.filters;
@@ -6907,6 +6942,13 @@ function initGeoCoverage() {
     const fBtn = document.getElementById("geoFiltersBtn"), fMenu = document.getElementById("geoFiltersMenu");
     fBtn.addEventListener("click", e => { e.stopPropagation(); const open = fMenu.hidden; closeAllMenus(); if (open) { populateGeoFilterOptions(); fMenu.hidden = false; } });
     fMenu.addEventListener("click", e => e.stopPropagation());
+    const cBtn = document.getElementById("geoColsBtn"), cPop = document.getElementById("geoColsPop");
+    cBtn.addEventListener("click", e => { e.stopPropagation(); const open = cPop.hidden; closeAllMenus(); if (open) { renderGeoColsPop(); cPop.hidden = false; } });
+    cPop.addEventListener("click", e => e.stopPropagation());
+    syncGeoColsCount();
+    const gh = document.getElementById("geoHeatmapBtn");
+    gh.addEventListener("click", e => { e.stopPropagation(); geoState.heatmap = !geoState.heatmap; gh.classList.toggle("toggled", geoState.heatmap); gh.setAttribute("aria-pressed", geoState.heatmap ? "true" : "false"); uiSave("geocoverage", { heatmap: geoState.heatmap }); renderGeoCoverage(); });
+    gh.classList.toggle("toggled", geoState.heatmap); gh.setAttribute("aria-pressed", geoState.heatmap ? "true" : "false");
     // Draggable splitter between the table (geo-side) and the map (geo-main).
     const divider = document.getElementById("geoDivider"), side = document.getElementById("geoSide"), layout = document.getElementById("geoLayout");
     let dragging = false, startX = 0, startW = 0, raf = 0;
@@ -7250,21 +7292,30 @@ function renderGeoCoverage() {
     return where ? (b.radius + " " + u + " around " + where) : (b.radius + " " + u + " radius");
   };
   const rows = [];
-  radius.forEach(b => rows.push({ label: radiusLabel(b), sub: b.campaign, clicks: b.clicks || 0, conversions: b.conversions || 0 }));
-  locations.forEach(l => rows.push({ label: l.name || ("Location " + l.geoTargetId), sub: l.campaign, clicks: l.clicks || 0, conversions: l.conversions || 0 }));
+  const geoRow = (label, sub, x) => {
+    const clicks = x.clicks || 0, cost = x.cost || 0, conversions = x.conversions || 0;
+    return { label, sub, clicks, cost, conversions, avgCpc: clicks ? cost / clicks : 0, convRate: clicks ? conversions / clicks : 0, cpa: conversions ? cost / conversions : 0 };
+  };
+  radius.forEach(b => rows.push(geoRow(radiusLabel(b), b.campaign, b)));
+  locations.forEach(l => rows.push(geoRow(l.name || ("Location " + l.geoTargetId), l.campaign, l)));
   const sk = geoState.sort.key, sdir = geoState.sort.dir === "asc" ? 1 : -1;
   rows.sort((a, b) => {
     if (sk === "label") return String(a.label).localeCompare(String(b.label)) * sdir;
+    if (sk === "cpa" && (!a.conversions || !b.conversions)) return (a.conversions ? -1 : 0) + (b.conversions ? 1 : 0);
     return ((a[sk] || 0) - (b[sk] || 0)) * sdir;
   });
 
   const arrow = key => geoState.sort.key === key ? '<span class="arr">' + (geoState.sort.dir === "desc" ? "\u25be" : "\u25b4") + "</span>" : "";
-  document.getElementById("geo-colgroup").innerHTML = colgroupHtml(GEO_COLS, geoState.columnWidths);
-  document.getElementById("geo-thead").innerHTML = "<tr>" + GEO_COLS.map(c =>
+  const cols = geoShownCols();
+  const heat = buildHeatmap(rows, cols.filter(c => !c.locked).map(c => c.key), geoState.heatmap);
+  document.getElementById("geo-colgroup").innerHTML = colgroupHtml(cols, geoState.columnWidths);
+  document.getElementById("geo-thead").innerHTML = "<tr>" + cols.map(c =>
     '<th class="' + (c.align === "clk" ? "clk" : "") + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
   document.getElementById("geo-tbody").innerHTML = rows.length
-    ? rows.map(r => '<tr><td data-col="label">' + escapeHtml(r.label) + (r.sub ? '<span class="loc-sub">' + escapeHtml(r.sub) + "</span>" : "") + '</td><td class="clk" data-col="clicks">' + fmtInt(r.clicks) + '</td><td class="clk" data-col="conversions">' + fmtDec(r.conversions) + "</td></tr>").join("")
-    : '<tr><td class="empty" colspan="3">No location targeting found for this account.</td></tr>';
+    ? rows.map(r => '<tr>' + cols.map(c => c.locked
+        ? '<td data-col="label">' + escapeHtml(r.label) + (r.sub ? '<span class="loc-sub">' + escapeHtml(r.sub) + "</span>" : "") + "</td>"
+        : '<td class="clk" data-col="' + c.key + '"' + (c.key === "cpa" && !r.conversions ? "" : heat(c.key, r[c.key])) + ">" + c.fmt(r) + "</td>").join("") + "</tr>").join("")
+    : '<tr><td class="empty" colspan="' + cols.length + '">No location targeting found for this account.</td></tr>';
   wireColumnResize({ colgroup: "geo-colgroup", thead: "geo-thead", tbody: "geo-tbody" }, geoState.columnWidths, (k) => {
     const s = geoState.sort;
     geoState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
