@@ -2,8 +2,8 @@
 // Maps a campaign's location targeting using location_view (the report behind the
 // Google Ads "Locations" screen), which returns both radius (PROXIMITY) and named
 // (LOCATION) criteria with metrics.
-//   • PROXIMITY → { campaign, lat, lng, radius, radiusUnits, clicks, impressions, conversions }  (bubbles)
-//   • LOCATION  → { campaign, geoTargetId, name, clicks, impressions, conversions }              (named targets)
+//   • PROXIMITY → { campaign, lat, lng, radius, radiusUnits, clicks, impressions, conversions, cost }  (bubbles)
+//   • LOCATION  → { campaign, geoTargetId, name, clicks, impressions, conversions, cost }              (named targets)
 // Named-location names are resolved from the geo_target_constant resource (the API has no
 // coordinates/boundaries for them, so geometry is handled client-side / later).
 
@@ -39,7 +39,7 @@ export async function onRequestGet(context) {
       campaign_criterion.proximity.geo_point.latitude_in_micro_degrees,
       campaign_criterion.proximity.geo_point.longitude_in_micro_degrees,
       campaign_criterion.proximity.address.city_name,
-      metrics.clicks, metrics.impressions, metrics.conversions
+      metrics.clicks, metrics.impressions, metrics.conversions, metrics.cost_micros
     FROM location_view
     WHERE campaign.status != 'REMOVED' AND ${dateClause}`;
 
@@ -69,6 +69,7 @@ export async function onRequestGet(context) {
       clicks: Number(m.clicks) || 0,
       impressions: Number(m.impressions) || 0,
       conversions: Number(m.conversions) || 0,
+      cost: (Number(m.costMicros) || 0) / 1e6,
     };
     if (cc.type === "PROXIMITY" && cc.proximity) {
       const gp = cc.proximity.geoPoint || {};
@@ -113,7 +114,8 @@ export async function onRequestGet(context) {
   const geomDiag = [];
   const uniq = new Map(); // geoTargetConstant -> first location row
   [...locations, ...excluded].forEach((l) => { if (l.geoTargetConstant && !uniq.has(l.geoTargetConstant)) uniq.set(l.geoTargetConstant, l); });
-  const targets = [...uniq.values()].slice(0, 30);
+  const GEO_CAP = 30;
+  const targets = [...uniq.values()].slice(0, GEO_CAP);
   for (const l of targets) {
     const g = await geocodeBoundary(l.canonical || l.name);
     geomDiag.push({ name: l.name, status: g.status, type: g.geometry?.type });
@@ -122,7 +124,7 @@ export async function onRequestGet(context) {
     });
   }
 
-  const payload = { radius, locations, excluded };
+  const payload = { radius, locations, excluded, geoCap: { uniqueTargets: uniq.size, cap: GEO_CAP } };
   if (debug) {
     payload.diag = {
       locationViewRows: lvRows.length,
