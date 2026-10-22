@@ -3677,7 +3677,6 @@ function onGlobalAccountChange(val) {
   if (page === "campaigns") initDashboard();
   else if (page === "allaccounts") { accState.loaded = false;
     initAllAccounts();
-    if (GLOBAL_ACCOUNT !== "ALL") loadCampaigns();
   }
   else if (page === "audit") initAudit();
   else if (page === "assets") initAssets();
@@ -4671,12 +4670,7 @@ function initAllAccounts() {
   if (!accState.loaded) { accState.loaded = true; loadAllAccounts(); }
   else if (accState.rows.length) {
     showEl("accLoading", false); showEl("accTable", true); showEl("accPagination", true);
-    // If single account selected and no campaign data loaded yet, load it
-    if (GLOBAL_ACCOUNT !== "ALL" && (!state.campaigns || !state.campaigns.length || state.loadedAccount !== GLOBAL_ACCOUNT)) {
-      loadCampaigns();
-    } else {
-      renderAccountsTable();
-    }
+    renderAccountsTable();
   } else { showEl("accLoading", false); showEl("accEmpty", true); }
 }
 
@@ -4958,6 +4952,7 @@ async function loadAllAccounts() {
         cmpRange ? fetch("/api/campaigns?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(cmpRange), { credentials: "same-origin" }) : Promise.resolve(null),
       ]);
       const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error(data.error || ("HTTP " + res.status));
       const campaigns = (data.campaigns || []).map(withMetrics);
       const row = aggregateCampaigns(campaigns);
       row._campaigns = campaigns;
@@ -4977,13 +4972,26 @@ async function loadAllAccounts() {
         for (const cc of campaigns) cc._prev = prevById[cc.id != null ? cc.id : cc.name] || null;
       }
       rows.push(row);
-    } catch {
+    } catch (e) {
       const row = aggregateCampaigns([]);
       row.enabledCount = 0; row.hasEnabled = false;
       row.id = a.id; row.name = a.name || a.formatted; row.formatted = a.formatted;
+      row._campaigns = [];
+      row._error = (e && e.message) || "Request failed";
       rows.push(row);
     }
   });
+
+  // Surface load failures on this page (previously they were swallowed as "0 campaigns").
+  const failed = rows.filter(r => r._error);
+  if (failed.length && failed.length === rows.length) {
+    loading.hidden = true;
+    const el = document.getElementById("accError"); el.hidden = false;
+    el.innerHTML = '<div class="big">Couldn\u2019t load campaigns</div>' + escapeHtml(failed.slice(0, 3).map(r => (rows.length > 1 ? (r.name || r.id) + ": " : "") + r._error).join(" \u00b7 ")) + "<br>Try Refresh, or a shorter date range.";
+    accState.rows = rows; accState.loaded = false;
+    return;
+  }
+  if (failed.length) showToast(failed.length + " account" + (failed.length === 1 ? "" : "s") + " couldn\u2019t be loaded: " + failed.slice(0, 2).map(r => r.name || r.id).join(", ") + (failed.length > 2 ? "\u2026" : ""));
 
   accState.rows = rows;
   reaggAccRows();
@@ -5032,7 +5040,7 @@ function populateAccCampaignFilter() {
       (acState.rows || []).forEach(r => {
         if (r.name && !seen.has(r.name)) { seen.add(r.name); list.push({ name: r.name, status: (r.campaignStatus || "Enabled").toUpperCase() }); }
       });
-    } else if (GLOBAL_ACCOUNT !== "ALL" && state.campaigns && state.campaigns.length) {
+    } else if (currentHashPage() !== "allaccounts" && GLOBAL_ACCOUNT !== "ALL" && state.campaigns && state.campaigns.length) {
       state.campaigns.forEach(c => {
         if (c.name && !seen.has(c.name)) { seen.add(c.name); list.push({ name: c.name, status: (c.status || "").toUpperCase() }); }
       });
@@ -5176,7 +5184,9 @@ function renderAccountsTable() {
 
   if (isSingleAccount) {
     // Campaign-level view — show COLUMNS just like #campaigns page did
-    const rows = (state.campaigns || []).filter(r =>
+    const accRow = (accState.rows || []).find(r => String(r.id) === String(GLOBAL_ACCOUNT));
+    const source = accRow ? (accRow._campaigns || []) : (state.campaigns || []);
+    const rows = source.filter(r =>
       (!campaignFilter || r.name === campaignFilter) && accCampMatches(r)
     );
     renderDataTable({
@@ -7130,7 +7140,14 @@ async function loadCannibalization(force) {
   try {
     const res = await fetch("/api/cannibalization?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(rangeToGAQL(SHARED_DATE_RANGE)), { credentials: "same-origin" });
     if (res.status === 401) { showSignedOut(); return; }
-    const data = await res.json();
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch {
+      const cf = (raw.match(/Error\s*(\d{3,4})/) || [])[1];
+      throw new Error("The server returned a page instead of data (HTTP " + res.status + (cf ? ", Cloudflare error " + cf : "") + "). " +
+        (res.status === 404 || /<title>[^<]*AdCanary/i.test(raw) ? "The Cannibalization endpoint may not be deployed." : "The request may have exceeded Cloudflare's limits \u2014 try a shorter date range."));
+    }
     show("cannLoading", false);
     if (data.error && !(data.terms && data.terms.length)) { if (data.error === "Select a single account") { show("cannPrompt", true); return; } throw new Error(data.detail || data.error); }
     cannState.terms = data.terms || [];
