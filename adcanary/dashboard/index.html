@@ -1721,6 +1721,13 @@
             </div>
             <div class="grow"></div>
             <div class="toolset">
+              <div class="filters" id="coViewGroup">
+                <button class="filters-btn" id="coViewBtn" aria-haspopup="true" title="Rollup level">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                  View: <span id="coViewLabel">Account-level</span>
+                </button>
+                <div class="pop col-pop" id="coViewPop" hidden></div>
+              </div>
               <div class="filters">
                 <button class="filters-btn" id="coHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -1772,6 +1779,16 @@
                     <button onclick="resetCoFilters()">Reset</button>
                     <button class="apply" onclick="applyCoFilters()">Apply</button>
                   </div>
+                </div>
+              </div>
+              <div class="filters" id="coExportGroup">
+                <button class="filters-btn" id="coExportBtn" title="Export current view">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                </button>
+                <div class="pop col-pop" id="coExportPop" hidden>
+                  <button class="pop-row" data-cofmt="csv">Download CSV</button>
+                  <button class="pop-row" data-cofmt="pdf">Download PDF</button>
+                  <button class="pop-row" data-cofmt="sheets">Copy for Google Sheets</button>
                 </div>
               </div>
             </div>
@@ -3999,7 +4016,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -7112,9 +7129,10 @@ function syncGeoDateSelect() { syncDateSelectEl("geoDateSelect", geoState.dateRa
 
 // ---------- Callouts ----------
 const CO_LEVEL_BOXES = [["coLvlAccount", "Account"], ["coLvlCampaign", "Campaign"], ["coLvlAdGroup", "Ad group"]];
-const coState = { rows: [], sort: { key: "impressions", dir: "desc" }, columnWidths: {}, currentPage: 1, pageSize: 25, visible: null, heatmap: false, loadedKey: null,
+const CO_VIEW_LEVELS = [["account", "Account-level"], ["campaign", "Campaign-level"], ["adgroup", "Ad Group-level"]];
+const coState = { rows: [], viewLevel: "account", sort: { key: "impressions", dir: "desc" }, columnWidths: {}, currentPage: 1, pageSize: 25, visible: null, heatmap: false, loadedKey: null,
   filters: { level: new Set(["Account", "Campaign", "Ad group"]), campStatus: new Set(["Enabled"]), agStatus: new Set(["Enabled"]) } };
-try { const p = uiGet("callouts"); if (p) { if (p.sort) coState.sort = p.sort; if (p.columnWidths) coState.columnWidths = p.columnWidths; if (p.pageSize) coState.pageSize = p.pageSize; if (typeof p.heatmap === "boolean") coState.heatmap = p.heatmap; } } catch {}
+try { const p = uiGet("callouts"); if (p) { if (p.sort) coState.sort = p.sort; if (p.columnWidths) coState.columnWidths = p.columnWidths; if (p.pageSize) coState.pageSize = p.pageSize; if (typeof p.heatmap === "boolean") coState.heatmap = p.heatmap; if (CO_VIEW_LEVELS.some(([id]) => id === p.viewLevel)) coState.viewLevel = p.viewLevel; } } catch {}
 function syncCoDateSelect() { syncDateSelectEl("coDateSelect", SHARED_DATE_RANGE); }
 function initCallouts() {
   document.getElementById("coSignedOut").hidden = signedIn;
@@ -7149,6 +7167,14 @@ function wireCoToolbar() {
   const hb = document.getElementById("coHeatmapBtn");
   hb.addEventListener("click", e => { e.stopPropagation(); coState.heatmap = !coState.heatmap; hb.classList.toggle("toggled", coState.heatmap); hb.setAttribute("aria-pressed", coState.heatmap ? "true" : "false"); persistUi("callouts", coState); renderCallouts(); });
   hb.classList.toggle("toggled", !!coState.heatmap); hb.setAttribute("aria-pressed", coState.heatmap ? "true" : "false");
+  const vBtn = document.getElementById("coViewBtn"), vPop = document.getElementById("coViewPop");
+  vBtn.addEventListener("click", e => { e.stopPropagation(); const open = vPop.hidden; closeAllMenus(); if (open) { renderCoViewPop(); vPop.hidden = false; } });
+  vPop.addEventListener("click", e => e.stopPropagation());
+  document.getElementById("coViewLabel").textContent = CO_VIEW_LEVELS.find(([id]) => id === coState.viewLevel)[1];
+  const xBtn = document.getElementById("coExportBtn"), xPop = document.getElementById("coExportPop");
+  xBtn.addEventListener("click", e => { e.stopPropagation(); const open = xPop.hidden; closeAllMenus(); if (open) xPop.hidden = false; });
+  xPop.addEventListener("click", e => e.stopPropagation());
+  xPop.querySelectorAll("[data-cofmt]").forEach(b => b.addEventListener("click", () => { xPop.hidden = true; exportCallouts(b.dataset.cofmt); }));
   const saved = loadPageFilters("callouts");
   if (saved) {
     if (Array.isArray(saved.level)) coState.filters.level = new Set(saved.level);
@@ -7157,6 +7183,36 @@ function wireCoToolbar() {
   }
   syncCoFilterBoxes();
   updateCoFilterCount();
+}
+function renderCoViewPop() {
+  const pop = document.getElementById("coViewPop");
+  pop.innerHTML = CO_VIEW_LEVELS.map(([id, name]) => {
+    const active = coState.viewLevel === id;
+    return '<button class="pop-row" data-coview="' + id + '"><span' + (active ? ' style="color:var(--accent);font-weight:560"' : "") + ">" + escapeHtml(name) + "</span>" + (active ? '<span class="active-dot">\u2713</span>' : "") + "</button>";
+  }).join("");
+  pop.querySelectorAll("[data-coview]").forEach(row => row.addEventListener("click", () => {
+    coState.viewLevel = row.dataset.coview;
+    document.getElementById("coViewLabel").textContent = CO_VIEW_LEVELS.find(([id]) => id === coState.viewLevel)[1];
+    pop.hidden = true;
+    coState.currentPage = 1;
+    uiSave("callouts", { viewLevel: coState.viewLevel });
+    renderCallouts();
+  }));
+}
+// Exports exactly what's on screen (current view level, filters, sort, columns).
+function exportCallouts(fmt) {
+  const rows = coState.viewRows || [], cols = coState.viewCols || [];
+  if (!rows.length) { showToast("Nothing to export."); return; }
+  const header = cols.map(c => c.label.replace(/<br\s*\/?>/gi, " "));
+  const data = rows.map(r => cols.map(c => {
+    if (c.key === "account") return r.accountName || "";
+    if (c.key === "campaign") return r.linkLevel === "Account" ? "All campaigns" : (r.name || "");
+    if (c.key === "adGroup") return r.linkLevel === "Ad group" ? (r.adGroup || "") : "All ad groups";
+    if (c.key === "ctr") return fmtPct(r.ctr || 0);
+    if (c.key === "impressions" || c.key === "clicks" || c.key === "links") return r[c.key] || 0;
+    return r[c.key] != null ? r[c.key] : "";
+  }));
+  exportMatrix(fmt, "callouts-" + new Date().toISOString().slice(0, 10), "Callouts", header, data);
 }
 function syncCoFilterBoxes() {
   const f = coState.filters;
@@ -7236,19 +7292,39 @@ function showCoResults() {
 function renderCallouts() {
   const f = coState.filters;
   const inAll = GLOBAL_ACCOUNT === "ALL";
-  const rows = coState.rows.filter(r =>
+  const filtered = coState.rows.filter(r =>
     (!f.level.size || f.level.has(r.linkLevel)) &&
     (!f.campStatus.size || f.campStatus.has(r.campaignStatus || "Enabled")) &&
     (!f.agStatus.size || f.agStatus.has(r.adGroupStatus || "Enabled"))
-  ).map(r => Object.assign({}, r, { ctr: r.impressions ? r.clicks / r.impressions : 0 }));
+  );
+  // Roll up to the selected view level (account id always in the key so different clients never merge).
+  const level = coState.viewLevel;
+  const agg = new Map();
+  filtered.forEach(r => {
+    let key = (r.accountId || "") + "|" + r.text;
+    if (level === "campaign") key += "|" + (r.linkLevel === "Account" ? "acct" : "camp:" + r.campaignId);
+    else if (level === "adgroup") key += "|" + r.linkLevel + "|" + r.campaignId + "|" + r.adGroupId;
+    let g = agg.get(key);
+    if (!g) {
+      g = { accountName: r.accountName, accountId: r.accountId, text: r.text, impressions: 0, clicks: 0, links: 0,
+            linkLevel: level === "account" ? "" : (level === "campaign" && r.linkLevel === "Ad group" ? "Campaign" : r.linkLevel),
+            name: r.name, campaignId: r.campaignId, adGroup: r.adGroup, adGroupId: r.adGroupId };
+      agg.set(key, g);
+    }
+    g.impressions += r.impressions || 0; g.clicks += r.clicks || 0; g.links++;
+  });
+  const rows = [...agg.values()].map(r => Object.assign(r, { ctr: r.impressions ? r.clicks / r.impressions : 0 }));
   const muted = t => '<span style="color:var(--muted)">' + escapeHtml(t) + "</span>";
   const cols = [];
   if (inAll) cols.push({ key: "account", label: "Account", align: "txt", width: 170, always: true, sort: r => r.accountName || "", cell: r => logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") });
   cols.push(
     { key: "text", label: "Callout", align: "txt", width: 240, always: true, cls: "name", sort: r => r.text, cell: r => escapeHtml(r.text) },
-    { key: "linkLevel", label: "Linked At", align: "txt", width: 110, always: true, sort: r => r.linkLevel, cell: r => escapeHtml(r.linkLevel) },
-    { key: "campaign", label: "Campaign", align: "txt", width: 240, always: true, sort: r => r.name, cell: r => r.linkLevel === "Account" ? muted("All campaigns") : escapeHtml(r.name) },
-    { key: "adGroup", label: "Ad Group", align: "txt", width: 200, always: true, sort: r => r.adGroup, cell: r => r.linkLevel === "Ad group" ? escapeHtml(r.adGroup) : muted("All ad groups") },
+  );
+  if (level === "account") cols.push({ key: "links", label: "Times Linked", align: "num", width: 110, always: true, cls: "tabnum", cell: r => fmtInt(r.links) });
+  if (level === "adgroup") cols.push({ key: "linkLevel", label: "Linked At", align: "txt", width: 110, always: true, sort: r => r.linkLevel, cell: r => escapeHtml(r.linkLevel) });
+  if (level !== "account") cols.push({ key: "campaign", label: "Campaign", align: "txt", width: 240, always: true, sort: r => r.name, cell: r => r.linkLevel === "Account" ? muted("All campaigns") : escapeHtml(r.name) });
+  if (level === "adgroup") cols.push({ key: "adGroup", label: "Ad Group", align: "txt", width: 200, always: true, sort: r => r.adGroup, cell: r => r.linkLevel === "Ad group" ? escapeHtml(r.adGroup) : muted("All ad groups") });
+  cols.push(
     { key: "impressions", label: "Impr.", align: "num", width: 100, always: true, cls: "tabnum", cell: r => fmtInt(r.impressions) },
     { key: "clicks", label: "Clicks", align: "num", width: 90, always: true, cls: "tabnum", cell: r => fmtInt(r.clicks) },
     { key: "ctr", label: "CTR", align: "num", width: 90, always: true, cls: "tabnum", cell: r => fmtPct(r.ctr) },
