@@ -116,8 +116,11 @@ export async function onRequestGet(context) {
   [...locations, ...excluded].forEach((l) => { if (l.geoTargetConstant && !uniq.has(l.geoTargetConstant)) uniq.set(l.geoTargetConstant, l); });
   const GEO_CAP = 30;
   const targets = [...uniq.values()].slice(0, GEO_CAP);
+  // Time budget for live lookups: anything left over is still listed, just drawn as an
+  // "approx." circle. Cached shapes (KV) don't count against it.
+  const geoDeadline = Date.now() + 15000;
   for (const l of targets) {
-    const g = await geocodeBoundary(l.canonical || l.name);
+    const g = await geocodeBoundary(l.canonical || l.name, env, geoDeadline);
     geomDiag.push({ name: l.name, status: g.status, type: g.geometry?.type });
     [...locations, ...excluded].forEach((row) => {
       if (row.geoTargetConstant === l.geoTargetConstant) { row.geometry = g.geometry || null; row.center = g.center || null; }
@@ -140,18 +143,29 @@ export async function onRequestGet(context) {
   return json(payload);
 }
 
-// Per-isolate cache so repeated locations aren't re-fetched within a warm worker.
+// Boundary lookups are cached in memory (warm worker) and in KV for 30 days, so repeat loads
+// don't hit Nominatim. Each live lookup has a 5s timeout and the batch shares a deadline.
 const _geoCache = new Map();
-async function geocodeBoundary(query) {
+const GEO_KV_TTL = 60 * 60 * 24 * 30;
+async function geocodeBoundary(query, env, deadline) {
   if (!query) return { status: "empty" };
   if (_geoCache.has(query)) return _geoCache.get(query);
-  let out;
+  const kvKey = "geo:" + query.toLowerCase();
+  const kv = env && env.SESSIONS;
+  if (kv) {
+    try { const hit = await kv.get(kvKey, "json"); if (hit) { _geoCache.set(query, hit); return hit; } } catch {}
+  }
+  if (deadline && Date.now() > deadline) return { status: "skipped_time_budget" };
+  let out, cacheable = false;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 5000);
   try {
-    const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&polygon_geojson=1&limit=1&countrycodes=gb,ie&q=" + encodeURIComponent(query);
-    const res = await fetch(url, { headers: { "User-Agent": "AdCanary/1.0 (https://adcanary.app)", "Accept-Language": "en-GB" } });
+    const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&polygon_geojson=1&polygon_threshold=0.005&limit=1&countrycodes=gb,ie&q=" + encodeURIComponent(query);
+    const res = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": "AdCanary/1.0 (https://adcanary.app)", "Accept-Language": "en-GB" } });
     if (!res.ok) out = { status: "http_" + res.status };
     else {
       const arr = await res.json();
+      cacheable = true;
       if (!arr.length) out = { status: "not_found" };
       else {
         const hit = arr[0];
@@ -160,8 +174,11 @@ async function geocodeBoundary(query) {
       }
     }
   } catch (e) {
-    out = { status: "error", message: String(e && e.message ? e.message : e).slice(0, 120) };
+    out = { status: e && e.name === "AbortError" ? "timeout" : "error", message: String(e && e.message ? e.message : e).slice(0, 120) };
+  } finally { clearTimeout(timer); }
+  if (cacheable) {
+    _geoCache.set(query, out);
+    if (kv) { try { await kv.put(kvKey, JSON.stringify(out), { expirationTtl: GEO_KV_TTL }); } catch {} }
   }
-  _geoCache.set(query, out);
   return out;
 }
