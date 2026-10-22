@@ -7255,9 +7255,16 @@ async function loadGeoCoverage(customerId) {
   showEl("geoLoading", true);
   try {
     const dr = encodeURIComponent(dateRangeToGAQL(geoState.dateRange));
-    const res = await fetch("/api/geocoverage?customerId=" + encodeURIComponent(customerId) + "&dateRange=" + dr, { credentials: "same-origin" });
+    const ctrl = new AbortController();
+    const tmo = setTimeout(() => ctrl.abort(), 60000);
+    let res;
+    try { res = await fetch("/api/geocoverage?customerId=" + encodeURIComponent(customerId) + "&dateRange=" + dr, { credentials: "same-origin", signal: ctrl.signal }); }
+    catch (e) { throw new Error(e && e.name === "AbortError" ? "This took longer than 60 seconds. Press Refresh to try again \u2014 location shapes are saved as they load, so it gets faster each time." : (e.message || "Request failed")); }
+    finally { clearTimeout(tmo); }
     if (res.status === 401) { showSignedOut(); return; }
-    const data = await res.json();
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); } catch { throw new Error("The server returned a page instead of data (HTTP " + res.status + "). Try Refresh, or a shorter date range."); }
     if (data.error) throw new Error(data.error);
     geoState.radius = data.radius || [];
     geoState.locations = data.locations || [];
