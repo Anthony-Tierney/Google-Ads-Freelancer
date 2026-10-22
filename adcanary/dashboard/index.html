@@ -739,6 +739,7 @@
       <a href="#" class="nav-item nav-sub" data-page="geocoverage">Geo Coverage</a>
       <a href="#" class="nav-item nav-sub" data-page="cannibalization">Cannibalization</a>
       <a href="#" class="nav-item nav-sub" data-page="adcopy">Ad Copy</a>
+      <a href="#" class="nav-item nav-sub" data-page="callouts">Callouts</a>
       <a href="#" class="nav-item nav-sub" data-page="audit">Policy Issues<span class="nav-warn" id="auditNavWarn" hidden title="Policy issues found"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
       <a href="#" class="nav-item nav-sub" data-page="assets">Assets<span class="nav-warn" id="assetsNavWarn" hidden title="Assets missing or below recommended counts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
       <a href="#" class="nav-item nav-sub" data-page="landingpages">Landing Pages</a>
@@ -1696,6 +1697,100 @@
       </section>
 
       <!-- Geo Coverage Page -->
+      <section id="callouts" class="page">
+        <section id="coSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to review your callout assets.</p>
+            <a class="btn-primary" href="/api/auth">Sign in with Google</a>
+          </div>
+        </section>
+        <section id="coSignedIn" hidden>
+          <div class="controls-row account">
+            <div>
+              <label class="field-label" for="coDateSelect">Date range</label>
+              <select id="coDateSelect" onchange="onCoDateRangeChange()">
+                <option value="yesterday">Yesterday</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="14days">Last 14 Days</option>
+                <option value="30days" selected>Last 30 Days</option>
+                <option value="thisMonth">This Month</option>
+                <option value="lastMonth">Last Month</option>
+                <option value="custom">Custom...</option>
+              </select>
+            </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="coHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                  Heatmap
+                </button>
+              </div>
+              <div class="filters" id="coFilterGroup">
+                <button class="filters-btn" id="coFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <span class="count" id="coFilterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="coFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('co-group-level', event)">
+                    <span class="toggle">−</span>Linked At
+                  </div>
+                  <div class="filter-group-items" id="co-group-level">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="coLvlAccount" checked /><label for="coLvlAccount">Account</label></div>
+                        <div class="check-row"><input type="checkbox" id="coLvlCampaign" checked /><label for="coLvlCampaign">Campaign</label></div>
+                        <div class="check-row"><input type="checkbox" id="coLvlAdGroup" checked /><label for="coLvlAdGroup">Ad group</label></div>
+                      </div>
+                      <div class="foot-note" style="margin-top:8px;">Where the callout is attached in Google Ads.</div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('co-group-campstatus', event)">
+                    <span class="toggle">−</span>Campaign Status
+                  </div>
+                  <div class="filter-group-items" id="co-group-campstatus">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="coCampEnabled" checked /><label for="coCampEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="coCampPaused" /><label for="coCampPaused">Paused</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('co-group-agstatus', event)">
+                    <span class="toggle">−</span>Ad Group Status
+                  </div>
+                  <div class="filter-group-items" id="co-group-agstatus">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="coAgEnabled" checked /><label for="coAgEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="coAgPaused" /><label for="coAgPaused">Paused</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetCoFilters()">Reset</button>
+                    <button class="apply" onclick="applyCoFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="coWarn" class="as-warn" hidden></div>
+          <div class="panel">
+            <div id="coLoading" class="state" hidden><div class="spinner"></div>Loading callouts…</div>
+            <div id="coError" class="state" hidden></div>
+            <div id="coEmpty" class="state" hidden><div class="big">No callouts</div>No enabled callouts found for this selection.</div>
+            <div class="scroll"><table id="coTable" hidden>
+              <colgroup id="co-colgroup"></colgroup><thead id="co-thead"></thead><tbody id="co-tbody"></tbody><tfoot id="co-tfoot"></tfoot>
+            </table></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+            <div class="pagination" id="coPagination" hidden></div>
+          </div>
+          <div class="foot-note" style="margin-top:10px;">Callouts are attached to the account, a campaign or an ad group rather than to individual ads, so their impressions and clicks are counted where they're linked. Account-level callouts apply to all campaigns.</div>
+        </section>
+      </section>
       <section id="cannibalization" class="page">
         <section id="cannSignedOut" hidden>
           <div class="gate">
@@ -2274,6 +2369,7 @@ function globalRefresh() {
     case "bidding": loadBidding(true); break;
     case "geocoverage": if (GLOBAL_ACCOUNT !== "ALL") loadGeoCoverage(GLOBAL_ACCOUNT); break;
     case "cannibalization": if (GLOBAL_ACCOUNT !== "ALL") loadCannibalization(true); break;
+    case "callouts": loadCallouts(true); break;
     case "reporting": loadReporting(); break;
   }
 }
@@ -2442,7 +2538,7 @@ function setSharedDateRange(dr) {
   syncAllDateSelects();
 }
 function syncAllDateSelects() {
-  [["dateSelect", "syncDateSelect"], ["accDateSelect", "syncAccDateSelect"], ["lpDateSelect", "syncLpDateSelect"], ["acDateSelect", "syncAcDateSelect"], ["geoDateSelect", "syncGeoDateSelect"], ["repDateSelect", "syncRepDateSelect"]].forEach(([id]) => {
+  [["dateSelect", "syncDateSelect"], ["accDateSelect", "syncAccDateSelect"], ["lpDateSelect", "syncLpDateSelect"], ["acDateSelect", "syncAcDateSelect"], ["geoDateSelect", "syncGeoDateSelect"], ["repDateSelect", "syncRepDateSelect"], ["cannDateSelect", ""], ["coDateSelect", ""]].forEach(([id]) => {
     if (document.getElementById(id)) syncDateSelectEl(id, SHARED_DATE_RANGE);
   });
 }
@@ -2932,6 +3028,7 @@ function cancelCustomDate() {
   else if (state.calendarTarget === "acc") syncAccDateSelect();
   else if (state.calendarTarget === "rep") syncRepDateSelect();
   else if (state.calendarTarget === "cann") syncCannDateSelect();
+  else if (state.calendarTarget === "co") syncCoDateSelect();
   else if (state.calendarTarget !== "compare") syncDateSelect();
 }
 
@@ -2964,6 +3061,7 @@ function applyCustomDate() {
   else if (t === "acc") loadAllAccounts();
   else if (t === "rep") loadReporting();
   else if (t === "cann") loadCannibalization();
+  else if (t === "co") loadCallouts(false);
   else { if (state.compareEnabled) updateCompareUI(); loadCampaigns(); }
 }
 
@@ -3324,6 +3422,7 @@ function routeFromHash() {
   else if (page === "bidding") initBidding();
   else if (page === "geocoverage") initGeoCoverage();
   else if (page === "cannibalization") initCannibalization();
+  else if (page === "callouts") initCallouts();
   else if (page === "reporting") initReporting();
 }
 
@@ -3686,6 +3785,7 @@ function onGlobalAccountChange(val) {
   else if (page === "bidding") { if (biddingState.loaded) renderBiddingTable(); else initBidding(); }
   else if (page === "geocoverage") initGeoCoverage();
   else if (page === "cannibalization") initCannibalization();
+  else if (page === "callouts") initCallouts();
   else if (page === "reporting") initReporting();
 }
 
@@ -3899,7 +3999,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -7008,6 +7108,173 @@ function onGeoDateRangeChange() {
 }
 
 function syncGeoDateSelect() { syncDateSelectEl("geoDateSelect", geoState.dateRange); }
+
+
+// ---------- Callouts ----------
+const CO_LEVEL_BOXES = [["coLvlAccount", "Account"], ["coLvlCampaign", "Campaign"], ["coLvlAdGroup", "Ad group"]];
+const coState = { rows: [], sort: { key: "impressions", dir: "desc" }, columnWidths: {}, currentPage: 1, pageSize: 25, visible: null, heatmap: false, loadedKey: null,
+  filters: { level: new Set(["Account", "Campaign", "Ad group"]), campStatus: new Set(["Enabled"]), agStatus: new Set(["Enabled"]) } };
+try { const p = uiGet("callouts"); if (p) { if (p.sort) coState.sort = p.sort; if (p.columnWidths) coState.columnWidths = p.columnWidths; if (p.pageSize) coState.pageSize = p.pageSize; if (typeof p.heatmap === "boolean") coState.heatmap = p.heatmap; } } catch {}
+function syncCoDateSelect() { syncDateSelectEl("coDateSelect", SHARED_DATE_RANGE); }
+function initCallouts() {
+  document.getElementById("coSignedOut").hidden = signedIn;
+  document.getElementById("coSignedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  syncCoDateSelect();
+  wireCoToolbar();
+  loadCallouts(false);
+}
+function onCoDateRangeChange() {
+  const val = document.getElementById("coDateSelect").value;
+  if (val === "customApplied") return;
+  if (val === "custom") {
+    state.calendarTarget = "co";
+    state.calendarFromDate = new Date();
+    state.calendarToDate = new Date();
+    document.getElementById("calendarTitle").textContent = "Custom date range";
+    renderCalendar("from"); renderCalendar("to");
+    document.getElementById("customDateModal").setAttribute("open", "");
+  } else {
+    setSharedDateRange(DATE_PRESET_MAP[val]);
+    loadCallouts(false);
+  }
+}
+function wireCoToolbar() {
+  const btn = document.getElementById("coFiltersBtn");
+  if (!btn || btn.dataset.wired) return;
+  btn.dataset.wired = "1";
+  const menu = document.getElementById("coFiltersMenu");
+  btn.addEventListener("click", e => { e.stopPropagation(); const open = menu.hidden; closeAllMenus(); if (open) menu.hidden = false; });
+  menu.addEventListener("click", e => e.stopPropagation());
+  const hb = document.getElementById("coHeatmapBtn");
+  hb.addEventListener("click", e => { e.stopPropagation(); coState.heatmap = !coState.heatmap; hb.classList.toggle("toggled", coState.heatmap); hb.setAttribute("aria-pressed", coState.heatmap ? "true" : "false"); persistUi("callouts", coState); renderCallouts(); });
+  hb.classList.toggle("toggled", !!coState.heatmap); hb.setAttribute("aria-pressed", coState.heatmap ? "true" : "false");
+  const saved = loadPageFilters("callouts");
+  if (saved) {
+    if (Array.isArray(saved.level)) coState.filters.level = new Set(saved.level);
+    if (Array.isArray(saved.campStatus)) coState.filters.campStatus = new Set(saved.campStatus);
+    if (Array.isArray(saved.agStatus)) coState.filters.agStatus = new Set(saved.agStatus);
+  }
+  syncCoFilterBoxes();
+  updateCoFilterCount();
+}
+function syncCoFilterBoxes() {
+  const f = coState.filters;
+  CO_LEVEL_BOXES.forEach(([id, v]) => { document.getElementById(id).checked = f.level.has(v); });
+  document.getElementById("coCampEnabled").checked = f.campStatus.has("Enabled");
+  document.getElementById("coCampPaused").checked = f.campStatus.has("Paused");
+  document.getElementById("coAgEnabled").checked = f.agStatus.has("Enabled");
+  document.getElementById("coAgPaused").checked = f.agStatus.has("Paused");
+}
+function applyCoFilters() {
+  const pick = pairs => new Set(pairs.filter(([id]) => document.getElementById(id).checked).map(([, v]) => v));
+  coState.filters = {
+    level: pick(CO_LEVEL_BOXES),
+    campStatus: pick([["coCampEnabled", "Enabled"], ["coCampPaused", "Paused"]]),
+    agStatus: pick([["coAgEnabled", "Enabled"], ["coAgPaused", "Paused"]]),
+  };
+  coState.currentPage = 1;
+  document.getElementById("coFiltersMenu").hidden = true;
+  savePageFilters("callouts", { level: [...coState.filters.level], campStatus: [...coState.filters.campStatus], agStatus: [...coState.filters.agStatus] });
+  updateCoFilterCount();
+  if (coState.loadedKey) renderCallouts();
+}
+function resetCoFilters() {
+  coState.filters = { level: new Set(["Account", "Campaign", "Ad group"]), campStatus: new Set(["Enabled"]), agStatus: new Set(["Enabled"]) };
+  syncCoFilterBoxes();
+  applyCoFilters();
+}
+function updateCoFilterCount() {
+  const f = coState.filters;
+  const n = (f.level.size && f.level.size < 3 ? 1 : 0) + (f.campStatus.size ? 1 : 0) + (f.agStatus.size ? 1 : 0);
+  const el = document.getElementById("coFilterCount");
+  if (n > 0) { el.textContent = n; el.hidden = false; } else el.hidden = true;
+}
+// force = true re-fetches; otherwise results are reused while account + date range are unchanged.
+async function loadCallouts(force) {
+  if (!signedIn) { initCallouts(); return; }
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.hidden = !on; };
+  const dr = rangeToGAQL(SHARED_DATE_RANGE);
+  const key = GLOBAL_ACCOUNT + "|" + dr;
+  if (!force && coState.loadedKey === key) { showCoResults(); return; }
+  ["coLoading", "coError", "coEmpty", "coTable", "coWarn", "coPagination"].forEach(id => show(id, false));
+  show("coLoading", true);
+  const accts = GLOBAL_ACCOUNT === "ALL" ? ACCOUNTS : [ACCOUNTS.find(a => a.id === GLOBAL_ACCOUNT) || { id: GLOBAL_ACCOUNT, name: "", formatted: GLOBAL_ACCOUNT }];
+  const rows = [], warns = [], errs = [];
+  await mapLimit(accts, 4, async (a) => {
+    try {
+      const res = await fetch("/api/callouts?customerId=" + encodeURIComponent(a.id) + "&dateRange=" + encodeURIComponent(dr), { credentials: "same-origin" });
+      if (res.status === 401) { showSignedOut(); return; }
+      const raw = await res.text();
+      let data; try { data = JSON.parse(raw); } catch { throw new Error("server returned HTTP " + res.status + " instead of data"); }
+      if (data.error) throw new Error(data.error);
+      if (data.warning) warns.push((accts.length > 1 ? (a.name || a.id) + ": " : "") + data.warning);
+      (data.rows || []).forEach(r => { r.accountName = a.name || a.formatted; r.accountId = a.id; rows.push(r); });
+    } catch (e) { errs.push((accts.length > 1 ? (a.name || a.id) + ": " : "") + (e.message || "request failed")); }
+  });
+  show("coLoading", false);
+  if (errs.length && errs.length === accts.length) {
+    const el = document.getElementById("coError"); el.hidden = false;
+    el.innerHTML = '<div class="big">Couldn\u2019t load callouts</div>' + escapeHtml(errs.slice(0, 3).join(" \u00b7 "));
+    return;
+  }
+  const notes = errs.concat(warns);
+  if (notes.length) { const w = document.getElementById("coWarn"); w.hidden = false; w.textContent = notes.slice(0, 3).join(" \u00b7 ") + (notes.length > 3 ? " \u2026" : ""); }
+  coState.rows = rows;
+  coState.loadedKey = key;
+  coState.currentPage = 1;
+  setLastRefresh("callouts");
+  showCoResults();
+}
+function showCoResults() {
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.hidden = !on; };
+  show("coEmpty", false); show("coTable", false); show("coPagination", false);
+  if (!coState.rows.length) { show("coEmpty", true); return; }
+  show("coTable", true);
+  renderCallouts();
+}
+function renderCallouts() {
+  const f = coState.filters;
+  const inAll = GLOBAL_ACCOUNT === "ALL";
+  const rows = coState.rows.filter(r =>
+    (!f.level.size || f.level.has(r.linkLevel)) &&
+    (!f.campStatus.size || f.campStatus.has(r.campaignStatus || "Enabled")) &&
+    (!f.agStatus.size || f.agStatus.has(r.adGroupStatus || "Enabled"))
+  ).map(r => Object.assign({}, r, { ctr: r.impressions ? r.clicks / r.impressions : 0 }));
+  const muted = t => '<span style="color:var(--muted)">' + escapeHtml(t) + "</span>";
+  const cols = [];
+  if (inAll) cols.push({ key: "account", label: "Account", align: "txt", width: 170, always: true, sort: r => r.accountName || "", cell: r => logoHtml(r.accountId, r.accountName) + escapeHtml(r.accountName || "") });
+  cols.push(
+    { key: "text", label: "Callout", align: "txt", width: 240, always: true, cls: "name", sort: r => r.text, cell: r => escapeHtml(r.text) },
+    { key: "linkLevel", label: "Linked At", align: "txt", width: 110, always: true, sort: r => r.linkLevel, cell: r => escapeHtml(r.linkLevel) },
+    { key: "campaign", label: "Campaign", align: "txt", width: 240, always: true, sort: r => r.name, cell: r => r.linkLevel === "Account" ? muted("All campaigns") : escapeHtml(r.name) },
+    { key: "adGroup", label: "Ad Group", align: "txt", width: 200, always: true, sort: r => r.adGroup, cell: r => r.linkLevel === "Ad group" ? escapeHtml(r.adGroup) : muted("All ad groups") },
+    { key: "impressions", label: "Impr.", align: "num", width: 100, always: true, cls: "tabnum", cell: r => fmtInt(r.impressions) },
+    { key: "clicks", label: "Clicks", align: "num", width: 90, always: true, cls: "tabnum", cell: r => fmtInt(r.clicks) },
+    { key: "ctr", label: "CTR", align: "num", width: 90, always: true, cls: "tabnum", cell: r => fmtPct(r.ctr) },
+  );
+  renderDataTable({
+    state: coState,
+    columns: cols,
+    colOrderKey: "callouts",
+    prefKey: "callouts",
+    heatmap: true,
+    resetPageOnSort: true,
+    ids: { colgroup: "co-colgroup", thead: "co-thead", tbody: "co-tbody", tfoot: "co-tfoot", pagination: "coPagination" },
+    rerender: renderCallouts,
+    rows: () => rows,
+    footer: (rs, cs) => {
+      const imp = rs.reduce((a, r) => a + (r.impressions || 0), 0), clk = rs.reduce((a, r) => a + (r.clicks || 0), 0);
+      return "<tr>" + cs.map((c, i) => {
+        if (i === 0) return '<td class="txt name" data-col="' + c.key + '">Total \u00b7 ' + rs.length + "</td>";
+        if (c.key === "impressions") return '<td class="num tabnum" data-col="impressions">' + fmtInt(imp) + "</td>";
+        if (c.key === "clicks") return '<td class="num tabnum" data-col="clicks">' + fmtInt(clk) + "</td>";
+        if (c.key === "ctr") return '<td class="num tabnum" data-col="ctr">' + fmtPct(imp ? clk / imp : 0) + "</td>";
+        return '<td data-col="' + c.key + '"></td>';
+      }).join("") + "</tr>";
+    },
+  });
+}
 
 // ---------- Cannibalization ----------
 const CANN_COL_KEYS = ["term", "priority", "campaignCount", "impressions", "clicks", "cost", "conversions"];
