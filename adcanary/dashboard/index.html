@@ -139,6 +139,18 @@
   .rep-card:hover { border-color: var(--accent); }
   .rep-card.on { border-color: var(--accent); background: var(--accent-soft); }
   .rep-card.on .rep-value { color: var(--accent); }
+  .rep-card.on2 { border-color: #eab308; background: rgba(234, 179, 8, .12); }
+  .rep-card.on2 .rep-value { color: #a16207; }
+  .rep-line2 { stroke: #eab308; }
+  .rep-dot2 { fill: #eab308; stroke: var(--panel); stroke-width: 1.5; }
+  .rep-axis2 { fill: #a16207; }
+  .rep-datalabel2 { fill: #a16207; }
+  .rep-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--accent); margin-right: 6px; vertical-align: 0; }
+  .rep-swatch-2 { background: #eab308; border-radius: 50%; }
+  .rep-vs { color: var(--muted); font-weight: 400; margin: 0 10px; font-size: 12.5px; }
+  .rep-intro { margin: 4px 0 14px; }
+  .rep-intro-title { margin: 0 0 4px; font-size: 18px; font-weight: 640; color: var(--ink); }
+  .rep-intro-text { margin: 0; font-size: 13.5px; color: var(--muted); }
   .rep-chart-wrap { margin-top: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 16px; }
   .rep-chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 12px; }
   .rep-chart-tools { display: flex; align-items: center; gap: 8px; }
@@ -823,6 +835,7 @@
                 <option value="30days" selected>Last 30 Days</option>
                 <option value="thisMonth">This Month</option>
                 <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
                 <option value="custom">Custom...</option>
               </select>
             </div>
@@ -1022,9 +1035,14 @@
                 <option value="30days" selected>Last 30 Days</option>
                 <option value="thisMonth">This Month</option>
                 <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
                 <option value="custom">Custom...</option>
               </select>
             </div>
+          </div>
+          <div class="rep-intro">
+            <h2 class="rep-intro-title">Performance Overview</h2>
+            <p class="rep-intro-text">Change the date above to filter the report below. Select one or more metrics below to populate the display graph.</p>
           </div>
           <div id="repLoading" class="state"><div class="spinner"></div>Loading reporting…</div>
           <div id="repError" class="state" hidden></div>
@@ -1076,6 +1094,7 @@
                 <option value="30days" selected>Last 30 Days</option>
                 <option value="thisMonth">This Month</option>
                 <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
                 <option value="custom">Custom...</option>
               </select>
             </div>
@@ -1273,6 +1292,7 @@
                 <option value="30days" selected>Last 30 Days</option>
                 <option value="thisMonth">This Month</option>
                 <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
                 <option value="custom">Custom...</option>
               </select>
             </div>
@@ -1572,6 +1592,7 @@
                 <option value="30days" selected>Last 30 Days</option>
                 <option value="thisMonth">This Month</option>
                 <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
                 <option value="custom">Custom...</option>
               </select>
             </div>
@@ -1716,6 +1737,7 @@
                 <option value="30days" selected>Last 30 Days</option>
                 <option value="thisMonth">This Month</option>
                 <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
                 <option value="custom">Custom...</option>
               </select>
             </div>
@@ -1827,6 +1849,7 @@
                 <option value="30days" selected>Last 30 Days</option>
                 <option value="thisMonth">This Month</option>
                 <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
                 <option value="custom">Custom...</option>
               </select>
             </div>
@@ -1935,6 +1958,7 @@
                 <option value="30days" selected>Last 30 Days</option>
                 <option value="thisMonth">This Month</option>
                 <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
                 <option value="custom">Custom...</option>
               </select>
             </div>
@@ -2676,6 +2700,10 @@ function dateRangeToGAQL(r) {
     const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
     return "segments.date >= '" + formatDateForGAQL(lastMonth) + "' AND segments.date <= '" + formatDateForGAQL(lastDay) + "'";
   }
+  if (r.type === "thisYear") {
+    const now = new Date();
+    return "segments.date >= '" + formatDateForGAQL(new Date(now.getFullYear(), 0, 1)) + "' AND segments.date <= '" + formatDateForGAQL(now) + "'";
+  }
   if (r.from && r.to) return "segments.date >= '" + r.from + "' AND segments.date <= '" + r.to + "'";
   if (r.days === 1) return "YESTERDAY";
   if (r.days === 7) return "LAST_7_DAYS";
@@ -2694,6 +2722,7 @@ const DATE_PRESET_MAP = {
   "30days": { label: "Last 30 Days", days: 30 },
   "thisMonth": { label: "This Month", type: "thisMonth" },
   "lastMonth": { label: "Last Month", type: "lastMonth" },
+  "thisYear": { label: "This Year", type: "thisYear" },
 };
 
 function onLpDateRangeChange() {
@@ -2752,6 +2781,9 @@ function getCurrentPeriodDates() {
   if (r.type === "lastMonth") {
     return { start: new Date(today.getFullYear(), today.getMonth() - 1, 1), end: new Date(today.getFullYear(), today.getMonth(), 0) };
   }
+  if (r.type === "thisYear") {
+    return { start: new Date(today.getFullYear(), 0, 1), end: today };
+  }
   if (r.from && r.to) {
     return { start: parseGAQLDate(r.from), end: parseGAQLDate(r.to) };
   }
@@ -2789,6 +2821,7 @@ function onDateRangeChange() {
     "30days": { label: "Last 30 Days", days: 30 },
     "thisMonth": { label: "This Month", type: "thisMonth" },
     "lastMonth": { label: "Last Month", type: "lastMonth" },
+    "thisYear": { label: "This Year", type: "thisYear" },
   };
   if (val === "custom") {
     state.calendarTarget = "main";
@@ -3028,6 +3061,7 @@ function syncDateSelectEl(selectId, r) {
     sel.value = "customApplied";
   } else if (r && r.type === "thisMonth") sel.value = "thisMonth";
   else if (r && r.type === "lastMonth") sel.value = "lastMonth";
+  else if (r && r.type === "thisYear") sel.value = "thisYear";
   else sel.value = ({ 1: "yesterday", 7: "7days", 14: "14days", 30: "30days" })[r ? r.days : 30] || "30days";
 }
 
@@ -3543,6 +3577,7 @@ const REP_METRICS = [
 const REP_BUCKET_KEYS = ["clicks", "impressions", "cost", "conversions", "impShareW", "clickShareW", "shareWeight"];
 let repSeries = [];
 let repSelectedMetric = "cost";
+let repSecondMetric = null; // optional second metric: yellow line on the right-hand axis
 let repGranularity = "month";
 let repChartType = "bars";
 let repShowLabels = false;
@@ -3573,6 +3608,7 @@ function repRangeBounds() {
   if (r.from && r.to) return { start: parseRepDate(r.from), end: parseRepDate(r.to) };
   if (r.type === "thisMonth") return { start: new Date(today.getFullYear(), today.getMonth(), 1), end: today };
   if (r.type === "lastMonth") return { start: new Date(today.getFullYear(), today.getMonth() - 1, 1), end: new Date(today.getFullYear(), today.getMonth(), 0) };
+  if (r.type === "thisYear") return { start: new Date(today.getFullYear(), 0, 1), end: today };
   const days = r.days || 30;
   const end = new Date(today); end.setDate(today.getDate() - 1);
   const start = new Date(today); start.setDate(today.getDate() - days);
@@ -3585,8 +3621,17 @@ function repSumBucket(list) {
   return t;
 }
 
+// Card selection: first metric = main (left axis); a second card adds a yellow line on the right
+// axis; a third card replaces the second; clicking a selected card removes it.
 function selectRepMetric(key) {
-  repSelectedMetric = key;
+  if (key === repSelectedMetric) {
+    if (!repSecondMetric) return;          // always keep at least one metric
+    repSelectedMetric = repSecondMetric; repSecondMetric = null;
+  } else if (key === repSecondMetric) {
+    repSecondMetric = null;
+  } else {
+    repSecondMetric = key;
+  }
   renderReportingCards();
   renderReportingChart();
 }
@@ -3599,8 +3644,8 @@ function renderReportingCards() {
   const total = repSumBucket(repSeries);
   document.getElementById("repCards").innerHTML = REP_METRICS.map(m => {
     const v = m.val(total);
-    const on = m.key === repSelectedMetric;
-    return '<button class="rep-card' + (on ? " on" : "") + '" data-metric="' + m.key + '" onclick="selectRepMetric(\'' + m.key + '\')">' +
+    const on = m.key === repSelectedMetric, on2 = m.key === repSecondMetric;
+    return '<button class="rep-card' + (on ? " on" : on2 ? " on2" : "") + '" data-metric="' + m.key + '" onclick="selectRepMetric(\'' + m.key + '\')">' +
       '<div class="rep-label">' + m.label + (m.sub ? ' <span class="rep-sub">' + m.sub + "</span>" : "") + "</div>" +
       '<div class="rep-value">' + (v == null ? "\u2014" : m.fmt(v)) + "</div></button>";
   }).join("");
@@ -3654,35 +3699,60 @@ function renderReportingChart() {
     REP_BUCKET_KEYS.forEach(key => g[key] += dp[key] || 0);
   });
   const buckets = [...map.values()].sort((a, c) => a.sortKey < c.sortKey ? -1 : a.sortKey > c.sortKey ? 1 : 0);
-  const bars = buckets.map(bk => ({ label: bk.label, value: metric.val(bk) }));
-  document.getElementById("repChartBody").innerHTML = renderRepChartSvg(bars, metric);
+  const metric2 = repSecondMetric ? REP_METRICS.find(m => m.key === repSecondMetric) : null;
+  const bars = buckets.map(bk => ({ label: bk.label, value: metric.val(bk), value2: metric2 ? metric2.val(bk) : null }));
+  const name = m => escapeHtml(m.label + (m.sub ? " (" + m.sub + ")" : ""));
+  document.getElementById("repChartTitle").innerHTML = metric2
+    ? '<span class="rep-swatch"></span>' + name(metric) + '<span class="rep-vs">vs</span><span class="rep-swatch rep-swatch-2"></span>' + name(metric2)
+    : name(metric);
+  document.getElementById("repChartBody").innerHTML = renderRepChartSvg(bars, metric, metric2);
 }
 
-function renderRepChartSvg(bars, metric) {
+// Smooth curve through points (Catmull-Rom converted to cubic Béziers).
+function repCurvePath(pts) {
+  if (!pts.length) return "";
+  if (pts.length === 1) return "M" + pts[0][0].toFixed(1) + "," + pts[0][1].toFixed(1);
+  let d = "M" + pts[0][0].toFixed(1) + "," + pts[0][1].toFixed(1);
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += " C" + c1x.toFixed(1) + "," + c1y.toFixed(1) + " " + c2x.toFixed(1) + "," + c2y.toFixed(1) + " " + p2[0].toFixed(1) + "," + p2[1].toFixed(1);
+  }
+  return d;
+}
+
+function renderRepChartSvg(bars, metric, metric2) {
   if (!bars.length) return '<div class="rep-chart-empty">No data for this range.</div>';
-  const W = 900, H = 300, mL = 70, mR = 14, mT = 22, mB = 44;
+  const W = 900, H = 300, mL = 70, mR = metric2 ? 70 : 14, mT = 22, mB = 44;
   const pw = W - mL - mR, ph = H - mT - mB;
-  const vals = bars.map(b => b.value == null ? 0 : b.value);
-  const niceMax = bpNiceCeil(Math.max(0.0000001, ...vals));
+  const niceMax = bpNiceCeil(Math.max(0.0000001, ...bars.map(b => b.value || 0)));
+  const niceMax2 = metric2 ? bpNiceCeil(Math.max(0.0000001, ...bars.map(b => b.value2 || 0))) : 1;
   const slot = pw / bars.length;
   const bw = Math.min(slot * 0.7, 54);
   const y = v => mT + ph - ((v || 0) / niceMax) * ph;
+  const y2 = v => mT + ph - ((v || 0) / niceMax2) * ph;
   const cx = i => mL + i * slot + slot / 2;
+  // Curve control points are clamped to the plot so smoothing can't dip below zero.
+  const clampY = p => [p[0], Math.min(mT + ph, Math.max(mT, p[1]))];
+  const curve = pts => repCurvePath(pts).replace(/C([\d.-]+),([\d.-]+) ([\d.-]+),([\d.-]+)/g, (m, a, b, c, d) => {
+    const p = clampY([+a, +b]), q = clampY([+c, +d]); return "C" + p[0] + "," + p[1].toFixed(1) + " " + q[0] + "," + q[1].toFixed(1);
+  });
   const lineMode = repChartType === "lines";
   const step = bars.length <= 16 ? 1 : Math.ceil(bars.length / 16);
+  const fmtTip = b => escapeHtml(b.label + ": " + (b.value == null ? "\u2014" : metric.fmt(b.value)) +
+    (metric2 ? "  \u00b7  " + metric2.label + ": " + (b.value2 == null ? "\u2014" : metric2.fmt(b.value2)) : ""));
   let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="bp-chart-svg" preserveAspectRatio="xMidYMid meet">';
   for (let t = 0; t <= 4; t++) {
-    const val = niceMax * t / 4, yy = y(val);
+    const yy = y(niceMax * t / 4);
     s += '<line x1="' + mL + '" y1="' + yy.toFixed(1) + '" x2="' + (W - mR) + '" y2="' + yy.toFixed(1) + '" stroke="var(--line-soft)" />';
-    s += '<text x="' + (mL - 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end" class="bp-chart-ylabel">' + metric.fmt(val) + "</text>";
+    s += '<text x="' + (mL - 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end" class="bp-chart-ylabel">' + metric.fmt(niceMax * t / 4) + "</text>";
+    if (metric2) s += '<text x="' + (W - mR + 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="start" class="bp-chart-ylabel rep-axis2">' + metric2.fmt(niceMax2 * t / 4) + "</text>";
   }
-  if (lineMode) {
-    const pts = bars.map((b, i) => cx(i).toFixed(1) + "," + y(b.value == null ? 0 : b.value).toFixed(1)).join(" ");
-    s += '<polyline points="' + pts + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />';
-  }
+  if (lineMode) s += '<path d="' + curve(bars.map((b, i) => [cx(i), y(b.value)])) + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" />';
   bars.forEach((b, i) => {
     const v = b.value == null ? 0 : b.value;
-    const tip = escapeHtml(b.label + ": " + (b.value == null ? "\u2014" : metric.fmt(b.value)));
+    const tip = fmtTip(b);
     if (lineMode) {
       s += '<circle cx="' + cx(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="3" class="rep-dot" data-tip="' + tip + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"></circle>';
     } else {
@@ -3694,6 +3764,16 @@ function renderRepChartSvg(bars, metric) {
     }
     if (i % step === 0) s += '<text x="' + cx(i).toFixed(1) + '" y="' + (mT + ph + 15) + '" text-anchor="middle" class="bp-chart-xlabel">' + escapeHtml(b.label) + "</text>";
   });
+  if (metric2) {
+    s += '<path d="' + curve(bars.map((b, i) => [cx(i), y2(b.value2)])) + '" fill="none" class="rep-line2" stroke-width="2.5" stroke-linecap="round" />';
+    bars.forEach((b, i) => {
+      const v2 = b.value2 == null ? 0 : b.value2;
+      s += '<circle cx="' + cx(i).toFixed(1) + '" cy="' + y2(v2).toFixed(1) + '" r="3.5" class="rep-dot2" data-tip="' + fmtTip(b) + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"></circle>';
+      if (repShowLabels && i % step === 0 && b.value2 != null) {
+        s += '<text x="' + cx(i).toFixed(1) + '" y="' + (y2(v2) - 7).toFixed(1) + '" text-anchor="middle" class="rep-datalabel rep-datalabel2">' + metric2.fmt(b.value2) + "</text>";
+      }
+    });
+  }
   s += "</svg>";
   return s;
 }
@@ -4719,6 +4799,7 @@ function periodMapToRange(val) {
     "30days": { label: "Last 30 Days", days: 30 },
     "thisMonth": { label: "This Month", type: "thisMonth" },
     "lastMonth": { label: "Last Month", type: "lastMonth" },
+    "thisYear": { label: "This Year", type: "thisYear" },
   };
   return map[val] || map["30days"];
 }
@@ -4734,6 +4815,9 @@ function rangeToGAQL(r) {
     const lm = new Date(today.getFullYear(), today.getMonth() - 1, 1);
     const ld = new Date(today.getFullYear(), today.getMonth(), 0);
     return "segments.date >= '" + formatDateForGAQL(lm) + "' AND segments.date <= '" + formatDateForGAQL(ld) + "'";
+  }
+  if (r.type === "thisYear") {
+    return "segments.date >= '" + formatDateForGAQL(new Date(today.getFullYear(), 0, 1)) + "' AND segments.date <= '" + formatDateForGAQL(today) + "'";
   }
   if (r.from && r.to) return "segments.date >= '" + r.from + "' AND segments.date <= '" + r.to + "'";
   if (r.days === 1) return "YESTERDAY";
@@ -4899,7 +4983,12 @@ function getAccCompareRange() {
     return "segments.date >= '" + accState.compareCustom.from + "' AND segments.date <= '" + accState.compareCustom.to + "'";
   }
   // Default: mirror the current date range, shifted back by the same number of days.
-  const dr = accState.dateRange;
+  let dr = accState.dateRange;
+  if (dr.type) {
+    // Resolve This Month / Last Month / This Year to explicit dates so "previous period" is correct.
+    const m = /'(\d{8})' AND segments\.date <= '(\d{8})'/.exec(rangeToGAQL(dr));
+    if (m) dr = { from: m[1], to: m[2] };
+  }
   if (dr.from && dr.to) {
     const msDay = 86400000;
     const from = new Date(dr.from.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"));
