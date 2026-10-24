@@ -149,6 +149,10 @@
   .rep-swatch-2 { background: #eab308; border-radius: 50%; }
   .rep-vs { color: var(--muted); font-weight: 400; margin: 0 10px; font-size: 12.5px; }
   .rep-intro { margin: 4px 0 14px; }
+  .rep-axis-title { fill: var(--muted); font-size: 12px; font-weight: 560; }
+  .rep-axis-title2 { fill: #a16207; }
+  .rep-table-section { margin-top: 22px; }
+  .rep-table-tools { margin-bottom: 10px; }
   .rep-intro-title { margin: 0 0 4px; font-size: 18px; font-weight: 640; color: var(--ink); }
   .rep-intro-text { margin: 0; font-size: 13.5px; color: var(--muted); }
   .rep-chart-wrap { margin-top: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 16px; }
@@ -1040,6 +1044,12 @@
                 <option value="custom">Custom...</option>
               </select>
             </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="repPdfBtn" onclick="exportReportingPdf()" title="Download this report as a PDF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Download PDF</button>
+              </div>
+            </div>
           </div>
           <div class="rep-intro">
             <h2 class="rep-intro-title">Performance Overview</h2>
@@ -1066,6 +1076,10 @@
               </div>
             </div>
             <div class="rep-chart-body-wrap"><div class="rep-chart-tip" id="repChartTip" hidden></div><div id="repChartBody"></div></div>
+          </div>
+          <div id="repTableSection" class="rep-table-section" hidden>
+            <div class="controls-row rep-table-tools" id="repToolsRow"><div class="grow"></div></div>
+            <div id="repTableHost"></div>
           </div>
           <div class="foot-note" style="margin-top:14px;">Account-level totals for the selected account and date range. Search impression share and click share are averaged across accounts weighted by impressions when "All Accounts" is selected.</div>
         </section>
@@ -1116,7 +1130,8 @@
               </div>
             </div>
             <div class="grow"></div>
-            <div class="toolset">
+            <span id="accToolsetHome" hidden></span>
+            <div class="toolset" id="accToolset">
               <div class="filters">
                 <button class="filters-btn" id="accHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -1255,6 +1270,8 @@
             </div>
           </div>
 
+          <span id="accTableBlockHome" hidden></span>
+          <div id="accTableBlock">
           <div class="panel">
             <div id="accLoading" class="state"><div class="spinner"></div>Loading accounts…</div>
             <div id="accError" class="state" hidden></div>
@@ -1266,6 +1283,7 @@
             <div class="pagination" id="accPagination" hidden></div>
           </div>
           <div class="foot-note" style="margin-top:10px;">Each row aggregates all campaigns in that account for the selected period. Click a header to sort; drag or double-click borders to resize.</div>
+          </div>
         </section>
       </section>
 
@@ -3431,7 +3449,34 @@ function currentHashPage() {
 // The metric-cell deltas follow whichever page you're on: Overview uses its own
 // Compare toggle, every other page uses the campaigns Compare toggle.
 function comparingNow() {
-  return currentHashPage() === "allaccounts" ? accState.compareEnabled : state.compareEnabled;
+  const p = currentHashPage();
+  if (p === "reporting") return false; // Reporting has no Compare control
+  return p === "allaccounts" ? accState.compareEnabled : state.compareEnabled;
+}
+
+// The Overview table + its toolbar (Heatmap, Filters, Views, Columns, Export) are lent to the
+// Reporting page while it's showing, and returned when Overview is shown, so both pages use
+// one table with the same data, filters, saved views and column choices.
+function mountAccTable(where) {
+  const tools = document.getElementById("accToolset"), block = document.getElementById("accTableBlock");
+  if (!tools || !block) return;
+  if (where === "reporting") {
+    const row = document.getElementById("repToolsRow"), host = document.getElementById("repTableHost");
+    if (tools.parentNode !== row) row.appendChild(tools);
+    if (block.parentNode !== host) host.appendChild(block);
+  } else {
+    const th = document.getElementById("accToolsetHome"), bh = document.getElementById("accTableBlockHome");
+    if (tools.previousElementSibling !== th) th.after(tools);
+    if (block.previousElementSibling !== bh) bh.after(block);
+  }
+}
+// Make sure the Overview data (current account + shared date range) is loaded for Reporting's table.
+function ensureRepTable() {
+  document.getElementById("repTableSection").hidden = false;
+  mountAccTable("reporting");
+  if (!accState.wired) { accState.wired = true; wireAccountsControls(); restoreAccFilters(); }
+  if (!accState.loaded) { accState.loaded = true; loadAllAccounts(); }
+  else if (accState.rows.length) { showEl("accLoading", false); showEl("accTable", true); showEl("accPagination", true); renderAccountsTable(); }
 }
 
 // Pages under the "Accounts" menu category share the account + campaign selection.
@@ -3447,6 +3492,7 @@ function refreshAccountsPage() {
 }
 
 function showPage(page) {
+  if (page === "allaccounts") mountAccTable("home");
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   (document.getElementById(page) || document.getElementById('allaccounts')).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
@@ -3539,6 +3585,7 @@ function repDateClause() {
 
 async function loadReporting() {
   if (!signedIn) { initReporting(); return; }
+  ensureRepTable();
   document.getElementById("repSignedOut").hidden = true;
   document.getElementById("repSignedIn").hidden = false;
   showEl("repError", false); showEl("repCards", false); showEl("repLoading", true);
@@ -3709,6 +3756,90 @@ function renderReportingChart() {
   document.getElementById("repChartBody").innerHTML = renderRepChartSvg(bars, metric, metric2);
 }
 
+// Rasterise an on-screen SVG (with its CSS-driven colours inlined) to a PNG data URL.
+async function svgToPng(svg, scale) {
+  const clone = svg.cloneNode(true);
+  const src = svg.querySelectorAll("*"), dst = clone.querySelectorAll("*");
+  const PROPS = ["fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity", "font-size", "font-family", "font-weight", "paint-order"];
+  src.forEach((el, i) => { const cs = getComputedStyle(el); dst[i].setAttribute("style", PROPS.map(p => p + ":" + cs.getPropertyValue(p)).join(";")); });
+  const vb = svg.viewBox.baseVal, w = vb.width, hgt = vb.height;
+  clone.setAttribute("width", w); clone.setAttribute("height", hgt);
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(clone));
+  const img = new Image();
+  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+  const cv = document.createElement("canvas");
+  cv.width = w * scale; cv.height = hgt * scale;
+  const ctx = cv.getContext("2d");
+  ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.drawImage(img, 0, 0, cv.width, cv.height);
+  return { data: cv.toDataURL("image/jpeg", 0.92), w, h: hgt };
+}
+
+// One-page-flow PDF of the Reporting page: header, scorecards, graph, and the table below it.
+async function exportReportingPdf() {
+  if (!repSeries || !document.querySelector("#repChartBody svg")) { showToast("Load the report first."); return; }
+  showToast("Preparing PDF\u2026");
+  if (!(await ensurePdfLibs())) { showToast("Couldn't load the PDF library \u2014 opening print instead."); window.print(); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+  const PW = doc.internal.pageSize.getWidth(), M = 36;
+  const ACC = [67, 56, 202], YEL = [161, 98, 7];
+  // Header
+  const sel = document.getElementById("globalAccountSelect");
+  const acct = sel && sel.selectedOptions[0] ? sel.selectedOptions[0].text : "All Accounts";
+  const camp = getCampPickerValue() || "All campaigns";
+  const range = SHARED_DATE_RANGE.label || (typeof prettyRangeLabel === "function" ? prettyRangeLabel(SHARED_DATE_RANGE) : "");
+  doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(20); doc.text("Performance Overview", M, 40);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(100);
+  doc.text(acct + "   \u00b7   " + camp + "   \u00b7   " + range, M, 56);
+  // Scorecards (2 rows x 5)
+  const total = repSumBucket(repSeries);
+  const gap = 8, cw = (PW - 2 * M - gap * 4) / 5, ch = 44;
+  REP_METRICS.forEach((m, idx) => {
+    const x = M + (idx % 5) * (cw + gap), y = 70 + Math.floor(idx / 5) * (ch + gap);
+    const on = m.key === repSelectedMetric, on2 = m.key === repSecondMetric;
+    doc.setDrawColor(...(on ? ACC : on2 ? [234, 179, 8] : [226, 232, 240]));
+    doc.setFillColor(...(on ? [238, 242, 255] : on2 ? [254, 249, 231] : [255, 255, 255]));
+    doc.roundedRect(x, y, cw, ch, 4, 4, "FD");
+    doc.setFontSize(7); doc.setTextColor(110); doc.text((m.label + (m.sub ? "  " + m.sub : "")).toUpperCase(), x + 8, y + 14);
+    const v = m.val(total);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(...(on ? ACC : on2 ? YEL : [20, 20, 20]));
+    doc.text(v == null ? "\u2014" : m.fmt(v), x + 8, y + 33);
+    doc.setFont("helvetica", "normal");
+  });
+  // Graph
+  let y = 70 + 2 * (ch + gap) + 10;
+  const metric2 = repSecondMetric ? REP_METRICS.find(m => m.key === repSecondMetric) : null;
+  const m1 = REP_METRICS.find(m => m.key === repSelectedMetric);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.setTextColor(20);
+  doc.text(m1.label + (metric2 ? "  vs  " + metric2.label : "") + "  \u00b7  by " + (document.getElementById("repGranSelect").selectedOptions[0].text || ""), M, y + 4);
+  doc.setFont("helvetica", "normal");
+  try {
+    const png = await svgToPng(document.querySelector("#repChartBody svg"), 2);
+    const iw = PW - 2 * M, ih = iw * png.h / png.w;
+    doc.addImage(png.data, "JPEG", M, y + 12, iw, ih);
+    y += 12 + ih + 10;
+  } catch { doc.setFontSize(9); doc.setTextColor(150); doc.text("(Graph could not be rendered.)", M, y + 24); y += 40; }
+  // Table (everything that matches the current filters, not just the visible page)
+  const cols = accState.viewCols || [], rows = accState.viewRows || [];
+  if (rows.length && cols.length) {
+    const head = [cols.map(c => String(c.label).replace(/<br\s*\/?>/gi, " "))];
+    const body = rows.map(r => cols.map(c => c.type === "status" ? titleCase(r[c.key] || "") : c.type ? formatCell(c.type, r[c.key]) : String(r[c.key] == null ? "" : r[c.key])));
+    const tot = accTotals(rows);
+    body.push(cols.map((c, i) => i === 0 ? "Total \u00b7 " + rows.length : (c.align === "num" ? formatCell(c.type, tot[c.key]) : "")));
+    const lastRow = body.length - 1;
+    doc.autoTable({
+      head, body, startY: y, margin: { left: M, right: M },
+      styles: { fontSize: 7, cellPadding: 3, overflow: "linebreak" },
+      headStyles: { fillColor: ACC, textColor: 255, fontSize: 7 },
+      didParseCell: d => { if (d.section === "body" && d.row.index === lastRow) { d.cell.styles.fontStyle = "bold"; d.cell.styles.fillColor = [241, 245, 249]; } },
+    });
+  }
+  doc.save("performance-overview-" + new Date().toISOString().slice(0, 10) + ".pdf");
+  showToast("PDF downloaded.");
+}
+
 // Smooth curve through points (Catmull-Rom converted to cubic Béziers).
 function repCurvePath(pts) {
   if (!pts.length) return "";
@@ -3725,7 +3856,7 @@ function repCurvePath(pts) {
 
 function renderRepChartSvg(bars, metric, metric2) {
   if (!bars.length) return '<div class="rep-chart-empty">No data for this range.</div>';
-  const W = 900, H = 300, mL = 70, mR = metric2 ? 70 : 14, mT = repShowLabels ? 30 : 22, mB = 44;
+  const W = 900, H = 316, mL = 88, mR = metric2 ? 88 : 18, mT = repShowLabels ? 30 : 22, mB = 60;
   const pw = W - mL - mR, ph = H - mT - mB;
   const niceMax = bpNiceCeil(Math.max(0.0000001, ...bars.map(b => b.value || 0)));
   const niceMax2 = metric2 ? bpNiceCeil(Math.max(0.0000001, ...bars.map(b => b.value2 || 0))) : 1;
@@ -3810,6 +3941,12 @@ function renderRepChartSvg(bars, metric, metric2) {
       if (has2) labels += '<text x="' + cx(i).toFixed(1) + '" y="' + q.toFixed(1) + '" text-anchor="middle" class="rep-datalabel' + (onBar(i, q) ? " on-bar" : " rep-datalabel2") + '">' + metric2.fmt(b.value2) + "</text>";
     });
   }
+  // Axis titles
+  const GRAN_TITLE = { day: "Day", week: "Week (starting Monday)", month: "Month", quarter: "Quarter" };
+  const cyMid = (mT + ph / 2).toFixed(1);
+  s += '<text x="16" y="' + cyMid + '" text-anchor="middle" transform="rotate(-90 16 ' + cyMid + ')" class="rep-axis-title">' + escapeHtml(metric.label) + "</text>";
+  if (metric2) s += '<text x="' + (W - 14) + '" y="' + cyMid + '" text-anchor="middle" transform="rotate(90 ' + (W - 14) + " " + cyMid + ')" class="rep-axis-title rep-axis-title2">' + escapeHtml(metric2.label) + "</text>";
+  s += '<text x="' + (mL + pw / 2).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" class="rep-axis-title">' + (GRAN_TITLE[repGranularity] || "Period") + "</text>";
   s += labels + "</svg>";
   return s;
 }
@@ -3899,6 +4036,7 @@ function onGlobalAccountChange(val) {
   { const fil = document.getElementById("accCampaignFilter"); if (fil) fil.value = ""; }
   { const lbl = document.getElementById("campPickerLabel"); if (lbl) { lbl.textContent = "All campaigns"; lbl.title = ""; } }
   resetAccountScopedFilters();
+  accState.loaded = false;
   state.loadedAccount = "__stale__";
   assetsState.loadedAccount = "__stale__";
   lpState.loadedAccount = "__stale__";
@@ -5166,6 +5304,7 @@ function aggregateCampaigns(campaigns) {
     a.viewThroughConversions += +c.viewThroughConversions || 0;
     a.invalidClicks += +c.invalidClicks || 0;
     a.activeViewImpressions += +c.activeViewImpressions || 0;
+    a.budget += +c.budget || 0;
     return a;
   }, { impressions:0, clicks:0, interactions:0, cost:0, conversions:0, convValue:0, allConversions:0, viewThroughConversions:0, invalidClicks:0, activeViewImpressions:0, budget:0 });
   const row = withMetrics(t);
