@@ -156,17 +156,24 @@
   .rep-chart-wrap { margin-top: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 16px; }
   .rep-chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 12px; }
   .rep-chart-tools { display: flex; align-items: center; gap: 8px; }
-  .rep-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
-  .rep-seg-btn { border: none; background: var(--panel); padding: 5px 9px; cursor: pointer; color: var(--muted); display: inline-flex; align-items: center; }
-  .rep-seg-btn svg { width: 15px; height: 15px; }
-  .rep-seg-btn + .rep-seg-btn { border-left: 1px solid var(--line); }
-  .rep-seg-btn.on { background: var(--accent-soft); color: var(--accent); }
   .rep-tool-btn { border: 1px solid var(--line); background: var(--panel); border-radius: 7px; padding: 5px 9px; cursor: pointer; color: var(--muted); display: inline-flex; align-items: center; }
   .rep-tool-btn svg { width: 15px; height: 15px; }
   .rep-tool-btn.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
   .rep-dot { fill: var(--accent); }
   .rep-datalabel { fill: var(--ink); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; stroke-linejoin: round; }
   .rep-datalabel.on-bar { fill: #fff; stroke: var(--accent); }
+  .rep-datalabel.on-bar2 { fill: #422006; stroke: #eab308; }
+  .rep-bar2 { fill: #eab308; transition: opacity .1s; }
+  .rep-bar2:hover { opacity: .82; }
+  .rep-card { position: relative; }
+  .rep-card.on .rep-label, .rep-card.on2 .rep-label { padding-right: 64px; }
+  .rep-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .rep-card-type { position: absolute; top: 8px; right: 8px; display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--panel); }
+  .rep-type-btn { border: none; background: var(--panel); padding: 3px 7px; cursor: pointer; color: var(--muted); display: inline-flex; align-items: center; }
+  .rep-type-btn svg { width: 14px; height: 14px; }
+  .rep-type-btn + .rep-type-btn { border-left: 1px solid var(--line); }
+  .rep-card.on .rep-type-btn.on { background: var(--accent-soft); color: var(--accent); }
+  .rep-card.on2 .rep-type-btn.on { background: rgba(234, 179, 8, .18); color: #a16207; }
   .rep-chart-title { font-size: 14px; font-weight: 600; color: var(--ink); }
   .rep-chart-body-wrap { position: relative; }
   .rep-bar { fill: var(--accent); transition: opacity .1s; }
@@ -1060,10 +1067,6 @@
             <div class="rep-chart-head">
               <div class="rep-chart-title" id="repChartTitle">Cost</div>
               <div class="rep-chart-tools">
-                <div class="rep-seg">
-                  <button id="repTypeBars" class="rep-seg-btn on" title="Bars" onclick="setRepChartType('bars')"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="11" width="4" height="9" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="16" y="3" width="4" height="17" rx="1"/></svg></button>
-                  <button id="repTypeLines" class="rep-seg-btn" title="Lines" onclick="setRepChartType('lines')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 16 9 9 13 13 21 4"/></svg></button>
-                </div>
                 <button id="repLabelsBtn" class="rep-tool-btn" title="Show data labels" onclick="toggleRepLabels()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><line x1="7" y1="7" x2="7" y2="7"/></svg></button>
                 <select id="repGranSelect" onchange="onRepGranChange()">
                   <option value="day">Day</option>
@@ -3625,15 +3628,19 @@ let repSeries = [];
 let repSelectedMetric = "cost";
 let repSecondMetric = null; // optional second metric: yellow line on the right-hand axis
 let repGranularity = "month";
-let repChartType = "bars";
 let repShowLabels = false;
-
-function setRepChartType(t) {
-  repChartType = t;
-  document.getElementById("repTypeBars").classList.toggle("on", t === "bars");
-  document.getElementById("repTypeLines").classList.toggle("on", t === "lines");
+// Per-metric display type ("bars" | "lines"), chosen on each selected card. Unset = default:
+// the main metric shows as bars, the second as a line.
+let repSeriesType = {};
+try { const p = uiGet("reporting"); if (p && p.seriesTypes) repSeriesType = p.seriesTypes; } catch {}
+function repTypeFor(key, slot) { return repSeriesType[key] || (slot === 1 ? "bars" : "lines"); }
+function setRepSeriesType(key, t) {
+  repSeriesType[key] = t;
+  uiSave("reporting", { seriesTypes: repSeriesType });
+  renderReportingCards();
   renderReportingChart();
 }
+function onRepCardKey(e, key) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectRepMetric(key); } }
 function toggleRepLabels() {
   repShowLabels = !repShowLabels;
   document.getElementById("repLabelsBtn").classList.toggle("on", repShowLabels);
@@ -3693,9 +3700,14 @@ function renderReportingCards() {
   document.getElementById("repCards").innerHTML = REP_METRICS.map(m => {
     const v = m.val(total);
     const on = m.key === repSelectedMetric, on2 = m.key === repSecondMetric;
-    return '<button class="rep-card' + (on ? " on" : on2 ? " on2" : "") + '" data-metric="' + m.key + '" onclick="selectRepMetric(\'' + m.key + '\')">' +
+    const t = (on || on2) ? repTypeFor(m.key, on ? 1 : 2) : null;
+    const tbtn = (type, title, svg) => '<button type="button" class="rep-type-btn' + (t === type ? " on" : "") + '" title="' + title + '" aria-pressed="' + (t === type) + '" onclick="event.stopPropagation(); setRepSeriesType(\'' + m.key + '\', \'' + type + '\')">' + svg + "</button>";
+    const toggle = t ? '<div class="rep-card-type" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()">' +
+      tbtn("bars", "Show as bars", '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="11" width="4" height="9" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="16" y="3" width="4" height="17" rx="1"/></svg>') +
+      tbtn("lines", "Show as a line", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c4-1 5-9 9-9s5 6 9 3"/></svg>') + "</div>" : "";
+    return '<div class="rep-card' + (on ? " on" : on2 ? " on2" : "") + '" role="button" tabindex="0" aria-pressed="' + (on || on2) + '" data-metric="' + m.key + '" onclick="selectRepMetric(\'' + m.key + '\')" onkeydown="onRepCardKey(event, \'' + m.key + '\')">' + toggle +
       '<div class="rep-label">' + m.label + (m.sub ? ' <span class="rep-sub">' + m.sub + "</span>" : "") + "</div>" +
-      '<div class="rep-value">' + (v == null ? "\u2014" : m.fmt(v)) + "</div></button>";
+      '<div class="rep-value">' + (v == null ? "\u2014" : m.fmt(v)) + "</div></div>";
   }).join("");
 }
 
@@ -3865,88 +3877,91 @@ function repCurvePath(pts) {
 function renderRepChartSvg(bars, metric, metric2) {
   if (!bars.length) return '<div class="rep-chart-empty">No data for this range.</div>';
   const W = 900, H = 316, mL = 88, mR = metric2 ? 88 : 18, mT = repShowLabels ? 30 : 22, mB = 60;
-  const pw = W - mL - mR, ph = H - mT - mB;
+  const pw = W - mL - mR, ph = H - mT - mB, base = mT + ph;
+  const t1 = repTypeFor(metric.key, 1), t2 = metric2 ? repTypeFor(metric2.key, 2) : null;
   const niceMax = bpNiceCeil(Math.max(0.0000001, ...bars.map(b => b.value || 0)));
   const niceMax2 = metric2 ? bpNiceCeil(Math.max(0.0000001, ...bars.map(b => b.value2 || 0))) : 1;
   const slot = pw / bars.length;
-  const bw = Math.min(slot * 0.7, 54);
-  const y = v => mT + ph - ((v || 0) / niceMax) * ph;
-  const y2 = v => mT + ph - ((v || 0) / niceMax2) * ph;
+  const y1 = v => base - ((v || 0) / niceMax) * ph;
+  const y2 = v => base - ((v || 0) / niceMax2) * ph;
   const cx = i => mL + i * slot + slot / 2;
+  // Bar geometry: a lone bar series is centred; two bar series sit side by side.
+  const both = t1 === "bars" && t2 === "bars";
+  const bwOne = Math.min(slot * 0.7, 54), bwHalf = Math.min(slot * 0.38, 30);
+  const barW = both ? bwHalf : bwOne;
+  const barCx = (n, i) => !both ? cx(i) : n === 1 ? cx(i) - bwHalf / 2 - 1 : cx(i) + bwHalf / 2 + 1;
   // Curve control points are clamped to the plot so smoothing can't dip below zero.
-  const clampY = p => [p[0], Math.min(mT + ph, Math.max(mT, p[1]))];
+  const clampY = p => [p[0], Math.min(base, Math.max(mT, p[1]))];
   const curve = pts => repCurvePath(pts).replace(/C([\d.-]+),([\d.-]+) ([\d.-]+),([\d.-]+)/g, (m, a, b, c, d) => {
     const p = clampY([+a, +b]), q = clampY([+c, +d]); return "C" + p[0] + "," + p[1].toFixed(1) + " " + q[0] + "," + q[1].toFixed(1);
   });
-  const lineMode = repChartType === "lines";
   const step = bars.length <= 16 ? 1 : Math.ceil(bars.length / 16);
-  // A label sits "on a bar" when its text (baseline y, ~12px tall) falls inside that bar.
-  const onBar = (i, baseline) => !lineMode && (baseline - 10) >= y(bars[i].value == null ? 0 : bars[i].value) && (bars[i].value || 0) > 0;
-  let labels = ""; // data labels are drawn last so they sit above bars and lines
-  const primaryLabelY = {}; // i -> baseline of the purple label (for collision checks)
   const fmtTip = b => escapeHtml(b.label + ": " + (b.value == null ? "\u2014" : metric.fmt(b.value)) +
     (metric2 ? "  \u00b7  " + metric2.label + ": " + (b.value2 == null ? "\u2014" : metric2.fmt(b.value2)) : ""));
+  const tipAttr = b => ' data-tip="' + fmtTip(b) + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"';
   let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="bp-chart-svg" preserveAspectRatio="xMidYMid meet">';
   for (let t = 0; t <= 4; t++) {
-    const yy = y(niceMax * t / 4);
+    const yy = y1(niceMax * t / 4);
     s += '<line x1="' + mL + '" y1="' + yy.toFixed(1) + '" x2="' + (W - mR) + '" y2="' + yy.toFixed(1) + '" stroke="var(--line-soft)" />';
     s += '<text x="' + (mL - 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end" class="bp-chart-ylabel">' + metric.fmt(niceMax * t / 4) + "</text>";
     if (metric2) s += '<text x="' + (W - mR + 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="start" class="bp-chart-ylabel">' + metric2.fmt(niceMax2 * t / 4) + "</text>";
   }
-  if (lineMode) s += '<path d="' + curve(bars.map((b, i) => [cx(i), y(b.value)])) + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" />';
-  bars.forEach((b, i) => {
-    const v = b.value == null ? 0 : b.value;
-    const tip = fmtTip(b);
-    if (lineMode) {
-      s += '<circle cx="' + cx(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="3" class="rep-dot" data-tip="' + tip + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"></circle>';
-    } else {
-      const bx = mL + i * slot + (slot - bw) / 2, by = y(v), bh = Math.max(0, mT + ph - by);
-      s += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="2" class="rep-bar" data-tip="' + tip + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"></rect>';
-    }
-    if (repShowLabels && i % step === 0 && b.value != null) {
-      primaryLabelY[i] = y(v) - 6;
-    }
-    if (i % step === 0) s += '<text x="' + cx(i).toFixed(1) + '" y="' + (mT + ph + 15) + '" text-anchor="middle" class="bp-chart-xlabel">' + escapeHtml(b.label) + "</text>";
+  const series = [{ n: 1, type: t1, val: b => b.value, y: y1, cls: "rep-bar", line: "var(--accent)", dot: "rep-dot", r: 3 }];
+  if (metric2) series.push({ n: 2, type: t2, val: b => b.value2, y: y2, cls: "rep-bar2", line: "#eab308", dot: "rep-dot2", r: 3.5 });
+  // Bars first, then lines on top.
+  series.filter(sr => sr.type === "bars").forEach(sr => bars.forEach((b, i) => {
+    const v = sr.val(b) || 0, top = sr.y(v), hgt = Math.max(0, base - top);
+    s += '<rect x="' + (barCx(sr.n, i) - barW / 2).toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + hgt.toFixed(1) + '" rx="2" class="' + sr.cls + '"' + tipAttr(b) + "></rect>";
+  }));
+  series.filter(sr => sr.type === "lines").forEach(sr => {
+    s += '<path d="' + curve(bars.map((b, i) => [cx(i), sr.y(sr.val(b))])) + '" fill="none" stroke="' + sr.line + '" stroke-width="' + (sr.n === 2 ? 2.5 : 2) + '" stroke-linecap="round" />';
+    bars.forEach((b, i) => { s += '<circle cx="' + cx(i).toFixed(1) + '" cy="' + sr.y(sr.val(b) || 0).toFixed(1) + '" r="' + sr.r + '" class="' + sr.dot + '"' + tipAttr(b) + "></circle>"; });
   });
-  if (metric2) {
-    s += '<path d="' + curve(bars.map((b, i) => [cx(i), y2(b.value2)])) + '" fill="none" class="rep-line2" stroke-width="2.5" stroke-linecap="round" />';
-    bars.forEach((b, i) => {
-      const v2 = b.value2 == null ? 0 : b.value2;
-      s += '<circle cx="' + cx(i).toFixed(1) + '" cy="' + y2(v2).toFixed(1) + '" r="3.5" class="rep-dot2" data-tip="' + fmtTip(b) + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"></circle>';
-      if (repShowLabels && i % step === 0 && b.value2 != null) {
-        // Placed in the joint pass below.
-      }
-    });
-  }
-  // Joint label placement: avoid the purple and yellow labels overlapping, and avoid text
-  // straddling a bar's top edge. Labels on a bar render white.
+  bars.forEach((b, i) => { if (i % step === 0) s += '<text x="' + cx(i).toFixed(1) + '" y="' + (base + 15) + '" text-anchor="middle" class="bp-chart-xlabel">' + escapeHtml(b.label) + "</text>"; });
+
+  // Data labels — drawn last so they sit above bars and lines. Rules: no overlaps between the two
+  // series' labels, no text straddling a bar's top edge, and text that sits on a bar is recoloured.
+  let labels = "";
   if (repShowLabels) {
     const TXT = 12, GAP = 18;
+    const textW = str => String(str).length * 6.6;
     bars.forEach((b, i) => {
       if (i % step !== 0) return;
-      const has1 = b.value != null, has2 = !!metric2 && b.value2 != null;
-      const barTop = y(b.value || 0), barH = mT + ph - barTop;
-      const straddles = base => !lineMode && (b.value || 0) > 0 && base > barTop && base - (TXT - 2) < barTop;
-      const inPlot = base => base - TXT >= 0 && base <= mT + ph - 2;
-      const clear = (a, c) => a == null || c == null || Math.abs(a - c) >= GAP;
-      let p = has1 ? y(b.value || 0) - 6 : null;
-      let q = null;
-      if (has2) {
-        const dot = y2(b.value2 || 0);
-        const cands = [dot - 8, dot + 17];
-        if (!lineMode && barH >= 22) cands.push(barTop + 16);
-        const pick = pp => cands.find(c => clear(c, pp) && !straddles(c) && inPlot(c));
-        q = pick(p);
-        if (q == null && has1) {
-          // Move the purple label instead: into its bar (white) or below its point.
-          const alt = lineMode ? y(b.value || 0) + 17 : (barH >= 22 ? barTop + 16 : null);
-          if (alt != null && inPlot(alt)) { const q2 = pick(alt); if (q2 != null) { p = alt; q = q2; } }
-        }
-        if (q == null) q = cands[0];
+      const L = series.map(sr => {
+        const v = sr.val(b);
+        if (v == null) return null;
+        const pt = sr.y(v || 0), isBar = sr.type === "bars";
+        return { sr, text: sr === series[0] ? metric.fmt(v) : metric2.fmt(v), x: isBar ? barCx(sr.n, i) : cx(i), pt, isBar, barH: isBar ? base - pt : 0, base: pt - (isBar ? 6 : 8) };
+      });
+      const [A, B] = L;
+      // Which bar (if any) is under a label position?
+      const barsAt = (x) => series.filter(sr => sr.type === "bars" && (sr.val(b) || 0) > 0 && Math.abs(x - barCx(sr.n, i)) < barW / 2);
+      const under = (lab, bl) => barsAt(lab.x).find(sr => bl - (TXT - 2) >= sr.y(sr.val(b) || 0)) || null;
+      const straddles = (lab, bl) => barsAt(lab.x).some(sr => { const top = sr.y(sr.val(b) || 0); return bl > top && bl - (TXT - 2) < top; });
+      const inPlot = bl => bl - TXT >= 0 && bl <= base - 2;
+      const clash = (p, q) => p && q && Math.abs(p.base - q.base) < GAP && Math.abs(p.x - q.x) < (textW(p.text) + textW(q.text)) / 2;
+      const candidates = lab => {
+        const c = lab.isBar ? [lab.pt - 6] : [lab.pt - 8, lab.pt + 17];
+        if (lab.isBar && lab.barH >= 22) c.push(lab.pt + 16);                 // inside its own bar
+        barsAt(lab.x).filter(sr => sr !== lab.sr).forEach(sr => { const top = sr.y(sr.val(b) || 0); if (base - top >= 22) c.push(top + 16); }); // inside the other bar
+        return c.filter(bl => inPlot(bl));
+      };
+      const ok = (lab, other) => !straddles(lab, lab.base) && !clash(lab, other);
+      if (A && B && !(ok(A, B) && ok(B, A))) {
+        // Try moving B, then A, then both, through their candidate positions.
+        let done = false;
+        for (const bb of candidates(B)) { const nb = { ...B, base: bb }; if (ok(nb, A) && ok(A, nb)) { B.base = bb; done = true; break; } }
+        if (!done) for (const aa of candidates(A)) { const na = { ...A, base: aa }; if (ok(na, B) && ok(B, na)) { A.base = aa; done = true; break; } }
+        if (!done) outer: for (const aa of candidates(A)) for (const bb of candidates(B)) { const na = { ...A, base: aa }, nb = { ...B, base: bb }; if (ok(na, nb) && ok(nb, na)) { A.base = aa; B.base = bb; break outer; } }
+      } else if (A && !B && straddles(A, A.base)) {
+        const c = candidates(A).find(bl => !straddles(A, bl)); if (c != null) A.base = c;
       }
-      const cls = base => onBar(i, base) ? " on-bar" : "";
-      if (has1) labels += '<text x="' + cx(i).toFixed(1) + '" y="' + p.toFixed(1) + '" text-anchor="middle" class="rep-datalabel' + cls(p) + '">' + metric.fmt(b.value) + "</text>";
-      if (has2) labels += '<text x="' + cx(i).toFixed(1) + '" y="' + q.toFixed(1) + '" text-anchor="middle" class="rep-datalabel' + (onBar(i, q) ? " on-bar" : " rep-datalabel2") + '">' + metric2.fmt(b.value2) + "</text>";
+      L.forEach(lab => {
+        if (!lab) return;
+        const on = under(lab, lab.base);
+        const cls = on ? (on.n === 1 ? " on-bar" : " on-bar2") : (lab.sr.n === 2 ? " rep-datalabel2" : "");
+        labels += '<text x="' + lab.x.toFixed(1) + '" y="' + lab.base.toFixed(1) + '" text-anchor="middle" class="rep-datalabel' + cls + '">' + lab.text + "</text>";
+      });
     });
   }
   // Axis titles
