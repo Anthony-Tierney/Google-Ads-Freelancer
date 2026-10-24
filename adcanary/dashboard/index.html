@@ -163,7 +163,8 @@
   .rep-tool-btn svg { width: 15px; height: 15px; }
   .rep-tool-btn.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
   .rep-dot { fill: var(--accent); }
-  .rep-datalabel { fill: var(--ink); font-size: 9.5px; font-variant-numeric: tabular-nums; }
+  .rep-datalabel { fill: var(--ink); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; stroke-linejoin: round; }
+  .rep-datalabel.on-bar { fill: #fff; stroke: var(--accent); }
   .rep-chart-title { font-size: 14px; font-weight: 600; color: var(--ink); }
   .rep-chart-body-wrap { position: relative; }
   .rep-bar { fill: var(--accent); transition: opacity .1s; }
@@ -3565,11 +3566,11 @@ async function loadReporting() {
 const REP_METRICS = [
   { key: "clicks", label: "Clicks", sub: "Traffic", fmt: fmtInt, val: b => b.clicks },
   { key: "avgcpc", label: "Avg. CPC", sub: "", fmt: fmtCurrency, val: b => b.clicks ? b.cost / b.clicks : 0 },
-  { key: "cost", label: "Cost", sub: "Ad Spend", fmt: fmtCurrency, val: b => b.cost },
+  { key: "cost", label: "Cost", sub: "Ad Spend", fmt: fmtCurrency0, val: b => b.cost },
   { key: "ctr", label: "CTR", sub: "Click-Through Rate", fmt: fmtPct, val: b => b.impressions ? b.clicks / b.impressions : 0 },
   { key: "impressions", label: "Impressions", sub: "", fmt: fmtInt, val: b => b.impressions },
-  { key: "conversions", label: "Conversions", sub: "", fmt: fmtDec, val: b => b.conversions },
-  { key: "cpa", label: "Cost / Conv.", sub: "CPA", fmt: fmtCurrency, val: b => b.conversions ? b.cost / b.conversions : 0 },
+  { key: "conversions", label: "Conversions", sub: "", fmt: fmtInt, val: b => b.conversions },
+  { key: "cpa", label: "Cost / Conv.", sub: "CPA", fmt: fmtCurrency0, val: b => b.conversions ? b.cost / b.conversions : 0 },
   { key: "convrate", label: "Conv. Rate", sub: "", fmt: fmtPct, val: b => b.clicks ? b.conversions / b.clicks : 0 },
   { key: "impshare", label: "Search Imp. Share", sub: "", fmt: fmtPct, val: b => b.shareWeight ? b.impShareW / b.shareWeight : null },
   { key: "clickshare", label: "Click Share", sub: "", fmt: fmtPct, val: b => b.shareWeight ? b.clickShareW / b.shareWeight : null },
@@ -3724,7 +3725,7 @@ function repCurvePath(pts) {
 
 function renderRepChartSvg(bars, metric, metric2) {
   if (!bars.length) return '<div class="rep-chart-empty">No data for this range.</div>';
-  const W = 900, H = 300, mL = 70, mR = metric2 ? 70 : 14, mT = 22, mB = 44;
+  const W = 900, H = 300, mL = 70, mR = metric2 ? 70 : 14, mT = repShowLabels ? 30 : 22, mB = 44;
   const pw = W - mL - mR, ph = H - mT - mB;
   const niceMax = bpNiceCeil(Math.max(0.0000001, ...bars.map(b => b.value || 0)));
   const niceMax2 = metric2 ? bpNiceCeil(Math.max(0.0000001, ...bars.map(b => b.value2 || 0))) : 1;
@@ -3740,6 +3741,10 @@ function renderRepChartSvg(bars, metric, metric2) {
   });
   const lineMode = repChartType === "lines";
   const step = bars.length <= 16 ? 1 : Math.ceil(bars.length / 16);
+  // A label sits "on a bar" when its text (baseline y, ~12px tall) falls inside that bar.
+  const onBar = (i, baseline) => !lineMode && (baseline - 10) >= y(bars[i].value == null ? 0 : bars[i].value) && (bars[i].value || 0) > 0;
+  let labels = ""; // data labels are drawn last so they sit above bars and lines
+  const primaryLabelY = {}; // i -> baseline of the purple label (for collision checks)
   const fmtTip = b => escapeHtml(b.label + ": " + (b.value == null ? "\u2014" : metric.fmt(b.value)) +
     (metric2 ? "  \u00b7  " + metric2.label + ": " + (b.value2 == null ? "\u2014" : metric2.fmt(b.value2)) : ""));
   let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="bp-chart-svg" preserveAspectRatio="xMidYMid meet">';
@@ -3760,7 +3765,7 @@ function renderRepChartSvg(bars, metric, metric2) {
       s += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="2" class="rep-bar" data-tip="' + tip + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"></rect>';
     }
     if (repShowLabels && i % step === 0 && b.value != null) {
-      s += '<text x="' + cx(i).toFixed(1) + '" y="' + (y(v) - 5).toFixed(1) + '" text-anchor="middle" class="rep-datalabel">' + metric.fmt(b.value) + "</text>";
+      primaryLabelY[i] = y(v) - 6;
     }
     if (i % step === 0) s += '<text x="' + cx(i).toFixed(1) + '" y="' + (mT + ph + 15) + '" text-anchor="middle" class="bp-chart-xlabel">' + escapeHtml(b.label) + "</text>";
   });
@@ -3770,11 +3775,42 @@ function renderRepChartSvg(bars, metric, metric2) {
       const v2 = b.value2 == null ? 0 : b.value2;
       s += '<circle cx="' + cx(i).toFixed(1) + '" cy="' + y2(v2).toFixed(1) + '" r="3.5" class="rep-dot2" data-tip="' + fmtTip(b) + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"></circle>';
       if (repShowLabels && i % step === 0 && b.value2 != null) {
-        s += '<text x="' + cx(i).toFixed(1) + '" y="' + (y2(v2) - 7).toFixed(1) + '" text-anchor="middle" class="rep-datalabel rep-datalabel2">' + metric2.fmt(b.value2) + "</text>";
+        // Placed in the joint pass below.
       }
     });
   }
-  s += "</svg>";
+  // Joint label placement: avoid the purple and yellow labels overlapping, and avoid text
+  // straddling a bar's top edge. Labels on a bar render white.
+  if (repShowLabels) {
+    const TXT = 12, GAP = 18;
+    bars.forEach((b, i) => {
+      if (i % step !== 0) return;
+      const has1 = b.value != null, has2 = !!metric2 && b.value2 != null;
+      const barTop = y(b.value || 0), barH = mT + ph - barTop;
+      const straddles = base => !lineMode && (b.value || 0) > 0 && base > barTop && base - (TXT - 2) < barTop;
+      const inPlot = base => base - TXT >= 0 && base <= mT + ph - 2;
+      const clear = (a, c) => a == null || c == null || Math.abs(a - c) >= GAP;
+      let p = has1 ? y(b.value || 0) - 6 : null;
+      let q = null;
+      if (has2) {
+        const dot = y2(b.value2 || 0);
+        const cands = [dot - 8, dot + 17];
+        if (!lineMode && barH >= 22) cands.push(barTop + 16);
+        const pick = pp => cands.find(c => clear(c, pp) && !straddles(c) && inPlot(c));
+        q = pick(p);
+        if (q == null && has1) {
+          // Move the purple label instead: into its bar (white) or below its point.
+          const alt = lineMode ? y(b.value || 0) + 17 : (barH >= 22 ? barTop + 16 : null);
+          if (alt != null && inPlot(alt)) { const q2 = pick(alt); if (q2 != null) { p = alt; q = q2; } }
+        }
+        if (q == null) q = cands[0];
+      }
+      const cls = base => onBar(i, base) ? " on-bar" : "";
+      if (has1) labels += '<text x="' + cx(i).toFixed(1) + '" y="' + p.toFixed(1) + '" text-anchor="middle" class="rep-datalabel' + cls(p) + '">' + metric.fmt(b.value) + "</text>";
+      if (has2) labels += '<text x="' + cx(i).toFixed(1) + '" y="' + q.toFixed(1) + '" text-anchor="middle" class="rep-datalabel' + (onBar(i, q) ? " on-bar" : " rep-datalabel2") + '">' + metric2.fmt(b.value2) + "</text>";
+    });
+  }
+  s += labels + "</svg>";
   return s;
 }
 
