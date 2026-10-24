@@ -3625,14 +3625,24 @@ const REP_METRICS = [
 ];
 const REP_BUCKET_KEYS = ["clicks", "impressions", "cost", "conversions", "impShareW", "clickShareW", "shareWeight"];
 let repSeries = [];
-let repSelectedMetric = "cost";
-let repSecondMetric = null; // optional second metric: yellow line on the right-hand axis
+// First visit: Clicks (main) + Conversions (second). After that, the user's last selection is remembered.
+let repSelectedMetric = "clicks";
+let repSecondMetric = "conversions"; // optional second metric: yellow line on the right-hand axis
 let repGranularity = "month";
 let repShowLabels = false;
 // Per-metric display type ("bars" | "lines"), chosen on each selected card. Unset = default:
 // the main metric shows as bars, the second as a line.
 let repSeriesType = {};
-try { const p = uiGet("reporting"); if (p && p.seriesTypes) repSeriesType = p.seriesTypes; } catch {}
+try {
+  const p = uiGet("reporting");
+  if (p && p.seriesTypes) repSeriesType = p.seriesTypes;
+  if (p && typeof p.showLabels === "boolean") repShowLabels = p.showLabels;
+  if (p && ["day", "week", "month", "quarter"].includes(p.granularity)) repGranularity = p.granularity;
+  if (p && "selected" in p) {
+    const valid = k => k == null || REP_METRICS.some(m => m.key === k);
+    if (valid(p.selected) && valid(p.second)) { repSelectedMetric = p.selected; repSecondMetric = p.selected ? p.second : null; }
+  }
+} catch {}
 function repTypeFor(key, slot) { return repSeriesType[key] || (slot === 1 ? "bars" : "lines"); }
 function setRepSeriesType(key, t) {
   repSeriesType[key] = t;
@@ -3643,6 +3653,7 @@ function setRepSeriesType(key, t) {
 function onRepCardKey(e, key) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectRepMetric(key); } }
 function toggleRepLabels() {
   repShowLabels = !repShowLabels;
+  uiSave("reporting", { showLabels: repShowLabels });
   document.getElementById("repLabelsBtn").classList.toggle("on", repShowLabels);
   renderReportingChart();
 }
@@ -3687,11 +3698,13 @@ function selectRepMetric(key) {
   } else {
     repSecondMetric = key;
   }
+  uiSave("reporting", { selected: repSelectedMetric, second: repSecondMetric });
   renderReportingCards();
   renderReportingChart();
 }
 function onRepGranChange() {
   repGranularity = document.getElementById("repGranSelect").value;
+  uiSave("reporting", { granularity: repGranularity });
   renderReportingChart();
 }
 
@@ -3737,6 +3750,8 @@ function repBucketize(series, gran) {
 }
 
 function renderReportingChart() {
+  const lb = document.getElementById("repLabelsBtn"); if (lb) lb.classList.toggle("on", repShowLabels);
+  const gs = document.getElementById("repGranSelect"); if (gs && gs.value !== repGranularity) gs.value = repGranularity;
   const metric = REP_METRICS.find(m => m.key === repSelectedMetric);
   if (!metric) {
     document.getElementById("repChartTitle").textContent = "";
