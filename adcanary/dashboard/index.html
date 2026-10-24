@@ -143,14 +143,12 @@
   .rep-card.on2 .rep-value { color: #a16207; }
   .rep-line2 { stroke: #eab308; }
   .rep-dot2 { fill: #eab308; stroke: var(--panel); stroke-width: 1.5; }
-  .rep-axis2 { fill: #a16207; }
   .rep-datalabel2 { fill: #a16207; }
   .rep-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--accent); margin-right: 6px; vertical-align: 0; }
   .rep-swatch-2 { background: #eab308; border-radius: 50%; }
   .rep-vs { color: var(--muted); font-weight: 400; margin: 0 10px; font-size: 12.5px; }
   .rep-intro { margin: 4px 0 14px; }
   .rep-axis-title { fill: var(--muted); font-size: 12px; font-weight: 560; }
-  .rep-axis-title2 { fill: #a16207; }
   .rep-table-section { margin-top: 22px; }
   .rep-table-tools { margin-bottom: 10px; }
   .rep-intro-title { margin: 0 0 4px; font-size: 18px; font-weight: 640; color: var(--ink); }
@@ -3670,13 +3668,15 @@ function repSumBucket(list) {
 }
 
 // Card selection: first metric = main (left axis); a second card adds a yellow line on the right
-// axis; a third card replaces the second; clicking a selected card removes it.
+// axis; a third card replaces the second; clicking a selected card removes it. Removing the only
+// selected metric leaves the graph empty until a card is chosen again.
 function selectRepMetric(key) {
   if (key === repSelectedMetric) {
-    if (!repSecondMetric) return;          // always keep at least one metric
-    repSelectedMetric = repSecondMetric; repSecondMetric = null;
+    repSelectedMetric = repSecondMetric; repSecondMetric = null; // null when it was the only one
   } else if (key === repSecondMetric) {
     repSecondMetric = null;
+  } else if (!repSelectedMetric) {
+    repSelectedMetric = key;
   } else {
     repSecondMetric = key;
   }
@@ -3725,7 +3725,12 @@ function repBucketize(series, gran) {
 }
 
 function renderReportingChart() {
-  const metric = REP_METRICS.find(m => m.key === repSelectedMetric) || REP_METRICS[0];
+  const metric = REP_METRICS.find(m => m.key === repSelectedMetric);
+  if (!metric) {
+    document.getElementById("repChartTitle").textContent = "";
+    document.getElementById("repChartBody").innerHTML = '<div class="rep-chart-empty">Select a metric above to populate the graph.</div>';
+    return;
+  }
   document.getElementById("repChartTitle").textContent = metric.label + (metric.sub ? " (" + metric.sub + ")" : "");
   // Build every bucket across the selected range (zero-filled) so the x-axis starts on the
   // range's start date even where the campaign had no data.
@@ -3778,7 +3783,7 @@ async function svgToPng(svg, scale) {
 
 // One-page-flow PDF of the Reporting page: header, scorecards, graph, and the table below it.
 async function exportReportingPdf() {
-  if (!repSeries || !document.querySelector("#repChartBody svg")) { showToast("Load the report first."); return; }
+  if (!repSeries || document.getElementById("repCards").hidden) { showToast("Load the report first."); return; }
   showToast("Preparing PDF\u2026");
   if (!(await ensurePdfLibs())) { showToast("Couldn't load the PDF library \u2014 opening print instead."); window.print(); return; }
   const { jsPDF } = window.jspdf;
@@ -3812,15 +3817,18 @@ async function exportReportingPdf() {
   let y = 70 + 2 * (ch + gap) + 10;
   const metric2 = repSecondMetric ? REP_METRICS.find(m => m.key === repSecondMetric) : null;
   const m1 = REP_METRICS.find(m => m.key === repSelectedMetric);
+  const chartSvg = document.querySelector("#repChartBody svg");
+  if (m1 && chartSvg) {
   doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.setTextColor(20);
   doc.text(m1.label + (metric2 ? "  vs  " + metric2.label : "") + "  \u00b7  by " + (document.getElementById("repGranSelect").selectedOptions[0].text || ""), M, y + 4);
   doc.setFont("helvetica", "normal");
   try {
-    const png = await svgToPng(document.querySelector("#repChartBody svg"), 2);
+    const png = await svgToPng(chartSvg, 2);
     const iw = PW - 2 * M, ih = iw * png.h / png.w;
     doc.addImage(png.data, "JPEG", M, y + 12, iw, ih);
     y += 12 + ih + 10;
   } catch { doc.setFontSize(9); doc.setTextColor(150); doc.text("(Graph could not be rendered.)", M, y + 24); y += 40; }
+  }
   // Table (everything that matches the current filters, not just the visible page)
   const cols = accState.viewCols || [], rows = accState.viewRows || [];
   if (rows.length && cols.length) {
@@ -3883,7 +3891,7 @@ function renderRepChartSvg(bars, metric, metric2) {
     const yy = y(niceMax * t / 4);
     s += '<line x1="' + mL + '" y1="' + yy.toFixed(1) + '" x2="' + (W - mR) + '" y2="' + yy.toFixed(1) + '" stroke="var(--line-soft)" />';
     s += '<text x="' + (mL - 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end" class="bp-chart-ylabel">' + metric.fmt(niceMax * t / 4) + "</text>";
-    if (metric2) s += '<text x="' + (W - mR + 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="start" class="bp-chart-ylabel rep-axis2">' + metric2.fmt(niceMax2 * t / 4) + "</text>";
+    if (metric2) s += '<text x="' + (W - mR + 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="start" class="bp-chart-ylabel">' + metric2.fmt(niceMax2 * t / 4) + "</text>";
   }
   if (lineMode) s += '<path d="' + curve(bars.map((b, i) => [cx(i), y(b.value)])) + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" />';
   bars.forEach((b, i) => {
@@ -3945,7 +3953,7 @@ function renderRepChartSvg(bars, metric, metric2) {
   const GRAN_TITLE = { day: "Day", week: "Week (starting Monday)", month: "Month", quarter: "Quarter" };
   const cyMid = (mT + ph / 2).toFixed(1);
   s += '<text x="16" y="' + cyMid + '" text-anchor="middle" transform="rotate(-90 16 ' + cyMid + ')" class="rep-axis-title">' + escapeHtml(metric.label) + "</text>";
-  if (metric2) s += '<text x="' + (W - 14) + '" y="' + cyMid + '" text-anchor="middle" transform="rotate(90 ' + (W - 14) + " " + cyMid + ')" class="rep-axis-title rep-axis-title2">' + escapeHtml(metric2.label) + "</text>";
+  if (metric2) s += '<text x="' + (W - 14) + '" y="' + cyMid + '" text-anchor="middle" transform="rotate(90 ' + (W - 14) + " " + cyMid + ')" class="rep-axis-title">' + escapeHtml(metric2.label) + "</text>";
   s += '<text x="' + (mL + pw / 2).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" class="rep-axis-title">' + (GRAN_TITLE[repGranularity] || "Period") + "</text>";
   s += labels + "</svg>";
   return s;
