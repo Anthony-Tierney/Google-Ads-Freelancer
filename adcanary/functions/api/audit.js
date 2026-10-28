@@ -40,6 +40,9 @@ export async function onRequestGet(context) {
   let limited = 0;
   const issues = [];
 
+  // Ended campaigns (enabled but past their end date) can't serve, so they're skipped.
+  const ended = await endedCampaignIds((q) => adsRequest(env, accessToken, `customers/${cleanId}/googleAds:search`, { query: q }));
+
   try {
     const ads = await adsRequest(
       env,
@@ -48,6 +51,7 @@ export async function onRequestGet(context) {
       {
         query: `
           SELECT
+            campaign.id,
             campaign.name,
             campaign.status,
             ad_group.name,
@@ -64,6 +68,7 @@ export async function onRequestGet(context) {
     );
 
     (ads.results || []).forEach((r) => {
+      if (ended.has(String(r.campaign?.id))) return;
       const status = r.adGroupAd?.policySummary?.approvalStatus;
       if (status === "DISAPPROVED") disapproved++;
       else if (status === "APPROVED_LIMITED" || status === "AREA_OF_INTEREST_ONLY") limited++;
@@ -87,4 +92,16 @@ export async function onRequestGet(context) {
   }
 
   return json({ accountStatus, disapproved, limited, issues });
+}
+
+// Ended = an ENABLED campaign past its end date. The API only shows this via
+// campaign.serving_status, so it's fetched separately and best-effort: if it fails,
+// campaigns simply keep their normal status.
+async function endedCampaignIds(search) {
+  const ended = new Set();
+  try {
+    const r = await search(`SELECT campaign.id, campaign.serving_status FROM campaign WHERE campaign.status = 'ENABLED'`);
+    (Array.isArray(r) ? r : (r.results || [])).forEach((x) => { if (x.campaign?.servingStatus === "ENDED") ended.add(String(x.campaign.id)); });
+  } catch { /* leave empty */ }
+  return ended;
 }
