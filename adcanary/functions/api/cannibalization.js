@@ -4,7 +4,7 @@
 //   • campaign-level negative keywords
 //   • shared negative keyword lists attached to the campaign
 //   • ad group negatives (only if they cover every ad group the term served from)
-//   • paused/removed campaigns or ad groups
+//   • paused/removed/ended campaigns, paused/removed ad groups
 // Negative matching follows Google's rules (no close variants):
 //   EXACT = whole term equals keyword · PHRASE = keyword words appear in order · BROAD = all words present.
 //   { terms: [{ term, campaignCount, activeCount, resolution: "open"|"partial"|"resolved",
@@ -76,11 +76,12 @@ export async function onRequestGet(context) {
   }
 
   // 2) Current negatives — each source independent so one failure doesn't sink the page.
-  const [campNegRows, agNegRows, linkRows, sharedRows] = await Promise.all([
+  const [campNegRows, agNegRows, linkRows, sharedRows, ended] = await Promise.all([
     safe("campaign negatives", "SELECT campaign.id, campaign_criterion.keyword.text, campaign_criterion.keyword.match_type FROM campaign_criterion WHERE campaign_criterion.negative = TRUE AND campaign_criterion.type = 'KEYWORD' AND campaign_criterion.status != 'REMOVED'"),
     safe("ad group negatives", "SELECT ad_group.id, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type FROM ad_group_criterion WHERE ad_group_criterion.negative = TRUE AND ad_group_criterion.type = 'KEYWORD' AND ad_group_criterion.status != 'REMOVED'"),
     safe("shared list links", "SELECT campaign.id, shared_set.id, shared_set.type, campaign_shared_set.status FROM campaign_shared_set WHERE shared_set.type = 'NEGATIVE_KEYWORDS' AND campaign_shared_set.status = 'ENABLED'"),
     safe("shared list keywords", "SELECT shared_set.id, shared_set.name, shared_set.type, shared_criterion.keyword.text, shared_criterion.keyword.match_type FROM shared_criterion WHERE shared_set.type = 'NEGATIVE_KEYWORDS'"),
+    endedCampaignIds(search),
   ]);
 
   const push = (map, k, v) => { if (!map.has(k)) map.set(k, []); map.get(k).push(v); };
@@ -103,7 +104,7 @@ export async function onRequestGet(context) {
     let camps = byTerm.get(term);
     if (!camps) { camps = new Map(); byTerm.set(term, camps); }
     let c = camps.get(cid);
-    if (!c) { c = { id: cid, name: r.campaign?.name || "", status: r.campaign?.status || "", adGroups: new Map(), impressions: 0, clicks: 0, cost: 0, conversions: 0 }; camps.set(cid, c); }
+    if (!c) { c = { id: cid, name: r.campaign?.name || "", status: r.campaign?.status === "ENABLED" && ended.has(cid) ? "ENDED" : (r.campaign?.status || ""), adGroups: new Map(), impressions: 0, clicks: 0, cost: 0, conversions: 0 }; camps.set(cid, c); }
     if (r.adGroup?.id) c.adGroups.set(String(r.adGroup.id), r.adGroup.status || "");
     c.impressions += Number(m.impressions) || 0;
     c.clicks += Number(m.clicks) || 0;
@@ -113,7 +114,7 @@ export async function onRequestGet(context) {
 
   // Can this campaign still show for this term today? Returns null if yes, else the reason.
   function blockedReason(c, term) {
-    if (c.status && c.status !== "ENABLED") return c.status === "REMOVED" ? "Campaign removed" : "Campaign paused";
+    if (c.status && c.status !== "ENABLED") return c.status === "REMOVED" ? "Campaign removed" : c.status === "ENDED" ? "Campaign ended" : "Campaign paused";
     const cn = firstMatch(campNeg.get(c.id), term);
     if (cn) return `Campaign negative "${cn.text}" (${mtLabel(cn.matchType)})`;
     for (const sid of campSets.get(c.id) || []) {
@@ -148,4 +149,16 @@ export async function onRequestGet(context) {
   const payload = { terms };
   if (errors.length) payload._errors = errors;
   return json(payload);
+}
+
+// Ended = an ENABLED campaign past its end date. The API only shows this via
+// campaign.serving_status, so it's fetched separately and best-effort: if it fails,
+// campaigns simply keep their normal status.
+async function endedCampaignIds(search) {
+  const ended = new Set();
+  try {
+    const r = await search(`SELECT campaign.id, campaign.serving_status FROM campaign WHERE campaign.status = 'ENABLED'`);
+    (Array.isArray(r) ? r : (r.results || [])).forEach((x) => { if (x.campaign?.servingStatus === "ENDED") ended.add(String(x.campaign.id)); });
+  } catch { /* leave empty */ }
+  return ended;
 }
