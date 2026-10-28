@@ -1369,6 +1369,7 @@
                       <div class="status-checks">
                         <div class="check-row"><input type="checkbox" id="acfCampStatEnabled" checked /><label for="acfCampStatEnabled">Enabled</label></div>
                         <div class="check-row"><input type="checkbox" id="acfCampStatPaused" /><label for="acfCampStatPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="acfCampStatEnded" /><label for="acfCampStatEnded">Ended</label></div>
                       </div>
                     </div>
                   </div>
@@ -6967,9 +6968,11 @@ const AC_DEFAULT_VISIBLE = ["ctr", "impressions", "clicks"];
 const AC_ASSETTYPE_BOXES = [["acfTypeHeadline", "Headline"], ["acfTypeDescription", "Description"]];
 // Status filters: [state key, checkbox id prefix]. Values are "Enabled" / "Paused"; default Enabled.
 const AC_STATUS_FILTERS = [["campStatus", "acfCampStat"], ["agStatus", "acfAgStat"], ["adStatus", "acfAdStat"]];
-const acStatusFromBoxes = (prefix) => new Set(["Enabled", "Paused"].filter(s => document.getElementById(prefix + s).checked));
+// "Ended" (enabled campaign past its end date) only exists for Campaign Status.
+const AC_STATUS_VALUES = ["Enabled", "Paused", "Ended"];
+const acStatusFromBoxes = (prefix) => new Set(AC_STATUS_VALUES.filter(s => { const el = document.getElementById(prefix + s); return el && el.checked; }));
 function acSyncStatusBoxes() {
-  AC_STATUS_FILTERS.forEach(([key, prefix]) => ["Enabled", "Paused"].forEach(s => { document.getElementById(prefix + s).checked = acState.filters[key].has(s); }));
+  AC_STATUS_FILTERS.forEach(([key, prefix]) => AC_STATUS_VALUES.forEach(s => { const el = document.getElementById(prefix + s); if (el) el.checked = acState.filters[key].has(s); }));
 }
 const acState = { rows: [], account: "", loadedAccount: null, sort: { key: "clicks", dir: "desc" }, filters: { account: new Set(), campaign: new Set(), adGroup: new Set(), assetType: new Set(), adText: "", adTextOp: "contains", campStatus: new Set(["Enabled"]), agStatus: new Set(["Enabled"]), adStatus: new Set(["Enabled"]) }, columnWidths: {}, currentPage: 1, pageSize: 10, visible: new Set([...(savedColVisible("adcopy") || AC_DEFAULT_VISIBLE), "assetType", "text"]), openColGroups: new Set(["acColsPop_g0"]), heatmap: false, viewLevel: "account", dateRange: SHARED_DATE_RANGE };
 
@@ -7064,7 +7067,7 @@ function resetAcFilters() {
   AC_ASSETTYPE_BOXES.forEach(([id]) => { document.getElementById(id).checked = false; });
   document.getElementById("acfAdText").value = "";
   document.getElementById("acfAdTextOp").value = "contains";
-  AC_STATUS_FILTERS.forEach(([, prefix]) => { document.getElementById(prefix + "Enabled").checked = true; document.getElementById(prefix + "Paused").checked = false; });
+  AC_STATUS_FILTERS.forEach(([, prefix]) => { AC_STATUS_VALUES.forEach(s => { const el = document.getElementById(prefix + s); if (el) el.checked = s === "Enabled"; }); });
   populateAcFilterOptions();
   applyAcFilters();
 }
