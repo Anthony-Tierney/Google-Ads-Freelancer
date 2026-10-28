@@ -42,6 +42,8 @@ export async function onRequestGet(context) {
     search(`SELECT change_event.change_date_time, change_event.change_resource_type, change_event.campaign, change_event.changed_fields FROM change_event WHERE change_event.change_date_time >= '${changeStart}' AND change_event.change_date_time <= '${changeEnd}' AND change_event.change_resource_type = 'CAMPAIGN_BUDGET' ORDER BY change_event.change_date_time DESC LIMIT 10000`),
   ]);
 
+  const ended = await endedCampaignIds(search);
+
   if (campR.status !== "fulfilled") {
     const e = campR.reason;
     return json({ error: (e && e.message) ? e.message : "Could not load campaigns" }, 500);
@@ -53,7 +55,7 @@ export async function onRequestGet(context) {
     campaigns[id] = {
       id,
       name: r.campaign?.name,
-      status: r.campaign?.status,
+      status: r.campaign?.status === "ENABLED" && ended.has(id) ? "ENDED" : r.campaign?.status,
       type: r.campaign?.advertisingChannelType,
       dailyBudget: Number(r.campaignBudget?.amountMicros || 0) / 1e6,
       daily: {},
@@ -157,4 +159,16 @@ export async function onRequestGet(context) {
   });
 
   return json({ campaigns: out, spendError, changeError });
+}
+
+// Ended = an ENABLED campaign past its end date. The API only shows this via
+// campaign.serving_status, so it's fetched separately and best-effort: if it fails,
+// campaigns simply keep their normal status.
+async function endedCampaignIds(search) {
+  const ended = new Set();
+  try {
+    const r = await search(`SELECT campaign.id, campaign.serving_status FROM campaign WHERE campaign.status = 'ENABLED'`);
+    (Array.isArray(r) ? r : (r.results || [])).forEach((x) => { if (x.campaign?.servingStatus === "ENDED") ended.add(String(x.campaign.id)); });
+  } catch { /* leave empty */ }
+  return ended;
 }
