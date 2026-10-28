@@ -44,6 +44,7 @@ export async function onRequestGet(context) {
     WHERE campaign.status != 'REMOVED' AND ${dateClause}`;
 
   let lvRows, lvError;
+  const endedP = endedCampaignIds(search);
   try {
     lvRows = (await search(LOCATION_VIEW_Q)).results || [];
   } catch (e) {
@@ -53,6 +54,7 @@ export async function onRequestGet(context) {
       : { error: "Could not load location targeting" }, debug ? 200 : 500);
   }
 
+  const ended = await endedP;
   const radius = [];
   const locations = [];
   const excluded = [];
@@ -65,7 +67,7 @@ export async function onRequestGet(context) {
     const base = {
       campaign: r.campaign?.name || "",
       campaignId: String(r.campaign?.id || ""),
-      status: r.campaign?.status || "",
+      status: r.campaign?.status === "ENABLED" && ended.has(String(r.campaign?.id)) ? "ENDED" : (r.campaign?.status || ""),
       clicks: Number(m.clicks) || 0,
       impressions: Number(m.impressions) || 0,
       conversions: Number(m.conversions) || 0,
@@ -181,4 +183,16 @@ async function geocodeBoundary(query, env, deadline) {
     if (kv) { try { await kv.put(kvKey, JSON.stringify(out), { expirationTtl: GEO_KV_TTL }); } catch {} }
   }
   return out;
+}
+
+// Ended = an ENABLED campaign past its end date. The API only shows this via
+// campaign.serving_status, so it's fetched separately and best-effort: if it fails,
+// campaigns simply keep their normal status.
+async function endedCampaignIds(search) {
+  const ended = new Set();
+  try {
+    const r = await search(`SELECT campaign.id, campaign.serving_status FROM campaign WHERE campaign.status = 'ENABLED'`);
+    (Array.isArray(r) ? r : (r.results || [])).forEach((x) => { if (x.campaign?.servingStatus === "ENDED") ended.add(String(x.campaign.id)); });
+  } catch { /* leave empty */ }
+  return ended;
 }
