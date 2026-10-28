@@ -8,7 +8,7 @@
 // Params: ?dryRun=1  → return the digest as JSON, don't post to Slack (for testing)
 //         ?debug=1   → include per-account errors in the JSON response
 //
-// Checks (enabled campaigns only): suspended account, disapproved ads, limited ads,
+// Checks (enabled, non-ended campaigns only): suspended account, disapproved ads, limited ads,
 // and CPA drift (achieved CPA well under target — the target likely needs adjusting).
 
 import { getAccessToken, adsRequest, json, formatId } from "../../shared/google.js";
@@ -107,19 +107,23 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
   }
 
   // Enabled campaigns (with Target CPA) — reused by the CPA, pacing and asset checks.
+  // Ended campaigns (enabled but past their end date) can't serve, so every check skips them.
+  const ended = await endedCampaignIds(search);
   let campEnabled = [];
   try {
     campEnabled = (await search("SELECT campaign.id, campaign.name, campaign.target_cpa.target_cpa_micros, campaign.maximize_conversions.target_cpa_micros FROM campaign WHERE campaign.status = 'ENABLED'")).results || [];
+    campEnabled = campEnabled.filter((r) => !ended.has(String(r.campaign?.id)));
   } catch { /* leave empty */ }
   const enabledCount = campEnabled.length;
 
   // 2) Policy — disapproved / limited ads on enabled campaigns
   try {
     const ads = (await search(
-      "SELECT ad_group_ad.policy_summary.approval_status, campaign.status, ad_group.status, ad_group_ad.status FROM ad_group_ad WHERE ad_group_ad.policy_summary.approval_status != 'APPROVED' AND campaign.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND ad_group_ad.status = 'ENABLED'"
+      "SELECT ad_group_ad.policy_summary.approval_status, campaign.id, campaign.status, ad_group.status, ad_group_ad.status FROM ad_group_ad WHERE ad_group_ad.policy_summary.approval_status != 'APPROVED' AND campaign.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND ad_group_ad.status = 'ENABLED'"
     )).results || [];
     let disapproved = 0, limited = 0;
     for (const r of ads) {
+      if (ended.has(String(r.campaign?.id))) continue;
       const s = r.adGroupAd?.policySummary?.approvalStatus;
       if (s === "DISAPPROVED") disapproved++;
       else if (s === "APPROVED_LIMITED" || s === "AREA_OF_INTEREST_ONLY") limited++;
@@ -367,4 +371,16 @@ function buildSlack(flagged) {
     textParts.push(section);
   }
   return { text: textParts.join("\n\n"), blocks };
+}
+
+// Ended = an ENABLED campaign past its end date. The API only shows this via
+// campaign.serving_status, so it's fetched separately and best-effort: if it fails,
+// campaigns simply keep their normal status.
+async function endedCampaignIds(search) {
+  const ended = new Set();
+  try {
+    const r = await search(`SELECT campaign.id, campaign.serving_status FROM campaign WHERE campaign.status = 'ENABLED'`);
+    (Array.isArray(r) ? r : (r.results || [])).forEach((x) => { if (x.campaign?.servingStatus === "ENDED") ended.add(String(x.campaign.id)); });
+  } catch { /* leave empty */ }
+  return ended;
 }
