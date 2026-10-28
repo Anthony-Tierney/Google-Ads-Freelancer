@@ -118,13 +118,17 @@
   .nav-heading.open .nh-chevron { transform: rotate(90deg); }
   .nav-section-items { overflow: hidden; }
   .nav-section-items.collapsed { display: none; }
-  /* Top-level page link styled like a section heading (no sub-items), e.g. Reporting */
-  .nav-item.nav-top { display: flex; align-items: center; gap: 8px; margin: 2px 0 0; padding: 10px 14px 10px 9px;
-    font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
-  .nav-item.nav-top:hover { color: var(--ink); }
-  .nav-item.nav-top.active { color: var(--ink); font-weight: 600; }
-  .nav-item.nav-top .nh-ico { width: 16px; height: 16px; flex: none; stroke: currentColor; }
-  .sidebar.collapsed .nav-item.nav-top { justify-content: center; padding: 10px 0; }
+  /* Locations page: bubble map */
+  .loc-bubble-legend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .loc-bubble-legend .b { display: inline-block; border-radius: 50%; border: 2px solid; opacity: .85; vertical-align: middle; }
+  .loc-geo-status { margin-left: auto; font-size: 12px; color: var(--muted); }
+  #locSide { flex-basis: 560px; }
+  .loc-unattr { margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .geo-table tbody tr.loc-row { cursor: pointer; }
+  .geo-table tbody tr.loc-row:hover td { background: var(--line-soft); }
+  .geo-table tbody tr.loc-row.sel td { background: var(--accent-soft); }
+  .loc-tip strong { display: block; margin-bottom: 2px; }
+  .filter-section .radio-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 13px; }
 
   .app-logo { display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
   .app-logo-mark { width: 52px; height: 52px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), #7c5cff); display: flex; align-items: center; justify-content: center; color: #fff; flex: none; overflow: hidden; }
@@ -779,6 +783,7 @@
   .geo-map { width: 100%; height: 540px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
   .geo-layout { display: flex; gap: 16px; align-items: flex-start; padding: 14px; }
   #geoControls { position: relative; z-index: 1200; }
+  #locMap { position: relative; z-index: 0; isolation: isolate; }
   .geo-side { flex: 0 0 384px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
   .geo-main { flex: 1 1 auto; min-width: 0; }
   .geo-divider { flex: 0 0 7px; align-self: stretch; min-height: 120px; cursor: col-resize; background: var(--line); border-radius: 4px; transition: background .12s; }
@@ -835,10 +840,15 @@
       <a href="#" class="nav-item nav-sub" data-page="structure">Structure</a>
       <a href="#" class="nav-item nav-sub" data-page="geocoverage">Geo Coverage</a>
     </div>
-    <a href="#" class="nav-item nav-top" data-page="reporting" title="Reporting">
+    <button class="nav-heading" data-section="reporting">
       <svg class="nh-ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="5" rx="0.5"/><rect x="12" y="8" width="3" height="9" rx="0.5"/><rect x="17" y="5" width="3" height="12" rx="0.5"/></svg>
       <span class="nh-label">Reporting</span>
-    </a>
+      <svg class="nh-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+    <div class="nav-section-items" data-section="reporting">
+      <a href="#" class="nav-item nav-sub" data-page="reporting">Performance Overview</a>
+      <a href="#" class="nav-item nav-sub" data-page="locations">Locations</a>
+    </div>
     <button class="nav-heading" data-section="audit">
       <svg class="nh-ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 8.6 9 10 5.2-1.4 9-5 9-10V6l-9-4z"/></svg>
       <span class="nh-label">Audit</span>
@@ -2237,6 +2247,129 @@
         </section>
       </section>
 
+      <!-- Locations Page (Reporting) -->
+      <section id="locations" class="page">
+        <section id="locSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to see performance by city.</p>
+            <a class="btn-primary" href="/api/auth">Sign in with Google</a>
+          </div>
+        </section>
+        <section id="locSignedIn" hidden>
+          <div class="rep-intro">
+            <h2 class="rep-intro-title">Locations</h2>
+            <p class="rep-intro-text">Performance by city for the selected account and date range. Bubbles on the map are sized by clicks or conversions &mdash; switch between them in Filters. Click a row to find that city on the map.</p>
+          </div>
+          <div class="controls-row account" id="locControls" hidden>
+            <div>
+              <label class="field-label" for="locDateSelect">Date range</label>
+              <select id="locDateSelect" onchange="onLocDateRangeChange()">
+                <option value="yesterday">Yesterday</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="14days">Last 14 Days</option>
+                <option value="30days" selected>Last 30 Days</option>
+                <option value="thisMonth">This Month</option>
+                <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
+                <option value="custom">Custom...</option>
+              </select>
+            </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="locHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                  Heatmap
+                </button>
+              </div>
+              <div class="filters" id="locFilterGroup">
+                <button class="filters-btn" id="locFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <span class="count" id="locFilterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="locFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('loc-group-metric', event)">
+                    <span class="toggle">−</span>Map Bubbles
+                  </div>
+                  <div class="filter-group-items" id="loc-group-metric">
+                    <div class="filter-section">
+                      <label class="radio-row"><input type="radio" name="locMetric" id="locMetricClicks" value="clicks" checked /> Clicks</label>
+                      <label class="radio-row"><input type="radio" name="locMetric" id="locMetricConv" value="conversions" /> Conversions</label>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('loc-group-status', event)">
+                    <span class="toggle">−</span>Campaign Status
+                  </div>
+                  <div class="filter-group-items" id="loc-group-status">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="locStatusEnabled" checked /><label for="locStatusEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="locStatusPaused" /><label for="locStatusPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="locStatusEnded" /><label for="locStatusEnded">Ended</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('loc-group-min', event)">
+                    <span class="toggle">−</span>Minimum Clicks
+                  </div>
+                  <div class="filter-group-items" id="loc-group-min">
+                    <div class="filter-section">
+                      <input type="number" id="locMinClicks" min="0" step="1" value="0" style="width:100%" />
+                    </div>
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetLocFilters()">Reset</button>
+                    <button class="apply" onclick="applyLocFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
+              <div class="filters" id="locColsGroup">
+                <button class="filters-btn" id="locColsBtn" aria-haspopup="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
+                  Columns <span class="count" id="locColsCount">0</span>
+                </button>
+                <div class="pop col-pop" id="locColsPop" hidden></div>
+              </div>
+              <div class="filters" id="locExportGroup">
+                <button class="filters-btn" id="locExportBtn" title="Export current view">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                </button>
+                <div class="pop col-pop" id="locExportPop" hidden>
+                  <button class="pop-row" data-locfmt="csv">Download CSV</button>
+                  <button class="pop-row" data-locfmt="pdf">Download PDF</button>
+                  <button class="pop-row" data-locfmt="sheets">Copy for Google Sheets</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div id="locLoading" class="state" hidden><div class="spinner"></div>Loading city performance…</div>
+            <div id="locPrompt" class="state" hidden><div class="big">Choose a single account</div>Locations shows one account at a time &mdash; pick a specific account from the selector above.</div>
+            <div id="locError" class="state" hidden></div>
+            <div id="locWarn" class="as-warn" hidden></div>
+            <div id="locLayout" class="geo-layout" hidden>
+              <div class="geo-side" id="locSide">
+                <div class="geo-table-wrap">
+                  <table class="geo-table">
+                    <colgroup id="loc-colgroup"></colgroup>
+                    <thead id="loc-thead"></thead>
+                    <tbody id="loc-tbody"></tbody>
+                  </table>
+                </div>
+                <div id="locUnattr" class="loc-unattr" hidden></div>
+              </div>
+              <div class="geo-divider" id="locDivider" title="Drag to resize"></div>
+              <div class="geo-main">
+                <div id="locMap" class="geo-map"></div>
+                <div class="loc-bubble-legend" id="locLegend"></div>
+              </div>
+            </div>
+          </div>
+          <div class="foot-note" style="margin-top:10px;">Cities come from the Google Ads &ldquo;Matched locations&rdquo; data (people physically in, or showing interest in, each city). Traffic Google can&rsquo;t attribute to a city is excluded from the table. Google doesn&rsquo;t supply map positions for cities, so new cities are looked up on OpenStreetMap (about one a second, busiest first) and saved, so they appear instantly from then on.</div>
+        </section>
+      </section>
+
       <!-- Budget Pacing Page -->
       <section id="budgetpacing" class="page">
         <section id="bpSignedOut" hidden>
@@ -2614,6 +2747,7 @@ function globalRefresh() {
     case "callouts": loadCallouts(true); break;
     case "structure": loadStructure(true); break;
     case "reporting": loadReporting(); break;
+    case "locations": if (GLOBAL_ACCOUNT !== "ALL") loadLocations(); break;
   }
 }
 const TYPE_CHECKBOXES = [
@@ -2778,10 +2912,11 @@ function setSharedDateRange(dr) {
   if (typeof lpState !== "undefined") { lpState.dateRange = dr; lpState.currentPage = 1; lpState.loadedAccount = "__stale__"; }
   if (typeof acState !== "undefined") { acState.dateRange = dr; acState.currentPage = 1; acState.loadedAccount = "__stale__"; }
   if (typeof geoState !== "undefined") { geoState.dateRange = dr; geoState.loadedAccount = "__stale__"; }
+  if (typeof locState !== "undefined") locState.loadedKey = null;
   syncAllDateSelects();
 }
 function syncAllDateSelects() {
-  [["dateSelect", "syncDateSelect"], ["accDateSelect", "syncAccDateSelect"], ["lpDateSelect", "syncLpDateSelect"], ["acDateSelect", "syncAcDateSelect"], ["geoDateSelect", "syncGeoDateSelect"], ["repDateSelect", "syncRepDateSelect"], ["cannDateSelect", ""], ["coDateSelect", ""]].forEach(([id]) => {
+  [["dateSelect", "syncDateSelect"], ["accDateSelect", "syncAccDateSelect"], ["lpDateSelect", "syncLpDateSelect"], ["acDateSelect", "syncAcDateSelect"], ["geoDateSelect", "syncGeoDateSelect"], ["repDateSelect", "syncRepDateSelect"], ["cannDateSelect", ""], ["coDateSelect", ""], ["locDateSelect", ""]].forEach(([id]) => {
     if (document.getElementById(id)) syncDateSelectEl(id, SHARED_DATE_RANGE);
   });
 }
@@ -3282,6 +3417,7 @@ function cancelCustomDate() {
   else if (state.calendarTarget === "rep") syncRepDateSelect();
   else if (state.calendarTarget === "cann") syncCannDateSelect();
   else if (state.calendarTarget === "co") syncCoDateSelect();
+  else if (state.calendarTarget === "loc") syncDateSelectEl("locDateSelect", SHARED_DATE_RANGE);
   else if (state.calendarTarget !== "compare") syncDateSelect();
 }
 
@@ -3315,6 +3451,7 @@ function applyCustomDate() {
   else if (t === "rep") loadReporting();
   else if (t === "cann") loadCannibalization();
   else if (t === "co") loadCallouts(false);
+  else if (t === "loc") loadLocations();
   else { if (state.compareEnabled) updateCompareUI(); loadCampaigns(); }
 }
 
@@ -3668,7 +3805,7 @@ function ensureRepTable() {
 // Pages under the "Accounts" menu category share the account + campaign selection.
 // Add future Accounts-category pages to this list.
 // Pages that show the shared account + campaign topbar picker.
-const ACCOUNTS_PAGES = ["allaccounts", "reporting", "adcopy", "structure"];
+const ACCOUNTS_PAGES = ["allaccounts", "reporting", "adcopy", "structure", "locations"];
 function isAccountsPage(p) { return ACCOUNTS_PAGES.includes(p || currentHashPage()); }
 function refreshAccountsPage() {
   const p = currentHashPage();
@@ -3676,6 +3813,7 @@ function refreshAccountsPage() {
   else if (p === "reporting") loadReporting();
   else if (p === "adcopy") renderAdCopyTable();
   else if (p === "structure") renderStructure();
+  else if (p === "locations") { renderLocations(); locStartGeocode(); }
 }
 
 function showPage(page) {
@@ -3710,6 +3848,7 @@ function routeFromHash() {
   else if (page === "callouts") initCallouts();
   else if (page === "structure") initStructure();
   else if (page === "reporting") initReporting();
+  else if (page === "locations") initLocations();
 }
 
 function initDashboard() {
@@ -4289,6 +4428,7 @@ function onGlobalAccountChange(val) {
   else if (page === "callouts") initCallouts();
   else if (page === "structure") initStructure();
   else if (page === "reporting") initReporting();
+  else if (page === "locations") initLocations();
 }
 
 // ---------- Sidebar collapse ----------
@@ -4305,17 +4445,19 @@ const SIDEBAR_COLLAPSED_KEY = "sidebarCollapsed";
 })();
 
 // ---------- Collapsible nav sections ----------
-const NAV_SECTIONS = ["accounts", "campaigns", "audit", "tools"];
+const NAV_SECTIONS = ["accounts", "reporting", "campaigns", "audit", "tools"];
 const NAV_OPEN_KEY = "navOpenSections";
 
-const NAV_SECTIONS_ALL = ["accounts", "campaigns", "audit", "tools"];
+const NAV_SECTIONS_ALL = ["accounts", "reporting", "campaigns", "audit", "tools"];
 
 function loadNavSections() {
   try {
     const stored = localStorage.getItem(NAV_OPEN_KEY);
     // If no preference has ever been saved, default to all sections open.
     if (stored === null) return new Set(NAV_SECTIONS_ALL);
-    return new Set(JSON.parse(stored));
+    const open = new Set(JSON.parse(stored));
+    if (!localStorage.getItem("navReportingAdded")) { localStorage.setItem("navReportingAdded", "1"); open.add("reporting"); localStorage.setItem(NAV_OPEN_KEY, JSON.stringify([...open])); }
+    return open;
   } catch { return new Set(NAV_SECTIONS_ALL); }
 }
 function saveNavSections(open) {
@@ -4501,7 +4643,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu", "locFiltersMenu", "locColsPop", "locExportPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -5651,7 +5793,11 @@ function populateAccCampaignFilter() {
   function buildCampaigns() {
     const list = [];
     const seen = new Set();
-    if (currentHashPage() === "structure") {
+    if (currentHashPage() === "locations") {
+      (locState.rows || []).forEach(r => {
+        if (r.campaign && !seen.has(r.campaign)) { seen.add(r.campaign); list.push({ name: r.campaign, status: r.status || "" }); }
+      });
+    } else if (currentHashPage() === "structure") {
       (structState.campaigns || []).forEach(c => {
         if (c.name && !seen.has(c.name)) { seen.add(c.name); list.push({ name: c.name, status: c.status === "Enabled" ? "ENABLED" : c.status === "Ended" ? "ENDED" : "PAUSED" }); }
       });
@@ -7636,6 +7782,375 @@ function onGeoDateRangeChange() {
 function syncGeoDateSelect() { syncDateSelectEl("geoDateSelect", geoState.dateRange); }
 
 
+
+// ---------- Locations (Reporting) ----------
+// City-level KPIs (geographic_view by city) in a table, plus a bubble map sized by clicks or
+// conversions. Cities have no coordinates in the Ads API, so missing positions are looked up on
+// OpenStreetMap Nominatim from the browser (max ~1/sec, busiest first) and saved to the server
+// (shared KV) and this browser, so each city is only ever looked up once.
+const LOC_METRIC_COLOR = { clicks: "#4338ca", conversions: "#10b981" };
+const LOC_COORDS_LS = "locCityCoords_v1";
+const locState = { rows: [], cities: {}, unattributed: null, loadedKey: null, map: null, layer: null, markers: new Map(),
+  sort: { key: "clicks", dir: "desc" }, columnWidths: {}, heatmap: false, sideWidth: null, wired: false,
+  filters: { metric: "clicks", status: new Set(["ENABLED"]), minClicks: 0 }, view: [], selected: null,
+  geo: { token: 0, total: 0, done: 0, running: false, pending: {} }, fitNext: true };
+const LOC_COLUMNS = [
+  { key: "label", label: "City", align: "txt", width: 230, locked: true },
+  { key: "impressions", label: "Impr.", align: "clk", width: 95, group: "Metrics", fmt: r => fmtInt(r.impressions) },
+  { key: "clicks", label: "Clicks", align: "clk", width: 85, group: "Metrics", fmt: r => fmtInt(r.clicks) },
+  { key: "ctr", label: "CTR", align: "clk", width: 80, group: "Metrics", fmt: r => fmtPct(r.ctr) },
+  { key: "cost", label: "Cost", align: "clk", width: 100, group: "Metrics", fmt: r => fmtCurrency(r.cost) },
+  { key: "avgCpc", label: "Avg. CPC", align: "clk", width: 90, group: "Metrics", fmt: r => fmtCurrency(r.avgCpc) },
+  { key: "conversions", label: "Conv.", align: "clk", width: 85, group: "Metrics", fmt: r => fmtDec(r.conversions) },
+  { key: "convRate", label: "Conv. Rate", align: "clk", width: 95, group: "Metrics", fmt: r => fmtPct(r.convRate) },
+  { key: "cpa", label: "Cost / Conv.", align: "clk", width: 105, group: "Metrics", fmt: r => r.conversions ? fmtCurrency(r.cpa) : "—" },
+];
+const LOC_DEFAULT_VISIBLE = ["clicks", "cost", "conversions", "cpa"];
+locState.visible = new Set(savedColVisible("locations") || LOC_DEFAULT_VISIBLE);
+locState.openColGroups = new Set(["locColsPop_g0"]);
+try {
+  const p = uiGet("locations");
+  if (p) {
+    if (p.sort) locState.sort = p.sort;
+    if (p.columnWidths) locState.columnWidths = p.columnWidths;
+    if (typeof p.heatmap === "boolean") locState.heatmap = p.heatmap;
+    if (p.sideWidth) locState.sideWidth = p.sideWidth;
+  }
+  const f = loadPageFilters("locations");
+  if (f) {
+    if (f.metric === "clicks" || f.metric === "conversions") locState.filters.metric = f.metric;
+    if (Array.isArray(f.status)) locState.filters.status = new Set(f.status);
+    if (f.minClicks >= 0) locState.filters.minClicks = +f.minClicks || 0;
+  }
+} catch {}
+const LOC_STATUS_BOXES = [["locStatusEnabled", "ENABLED"], ["locStatusPaused", "PAUSED"], ["locStatusEnded", "ENDED"]];
+function locShownCols() { return LOC_COLUMNS.filter(c => c.locked || locState.visible.has(c.key)); }
+function renderLocColsPop() {
+  renderGroupedCols("locColsPop", LOC_COLUMNS.filter(c => !c.locked), ["Metrics"], locState.visible, locState.openColGroups, key => {
+    locState.visible.has(key) ? locState.visible.delete(key) : locState.visible.add(key);
+    setColVisible("locations", locState.visible);
+    document.getElementById("locColsCount").textContent = locState.visible.size;
+    renderLocColsPop(); renderLocations();
+  });
+}
+function syncLocFilterBoxes() {
+  const f = locState.filters;
+  document.getElementById("locMetricClicks").checked = f.metric === "clicks";
+  document.getElementById("locMetricConv").checked = f.metric === "conversions";
+  LOC_STATUS_BOXES.forEach(([id, v]) => { document.getElementById(id).checked = f.status.has(v); });
+  document.getElementById("locMinClicks").value = f.minClicks || 0;
+}
+function applyLocFilters() {
+  const prevMetric = locState.filters.metric;
+  locState.filters = {
+    metric: document.getElementById("locMetricConv").checked ? "conversions" : "clicks",
+    status: new Set(LOC_STATUS_BOXES.filter(([id]) => document.getElementById(id).checked).map(([, v]) => v)),
+    minClicks: Math.max(0, parseInt(document.getElementById("locMinClicks").value, 10) || 0),
+  };
+  savePageFilters("locations", { metric: locState.filters.metric, status: [...locState.filters.status], minClicks: locState.filters.minClicks });
+  document.getElementById("locFiltersMenu").hidden = true;
+  if (prevMetric !== locState.filters.metric && locState.sort.key === prevMetric) locState.sort = { key: locState.filters.metric, dir: "desc" };
+  locState.fitNext = true;
+  updateLocFilterCount();
+  renderLocations();
+  locStartGeocode();
+}
+function resetLocFilters() {
+  locState.filters = { metric: "clicks", status: new Set(["ENABLED"]), minClicks: 0 };
+  syncLocFilterBoxes(); applyLocFilters();
+}
+function updateLocFilterCount() {
+  const f = locState.filters;
+  const n = (f.status.size ? 1 : 0) + (f.minClicks > 0 ? 1 : 0) + (f.metric !== "clicks" ? 1 : 0);
+  const el = document.getElementById("locFilterCount");
+  if (n) { el.textContent = n; el.hidden = false; } else el.hidden = true;
+  markFilterGroup("loc-group-status", f.status.size);
+  markFilterGroup("loc-group-min", f.minClicks > 0 ? 1 : 0);
+}
+
+function initLocations() {
+  document.getElementById("locSignedOut").hidden = signedIn;
+  document.getElementById("locSignedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  if (!locState.wired) {
+    locState.wired = true;
+    const wirePop = (btnId, popId, onOpen) => {
+      const btn = document.getElementById(btnId), pop = document.getElementById(popId);
+      btn.addEventListener("click", e => { e.stopPropagation(); const open = pop.hidden; closeAllMenus(); if (open) { if (onOpen) onOpen(); pop.hidden = false; } });
+      pop.addEventListener("click", e => e.stopPropagation());
+    };
+    wirePop("locFiltersBtn", "locFiltersMenu", syncLocFilterBoxes);
+    wirePop("locColsBtn", "locColsPop", renderLocColsPop);
+    wirePop("locExportBtn", "locExportPop");
+    document.querySelectorAll("#locExportPop [data-locfmt]").forEach(b => b.addEventListener("click", () => { document.getElementById("locExportPop").hidden = true; exportLocations(b.dataset.locfmt); }));
+    document.getElementById("locColsCount").textContent = locState.visible.size;
+    const hb = document.getElementById("locHeatmapBtn");
+    const syncHb = () => { hb.classList.toggle("toggled", locState.heatmap); hb.setAttribute("aria-pressed", locState.heatmap ? "true" : "false"); };
+    hb.addEventListener("click", e => { e.stopPropagation(); locState.heatmap = !locState.heatmap; syncHb(); uiSave("locations", { heatmap: locState.heatmap }); renderLocations(); });
+    syncHb();
+    updateLocFilterCount();
+    // Draggable splitter between table and map (same behaviour as Geo Coverage).
+    const divider = document.getElementById("locDivider"), side = document.getElementById("locSide"), layout = document.getElementById("locLayout");
+    let dragging = false, startX = 0, startW = 0, raf = 0;
+    const onMove = e => {
+      if (!dragging) return;
+      const avail = layout.clientWidth - 28 - 32 - 7;
+      const w = Math.max(240, Math.min(startW + (e.clientX - startX), Math.max(260, avail - 360)));
+      side.style.flexBasis = w + "px"; locState.sideWidth = w;
+      if (locState.map && !raf) raf = requestAnimationFrame(() => { raf = 0; locState.map.invalidateSize(); });
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false; layout.classList.remove("resizing");
+      document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp);
+      if (locState.map) locState.map.invalidateSize();
+      uiSave("locations", { sideWidth: locState.sideWidth });
+    };
+    divider.addEventListener("mousedown", e => {
+      e.preventDefault(); dragging = true; startX = e.clientX; startW = side.getBoundingClientRect().width;
+      layout.classList.add("resizing");
+      document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp);
+    });
+  }
+  syncDateSelectEl("locDateSelect", SHARED_DATE_RANGE);
+  if (GLOBAL_ACCOUNT === "ALL") {
+    document.getElementById("locControls").hidden = true;
+    ["locLoading", "locLayout", "locError", "locWarn"].forEach(id => showEl(id, false));
+    showEl("locPrompt", true);
+    return;
+  }
+  document.getElementById("locControls").hidden = false;
+  showEl("locPrompt", false);
+  const key = GLOBAL_ACCOUNT + "|" + dateRangeToGAQL(SHARED_DATE_RANGE);
+  if (locState.loadedKey !== key) loadLocations();
+  else { renderLocations(); locStartGeocode(); }
+}
+function onLocDateRangeChange() {
+  const val = document.getElementById("locDateSelect").value;
+  if (val === "customApplied") return;
+  if (val === "custom") {
+    state.calendarTarget = "loc";
+    state.calendarFromDate = new Date(); state.calendarToDate = new Date();
+    document.getElementById("calendarTitle").textContent = "Custom date range";
+    renderCalendar("from"); renderCalendar("to");
+    document.getElementById("customDateModal").setAttribute("open", "");
+  } else {
+    setSharedDateRange(DATE_PRESET_MAP[val]);
+    loadLocations();
+  }
+}
+
+async function loadLocations() {
+  if (GLOBAL_ACCOUNT === "ALL") { initLocations(); return; }
+  const key = GLOBAL_ACCOUNT + "|" + dateRangeToGAQL(SHARED_DATE_RANGE);
+  locState.loadedKey = key;
+  locState.geo.token++; // stop any lookups for the previous account / range
+  ["locPrompt", "locError", "locLayout", "locWarn"].forEach(id => showEl(id, false));
+  showEl("locLoading", true);
+  try {
+    const ctrl = new AbortController(), tmo = setTimeout(() => ctrl.abort(), 60000);
+    let res;
+    try { res = await fetch("/api/locations?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(dateRangeToGAQL(SHARED_DATE_RANGE)), { credentials: "same-origin", signal: ctrl.signal }); }
+    catch (e) { throw new Error(e && e.name === "AbortError" ? "This took longer than 60 seconds. Try Refresh, or a shorter date range." : (e.message || "Request failed")); }
+    finally { clearTimeout(tmo); }
+    if (res.status === 401) { showSignedOut(); return; }
+    const raw = await res.text();
+    let data; try { data = JSON.parse(raw); } catch { throw new Error("The server returned a page instead of data (HTTP " + res.status + "). Try Refresh, or a shorter date range."); }
+    if (data.error) throw new Error(data.error);
+    if (locState.loadedKey !== key) return; // a newer load started
+    locState.rows = data.rows || [];
+    locState.cities = data.cities || {};
+    locState.unattributed = data.unattributed || null;
+    // Fill positions this browser already found but the server doesn't have yet.
+    let local = {}; try { local = JSON.parse(localStorage.getItem(LOC_COORDS_LS) || "{}"); } catch {}
+    Object.entries(locState.cities).forEach(([id, c]) => {
+      if (c.lat != null || c.noGeo) return;
+      const v = local[id];
+      if (Array.isArray(v)) { c.lat = v[0]; c.lng = v[1]; locState.geo.pending[id] = v; }
+      else if (v === null) { c.noGeo = true; locState.geo.pending[id] = null; }
+    });
+    const w = document.getElementById("locWarn"); w.hidden = !data.warning; if (data.warning) w.textContent = data.warning;
+    showEl("locLoading", false);
+    locState.fitNext = true;
+    renderLocations();
+    setLastRefresh("locations");
+    if (typeof populateAccCampaignFilter === "function") populateAccCampaignFilter();
+    locFlushCoords();
+    locStartGeocode();
+  } catch (e) {
+    showEl("locLoading", false);
+    const el = document.getElementById("locError"); el.hidden = false;
+    el.innerHTML = '<div class="big">Couldn’t load city performance</div>' + escapeHtml(e.message || "Please try again.");
+  }
+}
+
+// One row per city for the current filters + campaign picker.
+function locAggregate() {
+  const f = locState.filters, pick = getCampPickerValue();
+  const by = new Map();
+  locState.rows.forEach(r => {
+    if (f.status.size && !f.status.has(r.status)) return;
+    if (pick && r.campaign !== pick) return;
+    let c = by.get(r.geoId);
+    if (!c) {
+      const city = locState.cities[r.geoId] || {};
+      const parts = String(city.canonical || "").split(",").map(s => s.trim()).filter(Boolean);
+      c = { geoId: r.geoId, label: city.name || ("City " + r.geoId), sub: parts.slice(1).join(", "), impressions: 0, clicks: 0, cost: 0, conversions: 0 };
+      by.set(r.geoId, c);
+    }
+    c.impressions += r.impressions; c.clicks += r.clicks; c.cost += r.cost; c.conversions += r.conversions;
+  });
+  return [...by.values()].filter(c => c.clicks >= (f.minClicks || 0) && (c.impressions || c.clicks || c.conversions)).map(c => Object.assign(c, {
+    ctr: c.impressions ? c.clicks / c.impressions : 0, avgCpc: c.clicks ? c.cost / c.clicks : 0,
+    convRate: c.clicks ? c.conversions / c.clicks : 0, cpa: c.conversions ? c.cost / c.conversions : 0,
+  }));
+}
+
+function renderLocations() {
+  if (GLOBAL_ACCOUNT === "ALL") return;
+  showEl("locLayout", true);
+  if (locState.sideWidth) document.getElementById("locSide").style.flexBasis = locState.sideWidth + "px";
+  const rows = locAggregate();
+  const sk = locState.sort.key, sdir = locState.sort.dir === "asc" ? 1 : -1;
+  rows.sort((a, b) => {
+    if (sk === "label") return String(a.label).localeCompare(String(b.label)) * sdir;
+    if (sk === "cpa" && (!a.conversions || !b.conversions)) return (a.conversions ? -1 : 0) + (b.conversions ? 1 : 0);
+    return ((a[sk] || 0) - (b[sk] || 0)) * sdir;
+  });
+  locState.view = rows;
+  const cols = locShownCols();
+  locState.viewCols = cols;
+  const arrow = key => locState.sort.key === key ? '<span class="arr">' + (locState.sort.dir === "desc" ? "▾" : "▴") + "</span>" : "";
+  const heat = buildHeatmap(rows, cols.filter(c => !c.locked).map(c => c.key), locState.heatmap);
+  document.getElementById("loc-colgroup").innerHTML = colgroupHtml(cols, locState.columnWidths);
+  document.getElementById("loc-thead").innerHTML = "<tr>" + cols.map(c =>
+    '<th class="' + (c.align === "clk" ? "clk" : "") + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
+  const MAX_ROWS = 1000;
+  document.getElementById("loc-tbody").innerHTML = rows.length
+    ? rows.slice(0, MAX_ROWS).map(r => '<tr class="loc-row' + (locState.selected === r.geoId ? " sel" : "") + '" data-geo="' + escapeHtml(r.geoId) + '">' + cols.map(c => c.locked
+        ? '<td data-col="label">' + escapeHtml(r.label) + (r.sub ? '<span class="loc-sub">' + escapeHtml(r.sub) + "</span>" : "") + "</td>"
+        : '<td class="clk" data-col="' + c.key + '"' + (c.key === "cpa" && !r.conversions ? "" : heat(c.key, r[c.key])) + ">" + c.fmt(r) + "</td>").join("") + "</tr>").join("") +
+      (rows.length > MAX_ROWS ? '<tr><td class="empty" colspan="' + cols.length + '">Showing the top ' + MAX_ROWS + " of " + fmtInt(rows.length) + " cities — export to see them all.</td></tr>" : "")
+    : '<tr><td class="empty" colspan="' + cols.length + '">No city data for these filters and dates.</td></tr>';
+  document.querySelectorAll("#loc-tbody tr.loc-row").forEach(tr => tr.addEventListener("click", () => locFocusCity(tr.dataset.geo)));
+  wireColumnResize({ colgroup: "loc-colgroup", thead: "loc-thead", tbody: "loc-tbody" }, locState.columnWidths, k => {
+    const s = locState.sort;
+    locState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
+    renderLocations();
+  });
+  uiSave("locations", { sort: locState.sort, columnWidths: locState.columnWidths });
+  // Traffic Google couldn't pin to a city.
+  const u = locState.unattributed, ue = document.getElementById("locUnattr");
+  if (u && u.clicks > 0 && !getCampPickerValue()) { ue.hidden = false; ue.textContent = fmtInt(u.clicks) + " click" + (u.clicks === 1 ? "" : "s") + " (all campaigns) couldn’t be attributed to a city and aren’t included."; }
+  else ue.hidden = true;
+  renderLocMap();
+}
+
+function renderLocMap() {
+  if (!locState.map) {
+    locState.map = L.map("locMap", { scrollWheelZoom: true }).setView([54.0, -2.5], 6);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxZoom: 19 }).addTo(locState.map);
+  }
+  locState.map.invalidateSize();
+  if (locState.layer) locState.layer.remove();
+  const group = L.featureGroup().addTo(locState.map);
+  locState.layer = group; locState.markers = new Map();
+  const metric = locState.filters.metric, color = LOC_METRIC_COLOR[metric];
+  const placed = locState.view.filter(r => { const c = locState.cities[r.geoId]; return c && c.lat != null && (r[metric] || 0) > 0; });
+  const max = Math.max(1, ...placed.map(r => r[metric] || 0));
+  const radius = v => 4 + 22 * Math.sqrt((v || 0) / max);
+  // Largest first so smaller bubbles stay clickable on top.
+  [...placed].sort((a, b) => (b[metric] || 0) - (a[metric] || 0)).forEach(r => {
+    const c = locState.cities[r.geoId];
+    const m = L.circleMarker([c.lat, c.lng], { radius: radius(r[metric]), color, weight: 1.5, fillColor: color, fillOpacity: 0.35 })
+      .bindPopup('<div class="loc-tip"><strong>' + escapeHtml(r.label) + "</strong>" + (r.sub ? escapeHtml(r.sub) + "<br>" : "") +
+        "Clicks: " + fmtInt(r.clicks) + " · Conv: " + fmtDec(r.conversions) + "<br>Cost: " + fmtCurrency(r.cost) + (r.conversions ? " · CPA: " + fmtCurrency(r.cpa) : "") + "</div>")
+      .addTo(group);
+    m.on("click", () => locSelectRow(r.geoId, false));
+    locState.markers.set(r.geoId, m);
+  });
+  if (locState.fitNext && placed.length) { locState.fitNext = false; try { locState.map.fitBounds(group.getBounds().pad(0.15), { maxZoom: 9 }); } catch {} }
+  // Legend: three reference bubble sizes + lookup progress.
+  const label = metric === "conversions" ? "Conversions" : "Clicks";
+  const refs = [max, max / 4, max / 16].filter((v, i, a) => v >= 1 && (i === 0 || Math.round(v) !== Math.round(a[i - 1])));
+  const g = locState.geo, missing = locState.view.filter(r => { const c = locState.cities[r.geoId]; return c && c.lat == null && !c.noGeo; }).length;
+  const status = g.running ? "Placing cities on the map… " + g.done + " of " + g.total : (missing ? missing + " cit" + (missing === 1 ? "y" : "ies") + " not yet on the map" : "");
+  document.getElementById("locLegend").innerHTML = "Bubble size = <strong>" + label + "</strong>" +
+    (placed.length ? refs.map(v => { const d = Math.round(radius(v) * 2); return '<span class="b" style="width:' + d + "px;height:" + d + "px;border-color:" + color + ";background:" + color + '33"></span>' + (metric === "conversions" ? fmtDec(v) : fmtInt(Math.round(v))); }).join(" ") : "") +
+    '<span class="loc-geo-status">' + escapeHtml(status) + "</span>";
+}
+function locSelectRow(geoId, scroll) {
+  locState.selected = geoId;
+  document.querySelectorAll("#loc-tbody tr.loc-row").forEach(tr => tr.classList.toggle("sel", tr.dataset.geo === geoId));
+  if (scroll) { const tr = document.querySelector('#loc-tbody tr.loc-row[data-geo="' + geoId + '"]'); if (tr) tr.scrollIntoView({ block: "nearest" }); }
+}
+function locFocusCity(geoId) {
+  locSelectRow(geoId, false);
+  const m = locState.markers.get(geoId);
+  if (m) { locState.map.flyTo(m.getLatLng(), Math.max(locState.map.getZoom(), 9), { duration: 0.6 }); m.openPopup(); }
+  else {
+    const c = locState.cities[geoId] || {};
+    showToast(c.noGeo ? "This city couldn’t be found on the map." : c.lat == null ? "This city hasn’t been placed on the map yet." : "No " + (locState.filters.metric === "conversions" ? "conversions" : "clicks") + " to show for this city.");
+  }
+}
+
+// ----- City position lookups (OpenStreetMap Nominatim, ~1 per second, busiest first) -----
+function locStartGeocode() {
+  const g = locState.geo;
+  if (g.running) { g.restart = true; g.token++; return; } // the running loop stops, then starts afresh
+  const metric = locState.filters.metric;
+  const queue = locAggregate().filter(r => { const c = locState.cities[r.geoId]; return c && c.lat == null && !c.noGeo && !c.tried; })
+    .sort((a, b) => (b[metric] || 0) - (a[metric] || 0) || (b.clicks || 0) - (a.clicks || 0)).map(r => r.geoId);
+  if (!queue.length) return;
+  const token = ++g.token;
+  g.running = true; g.total = queue.length; g.done = 0;
+  let lastDraw = 0;
+  (async () => {
+    for (const id of queue) {
+      if (token !== g.token || currentHashPage() !== "locations") break;
+      const c = locState.cities[id];
+      if (!c || c.lat != null || c.noGeo) { g.done++; continue; }
+      c.tried = true;
+      const t0 = Date.now();
+      try {
+        const q = (c.canonical || c.name || "").replace(/,/g, ", ");
+        const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=" + encodeURIComponent(q) + (c.countryCode ? "&countrycodes=" + c.countryCode.toLowerCase() : "");
+        const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+        if (res.ok) {
+          const arr = await res.json();
+          if (arr.length && isFinite(+arr[0].lat)) { c.lat = +arr[0].lat; c.lng = +arr[0].lon; g.pending[id] = [c.lat, c.lng]; }
+          else { c.noGeo = true; g.pending[id] = null; }
+        } else if (res.status === 429) { await new Promise(r => setTimeout(r, 5000)); }
+      } catch { /* network hiccup: leave for next time */ }
+      g.done++;
+      if (Object.keys(g.pending).length >= 10) locFlushCoords();
+      if (Date.now() - lastDraw > 1500) { lastDraw = Date.now(); if (currentHashPage() === "locations") renderLocMap(); }
+      await new Promise(r => setTimeout(r, Math.max(0, 1100 - (Date.now() - t0))));
+    }
+    g.running = false;
+    locFlushCoords();
+    if (currentHashPage() === "locations") {
+      renderLocMap();
+      if (g.restart) { g.restart = false; locStartGeocode(); }
+    } else g.restart = false;
+  })();
+}
+function locFlushCoords() {
+  const g = locState.geo, batch = g.pending;
+  if (!Object.keys(batch).length) return;
+  g.pending = {};
+  try { const local = JSON.parse(localStorage.getItem(LOC_COORDS_LS) || "{}"); Object.assign(local, batch); localStorage.setItem(LOC_COORDS_LS, JSON.stringify(local)); } catch {}
+  fetch("/api/locations", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ coords: batch }) }).catch(() => {});
+}
+
+function exportLocations(fmt) {
+  const rows = locState.view || [], cols = locState.viewCols || LOC_COLUMNS;
+  if (!rows.length) { showToast("Nothing to export."); return; }
+  const header = ["City", "Region / Country", ...cols.filter(c => !c.locked).map(c => c.label)];
+  const data = rows.map(r => [r.label, r.sub || "", ...cols.filter(c => !c.locked).map(c =>
+    c.key === "ctr" || c.key === "convRate" ? fmtPct(r[c.key] || 0) : c.key === "cpa" ? (r.conversions ? +r.cpa.toFixed(2) : "") : ["cost", "avgCpc"].includes(c.key) ? +(r[c.key] || 0).toFixed(2) : c.key === "conversions" ? +(r.conversions || 0).toFixed(2) : r[c.key] || 0)]);
+  exportMatrix(fmt, "locations-" + new Date().toISOString().slice(0, 10), "Locations", header, data);
+}
 
 // ---------- Account Structure ----------
 const ST_STATUS = { camp: [["stCampEnabled", "Enabled"], ["stCampPaused", "Paused"], ["stCampEnded", "Ended"]], ag: [["stAgEnabled", "Enabled"], ["stAgPaused", "Paused"]] };
