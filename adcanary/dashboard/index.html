@@ -1017,6 +1017,10 @@
                           <label for="statusPaused">Paused</label>
                         </div>
                         <div class="check-row">
+                          <input type="checkbox" id="statusEnded" />
+                          <label for="statusEnded">Ended</label>
+                        </div>
+                        <div class="check-row">
                           <input type="checkbox" id="statusRemoved" />
                           <label for="statusRemoved">Removed</label>
                         </div>
@@ -1293,6 +1297,7 @@
                       <div class="status-checks">
                         <div class="check-row"><input type="checkbox" id="accCampEnabled" checked /><label for="accCampEnabled">Enabled</label></div>
                         <div class="check-row"><input type="checkbox" id="accCampPaused" /><label for="accCampPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="accCampEnded" /><label for="accCampEnded">Ended</label></div>
                         <div class="check-row"><input type="checkbox" id="accCampRemoved" /><label for="accCampRemoved">Removed</label></div>
                       </div>
                       <div class="foot-note" style="margin-top:8px;">Account metrics reflect only campaigns with the selected status.</div>
@@ -1677,6 +1682,7 @@
                       <div class="status-checks">
                         <div class="check-row"><input type="checkbox" id="assetsStatusEnabled" checked /><label for="assetsStatusEnabled">Enabled</label></div>
                         <div class="check-row"><input type="checkbox" id="assetsStatusPaused" /><label for="assetsStatusPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="assetsStatusEnded" /><label for="assetsStatusEnded">Ended</label></div>
                         <div class="check-row"><input type="checkbox" id="assetsStatusRemoved" /><label for="assetsStatusRemoved">Removed</label></div>
                       </div>
                     </div>
@@ -1932,6 +1938,7 @@
                       <div class="status-checks">
                         <div class="check-row"><input type="checkbox" id="coCampEnabled" checked /><label for="coCampEnabled">Enabled</label></div>
                         <div class="check-row"><input type="checkbox" id="coCampPaused" /><label for="coCampPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="coCampEnded" /><label for="coCampEnded">Ended</label></div>
                       </div>
                     </div>
                   </div>
@@ -2038,6 +2045,7 @@
                       <div class="status-checks">
                         <div class="check-row"><input type="checkbox" id="cannCampEnabled" checked /><label for="cannCampEnabled">Enabled</label></div>
                         <div class="check-row"><input type="checkbox" id="cannCampPaused" /><label for="cannCampPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="cannCampEnded" /><label for="cannCampEnded">Ended</label></div>
                         <div class="check-row"><input type="checkbox" id="cannCampRemoved" /><label for="cannCampRemoved">Removed</label></div>
                       </div>
                       <div class="foot-note" style="margin-top:8px;">Only campaigns with the selected status count as competing.</div>
@@ -2139,6 +2147,7 @@
                       <div class="status-checks">
                         <div class="check-row"><input type="checkbox" id="geoStatusEnabled" checked /><label for="geoStatusEnabled">Enabled</label></div>
                         <div class="check-row"><input type="checkbox" id="geoStatusPaused" /><label for="geoStatusPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="geoStatusEnded" /><label for="geoStatusEnded">Ended</label></div>
                       </div>
                     </div>
                   </div>
@@ -2267,6 +2276,7 @@
                       <div class="status-checks">
                         <div class="check-row"><input type="checkbox" id="usStatusEnabled" checked /><label for="usStatusEnabled">Enabled</label></div>
                         <div class="check-row"><input type="checkbox" id="usStatusPaused" /><label for="usStatusPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="usStatusEnded" /><label for="usStatusEnded">Ended</label></div>
                         <div class="check-row"><input type="checkbox" id="usStatusRemoved" /><label for="usStatusRemoved">Removed</label></div>
                       </div>
                     </div>
@@ -2352,6 +2362,7 @@
                       <div class="status-checks">
                         <div class="check-row"><input type="checkbox" id="bidStatusEnabled" checked /><label for="bidStatusEnabled">Enabled</label></div>
                         <div class="check-row"><input type="checkbox" id="bidStatusPaused" /><label for="bidStatusPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="bidStatusEnded" /><label for="bidStatusEnded">Ended</label></div>
                         <div class="check-row"><input type="checkbox" id="bidStatusRemoved" /><label for="bidStatusRemoved">Removed</label></div>
                       </div>
                     </div>
@@ -3410,6 +3421,7 @@ function applyFilters() {
   state.filterStatus = new Set([
     document.getElementById("statusEnabled").checked ? "ENABLED" : null,
     document.getElementById("statusPaused").checked ? "PAUSED" : null,
+    document.getElementById("statusEnded").checked ? "ENDED" : null,
     document.getElementById("statusRemoved").checked ? "REMOVED" : null,
   ].filter(x => x));
   state.currentPage = 1;
@@ -3467,6 +3479,7 @@ function syncFilterDOM() {
   document.getElementById("filterCostValue").value = state.filterCostValue || "";
   document.getElementById("statusEnabled").checked = state.filterStatus.has("ENABLED");
   document.getElementById("statusPaused").checked = state.filterStatus.has("PAUSED");
+  document.getElementById("statusEnded").checked = state.filterStatus.has("ENDED");
   document.getElementById("statusRemoved").checked = state.filterStatus.has("REMOVED");
   const cmp = document.getElementById("compareBtn");
   if (cmp) cmp.classList.toggle("active", state.compareEnabled);
@@ -3531,6 +3544,7 @@ function resetFilters() {
   document.getElementById("filterCostValue").value = "0";
   document.getElementById("statusEnabled").checked = true;
   document.getElementById("statusPaused").checked = false;
+  document.getElementById("statusEnded").checked = false;
   document.getElementById("statusRemoved").checked = false;
   applyFilters();
 }
@@ -5243,6 +5257,7 @@ function restoreAccFilters() {
   // Sync every input to the current state (restored or default).
   document.getElementById("accCampEnabled").checked = accState.filterCampaignStatus.has("ENABLED");
   document.getElementById("accCampPaused").checked = accState.filterCampaignStatus.has("PAUSED");
+  document.getElementById("accCampEnded").checked = accState.filterCampaignStatus.has("ENDED");
   document.getElementById("accCampRemoved").checked = accState.filterCampaignStatus.has("REMOVED");
   document.getElementById("accfName").value = accState.filterCampName;
   document.getElementById("accfNameOp").value = accState.filterCampNameOp;
@@ -5399,6 +5414,7 @@ function applyAccFilters() {
   accState.filterCampaignStatus = new Set([
     document.getElementById("accCampEnabled").checked ? "ENABLED" : null,
     document.getElementById("accCampPaused").checked ? "PAUSED" : null,
+    document.getElementById("accCampEnded").checked ? "ENDED" : null,
     document.getElementById("accCampRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
   accState.filterCampName = document.getElementById("accfName").value;
@@ -5425,6 +5441,7 @@ function resetAccFilters() {
   document.getElementById("accStatusInactive").checked = false;
   document.getElementById("accCampEnabled").checked = true;
   document.getElementById("accCampPaused").checked = false;
+  document.getElementById("accCampEnded").checked = false;
   document.getElementById("accCampRemoved").checked = false;
   document.getElementById("accfName").value = "";
   document.getElementById("accfNameOp").value = "contains";
@@ -5590,7 +5607,7 @@ function populateAccCampaignFilter() {
     const seen = new Set();
     if (currentHashPage() === "structure") {
       (structState.campaigns || []).forEach(c => {
-        if (c.name && !seen.has(c.name)) { seen.add(c.name); list.push({ name: c.name, status: c.status === "Enabled" ? "ENABLED" : "PAUSED" }); }
+        if (c.name && !seen.has(c.name)) { seen.add(c.name); list.push({ name: c.name, status: c.status === "Enabled" ? "ENABLED" : c.status === "Ended" ? "ENDED" : "PAUSED" }); }
       });
     } else if (currentHashPage() === "adcopy") {
       (acState.rows || []).forEach(r => {
@@ -5654,7 +5671,7 @@ function populateAccCampaignFilter() {
           filtEnabled.map(c => '<button class="camp-picker-item' + (c.name === _campPickerValue ? " active" : "") + '" data-val="' + escapeHtml(c.name) + '" data-lbl="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</button>').join("") + '</div>';
       }
       if (filtPaused.length) {
-        html += '<div class="camp-picker-section-hdr' + (sections.paused ? " open" : "") + '" data-sec="paused"><span>Paused (' + filtPaused.length + ')</span><svg class="cp-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>' +
+        html += '<div class="camp-picker-section-hdr' + (sections.paused ? " open" : "") + '" data-sec="paused"><span>' + (filtPaused.some(c => c.status === "ENDED") ? "Paused & Ended" : "Paused") + ' (' + filtPaused.length + ')</span><svg class="cp-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>' +
           '<div class="camp-picker-section-body' + (sections.paused ? "" : " collapsed") + '" data-sec-body="paused">' +
           filtPaused.map(c => '<button class="camp-picker-item' + (c.name === _campPickerValue ? " active" : "") + '" data-val="' + escapeHtml(c.name) + '" data-lbl="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</button>').join("") + '</div>';
       }
@@ -6540,6 +6557,7 @@ function restoreAssetsFilters() {
     assetsState.filterStatus = new Set(saved.status);
     document.getElementById("assetsStatusEnabled").checked = saved.status.includes("ENABLED");
     document.getElementById("assetsStatusPaused").checked = saved.status.includes("PAUSED");
+    document.getElementById("assetsStatusEnded").checked = saved.status.includes("ENDED");
     document.getElementById("assetsStatusRemoved").checked = saved.status.includes("REMOVED");
   }
   assetsState.filterName = saved.name || "";
@@ -6570,6 +6588,7 @@ function applyAssetsFilters() {
   assetsState.filterStatus = new Set([
     document.getElementById("assetsStatusEnabled").checked ? "ENABLED" : null,
     document.getElementById("assetsStatusPaused").checked ? "PAUSED" : null,
+    document.getElementById("assetsStatusEnded").checked ? "ENDED" : null,
     document.getElementById("assetsStatusRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
   assetsState.filterName = document.getElementById("asfName").value.trim();
@@ -6586,6 +6605,7 @@ function applyAssetsFilters() {
 function resetAssetsFilters() {
   document.getElementById("assetsStatusEnabled").checked = true;
   document.getElementById("assetsStatusPaused").checked = false;
+  document.getElementById("assetsStatusEnded").checked = false;
   document.getElementById("assetsStatusRemoved").checked = false;
   document.getElementById("asfName").value = "";
   document.getElementById("asfNameOp").value = "contains";
@@ -7464,6 +7484,7 @@ function populateGeoFilterOptions() {
   }).join("") : '<div class="filter-empty">No options</div>';
   document.getElementById("geoStatusEnabled").checked = geoState.filters.status.has("ENABLED");
   document.getElementById("geoStatusPaused").checked = geoState.filters.status.has("PAUSED");
+  document.getElementById("geoStatusEnded").checked = geoState.filters.status.has("ENDED");
 }
 
 function applyGeoFilters() {
@@ -7471,6 +7492,7 @@ function applyGeoFilters() {
   const st = new Set();
   if (document.getElementById("geoStatusEnabled").checked) st.add("ENABLED");
   if (document.getElementById("geoStatusPaused").checked) st.add("PAUSED");
+  if (document.getElementById("geoStatusEnded").checked) st.add("ENDED");
   geoState.filters.status = st;
   document.getElementById("geoFiltersMenu").hidden = true;
   updateGeoFilterCount();
@@ -7807,6 +7829,7 @@ function syncCoFilterBoxes() {
   CO_LEVEL_BOXES.forEach(([id, v]) => { document.getElementById(id).checked = f.level.has(v); });
   document.getElementById("coCampEnabled").checked = f.campStatus.has("Enabled");
   document.getElementById("coCampPaused").checked = f.campStatus.has("Paused");
+  document.getElementById("coCampEnded").checked = f.campStatus.has("Ended");
   document.getElementById("coAgEnabled").checked = f.agStatus.has("Enabled");
   document.getElementById("coAgPaused").checked = f.agStatus.has("Paused");
 }
@@ -7814,7 +7837,7 @@ function applyCoFilters() {
   const pick = pairs => new Set(pairs.filter(([id]) => document.getElementById(id).checked).map(([, v]) => v));
   coState.filters = {
     level: pick(CO_LEVEL_BOXES),
-    campStatus: pick([["coCampEnabled", "Enabled"], ["coCampPaused", "Paused"]]),
+    campStatus: pick([["coCampEnabled", "Enabled"], ["coCampPaused", "Paused"], ["coCampEnded", "Ended"]]),
     agStatus: pick([["coAgEnabled", "Enabled"], ["coAgPaused", "Paused"]]),
   };
   coState.currentPage = 1;
@@ -8005,6 +8028,7 @@ function restoreCannFilters() {
   const s = cannState.filterCampaignStatus;
   document.getElementById("cannCampEnabled").checked = s.has("ENABLED");
   document.getElementById("cannCampPaused").checked = s.has("PAUSED");
+  document.getElementById("cannCampEnded").checked = s.has("ENDED");
   document.getElementById("cannCampRemoved").checked = s.has("REMOVED");
   document.getElementById("cannfImpOp").value = cannState.filterImpOp;
   document.getElementById("cannfImpValue").value = cannState.filterImpValue || "";
@@ -8014,6 +8038,7 @@ function applyCannFilters() {
   cannState.filterCampaignStatus = new Set([
     document.getElementById("cannCampEnabled").checked ? "ENABLED" : null,
     document.getElementById("cannCampPaused").checked ? "PAUSED" : null,
+    document.getElementById("cannCampEnded").checked ? "ENDED" : null,
     document.getElementById("cannCampRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
   cannState.filterImpOp = document.getElementById("cannfImpOp").value;
@@ -8028,6 +8053,7 @@ function applyCannFilters() {
 function resetCannFilters() {
   document.getElementById("cannCampEnabled").checked = true;
   document.getElementById("cannCampPaused").checked = false;
+  document.getElementById("cannCampEnded").checked = false;
   document.getElementById("cannCampRemoved").checked = false;
   document.getElementById("cannfImpOp").value = ">";
   document.getElementById("cannfImpValue").value = 10;
@@ -8150,7 +8176,7 @@ function renderCannibalization() {
         cell: r => '<span class="cann-badge">' + r.campaignCount + "</span>" + r.campaigns.map(c => {
           const share = r.impressions ? c.impressions / r.impressions : 0;
           const off = c.active === false;
-          const tag = off ? '<span class="cann-fix-tag">' + (/paused|removed/i.test(c.reason) ? "Paused" : "Negative") + "</span>" : "";
+          const tag = off ? '<span class="cann-fix-tag">' + (/ended/i.test(c.reason) ? "Ended" : /paused|removed/i.test(c.reason) ? "Paused" : "Negative") + "</span>" : "";
           return '<div class="cann-list-item' + (off ? " off" : "") + '" title="' + escapeHtml(c.name + " \u2014 " + fmtInt(c.impressions) + " impr, " + fmtInt(c.clicks) + " clicks, " + fmtCurrency0(c.cost) + ", " + fmtInt(c.conversions) + " conv" + (off ? "\nNo longer competing: " + c.reason : "")) + '">' +
             '<span class="cann-list-share">' + fmtPct(share) + "</span>" + tag + '<span class="cann-list-name">' + escapeHtml(c.name) + "</span></div>";
         }).join("") },
@@ -8440,6 +8466,7 @@ function restoreUnderspendFilters() {
     underspendState.filterStatus = new Set(saved.status);
     document.getElementById("usStatusEnabled").checked = saved.status.includes("ENABLED");
     document.getElementById("usStatusPaused").checked = saved.status.includes("PAUSED");
+    document.getElementById("usStatusEnded").checked = saved.status.includes("ENDED");
     document.getElementById("usStatusRemoved").checked = saved.status.includes("REMOVED");
   }
   underspendState.filterName = saved.name || "";
@@ -8529,6 +8556,7 @@ function updateUnderspendNavWarning() {
 // Plain-text Budget Pacing label (also used by CSV export).
 function pacingLabel(dailySpend, dailyBudget, status) {
   if ((status || "").toUpperCase() === "PAUSED") return { label: "Campaign is paused.", cls: "pace-wait" };
+  if ((status || "").toUpperCase() === "ENDED") return { label: "Campaign has ended.", cls: "pace-wait" };
   if (Math.round((dailySpend || 0) * 100) === 0) return { label: "Check Back Later", cls: "pace-wait" };
   if (!dailyBudget || dailyBudget <= 0) return { label: "—", cls: "" };
   const pct = (dailySpend / dailyBudget) * 100;
@@ -8661,6 +8689,7 @@ function applyUnderspendFilters() {
   underspendState.filterStatus = new Set([
     document.getElementById("usStatusEnabled").checked ? "ENABLED" : null,
     document.getElementById("usStatusPaused").checked ? "PAUSED" : null,
+    document.getElementById("usStatusEnded").checked ? "ENDED" : null,
     document.getElementById("usStatusRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
   underspendState.filterName = document.getElementById("usfName").value.trim();
@@ -8675,6 +8704,7 @@ function applyUnderspendFilters() {
 function resetUnderspendFilters() {
   document.getElementById("usStatusEnabled").checked = true;
   document.getElementById("usStatusPaused").checked = false;
+  document.getElementById("usStatusEnded").checked = false;
   document.getElementById("usStatusRemoved").checked = false;
   document.getElementById("usfName").value = "";
   document.getElementById("usfNameOp").value = "contains";
@@ -8842,6 +8872,7 @@ function restoreBiddingFilters() {
     biddingState.filterStatus = new Set(saved.status);
     document.getElementById("bidStatusEnabled").checked = saved.status.includes("ENABLED");
     document.getElementById("bidStatusPaused").checked = saved.status.includes("PAUSED");
+    document.getElementById("bidStatusEnded").checked = saved.status.includes("ENDED");
     document.getElementById("bidStatusRemoved").checked = saved.status.includes("REMOVED");
   }
   biddingState.filterName = saved.name || "";
@@ -8926,6 +8957,7 @@ function applyBiddingFilters() {
   biddingState.filterStatus = new Set([
     document.getElementById("bidStatusEnabled").checked ? "ENABLED" : null,
     document.getElementById("bidStatusPaused").checked ? "PAUSED" : null,
+    document.getElementById("bidStatusEnded").checked ? "ENDED" : null,
     document.getElementById("bidStatusRemoved").checked ? "REMOVED" : null,
   ].filter(Boolean));
   biddingState.filterName = document.getElementById("bidfName").value.trim();
@@ -8940,6 +8972,7 @@ function applyBiddingFilters() {
 function resetBiddingFilters() {
   document.getElementById("bidStatusEnabled").checked = true;
   document.getElementById("bidStatusPaused").checked = false;
+  document.getElementById("bidStatusEnded").checked = false;
   document.getElementById("bidStatusRemoved").checked = false;
   document.getElementById("bidfName").value = "";
   document.getElementById("bidfNameOp").value = "contains";
