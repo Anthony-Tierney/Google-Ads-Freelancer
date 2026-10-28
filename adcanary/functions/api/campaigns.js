@@ -56,17 +56,13 @@ export async function onRequestGet(context) {
     WHERE ${whereClause}
     ORDER BY metrics.clicks DESC`;
 
-  const result = await adsRequest(
-    env,
-    accessToken,
-    `customers/${cleanId}/googleAds:search`,
-    { query }
-  );
+  const search = (q) => adsRequest(env, accessToken, `customers/${cleanId}/googleAds:search`, { query: q });
+  const [result, ended] = await Promise.all([search(query), endedCampaignIds(search)]);
 
   const campaigns = (result.results || []).map((r, i) => ({
     id: String(r.campaign?.id ?? i),
     name: r.campaign?.name,
-    status: r.campaign?.status,
+    status: r.campaign?.status === "ENABLED" && ended.has(String(r.campaign?.id)) ? "ENDED" : r.campaign?.status,
     channelType: r.campaign?.advertisingChannelType,
     budget: Number(r.campaignBudget?.amountMicros || 0) / 1e6,
     impressions: Number(r.metrics?.impressions || 0),
@@ -89,4 +85,16 @@ export async function onRequestGet(context) {
   }));
 
   return json({ campaigns });
+}
+
+// Ended = an ENABLED campaign past its end date. The API only shows this via
+// campaign.serving_status, so it's fetched separately and best-effort: if it fails,
+// campaigns simply keep their normal status.
+async function endedCampaignIds(search) {
+  const ended = new Set();
+  try {
+    const r = await search(`SELECT campaign.id, campaign.serving_status FROM campaign WHERE campaign.status = 'ENABLED'`);
+    (Array.isArray(r) ? r : (r.results || [])).forEach((x) => { if (x.campaign?.servingStatus === "ENDED") ended.add(String(x.campaign.id)); });
+  } catch { /* leave empty */ }
+  return ended;
 }
