@@ -118,6 +118,13 @@
   .nav-heading.open .nh-chevron { transform: rotate(90deg); }
   .nav-section-items { overflow: hidden; }
   .nav-section-items.collapsed { display: none; }
+  /* Top-level page link styled like a section heading (no sub-items), e.g. Reporting */
+  .nav-item.nav-top { display: flex; align-items: center; gap: 8px; margin: 2px 0 0; padding: 10px 14px 10px 9px;
+    font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .nav-item.nav-top:hover { color: var(--ink); }
+  .nav-item.nav-top.active { color: var(--ink); font-weight: 600; }
+  .nav-item.nav-top .nh-ico { width: 16px; height: 16px; flex: none; stroke: currentColor; }
+  .sidebar.collapsed .nav-item.nav-top { justify-content: center; padding: 10px 0; }
 
   .app-logo { display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
   .app-logo-mark { width: 52px; height: 52px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), #7c5cff); display: flex; align-items: center; justify-content: center; color: #fff; flex: none; overflow: hidden; }
@@ -825,9 +832,13 @@
     </button>
     <div class="nav-section-items" data-section="accounts">
       <a href="#" class="nav-item nav-sub" data-page="allaccounts">Overview</a>
-      <a href="#" class="nav-item nav-sub" data-page="reporting">Reporting</a>
-      <a href="#" class="nav-item nav-sub" data-page="structure">Account Structure</a>
+      <a href="#" class="nav-item nav-sub" data-page="structure">Structure</a>
+      <a href="#" class="nav-item nav-sub" data-page="geocoverage">Geo Coverage</a>
     </div>
+    <a href="#" class="nav-item nav-top" data-page="reporting" title="Reporting">
+      <svg class="nh-ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="5" rx="0.5"/><rect x="12" y="8" width="3" height="9" rx="0.5"/><rect x="17" y="5" width="3" height="12" rx="0.5"/></svg>
+      <span class="nh-label">Reporting</span>
+    </a>
     <button class="nav-heading" data-section="audit">
       <svg class="nh-ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 8.6 9 10 5.2-1.4 9-5 9-10V6l-9-4z"/></svg>
       <span class="nh-label">Audit</span>
@@ -836,7 +847,6 @@
     </button>
     <div class="nav-section-items" data-section="audit">
       <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies<span class="nav-warn" id="bidNavWarn" hidden title="CPA running below target on one or more campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
-      <a href="#" class="nav-item nav-sub" data-page="geocoverage">Geo Coverage</a>
       <a href="#" class="nav-item nav-sub" data-page="cannibalization">Cannibalization</a>
       <a href="#" class="nav-item nav-sub" data-page="adcopy">Ad Copy</a>
       <a href="#" class="nav-item nav-sub" data-page="callouts">Callouts</a>
@@ -4117,8 +4127,13 @@ function renderRepChartSvg(bars, metric, metric2) {
   if (repShowLabels) {
     const TXT = 12, GAP = 18;
     const textW = str => String(str).length * 6.6;
+    // Label every bar unless neighbouring labels would overlap; only then thin them out.
+    // (Previously this reused the x-axis step, which hid every other label past 16 bars.)
+    let widest = 0;
+    bars.forEach(b => series.forEach(sr => { const v = sr.val(b); if (v != null) widest = Math.max(widest, textW(sr === series[0] ? metric.fmt(v) : metric2.fmt(v))); }));
+    const labelStep = Math.max(1, Math.ceil((widest + 4) / slot));
     bars.forEach((b, i) => {
-      if (i % step !== 0) return;
+      if (i % labelStep !== 0) return;
       const L = series.map(sr => {
         const v = sr.val(b);
         if (v == null) return null;
