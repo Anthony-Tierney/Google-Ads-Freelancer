@@ -1,5 +1,6 @@
 // GET /api/landingpages?customerId=1234567890[&debug=1]
 // Lists final URLs on live placements, independent of recent serving:
+//   (Ended campaigns — enabled but past their end date — are excluded throughout.)
 //   • Ads (Search/Display/Shopping/Video/App/Demand Gen): enabled ad/ad group/campaign  → "Ad"
 //   • Performance Max: enabled asset group in enabled campaign                            → "Asset Group"
 //   • Sitelink / Promotion / Price assets at account/campaign/ad-group level             → "Sitelink"/"Promotion"/"Price"
@@ -14,7 +15,7 @@
 
 import { getRefreshToken, getAccessToken, adsRequest, json } from "../../shared/google.js";
 
-const VERSION = "v4-decoupled-links";
+const VERSION = "v5-ended";
 const ASSET_FIELD_TYPES = "('SITELINK','PROMOTION','PRICE')";
 
 export async function onRequestGet(context) {
@@ -84,7 +85,8 @@ export async function onRequestGet(context) {
        FROM ad_group_asset WHERE ad_group_asset.field_type IN ${ASSET_FIELD_TYPES} AND ad_group_asset.status = 'ENABLED'`,
   ];
   const LABELS = ["ad URLs", "Performance Max URLs", "sitelink/promotion asset URLs", "price asset URLs", "enabled campaigns", "enabled ad groups", "account-level links", "campaign-level links", "ad group-level links"];
-  const settled = await Promise.allSettled(Q.map((q) => search(q)));
+  const [settled, ended] = await Promise.all([Promise.allSettled(Q.map((q) => search(q))), endedCampaignIds(search)]);
+  const live = (cid) => !ended.has(String(cid || ""));
   const rowsOf = (i) => (settled[i].status === "fulfilled" ? (settled[i].value.results || []) : []);
   const failures = [];
   settled.forEach((s, i) => { if (s.status === "rejected") failures.push(LABELS[i]); });
@@ -102,18 +104,20 @@ export async function onRequestGet(context) {
 
   // id -> name lookups
   const campName = new Map();
-  rowsOf(4).forEach((r) => campName.set(String(r.campaign?.id || ""), r.campaign?.name || ""));
+  rowsOf(4).forEach((r) => live(r.campaign?.id) && campName.set(String(r.campaign?.id || ""), r.campaign?.name || ""));
   const agInfo = new Map(); // agId -> { name, campId, campName }
-  rowsOf(5).forEach((r) => agInfo.set(String(r.adGroup?.id || ""), { name: r.adGroup?.name || "", campId: String(r.campaign?.id || ""), campName: r.campaign?.name || "" }));
+  rowsOf(5).forEach((r) => live(r.campaign?.id) && agInfo.set(String(r.adGroup?.id || ""), { name: r.adGroup?.name || "", campId: String(r.campaign?.id || ""), campName: r.campaign?.name || "" }));
 
   // 0 ads
   rowsOf(0).forEach((r) => {
+    if (!live(r.campaign?.id)) return;
     const cid = String(r.campaign?.id || ""), cname = r.campaign?.name || "", agId = String(r.adGroup?.id || ""), agName = r.adGroup?.name || "";
     const entity = "ad:" + String(r.adGroupAd?.ad?.id || "");
     (r.adGroupAd?.ad?.finalUrls || []).forEach((u) => { if (u) addUrl("Ad|" + cid + ":" + agId + "|" + u, { name: cname, adGroup: agName, source: "Ad", finalUrl: u }, entity); });
   });
   // 1 performance max
   rowsOf(1).forEach((r) => {
+    if (!live(r.campaign?.id)) return;
     const cid = String(r.campaign?.id || ""), cname = r.campaign?.name || "", agId = String(r.assetGroup?.id || ""), agName = r.assetGroup?.name || "";
     (r.assetGroup?.finalUrls || []).forEach((u) => { if (u) addUrl("AssetGroup|" + cid + ":" + agId + "|" + u, { name: cname, adGroup: agName, source: "Asset Group", finalUrl: u }, "ag:" + agId); });
   });
@@ -177,6 +181,7 @@ export async function onRequestGet(context) {
       })),
       assetUrlMapSize: assetUrls.size,
       enabledCampaigns: campName.size,
+      endedCampaigns: ended.size,
       enabledAdGroups: agInfo.size,
       sourceCounts,
       totalRows: rows.length,
@@ -185,4 +190,16 @@ export async function onRequestGet(context) {
   }
 
   return json({ rows, warning });
+}
+
+// Ended = an ENABLED campaign past its end date. The API only shows this via
+// campaign.serving_status, so it's fetched separately and best-effort: if it fails,
+// campaigns simply keep their normal status.
+async function endedCampaignIds(search) {
+  const ended = new Set();
+  try {
+    const r = await search(`SELECT campaign.id, campaign.serving_status FROM campaign WHERE campaign.status = 'ENABLED'`);
+    (Array.isArray(r) ? r : (r.results || [])).forEach((x) => { if (x.campaign?.servingStatus === "ENDED") ended.add(String(x.campaign.id)); });
+  } catch { /* leave empty */ }
+  return ended;
 }
