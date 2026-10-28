@@ -22,6 +22,8 @@ export async function onRequestGet(context) {
 
   const accessToken = await getAccessToken(env, refreshToken);
 
+  const ended = await endedCampaignIds((q) => adsRequest(env, accessToken, `customers/${cleanId}/googleAds:search`, { query: q }));
+
   // 1) Campaigns (exclude removed)
   let campaigns = {};
   try {
@@ -36,7 +38,7 @@ export async function onRequestGet(context) {
       campaigns[id] = {
         id,
         name: r.campaign?.name,
-        status: r.campaign?.status,
+        status: r.campaign?.status === "ENABLED" && ended.has(id) ? "ENDED" : r.campaign?.status,
         sitelinks: 0,
         landscape: 0,
         square: 0,
@@ -106,4 +108,16 @@ export async function onRequestGet(context) {
   }
 
   return json({ campaigns: Object.values(campaigns), assetError });
+}
+
+// Ended = an ENABLED campaign past its end date. The API only shows this via
+// campaign.serving_status, so it's fetched separately and best-effort: if it fails,
+// campaigns simply keep their normal status.
+async function endedCampaignIds(search) {
+  const ended = new Set();
+  try {
+    const r = await search(`SELECT campaign.id, campaign.serving_status FROM campaign WHERE campaign.status = 'ENABLED'`);
+    (Array.isArray(r) ? r : (r.results || [])).forEach((x) => { if (x.campaign?.servingStatus === "ENDED") ended.add(String(x.campaign.id)); });
+  } catch { /* leave empty */ }
+  return ended;
 }
