@@ -4,11 +4,12 @@
 // can filter them (defaults: Enabled only), at per-ad granularity — the front end rolls these
 // up to whichever view level (Account/Campaign/Ad Group/Ad) the user has selected,
 // summing impressions/clicks and recomputing CTR after aggregation.
+// campaignStatus is "Enabled" | "Paused" | "Ended" (enabled but past its end date).
 //   { rows: [{ name, campaignId, campaignStatus, adGroup, adGroupId, adGroupStatus, adId, adStatus, assetType, text, impressions, clicks }], warning?, diag? }
 
 import { getRefreshToken, getAccessToken, adsRequest, json } from "../../shared/google.js";
 
-const VERSION = "v3-statuses";
+const VERSION = "v4-ended";
 const FIELD_LABEL = { HEADLINE: "Headline", DESCRIPTION: "Description" };
 const STATUS_LABEL = { ENABLED: "Enabled", PAUSED: "Paused" };
 
@@ -62,6 +63,16 @@ export async function onRequestGet(context) {
   // Defensive aggregation to per-ad+asset+field_type (the finest grain the front end
   // ever needs) — collapses any literal duplicate rows the API might return, but
   // shouldn't otherwise change row count since this is already this view's native grain.
+  // Campaigns that have reached their end date keep status ENABLED in Google Ads; "ended" is only
+  // visible as serving_status. Fetched separately so a failure here can't break the page —
+  // without it, ended campaigns simply stay labelled "Enabled" as before.
+  const endedCampaigns = new Set();
+  let servingError = null;
+  try {
+    const sr = await search(`SELECT campaign.id, campaign.serving_status FROM campaign WHERE campaign.status = 'ENABLED'`);
+    (sr.results || []).forEach((r) => { if (r.campaign?.servingStatus === "ENDED") endedCampaigns.add(String(r.campaign.id)); });
+  } catch (e) { servingError = String(e?.message || e).slice(0, 200); }
+
   const agg = new Map();
   results.forEach((r) => {
     const label = FIELD_LABEL[r.adGroupAdAssetView?.fieldType];
@@ -72,7 +83,7 @@ export async function onRequestGet(context) {
     const agId = r.adGroup?.id || "", agName = r.adGroup?.name || "";
     const adId = r.adGroupAd?.ad?.id || "";
     const adStatus = STATUS_LABEL[r.adGroupAd?.status] || "";
-    const campaignStatus = STATUS_LABEL[r.campaign?.status] || "";
+    const campaignStatus = r.campaign?.status === "ENABLED" && endedCampaigns.has(String(r.campaign?.id)) ? "Ended" : (STATUS_LABEL[r.campaign?.status] || "");
     const adGroupStatus = STATUS_LABEL[r.adGroup?.status] || "";
     const key = campId + "|" + agId + "|" + adId + "|" + label + "|" + text;
     let row = agg.get(key);
@@ -87,7 +98,7 @@ export async function onRequestGet(context) {
   const rows = [...agg.values()];
 
   if (debug) {
-    return json({ rows, diag: { version: VERSION, rawResultCount: results.length, aggregatedRowCount: rows.length } });
+    return json({ rows, diag: { version: VERSION, rawResultCount: results.length, aggregatedRowCount: rows.length, endedCampaigns: endedCampaigns.size, servingError } });
   }
 
   return json({ rows });
