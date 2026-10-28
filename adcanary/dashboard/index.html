@@ -148,6 +148,57 @@
   .rep-swatch-2 { background: #eab308; border-radius: 50%; }
   .rep-vs { color: var(--muted); font-weight: 400; margin: 0 10px; font-size: 12.5px; }
   .rep-intro { margin: 4px 0 14px; }
+  /* Account Structure tree */
+  .st-summary { align-self: flex-end; padding-bottom: 9px; font-size: 13px; color: var(--muted); }
+  .st-zoom { display: inline-flex; align-items: center; gap: 4px; }
+  .st-zoom .filters-btn { min-width: 34px; justify-content: center; }
+  .st-zoom-val { min-width: 44px; text-align: center; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .st-canvas { overflow: auto; padding: 24px 12px 28px; max-height: 78vh; }
+  .st-tree { width: max-content; min-width: 100%; --st-line: #cbd5e1; }
+  html.dark .st-tree { --st-line: #64748b; }
+  .st-tree ul { list-style: none; margin: 0; padding: 0; }
+  .st-root { display: flex; justify-content: center; }
+  .st-top { display: flex; flex-direction: column; align-items: center; }
+  .st-node { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, .04); text-align: left; }
+  .st-acc { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-color: var(--accent); background: var(--accent-soft); }
+  .st-acc-logo .acc-logo, .st-acc-logo img { width: 34px; height: 34px; }
+  .st-acc-name { font-weight: 640; font-size: 15px; color: var(--ink); }
+  .st-acc-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  /* Campaign row + connectors from the account */
+  .st-camps { display: flex; align-items: flex-start; padding-top: 22px !important; position: relative; }
+  .st-camps::before { content: ""; position: absolute; top: 0; left: 50%; height: 22px; border-left: 1.5px solid var(--st-line); }
+  .st-camp { position: relative; padding: 22px 9px 0; display: flex; flex-direction: column; }
+  .st-camp::before, .st-camp::after { content: ""; position: absolute; top: 0; width: 50%; height: 22px; border-top: 1.5px solid var(--st-line); }
+  .st-camp::before { right: 50%; }
+  .st-camp::after { left: 50%; border-left: 1.5px solid var(--st-line); }
+  .st-camp:first-child::before, .st-camp:last-child::after { border-top: 0; }
+  .st-camp:last-child::before { border-right: 1.5px solid var(--st-line); border-top-right-radius: 8px; }
+  .st-camp:first-child::after { border-top-left-radius: 8px; }
+  .st-camp:only-child::before { display: none; }
+  .st-camp:only-child::after { border-top: 0; border-radius: 0; }
+  .st-c { width: 230px; padding: 10px 12px; cursor: pointer; transition: border-color .12s, box-shadow .12s; }
+  .st-c:hover { border-color: var(--accent); }
+  .st-c:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .st-c-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
+  .st-type { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .st-pill { font-size: 11px; padding: 1px 7px; }
+  .st-c-name { font-size: 13.5px; font-weight: 560; color: var(--ink); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 35px; }
+  .st-c-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--line-soft); font-size: 12px; color: var(--muted); }
+  .st-chev { display: inline-block; transition: transform .12s; font-size: 15px; line-height: 1; }
+  .st-chev.open { transform: rotate(90deg); }
+  /* Ad groups: a branch running down from each campaign */
+  .st-ags { margin-left: 16px; width: 214px; }
+  .st-ag { position: relative; padding-left: 16px; margin-top: 8px; }
+  .st-ag::before { content: ""; position: absolute; left: 0; top: -8px; bottom: 0; border-left: 1.5px solid var(--st-line); }
+  .st-ag:last-child::before { bottom: auto; height: calc(50% + 8px); }
+  .st-ag::after { content: ""; position: absolute; left: 0; top: 50%; width: 13px; border-top: 1.5px solid var(--st-line); }
+  .st-a { display: flex; align-items: center; gap: 7px; padding: 7px 10px; font-size: 12.5px; }
+  .st-a-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--off-fg); }
+  .st-a-dot.on { background: #10b981; }
+  .st-a-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); flex: 1; min-width: 0; }
+  .st-a-status { font-size: 11px; color: var(--muted); flex: none; }
+  .st-a-empty { color: var(--muted); font-style: italic; }
+  .st-empty { padding: 14px 18px; color: var(--muted); font-size: 13px; }
   .rep-axis-title { fill: var(--muted); font-size: 12px; font-weight: 560; }
   .rep-table-section { margin-top: 22px; }
   .rep-table-tools { margin-bottom: 10px; }
@@ -749,6 +800,7 @@
     <div class="nav-section-items" data-section="accounts">
       <a href="#" class="nav-item nav-sub" data-page="allaccounts">Overview</a>
       <a href="#" class="nav-item nav-sub" data-page="reporting">Reporting</a>
+      <a href="#" class="nav-item nav-sub" data-page="structure">Account Structure</a>
     </div>
     <button class="nav-heading" data-section="audit">
       <svg class="nh-ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 8.6 9 10 5.2-1.4 9-5 9-10V6l-9-4z"/></svg>
@@ -1023,6 +1075,82 @@
       </section>
 
       <!-- Reporting Page (placeholder) -->
+      <section id="structure" class="page">
+        <section id="stSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to see how your accounts are structured.</p>
+            <a class="btn-primary" href="/api/auth">Sign in with Google</a>
+          </div>
+        </section>
+        <section id="stSignedIn" hidden>
+          <div class="rep-intro">
+            <h2 class="rep-intro-title">Account Structure</h2>
+            <p class="rep-intro-text">How the selected account is built: its campaigns, and the ad groups inside each one. Click a campaign to collapse or expand its ad groups.</p>
+          </div>
+          <div class="controls-row account" id="stControls">
+            <div class="st-summary" id="stSummary"></div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters st-zoom" title="Zoom">
+                <button class="filters-btn" onclick="stZoom(-1)" aria-label="Zoom out">−</button>
+                <span class="st-zoom-val" id="stZoomVal">100%</span>
+                <button class="filters-btn" onclick="stZoom(1)" aria-label="Zoom in">+</button>
+                <button class="filters-btn" onclick="stZoomFit()" title="Fit the whole structure on screen">Fit</button>
+              </div>
+              <div class="filters">
+                <button class="filters-btn" onclick="stExpandAll(true)">Expand all</button>
+              </div>
+              <div class="filters">
+                <button class="filters-btn" onclick="stExpandAll(false)">Collapse all</button>
+              </div>
+              <div class="filters" id="stFilterGroup">
+                <button class="filters-btn" id="stFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <span class="count" id="stFilterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="stFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('st-group-campstatus', event)">
+                    <span class="toggle">−</span>Campaign Status
+                  </div>
+                  <div class="filter-group-items" id="st-group-campstatus">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="stCampEnabled" checked /><label for="stCampEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="stCampPaused" /><label for="stCampPaused">Paused</label></div>
+                        <div class="check-row"><input type="checkbox" id="stCampEnded" /><label for="stCampEnded">Ended</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('st-group-agstatus', event)">
+                    <span class="toggle">−</span>Ad Group Status
+                  </div>
+                  <div class="filter-group-items" id="st-group-agstatus">
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="stAgEnabled" checked /><label for="stAgEnabled">Enabled</label></div>
+                        <div class="check-row"><input type="checkbox" id="stAgPaused" /><label for="stAgPaused">Paused</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetStFilters()">Reset</button>
+                    <button class="apply" onclick="applyStFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="stWarn" class="as-warn" hidden></div>
+          <div class="panel">
+            <div id="stPrompt" class="state" hidden><div class="big">Choose a single account</div>Account Structure shows one account at a time — pick a specific account from the selector above.</div>
+            <div id="stLoading" class="state" hidden><div class="spinner"></div>Loading account structure…</div>
+            <div id="stError" class="state" hidden></div>
+            <div id="stCanvas" class="st-canvas" hidden><div id="stTree" class="st-tree"></div></div>
+          </div>
+          <div class="foot-note" style="margin-top:10px;">Removed campaigns and ad groups are not shown. Performance Max campaigns use asset groups rather than ad groups, so they appear without ad groups here. "Ended" campaigns are enabled but past their end date.</div>
+        </section>
+      </section>
       <section id="reporting" class="page">
         <section id="repSignedOut" hidden>
           <div class="gate">
@@ -2432,6 +2560,7 @@ function globalRefresh() {
     case "geocoverage": if (GLOBAL_ACCOUNT !== "ALL") loadGeoCoverage(GLOBAL_ACCOUNT); break;
     case "cannibalization": if (GLOBAL_ACCOUNT !== "ALL") loadCannibalization(true); break;
     case "callouts": loadCallouts(true); break;
+    case "structure": loadStructure(true); break;
     case "reporting": loadReporting(); break;
   }
 }
@@ -3484,13 +3613,14 @@ function ensureRepTable() {
 // Pages under the "Accounts" menu category share the account + campaign selection.
 // Add future Accounts-category pages to this list.
 // Pages that show the shared account + campaign topbar picker.
-const ACCOUNTS_PAGES = ["allaccounts", "reporting", "adcopy"];
+const ACCOUNTS_PAGES = ["allaccounts", "reporting", "adcopy", "structure"];
 function isAccountsPage(p) { return ACCOUNTS_PAGES.includes(p || currentHashPage()); }
 function refreshAccountsPage() {
   const p = currentHashPage();
   if (p === "allaccounts") renderAccountsTable();
   else if (p === "reporting") loadReporting();
   else if (p === "adcopy") renderAdCopyTable();
+  else if (p === "structure") renderStructure();
 }
 
 function showPage(page) {
@@ -3523,6 +3653,7 @@ function routeFromHash() {
   else if (page === "geocoverage") initGeoCoverage();
   else if (page === "cannibalization") initCannibalization();
   else if (page === "callouts") initCallouts();
+  else if (page === "structure") initStructure();
   else if (page === "reporting") initReporting();
 }
 
@@ -4096,6 +4227,7 @@ function onGlobalAccountChange(val) {
   else if (page === "geocoverage") initGeoCoverage();
   else if (page === "cannibalization") initCannibalization();
   else if (page === "callouts") initCallouts();
+  else if (page === "structure") initStructure();
   else if (page === "reporting") initReporting();
 }
 
@@ -4309,7 +4441,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -5456,7 +5588,11 @@ function populateAccCampaignFilter() {
   function buildCampaigns() {
     const list = [];
     const seen = new Set();
-    if (currentHashPage() === "adcopy") {
+    if (currentHashPage() === "structure") {
+      (structState.campaigns || []).forEach(c => {
+        if (c.name && !seen.has(c.name)) { seen.add(c.name); list.push({ name: c.name, status: c.status === "Enabled" ? "ENABLED" : "PAUSED" }); }
+      });
+    } else if (currentHashPage() === "adcopy") {
       (acState.rows || []).forEach(r => {
         if (r.name && !seen.has(r.name)) { seen.add(r.name); list.push({ name: r.name, status: (r.campaignStatus || "Enabled").toUpperCase() }); }
       });
@@ -7431,6 +7567,153 @@ function onGeoDateRangeChange() {
 
 function syncGeoDateSelect() { syncDateSelectEl("geoDateSelect", geoState.dateRange); }
 
+
+
+// ---------- Account Structure ----------
+const ST_STATUS = { camp: [["stCampEnabled", "Enabled"], ["stCampPaused", "Paused"], ["stCampEnded", "Ended"]], ag: [["stAgEnabled", "Enabled"], ["stAgPaused", "Paused"]] };
+const ST_ZOOMS = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.15, 1.3];
+const structState = { loadedAccount: null, campaigns: [], collapsed: new Set(), zoom: 1, wired: false,
+  filters: { camp: new Set(["Enabled"]), ag: new Set(["Enabled"]) } };
+try { const p = uiGet("structure"); if (p && ST_ZOOMS.includes(p.zoom)) structState.zoom = p.zoom; } catch {}
+function stChannel(t) {
+  const MAP = { SEARCH: "Search", PERFORMANCE_MAX: "Performance Max", DISPLAY: "Display", SHOPPING: "Shopping", VIDEO: "Video", DEMAND_GEN: "Demand Gen", MULTI_CHANNEL: "App", SMART: "Smart", LOCAL: "Local", LOCAL_SERVICES: "Local Services", HOTEL: "Hotel", DISCOVERY: "Discovery" };
+  return MAP[t] || String(t || "").toLowerCase().replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
+function initStructure() {
+  document.getElementById("stSignedOut").hidden = signedIn;
+  document.getElementById("stSignedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  if (!structState.wired) {
+    structState.wired = true;
+    const btn = document.getElementById("stFiltersBtn"), menu = document.getElementById("stFiltersMenu");
+    btn.addEventListener("click", e => { e.stopPropagation(); const open = menu.hidden; closeAllMenus(); if (open) menu.hidden = false; });
+    menu.addEventListener("click", e => e.stopPropagation());
+    const saved = loadPageFilters("structure");
+    if (saved) {
+      if (Array.isArray(saved.camp)) structState.filters.camp = new Set(saved.camp);
+      if (Array.isArray(saved.ag)) structState.filters.ag = new Set(saved.ag);
+    }
+    syncStFilterBoxes(); updateStFilterCount();
+  }
+  loadStructure(false);
+}
+function syncStFilterBoxes() {
+  ST_STATUS.camp.forEach(([id, v]) => { document.getElementById(id).checked = structState.filters.camp.has(v); });
+  ST_STATUS.ag.forEach(([id, v]) => { document.getElementById(id).checked = structState.filters.ag.has(v); });
+}
+function applyStFilters() {
+  const pick = list => new Set(list.filter(([id]) => document.getElementById(id).checked).map(([, v]) => v));
+  structState.filters = { camp: pick(ST_STATUS.camp), ag: pick(ST_STATUS.ag) };
+  document.getElementById("stFiltersMenu").hidden = true;
+  savePageFilters("structure", { camp: [...structState.filters.camp], ag: [...structState.filters.ag] });
+  updateStFilterCount();
+  renderStructure();
+}
+function resetStFilters() {
+  structState.filters = { camp: new Set(["Enabled"]), ag: new Set(["Enabled"]) };
+  syncStFilterBoxes(); applyStFilters();
+}
+function updateStFilterCount() {
+  const n = (structState.filters.camp.size ? 1 : 0) + (structState.filters.ag.size ? 1 : 0);
+  const el = document.getElementById("stFilterCount");
+  if (n) { el.textContent = n; el.hidden = false; } else el.hidden = true;
+}
+// force = true re-fetches (Refresh); otherwise reuse the loaded structure for the same account.
+async function loadStructure(force) {
+  if (!signedIn) { initStructure(); return; }
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.hidden = !on; };
+  ["stPrompt", "stLoading", "stError", "stCanvas", "stWarn"].forEach(id => show(id, false));
+  const ctl = document.getElementById("stControls");
+  if (GLOBAL_ACCOUNT === "ALL") { show("stPrompt", true); ctl.style.visibility = "hidden"; return; }
+  ctl.style.visibility = "";
+  if (!force && structState.loadedAccount === GLOBAL_ACCOUNT) { populateAccCampaignFilter(); renderStructure(); return; }
+  show("stLoading", true);
+  try {
+    const res = await fetch("/api/structure?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT), { credentials: "same-origin" });
+    if (res.status === 401) { showSignedOut(); return; }
+    const raw = await res.text();
+    let data; try { data = JSON.parse(raw); } catch { throw new Error("The server returned a page instead of data (HTTP " + res.status + ")."); }
+    if (data.error) throw new Error(data.error);
+    structState.campaigns = data.campaigns || [];
+    structState.loadedAccount = GLOBAL_ACCOUNT;
+    structState.collapsed = new Set();
+    show("stLoading", false);
+    if (data.warning) { const w = document.getElementById("stWarn"); w.hidden = false; w.textContent = data.warning; }
+    setLastRefresh("structure");
+    populateAccCampaignFilter();
+    renderStructure();
+  } catch (e) {
+    show("stLoading", false);
+    const el = document.getElementById("stError"); el.hidden = false;
+    el.innerHTML = '<div class="big">Couldn\u2019t load account structure</div>' + escapeHtml(e.message || "Please try again.");
+  }
+}
+function stStatusPill(s) {
+  const cls = s === "Enabled" ? "enabled" : s === "Paused" ? "paused" : "other";
+  return '<span class="pill st-pill ' + cls + '">' + escapeHtml(s || "\u2014") + "</span>";
+}
+function renderStructure() {
+  if (GLOBAL_ACCOUNT === "ALL" || structState.loadedAccount !== GLOBAL_ACCOUNT) return;
+  const f = structState.filters, pick = getCampPickerValue();
+  const camps = structState.campaigns
+    .filter(c => (!f.camp.size || f.camp.has(c.status)) && (!pick || c.name === pick))
+    .map(c => Object.assign({}, c, { ags: c.adGroups.filter(a => !f.ag.size || f.ag.has(a.status)) }));
+  const agTotal = camps.reduce((a, c) => a + c.ags.length, 0);
+  document.getElementById("stSummary").textContent = camps.length + " campaign" + (camps.length === 1 ? "" : "s") + " \u00b7 " + agTotal + " ad group" + (agTotal === 1 ? "" : "s") + " shown";
+  const acct = ACCOUNTS.find(a => a.id === GLOBAL_ACCOUNT) || { name: "", formatted: GLOBAL_ACCOUNT };
+  const accNode = '<div class="st-node st-acc"><div class="st-acc-logo">' + logoHtml(acct.id, acct.name) + '</div><div class="st-acc-text"><div class="st-acc-name">' + escapeHtml(acct.name || "Account") + '</div><div class="st-acc-meta">' + escapeHtml(acct.formatted || "") + " \u00b7 " + camps.length + " campaigns \u00b7 " + agTotal + " ad groups</div></div></div>";
+  let campsHtml = "";
+  if (!camps.length) {
+    campsHtml = '<ul class="st-camps"><li class="st-camp"><div class="st-empty">No campaigns match the current filters.</div></li></ul>';
+  } else {
+    campsHtml = '<ul class="st-camps">' + camps.map(c => {
+      const open = !structState.collapsed.has(c.id);
+      const isPmax = c.channelType === "PERFORMANCE_MAX";
+      const count = c.ags.length + " ad group" + (c.ags.length === 1 ? "" : "s");
+      const node = '<div class="st-node st-c" role="button" tabindex="0" aria-expanded="' + open + '" onclick="stToggle(\'' + c.id + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();stToggle(\'' + c.id + '\')}" title="' + escapeHtml(c.name) + '">' +
+        '<div class="st-c-top"><span class="st-type">' + escapeHtml(stChannel(c.channelType)) + "</span>" + stStatusPill(c.status) + "</div>" +
+        '<div class="st-c-name">' + escapeHtml(c.name) + "</div>" +
+        '<div class="st-c-foot"><span>' + (isPmax && !c.adGroups.length ? "Asset groups (not shown)" : count) + "</span>" + (c.ags.length ? '<span class="st-chev' + (open ? " open" : "") + '">\u203A</span>' : "") + "</div></div>";
+      let kids = "";
+      if (open && c.ags.length) {
+        kids = '<div class="st-ags">' + c.ags.map(a => '<div class="st-ag"><div class="st-node st-a" title="' + escapeHtml(a.name) + '"><span class="st-a-dot ' + (a.status === "Enabled" ? "on" : "off") + '"></span><span class="st-a-name">' + escapeHtml(a.name) + "</span>" + (a.status !== "Enabled" ? '<span class="st-a-status">' + escapeHtml(a.status) + "</span>" : "") + "</div></div>").join("") + "</div>";
+      } else if (open && !c.ags.length && !isPmax) {
+        kids = '<div class="st-ags"><div class="st-ag"><div class="st-node st-a st-a-empty">No ' + (c.adGroups.length ? "matching " : "") + "ad groups</div></div></div>";
+      }
+      return '<li class="st-camp">' + node + kids + "</li>";
+    }).join("") + "</ul>";
+  }
+  document.getElementById("stTree").innerHTML = '<ul class="st-root"><li class="st-top">' + accNode + campsHtml + "</li></ul>";
+  document.getElementById("stCanvas").hidden = false;
+  stApplyZoom();
+}
+function stToggle(id) {
+  structState.collapsed.has(id) ? structState.collapsed.delete(id) : structState.collapsed.add(id);
+  renderStructure();
+}
+function stExpandAll(open) {
+  structState.collapsed = open ? new Set() : new Set(structState.campaigns.map(c => c.id));
+  renderStructure();
+}
+function stApplyZoom() {
+  const t = document.getElementById("stTree"); if (t) t.style.zoom = structState.zoom;
+  const v = document.getElementById("stZoomVal"); if (v) v.textContent = Math.round(structState.zoom * 100) + "%";
+}
+function stZoom(dir) {
+  const i = ST_ZOOMS.indexOf(structState.zoom);
+  const n = ST_ZOOMS[Math.max(0, Math.min(ST_ZOOMS.length - 1, (i < 0 ? 6 : i) + dir))];
+  structState.zoom = n; uiSave("structure", { zoom: n }); stApplyZoom();
+}
+function stZoomFit() {
+  const canvas = document.getElementById("stCanvas"), tree = document.getElementById("stTree");
+  if (!canvas || !tree) return;
+  tree.style.zoom = 1;
+  const need = tree.scrollWidth, have = canvas.clientWidth - 24;
+  const fit = need > 0 ? have / need : 1;
+  structState.zoom = ST_ZOOMS.filter(z => z <= Math.max(fit, ST_ZOOMS[0])).pop() || ST_ZOOMS[0];
+  if (fit >= 1) structState.zoom = 1;
+  uiSave("structure", { zoom: structState.zoom }); stApplyZoom();
+}
 
 // ---------- Callouts ----------
 const CO_LEVEL_BOXES = [["coLvlAccount", "Account"], ["coLvlCampaign", "Campaign"], ["coLvlAdGroup", "Ad group"]];
