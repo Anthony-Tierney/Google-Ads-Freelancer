@@ -35,7 +35,8 @@ export async function onRequestGet(context) {
     catch (e) { diag[label] = "error"; errors.push(label + ": " + String(e?.message || e).slice(0, 200)); return null; }
   };
 
-  const [texts, lAcct, lCamp, lAg, mAcct, mCamp, mAg] = await Promise.all([
+  const [ended, texts, lAcct, lCamp, lAg, mAcct, mCamp, mAg] = await Promise.all([
+    endedCampaignIds(search),
     tryQ("text", `SELECT asset.resource_name, asset.callout_asset.callout_text FROM asset WHERE asset.type = 'CALLOUT'`),
     tryQ("account links", `SELECT customer_asset.asset FROM customer_asset WHERE customer_asset.field_type = 'CALLOUT' AND customer_asset.status = 'ENABLED'`),
     tryQ("campaign links", `SELECT campaign.id, campaign.name, campaign.status, campaign_asset.asset FROM campaign_asset WHERE campaign_asset.field_type = 'CALLOUT' AND campaign_asset.status = 'ENABLED' AND campaign.status != 'REMOVED'`),
@@ -68,15 +69,28 @@ export async function onRequestGet(context) {
     const m = metricsOf.get(key) || { impressions: 0, clicks: 0 };
     rows.push({ text, ...base, impressions: m.impressions, clicks: m.clicks });
   };
+  const campLabel = (c) => (c?.status === "ENABLED" && ended.has(String(c?.id)) ? "Ended" : (STATUS_LABEL[c?.status] || ""));
   (lAcct || []).forEach((r) => push("acct|" + r.customerAsset?.asset, r.customerAsset?.asset,
     { linkLevel: "Account", campaignId: "", name: "All campaigns", campaignStatus: "Enabled", adGroupId: "", adGroup: "All ad groups", adGroupStatus: "Enabled" }));
   (lCamp || []).forEach((r) => push("camp|" + r.campaign?.id + "|" + r.campaignAsset?.asset, r.campaignAsset?.asset,
-    { linkLevel: "Campaign", campaignId: String(r.campaign?.id || ""), name: r.campaign?.name || "", campaignStatus: STATUS_LABEL[r.campaign?.status] || "", adGroupId: "", adGroup: "All ad groups", adGroupStatus: "Enabled" }));
+    { linkLevel: "Campaign", campaignId: String(r.campaign?.id || ""), name: r.campaign?.name || "", campaignStatus: campLabel(r.campaign), adGroupId: "", adGroup: "All ad groups", adGroupStatus: "Enabled" }));
   (lAg || []).forEach((r) => push("ag|" + r.adGroup?.id + "|" + r.adGroupAsset?.asset, r.adGroupAsset?.asset,
-    { linkLevel: "Ad group", campaignId: String(r.campaign?.id || ""), name: r.campaign?.name || "", campaignStatus: STATUS_LABEL[r.campaign?.status] || "", adGroupId: String(r.adGroup?.id || ""), adGroup: r.adGroup?.name || "", adGroupStatus: STATUS_LABEL[r.adGroup?.status] || "" }));
+    { linkLevel: "Ad group", campaignId: String(r.campaign?.id || ""), name: r.campaign?.name || "", campaignStatus: campLabel(r.campaign), adGroupId: String(r.adGroup?.id || ""), adGroup: r.adGroup?.name || "", adGroupStatus: STATUS_LABEL[r.adGroup?.status] || "" }));
 
   const payload = { rows };
   if (errors.length) payload.warning = "Some callout data couldn't be loaded: " + errors.slice(0, 2).join(" · ");
   if (debug) payload.diag = diag;
   return json(payload);
+}
+
+// Ended = an ENABLED campaign past its end date. The API only shows this via
+// campaign.serving_status, so it's fetched separately and best-effort: if it fails,
+// campaigns simply keep their normal status.
+async function endedCampaignIds(search) {
+  const ended = new Set();
+  try {
+    const r = await search(`SELECT campaign.id, campaign.serving_status FROM campaign WHERE campaign.status = 'ENABLED'`);
+    (Array.isArray(r) ? r : (r.results || [])).forEach((x) => { if (x.campaign?.servingStatus === "ENDED") ended.add(String(x.campaign.id)); });
+  } catch { /* leave empty */ }
+  return ended;
 }
