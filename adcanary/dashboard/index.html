@@ -124,6 +124,8 @@
   .loc-geo-status { margin-left: auto; font-size: 12px; color: var(--muted); }
   #locSide { flex-basis: 640px; }
   #locSide .geo-table-wrap { max-height: none; }
+  #loc-tfoot td { padding: 10px; font-variant-numeric: tabular-nums; border-bottom: none; }
+  #loc-tfoot td.clk { text-align: center; white-space: nowrap; }
   .loc-unattr { margin-top: 8px; font-size: 12px; color: var(--muted); }
   .geo-table tbody tr.loc-row { cursor: pointer; }
   .geo-table tbody tr.loc-row:hover td { background: var(--line-soft); }
@@ -2364,6 +2366,7 @@
                     <colgroup id="loc-colgroup"></colgroup>
                     <thead id="loc-thead"></thead>
                     <tbody id="loc-tbody"></tbody>
+                    <tfoot id="loc-tfoot"></tfoot>
                   </table>
                 </div>
                 <div class="pagination" id="locPagination" hidden></div>
@@ -8060,8 +8063,16 @@ function renderLocTable() {
         ? '<td data-col="label">' + escapeHtml(r.label) + (r.sub ? '<span class="loc-sub">' + escapeHtml(r.sub) + "</span>" : "") + "</td>"
         : '<td class="clk" data-col="' + c.key + '"' + (c.key === "cpa" && !r.conversions ? "" : heat(c.key, r[c.key])) + ">" + c.fmt(r) + "</td>").join("") + "</tr>").join("")
     : '<tr><td class="empty" colspan="' + cols.length + '">No city data for these filters and dates.</td></tr>';
+  // Summary row: totals across every city that passes the filters (all pages), with the
+  // rate metrics recalculated from the totals — same approach as Overview.
+  const T = rows.reduce((a, r) => { a.impressions += r.impressions; a.clicks += r.clicks; a.cost += r.cost; a.conversions += r.conversions; return a; }, { impressions: 0, clicks: 0, cost: 0, conversions: 0 });
+  T.ctr = T.impressions ? T.clicks / T.impressions : 0; T.avgCpc = T.clicks ? T.cost / T.clicks : 0;
+  T.convRate = T.clicks ? T.conversions / T.clicks : 0; T.cpa = T.conversions ? T.cost / T.conversions : 0;
+  document.getElementById("loc-tfoot").innerHTML = rows.length ? "<tr>" + cols.map(c => c.locked
+    ? '<td data-col="label">Total \u00b7 ' + fmtInt(rows.length) + " cit" + (rows.length === 1 ? "y" : "ies") + "</td>"
+    : '<td class="clk" data-col="' + c.key + '">' + c.fmt(T) + "</td>").join("") + "</tr>" : "";
   document.querySelectorAll("#loc-tbody tr.loc-row").forEach(tr => tr.addEventListener("click", () => locFocusCity(tr.dataset.geo)));
-  wireColumnResize({ colgroup: "loc-colgroup", thead: "loc-thead", tbody: "loc-tbody" }, locState.columnWidths, k => {
+  wireColumnResize({ colgroup: "loc-colgroup", thead: "loc-thead", tbody: "loc-tbody", tfoot: "loc-tfoot" }, locState.columnWidths, k => {
     const s = locState.sort;
     locState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
     locState.currentPage = 1;
@@ -8179,6 +8190,11 @@ function exportLocations(fmt) {
   const header = ["City", "Region / Country", ...cols.filter(c => !c.locked).map(c => c.label)];
   const data = rows.map(r => [r.label, r.sub || "", ...cols.filter(c => !c.locked).map(c =>
     c.key === "ctr" || c.key === "convRate" ? fmtPct(r[c.key] || 0) : c.key === "cpa" ? (r.conversions ? +r.cpa.toFixed(2) : "") : ["cost", "avgCpc"].includes(c.key) ? +(r[c.key] || 0).toFixed(2) : c.key === "conversions" ? +(r.conversions || 0).toFixed(2) : r[c.key] || 0)]);
+  const T = rows.reduce((a, r) => { a.impressions += r.impressions; a.clicks += r.clicks; a.cost += r.cost; a.conversions += r.conversions; return a; }, { impressions: 0, clicks: 0, cost: 0, conversions: 0 });
+  T.ctr = T.impressions ? T.clicks / T.impressions : 0; T.avgCpc = T.clicks ? T.cost / T.clicks : 0;
+  T.convRate = T.clicks ? T.conversions / T.clicks : 0; T.cpa = T.conversions ? T.cost / T.conversions : 0;
+  data.push(["Total (" + rows.length + " cities)", "", ...cols.filter(c => !c.locked).map(c =>
+    c.key === "ctr" || c.key === "convRate" ? fmtPct(T[c.key]) : c.key === "cpa" ? (T.conversions ? +T.cpa.toFixed(2) : "") : ["cost", "avgCpc", "conversions"].includes(c.key) ? +T[c.key].toFixed(2) : T[c.key])]);
   exportMatrix(fmt, "locations-" + new Date().toISOString().slice(0, 10), "Locations", header, data);
 }
 
