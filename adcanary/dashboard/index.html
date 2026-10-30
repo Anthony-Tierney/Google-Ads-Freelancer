@@ -2366,7 +2366,7 @@
               </div>
             </div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Cities come from the Google Ads &ldquo;Matched locations&rdquo; data (people physically in, or showing interest in, each city). Traffic Google can&rsquo;t attribute to a city is excluded from the table. Google doesn&rsquo;t supply map positions for cities, so new cities are looked up on OpenStreetMap (about one a second, busiest first) and saved, so they appear instantly from then on.</div>
+          <div class="foot-note" style="margin-top:10px;">Cities are where people were <strong>physically located</strong> when they saw or clicked your ads (the Google Ads &ldquo;Where your users were&rdquo; report) &mdash; locations of interest are not included. Traffic Google can&rsquo;t attribute to a city is excluded from the table. Google doesn&rsquo;t supply map positions for cities, so new cities are looked up on OpenStreetMap (about one a second, busiest first) and saved, so they appear instantly from then on.</div>
         </section>
       </section>
 
@@ -7784,7 +7784,7 @@ function syncGeoDateSelect() { syncDateSelectEl("geoDateSelect", geoState.dateRa
 
 
 // ---------- Locations (Reporting) ----------
-// City-level KPIs (geographic_view by city) in a table, plus a bubble map sized by clicks or
+// City-level KPIs (user_location_view by city: physical locations only) in a table, plus a bubble map sized by clicks or
 // conversions. Cities have no coordinates in the Ads API, so missing positions are looked up on
 // OpenStreetMap Nominatim from the browser (max ~1/sec, busiest first) and saved to the server
 // (shared KV) and this browser, so each city is only ever looked up once.
