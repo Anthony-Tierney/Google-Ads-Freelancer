@@ -1,7 +1,7 @@
 // GET  /api/locations?customerId=<id>&dateRange=<gaql>[&debug=1]
-// City-level performance for the Locations page, from geographic_view segmented by
-// segments.geo_target_city (the data behind the Google Ads "Matched locations" report —
-// both "presence" and "interest" matches, summed).
+// City-level performance for the Locations page, from user_location_view segmented by
+// segments.geo_target_city — the data behind the Google Ads "Where your users were" report,
+// i.e. users' PHYSICAL locations only (no "locations of interest").
 //   { rows:   [{ geoId, campaignId, campaign, status, impressions, clicks, cost, conversions }],
 //     cities: { <geoId>: { name, canonical, countryCode, lat?, lng? } },
 //     unattributed: { impressions, clicks, cost, conversions },   // traffic Google couldn't pin to a city
@@ -49,7 +49,7 @@ export async function onRequestGet(context) {
 
   const GEO_Q = `SELECT campaign.id, campaign.name, campaign.status, segments.geo_target_city,
       metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
-    FROM geographic_view
+    FROM user_location_view
     WHERE campaign.status != 'REMOVED' AND ${dateClause}`;
 
   let geoRows;
@@ -67,7 +67,8 @@ export async function onRequestGet(context) {
   if (endedR.status === "fulfilled") endedR.value.forEach((r) => { if (r.campaign?.servingStatus === "ENDED") ended.add(String(r.campaign.id)); });
   const coordStore = (kvR.status === "fulfilled" && kvR.value) || {};
 
-  // Aggregate to one row per city per campaign (location types are summed).
+  // Aggregate to one row per city per campaign (user_location_view also splits by country /
+  // targeted-or-not, so rows are summed).
   const byKey = new Map();
   const unattributed = { impressions: 0, clicks: 0, cost: 0, conversions: 0 };
   const cityRns = new Set();
