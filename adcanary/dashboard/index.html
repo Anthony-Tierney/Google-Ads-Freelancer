@@ -122,7 +122,8 @@
   .loc-bubble-legend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--muted); }
   .loc-bubble-legend .b { display: inline-block; border-radius: 50%; border: 2px solid; opacity: .85; vertical-align: middle; }
   .loc-geo-status { margin-left: auto; font-size: 12px; color: var(--muted); }
-  #locSide { flex-basis: 560px; }
+  #locSide { flex-basis: 640px; }
+  #locSide .geo-table-wrap { max-height: none; }
   .loc-unattr { margin-top: 8px; font-size: 12px; color: var(--muted); }
   .geo-table tbody tr.loc-row { cursor: pointer; }
   .geo-table tbody tr.loc-row:hover td { background: var(--line-soft); }
@@ -2294,8 +2295,8 @@
                   </div>
                   <div class="filter-group-items" id="loc-group-metric">
                     <div class="filter-section">
-                      <label class="radio-row"><input type="radio" name="locMetric" id="locMetricClicks" value="clicks" checked /> Clicks</label>
-                      <label class="radio-row"><input type="radio" name="locMetric" id="locMetricConv" value="conversions" /> Conversions</label>
+                      <label class="radio-row"><input type="radio" name="locMetric" id="locMetricConv" value="conversions" checked /> Conversions</label>
+                      <label class="radio-row"><input type="radio" name="locMetric" id="locMetricClicks" value="clicks" /> Clicks</label>
                     </div>
                   </div>
                   <div class="filter-group-header" onclick="toggleFilterGroup('loc-group-status', event)">
@@ -2316,6 +2317,14 @@
                   <div class="filter-group-items" id="loc-group-min">
                     <div class="filter-section">
                       <input type="number" id="locMinClicks" min="0" step="1" value="0" style="width:100%" />
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('loc-group-minconv', event)">
+                    <span class="toggle">−</span>Minimum Conversions
+                  </div>
+                  <div class="filter-group-items" id="loc-group-minconv">
+                    <div class="filter-section">
+                      <input type="number" id="locMinConv" min="0" step="1" value="1" style="width:100%" />
                     </div>
                   </div>
                   <div class="filter-buttons">
@@ -2357,6 +2366,7 @@
                     <tbody id="loc-tbody"></tbody>
                   </table>
                 </div>
+                <div class="pagination" id="locPagination" hidden></div>
                 <div id="locUnattr" class="loc-unattr" hidden></div>
               </div>
               <div class="geo-divider" id="locDivider" title="Drag to resize"></div>
@@ -7791,8 +7801,8 @@ function syncGeoDateSelect() { syncDateSelectEl("geoDateSelect", geoState.dateRa
 const LOC_METRIC_COLOR = { clicks: "#4338ca", conversions: "#10b981" };
 const LOC_COORDS_LS = "locCityCoords_v1";
 const locState = { rows: [], cities: {}, unattributed: null, loadedKey: null, map: null, layer: null, markers: new Map(),
-  sort: { key: "clicks", dir: "desc" }, columnWidths: {}, heatmap: false, sideWidth: null, wired: false,
-  filters: { metric: "clicks", status: new Set(["ENABLED"]), minClicks: 0 }, view: [], selected: null,
+  sort: { key: "conversions", dir: "desc" }, columnWidths: {}, heatmap: false, sideWidth: null, wired: false, pageSize: 10, currentPage: 1,
+  filters: { metric: "conversions", status: new Set(["ENABLED"]), minClicks: 0, minConv: 1 }, view: [], selected: null,
   geo: { token: 0, total: 0, done: 0, running: false, pending: {} }, fitNext: true };
 const LOC_COLUMNS = [
   { key: "label", label: "City", align: "txt", width: 230, locked: true },
@@ -7815,12 +7825,14 @@ try {
     if (p.columnWidths) locState.columnWidths = p.columnWidths;
     if (typeof p.heatmap === "boolean") locState.heatmap = p.heatmap;
     if (p.sideWidth) locState.sideWidth = p.sideWidth;
+    if ([10, 25, 50, 100, 500].includes(p.pageSize)) locState.pageSize = p.pageSize;
   }
   const f = loadPageFilters("locations");
   if (f) {
     if (f.metric === "clicks" || f.metric === "conversions") locState.filters.metric = f.metric;
     if (Array.isArray(f.status)) locState.filters.status = new Set(f.status);
     if (f.minClicks >= 0) locState.filters.minClicks = +f.minClicks || 0;
+    if (f.minConv >= 0) locState.filters.minConv = +f.minConv || 0;
   }
 } catch {}
 const LOC_STATUS_BOXES = [["locStatusEnabled", "ENABLED"], ["locStatusPaused", "PAUSED"], ["locStatusEnded", "ENDED"]];
@@ -7839,6 +7851,7 @@ function syncLocFilterBoxes() {
   document.getElementById("locMetricConv").checked = f.metric === "conversions";
   LOC_STATUS_BOXES.forEach(([id, v]) => { document.getElementById(id).checked = f.status.has(v); });
   document.getElementById("locMinClicks").value = f.minClicks || 0;
+  document.getElementById("locMinConv").value = f.minConv || 0;
 }
 function applyLocFilters() {
   const prevMetric = locState.filters.metric;
@@ -7846,8 +7859,10 @@ function applyLocFilters() {
     metric: document.getElementById("locMetricConv").checked ? "conversions" : "clicks",
     status: new Set(LOC_STATUS_BOXES.filter(([id]) => document.getElementById(id).checked).map(([, v]) => v)),
     minClicks: Math.max(0, parseInt(document.getElementById("locMinClicks").value, 10) || 0),
+    minConv: Math.max(0, parseFloat(document.getElementById("locMinConv").value) || 0),
   };
-  savePageFilters("locations", { metric: locState.filters.metric, status: [...locState.filters.status], minClicks: locState.filters.minClicks });
+  savePageFilters("locations", { metric: locState.filters.metric, status: [...locState.filters.status], minClicks: locState.filters.minClicks, minConv: locState.filters.minConv });
+  locState.currentPage = 1;
   document.getElementById("locFiltersMenu").hidden = true;
   if (prevMetric !== locState.filters.metric && locState.sort.key === prevMetric) locState.sort = { key: locState.filters.metric, dir: "desc" };
   locState.fitNext = true;
@@ -7856,16 +7871,17 @@ function applyLocFilters() {
   locStartGeocode();
 }
 function resetLocFilters() {
-  locState.filters = { metric: "clicks", status: new Set(["ENABLED"]), minClicks: 0 };
+  locState.filters = { metric: "conversions", status: new Set(["ENABLED"]), minClicks: 0, minConv: 1 };
   syncLocFilterBoxes(); applyLocFilters();
 }
 function updateLocFilterCount() {
   const f = locState.filters;
-  const n = (f.status.size ? 1 : 0) + (f.minClicks > 0 ? 1 : 0) + (f.metric !== "clicks" ? 1 : 0);
+  const n = (f.status.size ? 1 : 0) + (f.minClicks > 0 ? 1 : 0) + (f.minConv > 0 ? 1 : 0);
   const el = document.getElementById("locFilterCount");
   if (n) { el.textContent = n; el.hidden = false; } else el.hidden = true;
   markFilterGroup("loc-group-status", f.status.size);
   markFilterGroup("loc-group-min", f.minClicks > 0 ? 1 : 0);
+  markFilterGroup("loc-group-minconv", f.minConv > 0 ? 1 : 0);
 }
 
 function initLocations() {
@@ -7972,6 +7988,7 @@ async function loadLocations() {
     const w = document.getElementById("locWarn"); w.hidden = !data.warning; if (data.warning) w.textContent = data.warning;
     showEl("locLoading", false);
     locState.fitNext = true;
+    locState.currentPage = 1;
     renderLocations();
     setLastRefresh("locations");
     if (typeof populateAccCampaignFilter === "function") populateAccCampaignFilter();
@@ -8000,7 +8017,7 @@ function locAggregate() {
     }
     c.impressions += r.impressions; c.clicks += r.clicks; c.cost += r.cost; c.conversions += r.conversions;
   });
-  return [...by.values()].filter(c => c.clicks >= (f.minClicks || 0) && (c.impressions || c.clicks || c.conversions)).map(c => Object.assign(c, {
+  return [...by.values()].filter(c => c.clicks >= (f.minClicks || 0) && c.conversions >= (f.minConv || 0) && (c.impressions || c.clicks || c.conversions)).map(c => Object.assign(c, {
     ctr: c.impressions ? c.clicks / c.impressions : 0, avgCpc: c.clicks ? c.cost / c.clicks : 0,
     convRate: c.clicks ? c.conversions / c.clicks : 0, cpa: c.conversions ? c.cost / c.conversions : 0,
   }));
@@ -8018,6 +8035,17 @@ function renderLocations() {
     return ((a[sk] || 0) - (b[sk] || 0)) * sdir;
   });
   locState.view = rows;
+  renderLocTable();
+  // Traffic Google couldn't pin to a city.
+  const u = locState.unattributed, ue = document.getElementById("locUnattr");
+  if (u && u.clicks > 0 && !getCampPickerValue()) { ue.hidden = false; ue.textContent = fmtInt(u.clicks) + " click" + (u.clicks === 1 ? "" : "s") + " (all campaigns) couldn’t be attributed to a city and aren’t included."; }
+  else ue.hidden = true;
+  renderLocMap();
+}
+
+// Table only (current page). The map always shows every city that passes the filters.
+function renderLocTable() {
+  const rows = locState.view;
   const cols = locShownCols();
   locState.viewCols = cols;
   const arrow = key => locState.sort.key === key ? '<span class="arr">' + (locState.sort.dir === "desc" ? "▾" : "▴") + "</span>" : "";
@@ -8025,25 +8053,21 @@ function renderLocations() {
   document.getElementById("loc-colgroup").innerHTML = colgroupHtml(cols, locState.columnWidths);
   document.getElementById("loc-thead").innerHTML = "<tr>" + cols.map(c =>
     '<th class="' + (c.align === "clk" ? "clk" : "") + '" data-col="' + c.key + '"><span class="sortable">' + c.label + arrow(c.key) + "</span></th>").join("") + "</tr>";
-  const MAX_ROWS = 1000;
+  const pageRows = pageSlice(rows, locState);
+  renderPagination("locPagination", locState, rows.length, () => { uiSave("locations", { pageSize: locState.pageSize }); renderLocTable(); });
   document.getElementById("loc-tbody").innerHTML = rows.length
-    ? rows.slice(0, MAX_ROWS).map(r => '<tr class="loc-row' + (locState.selected === r.geoId ? " sel" : "") + '" data-geo="' + escapeHtml(r.geoId) + '">' + cols.map(c => c.locked
+    ? pageRows.map(r => '<tr class="loc-row' + (locState.selected === r.geoId ? " sel" : "") + '" data-geo="' + escapeHtml(r.geoId) + '">' + cols.map(c => c.locked
         ? '<td data-col="label">' + escapeHtml(r.label) + (r.sub ? '<span class="loc-sub">' + escapeHtml(r.sub) + "</span>" : "") + "</td>"
-        : '<td class="clk" data-col="' + c.key + '"' + (c.key === "cpa" && !r.conversions ? "" : heat(c.key, r[c.key])) + ">" + c.fmt(r) + "</td>").join("") + "</tr>").join("") +
-      (rows.length > MAX_ROWS ? '<tr><td class="empty" colspan="' + cols.length + '">Showing the top ' + MAX_ROWS + " of " + fmtInt(rows.length) + " cities — export to see them all.</td></tr>" : "")
+        : '<td class="clk" data-col="' + c.key + '"' + (c.key === "cpa" && !r.conversions ? "" : heat(c.key, r[c.key])) + ">" + c.fmt(r) + "</td>").join("") + "</tr>").join("")
     : '<tr><td class="empty" colspan="' + cols.length + '">No city data for these filters and dates.</td></tr>';
   document.querySelectorAll("#loc-tbody tr.loc-row").forEach(tr => tr.addEventListener("click", () => locFocusCity(tr.dataset.geo)));
   wireColumnResize({ colgroup: "loc-colgroup", thead: "loc-thead", tbody: "loc-tbody" }, locState.columnWidths, k => {
     const s = locState.sort;
     locState.sort = s.key === k ? { key: k, dir: s.dir === "desc" ? "asc" : "desc" } : { key: k, dir: "desc" };
+    locState.currentPage = 1;
     renderLocations();
   });
-  uiSave("locations", { sort: locState.sort, columnWidths: locState.columnWidths });
-  // Traffic Google couldn't pin to a city.
-  const u = locState.unattributed, ue = document.getElementById("locUnattr");
-  if (u && u.clicks > 0 && !getCampPickerValue()) { ue.hidden = false; ue.textContent = fmtInt(u.clicks) + " click" + (u.clicks === 1 ? "" : "s") + " (all campaigns) couldn’t be attributed to a city and aren’t included."; }
-  else ue.hidden = true;
-  renderLocMap();
+  uiSave("locations", { sort: locState.sort, columnWidths: locState.columnWidths, pageSize: locState.pageSize });
 }
 
 function renderLocMap() {
@@ -8081,6 +8105,12 @@ function renderLocMap() {
 }
 function locSelectRow(geoId, scroll) {
   locState.selected = geoId;
+  const idx = locState.view.findIndex(r => r.geoId === geoId);
+  if (idx >= 0) {
+    const page = Math.floor(idx / (locState.pageSize || 10)) + 1;
+    if (page !== locState.currentPage) { locState.currentPage = page; renderLocTable(); }
+    scroll = true;
+  }
   document.querySelectorAll("#loc-tbody tr.loc-row").forEach(tr => tr.classList.toggle("sel", tr.dataset.geo === geoId));
   if (scroll) { const tr = document.querySelector('#loc-tbody tr.loc-row[data-geo="' + geoId + '"]'); if (tr) tr.scrollIntoView({ block: "nearest" }); }
 }
