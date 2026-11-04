@@ -1,7 +1,14 @@
-// GET  /api/locations?customerId=<id>&dateRange=<gaql>[&debug=1]
-// City-level performance for the Locations page, from user_location_view segmented by
-// segments.geo_target_city — the data behind the Google Ads "Where your users were" report,
-// i.e. users' PHYSICAL locations only (no "locations of interest").
+// GET  /api/locations?customerId=<id>&dateRange=<gaql>&level=<country|region|county|city|postcode>[&debug=1]
+// Location performance for the Locations page, from user_location_view — the data behind the
+// Google Ads "Where your users were" report, i.e. users' PHYSICAL locations only (no
+// "locations of interest"). `level` picks the breakdown (default city):
+//   country  → user_location_view.country_criterion_id
+//   region   → segments.geo_target_region   (falls back to province / state if Google files the
+//              account's regions under those instead)
+//   county   → segments.geo_target_county
+//   city     → segments.geo_target_city
+//   postcode → segments.geo_target_postal_code
+// (Response keys still say "cities" for compatibility; they hold whichever level was asked for.)
 //   { rows:   [{ geoId, campaignId, campaign, status, impressions, clicks, cost, conversions }],
 //     cities: { <geoId>: { name, canonical, countryCode, lat?, lng? } },
 //     unattributed: { impressions, clicks, cost, conversions },   // traffic Google couldn't pin to a city
@@ -47,22 +54,49 @@ export async function onRequestGet(context) {
   const idOf = (rn) => String(rn || "").split("/").pop();
   const warnings = [];
 
-  const GEO_Q = `SELECT campaign.id, campaign.name, campaign.status, segments.geo_target_city,
+  // Level → GAQL field(s) to try in order, and how to read the location off a result row.
+  const LEVELS = {
+    country: [{ field: "user_location_view.country_criterion_id", read: (r) => (r.userLocationView?.countryCriterionId ? "geoTargetConstants/" + r.userLocationView.countryCriterionId : "") }],
+    region: [
+      { field: "segments.geo_target_region", read: (r) => r.segments?.geoTargetRegion },
+      { field: "segments.geo_target_province", read: (r) => r.segments?.geoTargetProvince },
+      { field: "segments.geo_target_state", read: (r) => r.segments?.geoTargetState },
+    ],
+    county: [{ field: "segments.geo_target_county", read: (r) => r.segments?.geoTargetCounty }],
+    city: [{ field: "segments.geo_target_city", read: (r) => r.segments?.geoTargetCity }],
+    postcode: [{ field: "segments.geo_target_postal_code", read: (r) => r.segments?.geoTargetPostalCode }],
+  };
+  const level = LEVELS[url.searchParams.get("level")] ? url.searchParams.get("level") : "city";
+  const geoQ = (field) => `SELECT campaign.id, campaign.name, campaign.status, ${field},
       metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
     FROM user_location_view
     WHERE campaign.status != 'REMOVED' AND ${dateClause}`;
 
-  let geoRows;
+  // Try each candidate field for the level; keep the first that attributes any traffic.
+  const fetchLevel = async () => {
+    let last = null, firstErr = null;
+    for (const cand of LEVELS[level]) {
+      try {
+        const rows = await search(geoQ(cand.field));
+        last = { rows, cand };
+        if (rows.some((r) => cand.read(r))) return last;
+      } catch (e) { if (!firstErr) firstErr = e; }
+    }
+    if (last) return last;
+    throw firstErr || new Error("No data");
+  };
+
+  let geoRows, used;
   const [geoR, endedR, kvR] = await Promise.allSettled([
-    search(GEO_Q),
+    fetchLevel(),
     search(`SELECT campaign.id, campaign.serving_status FROM campaign WHERE campaign.status = 'ENABLED'`),
     env.SESSIONS ? env.SESSIONS.get(KV_KEY, "json") : Promise.resolve(null),
   ]);
   if (geoR.status !== "fulfilled") {
     const msg = String(geoR.reason?.message || geoR.reason).slice(0, 300);
-    return json(debug ? { error: "Could not load city data", detail: msg, query: GEO_Q } : { error: "Could not load city data: " + msg.slice(0, 160) }, 500);
+    return json(debug ? { error: "Could not load location data", detail: msg, query: geoQ(LEVELS[level][0].field) } : { error: "Could not load location data: " + msg.slice(0, 160) }, 500);
   }
-  geoRows = geoR.value;
+  geoRows = geoR.value.rows; used = geoR.value.cand;
   const ended = new Set();
   if (endedR.status === "fulfilled") endedR.value.forEach((r) => { if (r.campaign?.servingStatus === "ENDED") ended.add(String(r.campaign.id)); });
   const coordStore = (kvR.status === "fulfilled" && kvR.value) || {};
@@ -75,7 +109,7 @@ export async function onRequestGet(context) {
   for (const r of geoRows) {
     const m = r.metrics || {};
     const v = { impressions: Number(m.impressions) || 0, clicks: Number(m.clicks) || 0, cost: (Number(m.costMicros) || 0) / 1e6, conversions: Number(m.conversions) || 0 };
-    const rn = r.segments?.geoTargetCity;
+    const rn = used.read(r);
     if (!rn) { for (const k in v) unattributed[k] += v[k]; continue; }
     cityRns.add(rn);
     const geoId = idOf(rn), cid = String(r.campaign?.id || "");
@@ -95,22 +129,22 @@ export async function onRequestGet(context) {
   for (let i = 0; i < rnList.length; i += 400) {
     const chunk = rnList.slice(i, i + 400);
     try {
-      const res = await search(`SELECT geo_target_constant.id, geo_target_constant.name, geo_target_constant.canonical_name, geo_target_constant.country_code FROM geo_target_constant WHERE geo_target_constant.resource_name IN (${chunk.map((rn) => `'${rn}'`).join(", ")})`);
+      const res = await search(`SELECT geo_target_constant.id, geo_target_constant.name, geo_target_constant.canonical_name, geo_target_constant.country_code, geo_target_constant.target_type FROM geo_target_constant WHERE geo_target_constant.resource_name IN (${chunk.map((rn) => `'${rn}'`).join(", ")})`);
       res.forEach((g) => {
         const c = g.geoTargetConstant || {};
-        cities[String(c.id)] = { name: c.name || "", canonical: c.canonicalName || c.name || "", countryCode: c.countryCode || "" };
+        cities[String(c.id)] = { name: c.name || "", canonical: c.canonicalName || c.name || "", countryCode: c.countryCode || "", type: c.targetType || "" };
       });
-    } catch (e) { warnings.push("Some city names couldn't be loaded."); break; }
+    } catch (e) { warnings.push("Some location names couldn't be loaded."); break; }
   }
   rnList.forEach((rn) => {
     const id = idOf(rn);
-    if (!cities[id]) cities[id] = { name: "City " + id, canonical: "", countryCode: "" };
+    if (!cities[id]) cities[id] = { name: "Location " + id, canonical: "", countryCode: "" };
     const c = coordStore[id];
     if (Array.isArray(c)) { cities[id].lat = c[0]; cities[id].lng = c[1]; }
     else if (c === null) cities[id].noGeo = true;
   });
 
-  const payload = { rows: [...byKey.values()], cities, unattributed };
+  const payload = { rows: [...byKey.values()], cities, unattributed, level, field: used.field };
   if (warnings.length) payload.warning = warnings.join(" ");
   if (debug) payload.diag = { geoRows: geoRows.length, cities: rnList.length, cachedCoords: Object.keys(coordStore).length };
   return json(payload);
