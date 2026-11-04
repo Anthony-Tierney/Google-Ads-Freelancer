@@ -2262,7 +2262,7 @@
         <section id="locSignedIn" hidden>
           <div class="rep-intro">
             <h2 class="rep-intro-title">Locations</h2>
-            <p class="rep-intro-text">Performance by city for the selected account and date range. Bubbles on the map are sized by clicks or conversions &mdash; switch between them in Filters. Click a row to find that city on the map.</p>
+            <p class="rep-intro-text">Performance by location for the selected account and date range &mdash; choose Country, Region, County, City or Postcode with the Level button. Bubbles on the map are sized by clicks or conversions &mdash; switch between them in Filters. Click a row to find it on the map.</p>
           </div>
           <div class="controls-row account" id="locControls" hidden>
             <div>
@@ -2280,6 +2280,13 @@
             </div>
             <div class="grow"></div>
             <div class="toolset">
+              <div class="filters" id="locLevelGroup">
+                <button class="filters-btn" id="locLevelBtn" aria-haspopup="true" title="Location level">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                  Level: <span id="locLevelLabel">City</span>
+                </button>
+                <div class="pop col-pop" id="locLevelPop" hidden></div>
+              </div>
               <div class="filters">
                 <button class="filters-btn" id="locHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -2355,7 +2362,7 @@
             </div>
           </div>
           <div class="panel">
-            <div id="locLoading" class="state" hidden><div class="spinner"></div>Loading city performance…</div>
+            <div id="locLoading" class="state" hidden><div class="spinner"></div>Loading location performance…</div>
             <div id="locPrompt" class="state" hidden><div class="big">Choose a single account</div>Locations shows one account at a time &mdash; pick a specific account from the selector above.</div>
             <div id="locError" class="state" hidden></div>
             <div id="locWarn" class="as-warn" hidden></div>
@@ -2379,7 +2386,7 @@
               </div>
             </div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Cities are where people were <strong>physically located</strong> when they saw or clicked your ads (the Google Ads &ldquo;Where your users were&rdquo; report) &mdash; locations of interest are not included. Traffic Google can&rsquo;t attribute to a city is excluded from the table. Google doesn&rsquo;t supply map positions for cities, so new cities are looked up on OpenStreetMap (about one a second, busiest first) and saved, so they appear instantly from then on.</div>
+          <div class="foot-note" style="margin-top:10px;">Locations are where people were <strong>physically located</strong> when they saw or clicked your ads (the Google Ads &ldquo;Where your users were&rdquo; report) &mdash; locations of interest are not included. Traffic Google can&rsquo;t attribute at the chosen level is excluded from the table. Google doesn&rsquo;t supply map positions for locations, so new ones are looked up on OpenStreetMap (about one a second, busiest first) and saved, so they appear instantly from then on.</div>
         </section>
       </section>
 
@@ -4656,7 +4663,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu", "locFiltersMenu", "locColsPop", "locExportPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu", "locFiltersMenu", "locColsPop", "locExportPop", "locLevelPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -7803,8 +7810,12 @@ function syncGeoDateSelect() { syncDateSelectEl("geoDateSelect", geoState.dateRa
 // (shared KV) and this browser, so each city is only ever looked up once.
 const LOC_METRIC_COLOR = { clicks: "#4338ca", conversions: "#10b981" };
 const LOC_COORDS_LS = "locCityCoords_v1";
+// Level switch: [id, column/label name, plural]
+const LOC_LEVELS = [["country", "Country", "countries"], ["region", "Region", "regions"], ["county", "County", "counties"], ["city", "City", "cities"], ["postcode", "Postcode", "postcodes"]];
+function locLevel() { return LOC_LEVELS.find(l => l[0] === locState.level) || LOC_LEVELS[3]; }
+function locPlural(n) { const l = locLevel(); return fmtInt(n) + " " + (n === 1 ? l[1].toLowerCase() : l[2]); }
 const locState = { rows: [], cities: {}, unattributed: null, loadedKey: null, map: null, layer: null, markers: new Map(),
-  sort: { key: "conversions", dir: "desc" }, columnWidths: {}, heatmap: false, sideWidth: null, wired: false, pageSize: 10, currentPage: 1,
+  sort: { key: "conversions", dir: "desc" }, columnWidths: {}, heatmap: false, sideWidth: null, wired: false, pageSize: 10, currentPage: 1, level: "city",
   filters: { metric: "conversions", status: new Set(["ENABLED"]), minClicks: 0, minConv: 1 }, view: [], selected: null,
   geo: { token: 0, total: 0, done: 0, running: false, pending: {} }, fitNext: true };
 const LOC_COLUMNS = [
@@ -7829,6 +7840,7 @@ try {
     if (typeof p.heatmap === "boolean") locState.heatmap = p.heatmap;
     if (p.sideWidth) locState.sideWidth = p.sideWidth;
     if ([10, 25, 50, 100, 500].includes(p.pageSize)) locState.pageSize = p.pageSize;
+    if (LOC_LEVELS.some(l => l[0] === p.level)) locState.level = p.level;
   }
   const f = loadPageFilters("locations");
   if (f) {
@@ -7839,7 +7851,23 @@ try {
   }
 } catch {}
 const LOC_STATUS_BOXES = [["locStatusEnabled", "ENABLED"], ["locStatusPaused", "PAUSED"], ["locStatusEnded", "ENDED"]];
-function locShownCols() { return LOC_COLUMNS.filter(c => c.locked || locState.visible.has(c.key)); }
+function locShownCols() { LOC_COLUMNS[0].label = locLevel()[1]; return LOC_COLUMNS.filter(c => c.locked || locState.visible.has(c.key)); }
+function renderLocLevelPop() {
+  const pop = document.getElementById("locLevelPop");
+  pop.innerHTML = LOC_LEVELS.map(([id, name]) => {
+    const active = locState.level === id;
+    return '<button class="pop-row" data-loclevel="' + id + '"><span' + (active ? ' style="color:var(--accent);font-weight:560"' : "") + ">" + escapeHtml(name) + "</span>" + (active ? '<span class="active-dot">\u2713</span>' : "") + "</button>";
+  }).join("");
+  pop.querySelectorAll("[data-loclevel]").forEach(row => row.addEventListener("click", () => {
+    pop.hidden = true;
+    if (row.dataset.loclevel === locState.level) return;
+    locState.level = row.dataset.loclevel;
+    document.getElementById("locLevelLabel").textContent = locLevel()[1];
+    uiSave("locations", { level: locState.level });
+    locState.selected = null;
+    loadLocations();
+  }));
+}
 function renderLocColsPop() {
   renderGroupedCols("locColsPop", LOC_COLUMNS.filter(c => !c.locked), ["Metrics"], locState.visible, locState.openColGroups, key => {
     locState.visible.has(key) ? locState.visible.delete(key) : locState.visible.add(key);
@@ -7901,6 +7929,8 @@ function initLocations() {
     wirePop("locFiltersBtn", "locFiltersMenu", syncLocFilterBoxes);
     wirePop("locColsBtn", "locColsPop", renderLocColsPop);
     wirePop("locExportBtn", "locExportPop");
+    wirePop("locLevelBtn", "locLevelPop", renderLocLevelPop);
+    document.getElementById("locLevelLabel").textContent = locLevel()[1];
     document.querySelectorAll("#locExportPop [data-locfmt]").forEach(b => b.addEventListener("click", () => { document.getElementById("locExportPop").hidden = true; exportLocations(b.dataset.locfmt); }));
     document.getElementById("locColsCount").textContent = locState.visible.size;
     const hb = document.getElementById("locHeatmapBtn");
@@ -7940,7 +7970,7 @@ function initLocations() {
   }
   document.getElementById("locControls").hidden = false;
   showEl("locPrompt", false);
-  const key = GLOBAL_ACCOUNT + "|" + dateRangeToGAQL(SHARED_DATE_RANGE);
+  const key = GLOBAL_ACCOUNT + "|" + locState.level + "|" + dateRangeToGAQL(SHARED_DATE_RANGE);
   if (locState.loadedKey !== key) loadLocations();
   else { renderLocations(); locStartGeocode(); }
 }
@@ -7961,7 +7991,7 @@ function onLocDateRangeChange() {
 
 async function loadLocations() {
   if (GLOBAL_ACCOUNT === "ALL") { initLocations(); return; }
-  const key = GLOBAL_ACCOUNT + "|" + dateRangeToGAQL(SHARED_DATE_RANGE);
+  const key = GLOBAL_ACCOUNT + "|" + locState.level + "|" + dateRangeToGAQL(SHARED_DATE_RANGE);
   locState.loadedKey = key;
   locState.geo.token++; // stop any lookups for the previous account / range
   ["locPrompt", "locError", "locLayout", "locWarn"].forEach(id => showEl(id, false));
@@ -7969,7 +7999,7 @@ async function loadLocations() {
   try {
     const ctrl = new AbortController(), tmo = setTimeout(() => ctrl.abort(), 60000);
     let res;
-    try { res = await fetch("/api/locations?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(dateRangeToGAQL(SHARED_DATE_RANGE)), { credentials: "same-origin", signal: ctrl.signal }); }
+    try { res = await fetch("/api/locations?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(dateRangeToGAQL(SHARED_DATE_RANGE)) + "&level=" + encodeURIComponent(locState.level), { credentials: "same-origin", signal: ctrl.signal }); }
     catch (e) { throw new Error(e && e.name === "AbortError" ? "This took longer than 60 seconds. Try Refresh, or a shorter date range." : (e.message || "Request failed")); }
     finally { clearTimeout(tmo); }
     if (res.status === 401) { showSignedOut(); return; }
@@ -7991,6 +8021,7 @@ async function loadLocations() {
     const w = document.getElementById("locWarn"); w.hidden = !data.warning; if (data.warning) w.textContent = data.warning;
     showEl("locLoading", false);
     locState.fitNext = true;
+    locState.userMoved = false;
     locState.currentPage = 1;
     renderLocations();
     setLastRefresh("locations");
@@ -8000,7 +8031,7 @@ async function loadLocations() {
   } catch (e) {
     showEl("locLoading", false);
     const el = document.getElementById("locError"); el.hidden = false;
-    el.innerHTML = '<div class="big">Couldn’t load city performance</div>' + escapeHtml(e.message || "Please try again.");
+    el.innerHTML = '<div class="big">Couldn’t load location performance</div>' + escapeHtml(e.message || "Please try again.");
   }
 }
 
@@ -8015,7 +8046,7 @@ function locAggregate() {
     if (!c) {
       const city = locState.cities[r.geoId] || {};
       const parts = String(city.canonical || "").split(",").map(s => s.trim()).filter(Boolean);
-      c = { geoId: r.geoId, label: city.name || ("City " + r.geoId), sub: parts.slice(1).join(", "), impressions: 0, clicks: 0, cost: 0, conversions: 0 };
+      c = { geoId: r.geoId, label: city.name || ("Location " + r.geoId), sub: parts.slice(1).join(", "), impressions: 0, clicks: 0, cost: 0, conversions: 0 };
       by.set(r.geoId, c);
     }
     c.impressions += r.impressions; c.clicks += r.clicks; c.cost += r.cost; c.conversions += r.conversions;
@@ -8041,7 +8072,7 @@ function renderLocations() {
   renderLocTable();
   // Traffic Google couldn't pin to a city.
   const u = locState.unattributed, ue = document.getElementById("locUnattr");
-  if (u && u.clicks > 0 && !getCampPickerValue()) { ue.hidden = false; ue.textContent = fmtInt(u.clicks) + " click" + (u.clicks === 1 ? "" : "s") + " (all campaigns) couldn’t be attributed to a city and aren’t included."; }
+  if (u && u.clicks > 0 && !getCampPickerValue()) { ue.hidden = false; ue.textContent = fmtInt(u.clicks) + " click" + (u.clicks === 1 ? "" : "s") + " (all campaigns) couldn’t be attributed to a " + locLevel()[1].toLowerCase() + " and aren’t included."; }
   else ue.hidden = true;
   renderLocMap();
 }
@@ -8062,14 +8093,14 @@ function renderLocTable() {
     ? pageRows.map(r => '<tr class="loc-row' + (locState.selected === r.geoId ? " sel" : "") + '" data-geo="' + escapeHtml(r.geoId) + '">' + cols.map(c => c.locked
         ? '<td data-col="label">' + escapeHtml(r.label) + (r.sub ? '<span class="loc-sub">' + escapeHtml(r.sub) + "</span>" : "") + "</td>"
         : '<td class="clk" data-col="' + c.key + '"' + (c.key === "cpa" && !r.conversions ? "" : heat(c.key, r[c.key])) + ">" + c.fmt(r) + "</td>").join("") + "</tr>").join("")
-    : '<tr><td class="empty" colspan="' + cols.length + '">No city data for these filters and dates.</td></tr>';
+    : '<tr><td class="empty" colspan="' + cols.length + '">No " + locLevel()[1].toLowerCase() + " data for these filters and dates.</td></tr>';
   // Summary row: totals across every city that passes the filters (all pages), with the
   // rate metrics recalculated from the totals — same approach as Overview.
   const T = rows.reduce((a, r) => { a.impressions += r.impressions; a.clicks += r.clicks; a.cost += r.cost; a.conversions += r.conversions; return a; }, { impressions: 0, clicks: 0, cost: 0, conversions: 0 });
   T.ctr = T.impressions ? T.clicks / T.impressions : 0; T.avgCpc = T.clicks ? T.cost / T.clicks : 0;
   T.convRate = T.clicks ? T.conversions / T.clicks : 0; T.cpa = T.conversions ? T.cost / T.conversions : 0;
   document.getElementById("loc-tfoot").innerHTML = rows.length ? "<tr>" + cols.map(c => c.locked
-    ? '<td data-col="label">Total \u00b7 ' + fmtInt(rows.length) + " cit" + (rows.length === 1 ? "y" : "ies") + "</td>"
+    ? '<td data-col="label">Total \u00b7 ' + locPlural(rows.length) + "</td>"
     : '<td class="clk" data-col="' + c.key + '">' + c.fmt(T) + "</td>").join("") + "</tr>" : "";
   document.querySelectorAll("#loc-tbody tr.loc-row").forEach(tr => tr.addEventListener("click", () => locFocusCity(tr.dataset.geo)));
   wireColumnResize({ colgroup: "loc-colgroup", thead: "loc-thead", tbody: "loc-tbody", tfoot: "loc-tfoot" }, locState.columnWidths, k => {
@@ -8084,6 +8115,10 @@ function renderLocTable() {
 function renderLocMap() {
   if (!locState.map) {
     locState.map = L.map("locMap", { scrollWheelZoom: true }).setView([54.0, -2.5], 6);
+    // Remember when the user pans/zooms, so late-arriving positions don't yank the view around.
+    locState.map.on("dragstart", () => { locState.userMoved = true; });
+    locState.map.getContainer().addEventListener("wheel", () => { locState.userMoved = true; }, { passive: true });
+    locState.map.on("zoomstart", e => { if (e && e.originalEvent) locState.userMoved = true; });
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxZoom: 19 }).addTo(locState.map);
   }
   locState.map.invalidateSize();
@@ -8109,7 +8144,7 @@ function renderLocMap() {
   const label = metric === "conversions" ? "Conversions" : "Clicks";
   const refs = [max, max / 4, max / 16].filter((v, i, a) => v >= 1 && (i === 0 || Math.round(v) !== Math.round(a[i - 1])));
   const g = locState.geo, missing = locState.view.filter(r => { const c = locState.cities[r.geoId]; return c && c.lat == null && !c.noGeo; }).length;
-  const status = g.running ? "Placing cities on the map… " + g.done + " of " + g.total : (missing ? missing + " cit" + (missing === 1 ? "y" : "ies") + " not yet on the map" : "");
+  const status = g.running ? "Placing " + locLevel()[2] + " on the map… " + g.done + " of " + g.total : (missing ? locPlural(missing) + " not yet on the map" : "");
   document.getElementById("locLegend").innerHTML = "Bubble size = <strong>" + label + "</strong>" +
     (placed.length ? refs.map(v => { const d = Math.round(radius(v) * 2); return '<span class="b" style="width:' + d + "px;height:" + d + "px;border-color:" + color + ";background:" + color + '33"></span>' + (metric === "conversions" ? fmtDec(v) : fmtInt(Math.round(v))); }).join(" ") : "") +
     '<span class="loc-geo-status">' + escapeHtml(status) + "</span>";
@@ -8131,7 +8166,8 @@ function locFocusCity(geoId) {
   if (m) { locState.map.flyTo(m.getLatLng(), Math.max(locState.map.getZoom(), 9), { duration: 0.6 }); m.openPopup(); }
   else {
     const c = locState.cities[geoId] || {};
-    showToast(c.noGeo ? "This city couldn’t be found on the map." : c.lat == null ? "This city hasn’t been placed on the map yet." : "No " + (locState.filters.metric === "conversions" ? "conversions" : "clicks") + " to show for this city.");
+    const what = "This " + locLevel()[1].toLowerCase();
+    showToast(c.noGeo ? what + " couldn’t be found on the map." : c.lat == null ? what + " hasn’t been placed on the map yet." : "No " + (locState.filters.metric === "conversions" ? "conversions" : "clicks") + " to show for this city.");
   }
 }
 
@@ -8154,14 +8190,27 @@ function locStartGeocode() {
       c.tried = true;
       const t0 = Date.now();
       try {
-        const q = (c.canonical || c.name || "").replace(/,/g, ", ");
-        const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=" + encodeURIComponent(q) + (c.countryCode ? "&countrycodes=" + c.countryCode.toLowerCase() : "");
-        const res = await fetch(url, { headers: { "Accept-Language": "en" } });
-        if (res.ok) {
+        // Up to two lookups per place (each ~1s apart): a structured one first where the level
+        // suits it (postcode / country), then the full "Name, Region, Country" text search.
+        const cc = c.countryCode ? "&countrycodes=" + c.countryCode.toLowerCase() : "";
+        const tries = [];
+        const isPost = c.type === "Postal Code" || locState.level === "postcode";
+        const isCountry = c.type === "Country" || locState.level === "country";
+        if (isPost && c.name) tries.push("postalcode=" + encodeURIComponent(c.name) + cc);
+        if (isCountry && c.name) tries.push("country=" + encodeURIComponent(c.name));
+        tries.push("q=" + encodeURIComponent((c.canonical || c.name || "").replace(/,/g, ", ")) + cc);
+        let found = null, answered = false;
+        for (let t = 0; t < tries.length && !found; t++) {
+          if (t > 0) await new Promise(r => setTimeout(r, 1100));
+          const res = await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&" + tries[t], { headers: { "Accept-Language": "en" } });
+          if (res.status === 429) { await new Promise(r => setTimeout(r, 5000)); break; }
+          if (!res.ok) break;
+          answered = true;
           const arr = await res.json();
-          if (arr.length && isFinite(+arr[0].lat)) { c.lat = +arr[0].lat; c.lng = +arr[0].lon; g.pending[id] = [c.lat, c.lng]; }
-          else { c.noGeo = true; g.pending[id] = null; }
-        } else if (res.status === 429) { await new Promise(r => setTimeout(r, 5000)); }
+          if (arr.length && isFinite(+arr[0].lat)) found = [+arr[0].lat, +arr[0].lon];
+        }
+        if (found) { c.lat = found[0]; c.lng = found[1]; g.pending[id] = found; }
+        else if (answered) { c.noGeo = true; g.pending[id] = null; }
       } catch { /* network hiccup: leave for next time */ }
       g.done++;
       if (Object.keys(g.pending).length >= 10) locFlushCoords();
@@ -8171,6 +8220,7 @@ function locStartGeocode() {
     g.running = false;
     locFlushCoords();
     if (currentHashPage() === "locations") {
+      if (!locState.userMoved && !locState.selected) locState.fitNext = true; // re-fit to include newly placed bubbles
       renderLocMap();
       if (g.restart) { g.restart = false; locStartGeocode(); }
     } else g.restart = false;
@@ -8187,15 +8237,15 @@ function locFlushCoords() {
 function exportLocations(fmt) {
   const rows = locState.view || [], cols = locState.viewCols || LOC_COLUMNS;
   if (!rows.length) { showToast("Nothing to export."); return; }
-  const header = ["City", "Region / Country", ...cols.filter(c => !c.locked).map(c => c.label)];
+  const header = [locLevel()[1], "Region / Country", ...cols.filter(c => !c.locked).map(c => c.label)];
   const data = rows.map(r => [r.label, r.sub || "", ...cols.filter(c => !c.locked).map(c =>
     c.key === "ctr" || c.key === "convRate" ? fmtPct(r[c.key] || 0) : c.key === "cpa" ? (r.conversions ? +r.cpa.toFixed(2) : "") : ["cost", "avgCpc"].includes(c.key) ? +(r[c.key] || 0).toFixed(2) : c.key === "conversions" ? +(r.conversions || 0).toFixed(2) : r[c.key] || 0)]);
   const T = rows.reduce((a, r) => { a.impressions += r.impressions; a.clicks += r.clicks; a.cost += r.cost; a.conversions += r.conversions; return a; }, { impressions: 0, clicks: 0, cost: 0, conversions: 0 });
   T.ctr = T.impressions ? T.clicks / T.impressions : 0; T.avgCpc = T.clicks ? T.cost / T.clicks : 0;
   T.convRate = T.clicks ? T.conversions / T.clicks : 0; T.cpa = T.conversions ? T.cost / T.conversions : 0;
-  data.push(["Total (" + rows.length + " cities)", "", ...cols.filter(c => !c.locked).map(c =>
+  data.push(["Total (" + locPlural(rows.length) + ")", "", ...cols.filter(c => !c.locked).map(c =>
     c.key === "ctr" || c.key === "convRate" ? fmtPct(T[c.key]) : c.key === "cpa" ? (T.conversions ? +T.cpa.toFixed(2) : "") : ["cost", "avgCpc", "conversions"].includes(c.key) ? +T[c.key].toFixed(2) : T[c.key])]);
-  exportMatrix(fmt, "locations-" + new Date().toISOString().slice(0, 10), "Locations", header, data);
+  exportMatrix(fmt, "locations-" + locState.level + "-" + new Date().toISOString().slice(0, 10), "Locations (" + locLevel()[1] + ")", header, data);
 }
 
 // ---------- Account Structure ----------
