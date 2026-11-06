@@ -253,6 +253,35 @@
   .rep-tool-btn svg { width: 15px; height: 15px; }
   .rep-tool-btn.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
   .rep-dot { fill: var(--accent); }
+  /* Annotations (account changes + notes) */
+  .rep-ann-wrap { position: relative; }
+  .rep-ann-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; width: 300px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(15,23,42,.14); padding: 12px; font-size: 13px; }
+  .rep-ann-pop h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+  .rep-ann-pop .row { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; }
+  .rep-ann-pop .sw { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .rep-ann-pop hr { border: 0; border-top: 1px solid var(--line-soft); margin: 10px 0; }
+  .rep-ann-pop label.f { display: block; font-size: 12px; color: var(--muted); margin: 6px 0 3px; }
+  .rep-ann-pop input[type=date], .rep-ann-pop select, .rep-ann-pop textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); color: var(--ink); }
+  .rep-ann-pop textarea { resize: vertical; min-height: 54px; }
+  .rep-ann-pop .actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .rep-ann-pop .hint { font-size: 12px; color: var(--muted); }
+  .rep-ann-mark { cursor: pointer; }
+  .rep-ann-mark circle { stroke: var(--panel); stroke-width: 2; }
+  .rep-ann-mark text { fill: #fff; font-size: 10px; font-weight: 700; pointer-events: none; }
+  .rep-ann-mark:hover circle { stroke: var(--ink); }
+  .rep-ann-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 6px; font-size: 12px; color: var(--muted); }
+  .rep-ann-legend .k { display: inline-flex; align-items: center; gap: 5px; }
+  .rep-ann-legend .k i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .rep-ann-panel { margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--bg); }
+  .rep-ann-panel .hd { display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 13px; margin-bottom: 6px; color: var(--ink); }
+  .rep-ann-panel .hd button { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 16px; line-height: 1; }
+  .rep-ann-item { display: grid; grid-template-columns: 12px 82px 1fr auto; gap: 8px; align-items: start; padding: 6px 0; border-top: 1px solid var(--line-soft); font-size: 13px; }
+  .rep-ann-item:first-of-type { border-top: 0; }
+  .rep-ann-item .sw { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; }
+  .rep-ann-item .d { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rep-ann-item .what { color: var(--ink); }
+  .rep-ann-item .who { color: var(--muted); font-size: 12px; }
+  .rep-ann-item .del { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 12px; text-decoration: underline; }
   .rep-datalabel { fill: var(--ink); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; stroke-linejoin: round; }
   .rep-datalabel.on-bar { fill: #fff; stroke: var(--accent); }
   .rep-datalabel.on-bar2 { fill: #422006; stroke: #eab308; }
@@ -1255,6 +1284,10 @@
             <div class="rep-chart-head">
               <div class="rep-chart-title" id="repChartTitle">Cost</div>
               <div class="rep-chart-tools">
+                <div class="rep-ann-wrap">
+                  <button id="repAnnBtn" class="rep-tool-btn" title="Annotations: budget, bidding and status changes, and notes" onclick="toggleRepAnnPop(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4"/><path d="M4 4h12l-2 4 2 4H4"/></svg></button>
+                  <div id="repAnnPop" class="rep-ann-pop" hidden onclick="event.stopPropagation()"></div>
+                </div>
                 <button id="repLabelsBtn" class="rep-tool-btn" title="Show data labels" onclick="toggleRepLabels()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><line x1="7" y1="7" x2="7" y2="7"/></svg></button>
                 <select id="repGranSelect" onchange="onRepGranChange()">
                   <option value="day">Day</option>
@@ -1265,6 +1298,8 @@
               </div>
             </div>
             <div class="rep-chart-body-wrap"><div class="rep-chart-tip" id="repChartTip" hidden></div><div id="repChartBody"></div></div>
+            <div class="rep-ann-legend" id="repAnnLegend"></div>
+            <div class="rep-ann-panel" id="repAnnPanel" hidden></div>
           </div>
           <div id="repTableSection" class="rep-table-section" hidden>
             <div class="controls-row rep-table-tools" id="repToolsRow"><div class="grow"></div></div>
@@ -2768,7 +2803,7 @@ function globalRefresh() {
     case "cannibalization": if (GLOBAL_ACCOUNT !== "ALL") loadCannibalization(true); break;
     case "callouts": loadCallouts(true); break;
     case "structure": loadStructure(true); break;
-    case "reporting": loadReporting(); break;
+    case "reporting": repAnn.key = null; loadReporting(); break;
     case "locations": if (GLOBAL_ACCOUNT !== "ALL") loadLocations(); break;
   }
 }
@@ -3948,6 +3983,7 @@ async function loadReporting() {
     repSeries = d.series || [];
     renderReportingCards();
     renderReportingChart();
+    loadRepAnnotations();
     showEl("repLoading", false); showEl("repCards", true);
     document.getElementById("repChartWrap").hidden = false;
     setLastRefresh("reporting");
@@ -4128,12 +4164,19 @@ function renderReportingChart() {
   });
   const buckets = [...map.values()].sort((a, c) => a.sortKey < c.sortKey ? -1 : a.sortKey > c.sortKey ? 1 : 0);
   const metric2 = repSecondMetric ? REP_METRICS.find(m => m.key === repSecondMetric) : null;
-  const bars = buckets.map(bk => ({ label: bk.label, value: metric.val(bk), value2: metric2 ? metric2.val(bk) : null }));
+  const bars = buckets.map(bk => ({ label: bk.label, sortKey: bk.sortKey, value: metric.val(bk), value2: metric2 ? metric2.val(bk) : null }));
+  // Annotations: group visible changes/notes into the same buckets as the bars.
+  const idx = new Map(bars.map((b, i) => [b.sortKey, i]));
+  repAnnBuckets = bars.map(() => []);
+  repAnnVisible().forEach(it => { const i = idx.get(repBucketKey(it.date, repGranularity).sortKey); if (i != null) repAnnBuckets[i].push(it); });
+  repAnnBars = bars;
   const name = m => escapeHtml(m.label + (m.sub ? " (" + m.sub + ")" : ""));
   document.getElementById("repChartTitle").innerHTML = metric2
     ? '<span class="rep-swatch"></span>' + name(metric) + '<span class="rep-vs">vs</span><span class="rep-swatch rep-swatch-2"></span>' + name(metric2)
     : name(metric);
   document.getElementById("repChartBody").innerHTML = renderRepChartSvg(bars, metric, metric2);
+  renderRepAnnLegend();
+  if (repAnn.openIdx != null) renderRepAnnPanel(repAnn.openIdx);
 }
 
 // Rasterise an on-screen SVG (with its CSS-driven colours inlined) to a PNG data URL.
@@ -4204,6 +4247,24 @@ async function exportReportingPdf() {
     y += 12 + ih + 10;
   } catch { doc.setFontSize(9); doc.setTextColor(150); doc.text("(Graph could not be rendered.)", M, y + 24); y += 40; }
   }
+  // Annotations in range (the graph image already shows their markers).
+  const ann = repAnnVisible();
+  if (ann.length) {
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.setTextColor(20);
+    doc.text("Account changes & notes", M, y + 4);
+    doc.setFont("helvetica", "normal");
+    const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+    doc.autoTable({
+      head: [["Date", "Type", "Campaign", "Change", "By"]],
+      body: ann.map(it => [fmtAnnDate(it.date), REP_ANN_TYPES[it.kind].short, repAnnWhere(it), repAnnText(it).replace(/\u2192/g, "->"), repAnnWho(it)]),
+      startY: y + 10, margin: { left: M, right: M },
+      styles: { fontSize: 7.5, cellPadding: 3, overflow: "linebreak" },
+      headStyles: { fillColor: [71, 85, 105], textColor: 255, fontSize: 7.5 },
+      columnStyles: { 0: { cellWidth: 62 }, 1: { cellWidth: 48 }, 4: { cellWidth: 120 } },
+      didParseCell: d => { if (d.section === "body" && d.column.index === 1) d.cell.styles.textColor = hexRgb(REP_ANN_TYPES[ann[d.row.index].kind].color); },
+    });
+    y = doc.lastAutoTable.finalY + 16;
+  }
   // Table (everything that matches the current filters, not just the visible page)
   const cols = accState.viewCols || [], rows = accState.viewRows || [];
   if (rows.length && cols.length) {
@@ -4239,7 +4300,8 @@ function repCurvePath(pts) {
 
 function renderRepChartSvg(bars, metric, metric2) {
   if (!bars.length) return '<div class="rep-chart-empty">No data for this range.</div>';
-  const W = 900, H = 316, mL = 88, mR = metric2 ? 88 : 18, mT = repShowLabels ? 30 : 22, mB = 60;
+  const annOn = repAnnBuckets.length === bars.length && repAnnBuckets.some(a => a.length);
+  const W = 900, H = 316 + (annOn ? 18 : 0), mL = 88, mR = metric2 ? 88 : 18, mT = (repShowLabels ? 30 : 22) + (annOn ? 18 : 0), mB = 60;
   const pw = W - mL - mR, ph = H - mT - mB, base = mT + ph;
   const t1 = repTypeFor(metric.key, 1), t2 = metric2 ? repTypeFor(metric2.key, 2) : null;
   const niceMax = bpNiceCeil(Math.max(0.0000001, ...bars.map(b => b.value || 0)));
@@ -4338,7 +4400,19 @@ function renderRepChartSvg(bars, metric, metric2) {
   s += '<text x="16" y="' + cyMid + '" text-anchor="middle" transform="rotate(-90 16 ' + cyMid + ')" class="rep-axis-title">' + escapeHtml(metric.label) + "</text>";
   if (metric2) s += '<text x="' + (W - 14) + '" y="' + cyMid + '" text-anchor="middle" transform="rotate(90 ' + (W - 14) + " " + cyMid + ')" class="rep-axis-title">' + escapeHtml(metric2.label) + "</text>";
   s += '<text x="' + (mL + pw / 2).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" class="rep-axis-title">' + (GRAN_TITLE[repGranularity] || "Period") + "</text>";
-  s += labels + "</svg>";
+  // Annotation markers: a dashed line up the plot and a lettered dot above it (count if several).
+  let marks = "";
+  if (annOn) repAnnBuckets.forEach((items, i) => {
+    if (!items.length) return;
+    const x = cx(i).toFixed(1), kinds = [...new Set(items.map(it => it.kind))];
+    const col = kinds.length === 1 ? REP_ANN_TYPES[kinds[0]].color : "#334155";
+    const txt = items.length > 1 ? String(items.length) : REP_ANN_TYPES[items[0].kind].letter;
+    const my = mT - 13;
+    s += '<line x1="' + x + '" y1="' + (my + 8) + '" x2="' + x + '" y2="' + base + '" stroke="' + col + '" stroke-width="1.2" stroke-dasharray="3 3" opacity=".65" pointer-events="none" />';
+    marks += '<g class="rep-ann-mark" data-i="' + i + '" onclick="openRepAnnPanel(' + i + ')" onmousemove="repAnnTip(event,' + i + ')" onmouseleave="repBarTipHide()">' +
+      '<circle cx="' + x + '" cy="' + my + '" r="8" fill="' + col + '"></circle><text x="' + x + '" y="' + (my + 3.5) + '" text-anchor="middle">' + txt + "</text></g>";
+  });
+  s += labels + marks + "</svg>";
   return s;
 }
 
@@ -4354,6 +4428,177 @@ function repBarTip(e, rect) {
   tip.style.top = (e.clientY - wrap.top - 4) + "px";
 }
 function repBarTipHide() { const t = document.getElementById("repChartTip"); if (t) t.hidden = true; }
+
+// ---------- Performance Overview annotations ----------
+// Budget / bidding / status changes (Google's change history, extended by our own saved log) and
+// manual notes, drawn as markers on the graph. See /api/annotations and shared/changes.js.
+const REP_ANN_TYPES = {
+  budget: { label: "Budget changes", short: "Budget", color: "#0284c7", letter: "B" },
+  bidding: { label: "Bidding changes", short: "Bidding", color: "#9333ea", letter: "S" },
+  status: { label: "Paused / enabled", short: "Status", color: "#ea580c", letter: "P" },
+  note: { label: "Notes", short: "Note", color: "#475569", letter: "N" },
+};
+let repAnnShow = { budget: true, bidding: true, status: true, note: true };
+try { const p = uiGet("reporting"); if (p && p.annShow) repAnnShow = Object.assign(repAnnShow, p.annShow); } catch {}
+const repAnn = { key: null, changes: [], notes: [], historyFrom: null, warning: "", loading: false, openIdx: null, token: 0 };
+let repAnnBuckets = [], repAnnBars = [];
+const p2d = n => String(n).padStart(2, "0");
+const ymd = d => d.getFullYear() + "-" + p2d(d.getMonth() + 1) + "-" + p2d(d.getDate());
+function fmtAnnDate(s) { const d = parseRepDate(s); return isNaN(d) ? s : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); }
+
+async function loadRepAnnotations(force) {
+  const b = repRangeBounds(), from = ymd(b.start), to = ymd(b.end);
+  const sel = document.getElementById("globalAccountSelect");
+  const accounts = GLOBAL_ACCOUNT === "ALL"
+    ? [...(sel ? sel.options : [])].filter(o => o.value && o.value !== "ALL").map(o => ({ id: o.value, name: o.text.split(" \u00b7 ")[0] }))
+    : [{ id: GLOBAL_ACCOUNT, name: "" }];
+  const key = accounts.map(a => a.id).join(",") + "|" + from + "|" + to;
+  if (!force && key === repAnn.key) return;
+  repAnn.key = key; const token = ++repAnn.token;
+  repAnn.loading = true; repAnn.openIdx = null;
+  const changes = [], notes = [], hist = [], warns = [];
+  let i = 0;
+  const worker = async () => {
+    while (i < accounts.length) {
+      const a = accounts[i++];
+      try {
+        const res = await fetch("/api/annotations?customerId=" + encodeURIComponent(a.id) + "&from=" + from + "&to=" + to, { credentials: "same-origin" });
+        const d = await res.json();
+        if (d.error) { warns.push(d.error); continue; }
+        (d.changes || []).forEach(c => changes.push(Object.assign({ kind: c.type, accountId: a.id, accountName: a.name }, c)));
+        (d.notes || []).forEach(n => notes.push(Object.assign({ kind: "note", accountId: a.id, accountName: a.name }, n)));
+        if (d.historyFrom) hist.push(d.historyFrom);
+        if (d.warning) warns.push(d.warning);
+      } catch { /* one account failing shouldn't hide the rest */ }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(4, accounts.length) }, worker));
+  if (token !== repAnn.token) return;
+  Object.assign(repAnn, { changes, notes, historyFrom: hist.length ? hist.sort().pop() : null, warning: warns[0] || "", loading: false });
+  if (currentHashPage() === "reporting") renderReportingChart();
+}
+
+function repAnnVisible() {
+  const pick = getCampPickerValue();
+  const out = [];
+  repAnn.changes.forEach(c => { if (repAnnShow[c.kind] && (!pick || (c.campaigns || []).some(x => x.name === pick))) out.push(c); });
+  repAnn.notes.forEach(n => { if (repAnnShow.note && (!pick || !n.campaign || n.campaign === pick)) out.push(n); });
+  return out.sort((a, b) => (a.ts || a.date) < (b.ts || b.date) ? -1 : 1);
+}
+
+// Human-readable description of one annotation.
+function repAnnText(it) {
+  if (it.kind === "note") return it.text;
+  const f = v => v == null ? "\u2014" : it.unit === "money" ? fmtCurrency(v) : it.unit === "pct" ? Math.round(v * 100) + "%" : String(v);
+  const scope = it.scope ? " (" + it.scope + ")" : "";
+  if (it.label === "Status") return "Campaign " + String(it.to || "").toLowerCase();
+  if (it.label === "Budget switched") return "Moved to a different budget" + scope + (it.to != null ? " \u2014 " + f(it.to) + " / day" : "");
+  let pct = "";
+  if ((it.unit === "money" || it.unit === "pct") && it.from && it.to) pct = " (" + (it.to >= it.from ? "+" : "") + Math.round((it.to / it.from - 1) * 100) + "%)";
+  return it.label + scope + ": " + (it.from == null ? "" : f(it.from) + " \u2192 ") + f(it.to) + pct;
+}
+function repAnnWhere(it) {
+  const acct = GLOBAL_ACCOUNT === "ALL" && it.accountName ? it.accountName + " \u00b7 " : "";
+  if (it.kind === "note") return acct + (it.campaign || "All campaigns");
+  const names = (it.campaigns || []).map(c => c.name).filter(Boolean);
+  return acct + (names.length > 3 ? names.slice(0, 3).join(", ") + " +" + (names.length - 3) + " more" : names.join(", ") || "Campaign");
+}
+function repAnnWho(it) { return it.kind === "note" ? "Note" : (it.user || it.source || ""); }
+
+function repAnnTip(e, i) {
+  const items = repAnnBuckets[i] || [];
+  const tip = document.getElementById("repChartTip"); if (!tip) return;
+  tip.textContent = items.length === 1
+    ? fmtAnnDate(items[0].date) + " \u00b7 " + repAnnWhere(items[0]) + " \u2014 " + repAnnText(items[0])
+    : items.length + " changes " + (repGranularity === "day" ? "on " : repGranularity === "week" ? "in the week of " : "in ") + (repAnnBars[i] ? repAnnBars[i].label : "this period") + " \u2014 click for details";
+  tip.hidden = false;
+  const wrap = tip.parentElement.getBoundingClientRect();
+  let left = e.clientX - wrap.left + 12;
+  if (left > wrap.width - 260) left = e.clientX - wrap.left - 260;
+  tip.style.left = Math.max(0, left) + "px"; tip.style.top = (e.clientY - wrap.top + 14) + "px";
+}
+
+function openRepAnnPanel(i) { repAnn.openIdx = repAnn.openIdx === i ? null : i; renderRepAnnPanel(repAnn.openIdx); }
+function renderRepAnnPanel(i) {
+  const el = document.getElementById("repAnnPanel");
+  const items = i == null ? [] : (repAnnBuckets[i] || []);
+  if (!items.length) { el.hidden = true; repAnn.openIdx = null; return; }
+  el.hidden = false;
+  el.innerHTML = '<div class="hd"><span>' + escapeHtml((repAnnBars[i] ? repAnnBars[i].label : "") + " \u00b7 " + items.length + " change" + (items.length === 1 ? "" : "s")) + '</span><button title="Close" onclick="openRepAnnPanel(' + i + ')">\u00d7</button></div>' +
+    items.map(it => '<div class="rep-ann-item"><span class="sw" style="background:' + REP_ANN_TYPES[it.kind].color + '"></span>' +
+      '<span class="d">' + escapeHtml(fmtAnnDate(it.date)) + "</span>" +
+      '<span><span class="what">' + escapeHtml(repAnnText(it)) + '</span><br><span class="who">' + escapeHtml(repAnnWhere(it)) + (repAnnWho(it) ? " \u00b7 " + escapeHtml(repAnnWho(it)) : "") + "</span></span>" +
+      (it.kind === "note" ? '<button class="del" onclick="deleteRepNote(\'' + escapeHtml(it.accountId) + "','" + escapeHtml(it.id) + '\')">Delete</button>' : "<span></span>") + "</div>").join("");
+}
+
+function renderRepAnnLegend() {
+  const el = document.getElementById("repAnnLegend"); if (!el) return;
+  const on = Object.entries(REP_ANN_TYPES).filter(([k]) => repAnnShow[k]);
+  const btn = document.getElementById("repAnnBtn"); if (btn) btn.classList.toggle("on", on.length > 0);
+  if (!on.length) { el.innerHTML = ""; return; }
+  const count = repAnnBuckets.reduce((a, l) => a + l.length, 0);
+  const b = repRangeBounds();
+  const histNote = repAnn.historyFrom && ymd(b.start) < repAnn.historyFrom
+    ? " \u00b7 Change history available from " + fmtAnnDate(repAnn.historyFrom) + (GLOBAL_ACCOUNT === "ALL" ? " for all accounts" : "") : "";
+  el.innerHTML = on.map(([, t]) => '<span class="k"><i style="background:' + t.color + '"></i>' + t.short + "</span>").join("") +
+    "<span>" + (repAnn.loading ? "Loading changes\u2026" : count + " annotation" + (count === 1 ? "" : "s") + " in range") + escapeHtml(histNote) + "</span>" +
+    (repAnn.warning ? '<span title="' + escapeHtml(repAnn.warning) + '">\u26a0 Latest changes unavailable</span>' : "");
+}
+
+function toggleRepAnnPop(e) {
+  e.stopPropagation();
+  const pop = document.getElementById("repAnnPop");
+  const open = pop.hidden; closeAllMenus();
+  if (!open) return;
+  const single = GLOBAL_ACCOUNT !== "ALL";
+  const pick = getCampPickerValue();
+  const camps = single ? [...new Set((state.campaigns || []).map(c => c.name).filter(Boolean))].sort() : [];
+  const b = repRangeBounds();
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const defDate = ymd(b.end < today ? b.end : today);
+  pop.innerHTML = "<h4>Show on graph</h4>" + Object.entries(REP_ANN_TYPES).map(([k, t]) =>
+    '<label class="row"><input type="checkbox" ' + (repAnnShow[k] ? "checked " : "") + 'onchange="setRepAnnShow(\'' + k + '\', this.checked)"><span class="sw" style="background:' + t.color + '"></span>' + t.label + "</label>").join("") +
+    "<hr><h4>Add a note</h4>" + (single
+      ? '<label class="f" for="repNoteDate">Date</label><input type="date" id="repNoteDate" value="' + defDate + '" max="' + ymd(today) + '">' +
+        '<label class="f" for="repNoteCamp">Applies to</label><select id="repNoteCamp"><option value="">All campaigns</option>' +
+        camps.map(n => '<option' + (n === pick ? " selected" : "") + ' value="' + escapeHtml(n) + '">' + escapeHtml(n) + "</option>").join("") + "</select>" +
+        '<label class="f" for="repNoteText">Note</label><textarea id="repNoteText" maxlength="300" placeholder="e.g. Client\u2019s website was down, new landing page live\u2026"></textarea>' +
+        '<div class="actions"><button class="btn-primary" style="padding:6px 14px;font-size:13px" onclick="saveRepNote()">Save note</button></div>'
+      : '<div class="hint">Choose a single account in the top bar to add notes.</div>');
+  pop.hidden = false;
+}
+function setRepAnnShow(k, on) {
+  repAnnShow[k] = on;
+  uiSave("reporting", { annShow: repAnnShow });
+  renderReportingChart();
+}
+async function saveRepNote() {
+  const date = document.getElementById("repNoteDate").value, text = document.getElementById("repNoteText").value.trim();
+  const campaign = document.getElementById("repNoteCamp").value;
+  if (!date) { showToast("Pick a date for the note."); return; }
+  if (!text) { showToast("Write the note first."); return; }
+  try {
+    const res = await fetch("/api/annotations", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customerId: GLOBAL_ACCOUNT, date, text, campaign }) });
+    const d = await res.json();
+    if (d.error) throw new Error(d.error);
+    const b = repRangeBounds();
+    if (date >= ymd(b.start) && date <= ymd(b.end)) repAnn.notes.push(Object.assign({ kind: "note", accountId: GLOBAL_ACCOUNT, accountName: "" }, d.note));
+    if (!repAnnShow.note) { repAnnShow.note = true; uiSave("reporting", { annShow: repAnnShow }); }
+    document.getElementById("repAnnPop").hidden = true;
+    renderReportingChart();
+    showToast("Note added.");
+  } catch (e) { showToast("Couldn\u2019t save the note: " + (e.message || "please try again")); }
+}
+async function deleteRepNote(accountId, id) {
+  try {
+    const res = await fetch("/api/annotations?customerId=" + encodeURIComponent(accountId) + "&id=" + encodeURIComponent(id), { method: "DELETE", credentials: "same-origin" });
+    const d = await res.json();
+    if (d.error) throw new Error(d.error);
+    repAnn.notes = repAnn.notes.filter(n => n.id !== id);
+    renderReportingChart();
+    showToast("Note deleted.");
+  } catch (e) { showToast("Couldn\u2019t delete the note: " + (e.message || "please try again")); }
+}
 
 function renderReportingCards_OLD(d) {
   const avgCpc = d.clicks ? d.cost / d.clicks : 0;
@@ -4665,7 +4910,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu", "locFiltersMenu", "locColsPop", "locExportPop", "locLevelPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu", "repAnnPop", "locFiltersMenu", "locColsPop", "locExportPop", "locLevelPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
