@@ -10,7 +10,7 @@
 // Every action first checks the signed-in person can access that Google Ads account (403 if not).
 
 import { getRefreshToken, getAccessToken, adsRequest, json } from "../../shared/google.js";
-import { fetchChanges, liveWindow, mergeIntoLog, readLog, readNotes, writeNotes } from "../../shared/changes.js";
+import { fetchChanges, liveWindow, mergeIntoLog, readLog, readNotes, writeNotes, adsErrorReason } from "../../shared/changes.js";
 import { canAccess } from "../../shared/access.js";
 
 const NO_ACCESS = () => json({ error: "You don't have access to this Google Ads account" }, 403);
@@ -46,7 +46,7 @@ export async function onRequestGet(context) {
       };
       const fresh = await fetchChanges(search, w.start, w.end);
       log = await mergeIntoLog(env, cid, fresh, w.start);
-    } catch (e) { liveError = String(e && e.message ? e.message : e).slice(0, 200); }
+    } catch (e) { liveError = adsErrorReason(e).slice(0, 300); }
   }
   const inRange = (d) => d >= from && d <= to;
   const notes = (await readNotes(env, cid)).filter((n) => inRange(n.date));
