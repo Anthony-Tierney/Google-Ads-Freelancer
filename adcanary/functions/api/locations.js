@@ -9,6 +9,12 @@
 //   city     → segments.geo_target_city
 //   postcode → segments.geo_target_postal_code
 // (Response keys still say "cities" for compatibility; they hold whichever level was asked for.)
+//
+// GET /api/locations?customerId=<id>&mode=shapes&ids=<geoId,geoId,...>
+// Boundary outlines (GeoJSON) for the Country / Region map view, from OpenStreetMap Nominatim.
+// Cached in KV for 90 days per location; at most 6 live lookups per call (~1/sec), the rest
+// come back in `pending` for the browser to ask for again.
+//   { shapes: { <geoId>: geometry | null }, pending: [geoId] }
 //   { rows:   [{ geoId, campaignId, campaign, status, impressions, clicks, cost, conversions }],
 //     cities: { <geoId>: { name, canonical, countryCode, lat?, lng? } },
 //     unattributed: { impressions, clicks, cost, conversions },   // traffic Google couldn't pin to a city
@@ -53,6 +59,11 @@ export async function onRequestGet(context) {
   };
   const idOf = (rn) => String(rn || "").split("/").pop();
   const warnings = [];
+
+  if (url.searchParams.get("mode") === "shapes") {
+    const ids = [...new Set(String(url.searchParams.get("ids") || "").split(",").filter((x) => /^\d{1,12}$/.test(x)))].slice(0, 20);
+    return json(await loadShapes(ids, search, env));
+  }
 
   // Level → GAQL field(s) to try in order, and how to read the location off a result row.
   const LEVELS = {
@@ -212,4 +223,50 @@ export async function onRequestPost(context) {
   Object.assign(store, clean);
   try { await env.SESSIONS.put(KV_KEY, JSON.stringify(store)); } catch (e) { return json({ ok: false, error: "Could not save" }, 500); }
   return json({ ok: true, saved: Object.keys(clean).length });
+}
+
+// ----- Boundary outlines for the Country / Region view -----
+const SHAPE_KV = (id) => "geoshape:v1:" + id;
+const SHAPE_TTL = 60 * 60 * 24 * 90;
+async function loadShapes(ids, search, env) {
+  const kv = env && env.SESSIONS;
+  const shapes = {}, need = [], pending = [];
+  for (const id of ids) {
+    let hit = null;
+    if (kv) { try { hit = await kv.get(SHAPE_KV(id), "json"); } catch {} }
+    if (hit) shapes[id] = hit.geometry || null; else need.push(id);
+  }
+  if (!need.length) return { shapes, pending };
+
+  const names = {};
+  try {
+    (await search(`SELECT geo_target_constant.id, geo_target_constant.name, geo_target_constant.canonical_name, geo_target_constant.country_code, geo_target_constant.target_type FROM geo_target_constant WHERE geo_target_constant.resource_name IN (${need.map((id) => `'geoTargetConstants/${id}'`).join(", ")})`))
+      .forEach((g) => { const c = g.geoTargetConstant || {}; names[String(c.id)] = { name: c.name || "", canonical: c.canonicalName || c.name || "", cc: c.countryCode || "", type: c.targetType || "" }; });
+  } catch { return { shapes, pending: need }; }
+
+  const deadline = Date.now() + 15000;
+  let live = 0;
+  for (const id of need) {
+    const n = names[id];
+    if (!n) { shapes[id] = null; continue; }
+    if (live >= 6 || Date.now() > deadline) { pending.push(id); continue; }
+    if (live) await new Promise((r) => setTimeout(r, 1000)); // Nominatim: max ~1 request/second
+    live++;
+    const qs = n.type === "Country"
+      ? "country=" + encodeURIComponent(n.name)
+      : "q=" + encodeURIComponent(n.canonical.replace(/,/g, ", ")) + (n.cc ? "&countrycodes=" + n.cc.toLowerCase() : "");
+    const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 8000);
+    try {
+      const res = await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&polygon_geojson=1&polygon_threshold=0.01&" + qs,
+        { signal: ctrl.signal, headers: { "User-Agent": "AdCanary/1.0 (https://adcanary.app)", "Accept-Language": "en-GB" } });
+      if (!res.ok) { pending.push(id); continue; }
+      const arr = await res.json();
+      const gj = arr && arr[0] && arr[0].geojson;
+      const geometry = gj && /Polygon$/.test(gj.type) ? gj : null;
+      shapes[id] = geometry;
+      if (kv) { try { await kv.put(SHAPE_KV(id), JSON.stringify({ geometry }), { expirationTtl: SHAPE_TTL }); } catch {} }
+    } catch { pending.push(id); }
+    finally { clearTimeout(timer); }
+  }
+  return { shapes, pending };
 }
