@@ -4466,6 +4466,7 @@ const REP_ANN_TYPES = {
   budget: { label: "Budget changes", short: "Budget", color: "#0284c7", letter: "B" },
   bidding: { label: "Bidding changes", short: "Bidding", color: "#9333ea", letter: "S" },
   status: { label: "Paused / enabled", short: "Status", color: "#ea580c", letter: "P" },
+  landing: { label: "Landing page changes", short: "Landing page", color: "#0d9488", letter: "L" },
   note: { label: "Notes", short: "Note", color: "#475569", letter: "N" },
 };
 // Icon artwork for each annotation type (24×24 units, drawn as white strokes on the coloured dot).
@@ -4476,6 +4477,7 @@ const REP_ANN_ICONS = {
   enabled: '<path d="M8 5.5v13l10.5-6.5z" fill="#fff"/>',                                               // play
   removed: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',                                              // ×
   note: '<path d="M15.5 4.5l4 4L9 19H5v-4z"/><path d="M13 7l4 4"/>',                                  // pencil
+  landing: '<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.1 1.1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.1-1.1"/>', // link
 };
 function repAnnIconKey(it) {
   if (it.kind !== "status") return it.kind;
@@ -4488,7 +4490,7 @@ function repAnnBadge(kind, iconKey, size) {
   return '<svg class="rep-ann-badge" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="' + t.color + '"/>' +
     '<g transform="translate(5.4 5.4) scale(.55)" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">' + REP_ANN_ICONS[iconKey || (kind === "status" ? "paused" : kind)] + "</g></svg>";
 }
-let repAnnShow = { budget: true, bidding: true, status: true, note: true };
+let repAnnShow = { budget: true, bidding: true, status: true, landing: true, note: true };
 try { const p = uiGet("reporting"); if (p && p.annShow) repAnnShow = Object.assign(repAnnShow, p.annShow); } catch {}
 const repAnn = { key: null, changes: [], notes: [], historyFrom: null, warning: "", loading: false, openIdx: null, openKey: null, token: 0, collapsed: false };
 let repAnnBuckets = [], repAnnBars = [];
@@ -4533,8 +4535,17 @@ async function loadRepAnnotations(force) {
 
 function repAnnVisible() {
   const pick = getCampPickerValue();
-  const out = [];
-  repAnn.changes.forEach(c => { if (repAnnShow[c.kind] && (!pick || (c.campaigns || []).some(x => x.name === pick))) out.push(c); });
+  const out = [], groups = new Map();
+  repAnn.changes.forEach(c => {
+    if (!repAnnShow[c.kind] || (pick && !(c.campaigns || []).some(x => x.name === pick))) return;
+    if (c.kind !== "landing") { out.push(c); return; }
+    // One URL change often touches many ads at once — show it as one entry.
+    const k = [c.accountId, c.date, c.label, (c.campaigns || []).map(x => x.id).join("+"), c.from || "", c.to || "", c.scope || ""].join("|");
+    const g = groups.get(k);
+    if (g) { g.count++; if (c.adGroup) g.adGroups.add(c.adGroup); return; }
+    const item = Object.assign({}, c, { count: 1, adGroups: new Set(c.adGroup ? [c.adGroup] : []) });
+    groups.set(k, item); out.push(item);
+  });
   repAnn.notes.forEach(n => { if (repAnnShow.note && (!pick || !n.campaign || n.campaign === pick)) out.push(n); });
   return out.sort((a, b) => (a.ts || a.date) < (b.ts || b.date) ? -1 : 1);
 }
@@ -4542,6 +4553,15 @@ function repAnnVisible() {
 // Human-readable description of one annotation.
 function repAnnText(it) {
   if (it.kind === "note") return it.text;
+  if (it.kind === "landing") {
+    const n = it.count > 1 ? it.count : 0;
+    const scope = it.scope ? " (" + it.scope + ")" : "";
+    if (it.label === "New landing page") return "New landing page in use" + scope + ": " + repShortUrl(it.to);
+    if (it.label === "Landing page no longer used") return "Landing page no longer used" + scope + ": " + repShortUrl(it.from);
+    if (it.label === "New ad") return (n ? n + " new ads" : "New ad") + " with a new landing page: " + repShortUrl(it.to);
+    const what = it.label === "Ad URL" ? (n ? "Landing page changed on " + n + " ads" : "Landing page changed") : it.label + " changed" + scope;
+    return what + ": " + (it.from ? repShortUrl(it.from) + " \u2192 " : "") + repShortUrl(it.to);
+  }
   const f = v => v == null ? "\u2014" : it.unit === "money" ? fmtCurrency(v) : it.unit === "pct" ? Math.round(v * 100) + "%" : String(v);
   const scope = it.scope ? " (" + it.scope + ")" : "";
   if (it.label === "Status") return "Campaign " + String(it.to || "").toLowerCase();
@@ -4550,13 +4570,24 @@ function repAnnText(it) {
   if ((it.unit === "money" || it.unit === "pct") && it.from && it.to) pct = " (" + (it.to >= it.from ? "+" : "") + Math.round((it.to / it.from - 1) * 100) + "%)";
   return it.label + scope + ": " + (it.from == null ? "" : f(it.from) + " \u2192 ") + f(it.to) + pct;
 }
+// URLs for display: drop the protocol and "www.", keep the path, shorten very long ones in the middle.
+function repShortUrl(u) {
+  let s = String(u || "").replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/$/, "");
+  return s.length > 64 ? s.slice(0, 38) + "\u2026" + s.slice(-22) : s;
+}
 function repAnnWhere(it) {
   const acct = GLOBAL_ACCOUNT === "ALL" && it.accountName ? it.accountName + " \u00b7 " : "";
+  if (it.kind === "landing") {
+    const camp = (it.campaigns || []).map(c => c.name).filter(Boolean);
+    const campTxt = camp.length > 3 ? camp.slice(0, 3).join(", ") + " +" + (camp.length - 3) + " more" : camp.join(", ") || (it.scope && /account/.test(it.scope) ? "All campaigns" : "Campaign");
+    const ags = it.adGroups ? [...it.adGroups] : [];
+    return acct + campTxt + (ags.length === 1 ? " \u203a " + ags[0] : ags.length > 1 ? " \u00b7 " + ags.length + " ad groups" : "");
+  }
   if (it.kind === "note") return acct + (it.campaign || "All campaigns");
   const names = (it.campaigns || []).map(c => c.name).filter(Boolean);
   return acct + (names.length > 3 ? names.slice(0, 3).join(", ") + " +" + (names.length - 3) + " more" : names.join(", ") || "Campaign");
 }
-function repAnnWho(it) { return it.kind === "note" ? "Note" : (it.user || it.source || ""); }
+function repAnnWho(it) { return it.kind === "note" ? "Note" : it.source === "Daily check" ? "Spotted by AdCanary\u2019s daily check" : (it.user || it.source || ""); }
 
 function repAnnTip(e, i) {
   const items = repAnnBuckets[i] || [];
@@ -4569,7 +4600,7 @@ function repAnnTip(e, i) {
   } else {
     const when = (repGranularity === "day" ? "on " : repGranularity === "week" ? "in the week of " : "in ") + (repAnnBars[i] ? repAnnBars[i].label : "this period");
     tip.innerHTML = '<div class="t-what">' + items.length + " changes " + escapeHtml(when) + "</div>" +
-      items.slice(0, 3).map(it => '<div class="t-meta">' + escapeHtml(REP_ANN_TYPES[it.kind].short + ": " + repAnnText(it)) + "</div>").join("") +
+      items.slice(0, 3).map(it => '<div class="t-meta">' + escapeHtml((it.kind === "landing" ? "" : REP_ANN_TYPES[it.kind].short + ": ") + repAnnText(it)) + "</div>").join("") +
       '<div class="t-more">' + (items.length > 3 ? "+" + (items.length - 3) + " more \u2014 " : "") + "Click for details</div>";
   }
   tip.hidden = false;
