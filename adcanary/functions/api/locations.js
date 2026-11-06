@@ -8,6 +8,12 @@
 //   county   → segments.geo_target_county
 //   city     → segments.geo_target_city
 //   postcode → segments.geo_target_postal_code
+// Country level also carries Search impression share / top impression share / click share.
+// Google only allows these split by location at country level (segments.geo_target_country on
+// the campaign report). Each row gets the building blocks, not the percentages, so the browser
+// can combine campaigns correctly (impression-weighted):
+//   isImpr  = Search impressions          isElig = isImpr / search_impression_share  (eligible impr.)
+//   topImpr = top_IS × isElig             csClicks = Search clicks   csElig = csClicks / search_click_share
 // (Response keys still say "cities" for compatibility; they hold whichever level was asked for.)
 //
 // GET /api/locations?customerId=<id>&mode=shapes&ids=<geoId,geoId,...>
@@ -170,6 +176,41 @@ export async function onRequestGet(context) {
       byKey.set(key, row);
     }
     for (const k in v) row[k] += v[k];
+  }
+
+  // Country level: impression share (Search campaigns, Google Search network).
+  if (level === "country") {
+    try {
+      const isRows = await search(`SELECT campaign.id, campaign.name, campaign.status, segments.geo_target_country,
+          metrics.impressions, metrics.clicks, metrics.search_impression_share,
+          metrics.search_top_impression_share, metrics.search_click_share
+        FROM campaign
+        WHERE campaign.status != 'REMOVED' AND campaign.advertising_channel_type = 'SEARCH'
+          AND segments.ad_network_type = 'SEARCH' AND ${dateClause}`);
+      for (const r of isRows) {
+        const rn = r.segments?.geoTargetCountry;
+        if (!rn) continue;
+        const m = r.metrics || {};
+        const impr = Number(m.impressions) || 0, clicks = Number(m.clicks) || 0;
+        const is = Number(m.searchImpressionShare), top = Number(m.searchTopImpressionShare), cs = Number(m.searchClickShare);
+        if (!impr || !(is > 0)) continue; // no share reported for this campaign/country
+        const geoId = idOf(rn), cid = String(r.campaign?.id || ""), key = geoId + "|" + cid;
+        let row = byKey.get(key);
+        if (!row) {
+          const st = r.campaign?.status || "";
+          row = { geoId, campaignId: cid, campaign: r.campaign?.name || "", status: st === "ENABLED" && ended.has(cid) ? "ENDED" : st, impressions: 0, clicks: 0, cost: 0, conversions: 0 };
+          byKey.set(key, row);
+          cityRns.add(rn);
+        }
+        const elig = impr / is;
+        row.isImpr = (row.isImpr || 0) + impr;
+        row.isElig = (row.isElig || 0) + elig;
+        if (top >= 0 && isFinite(top)) { row.topImpr = (row.topImpr || 0) + top * elig; row.topElig = (row.topElig || 0) + elig; }
+        if (cs > 0 && clicks) { row.csClicks = (row.csClicks || 0) + clicks; row.csElig = (row.csElig || 0) + clicks / cs; }
+      }
+    } catch (e) {
+      warnings.push("Impression share couldn't be loaded: " + String(e && e.message ? e.message : e).slice(0, 140));
+    }
   }
 
   // City names (chunked IN lists).
