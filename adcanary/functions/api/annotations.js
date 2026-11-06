@@ -7,9 +7,13 @@
 //          historyFrom = earliest date change history is available for this account.
 // POST   { customerId, date, text, campaign? }  → { note }       add a manual note
 // DELETE ?customerId=<id>&id=<noteId>           → { ok: true }   remove a note
+// Every action first checks the signed-in person can access that Google Ads account (403 if not).
 
 import { getRefreshToken, getAccessToken, adsRequest, json } from "../../shared/google.js";
 import { fetchChanges, liveWindow, mergeIntoLog, readLog, readNotes, writeNotes } from "../../shared/changes.js";
+import { canAccess } from "../../shared/access.js";
+
+const NO_ACCESS = () => json({ error: "You don't have access to this Google Ads account" }, 403);
 
 const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
 const cleanCid = (s) => String(s || "").replace(/-/g, "");
@@ -23,6 +27,7 @@ export async function onRequestGet(context) {
   const from = url.searchParams.get("from"), to = url.searchParams.get("to");
   if (!/^\d{6,12}$/.test(cid)) return json({ error: "Select a single account" }, 400);
   if (!isDate(from) || !isDate(to)) return json({ error: "Missing from/to dates" }, 400);
+  if (!(await canAccess(env, refreshToken, cid))) return NO_ACCESS();
 
   let log = await readLog(env, cid);
   let liveError;
@@ -61,6 +66,7 @@ export async function onRequestPost(context) {
   if (!/^\d{6,12}$/.test(cid)) return json({ error: "Select a single account" }, 400);
   if (!isDate(body.date)) return json({ error: "Pick a date" }, 400);
   if (!text) return json({ error: "Write a note" }, 400);
+  if (!(await canAccess(env, refreshToken, cid))) return NO_ACCESS();
   const note = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: body.date, text, campaign, createdAt: new Date().toISOString() };
   const notes = await readNotes(env, cid);
   notes.push(note);
@@ -75,6 +81,7 @@ export async function onRequestDelete(context) {
   const url = new URL(request.url);
   const cid = cleanCid(url.searchParams.get("customerId")), id = url.searchParams.get("id");
   if (!/^\d{6,12}$/.test(cid) || !id) return json({ error: "Bad request" }, 400);
+  if (!(await canAccess(env, refreshToken, cid))) return NO_ACCESS();
   const notes = await readNotes(env, cid);
   const left = notes.filter((n) => n.id !== id);
   if (left.length === notes.length) return json({ error: "Note not found" }, 404);
