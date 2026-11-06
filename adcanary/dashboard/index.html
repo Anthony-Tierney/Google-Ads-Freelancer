@@ -4463,13 +4463,16 @@ async function loadRepAnnotations(force) {
       const a = accounts[i++];
       try {
         const res = await fetch("/api/annotations?customerId=" + encodeURIComponent(a.id) + "&from=" + from + "&to=" + to, { credentials: "same-origin" });
-        const d = await res.json();
-        if (d.error) { warns.push(d.error); continue; }
+        const raw = await res.text();
+        let d;
+        try { d = JSON.parse(raw); }
+        catch { warns.push("Annotations couldn\u2019t load (HTTP " + res.status + (res.status === 404 ? " \u2014 /api/annotations not found; check annotations.js is uploaded" : res.status >= 500 ? " \u2014 server error; check shared/changes.js and shared/access.js are uploaded" : "") + ")"); continue; }
+        if (d.error) { warns.push((a.name ? a.name + ": " : "") + d.error); continue; }
         (d.changes || []).forEach(c => changes.push(Object.assign({ kind: c.type, accountId: a.id, accountName: a.name }, c)));
         (d.notes || []).forEach(n => notes.push(Object.assign({ kind: "note", accountId: a.id, accountName: a.name }, n)));
         if (d.historyFrom) hist.push(d.historyFrom);
         if (d.warning) warns.push(d.warning);
-      } catch { /* one account failing shouldn't hide the rest */ }
+      } catch (e) { warns.push("Annotations couldn\u2019t load: " + (e && e.message ? e.message : "network error")); } // other accounts still load
     }
   };
   await Promise.all(Array.from({ length: Math.min(4, accounts.length) }, worker));
@@ -4542,7 +4545,7 @@ function renderRepAnnLegend() {
     ? " \u00b7 Change history available from " + fmtAnnDate(repAnn.historyFrom) + (GLOBAL_ACCOUNT === "ALL" ? " for all accounts" : "") : "";
   el.innerHTML = on.map(([, t]) => '<span class="k"><i style="background:' + t.color + '"></i>' + t.short + "</span>").join("") +
     "<span>" + (repAnn.loading ? "Loading changes\u2026" : count + " annotation" + (count === 1 ? "" : "s") + " in range") + escapeHtml(histNote) + "</span>" +
-    (repAnn.warning ? '<span title="' + escapeHtml(repAnn.warning) + '">\u26a0 Latest changes unavailable</span>' : "");
+    (repAnn.warning ? '<span style="color:var(--bad, #b91c1c)">\u26a0 ' + escapeHtml(repAnn.warning) + "</span>" : "");
 }
 
 function toggleRepAnnPop(e) {
