@@ -4190,7 +4190,9 @@ function renderReportingChart() {
     : name(metric);
   document.getElementById("repChartBody").innerHTML = renderRepChartSvg(bars, metric, metric2);
   renderRepAnnLegend();
-  if (repAnn.openIdx != null) renderRepAnnPanel(repAnn.openIdx);
+  // Re-sync the open list with what's on the graph now (filters, granularity or data may have changed).
+  const oi = repAnn.openKey ? repAnnBars.findIndex(b => repGranularity + "|" + b.sortKey === repAnn.openKey) : -1;
+  renderRepAnnPanel(oi >= 0 ? oi : null);
 }
 
 // Rasterise an on-screen SVG (with its CSS-driven colours inlined) to a PNG data URL.
@@ -4477,7 +4479,7 @@ function repAnnBadge(kind, iconKey, size) {
 }
 let repAnnShow = { budget: true, bidding: true, status: true, note: true };
 try { const p = uiGet("reporting"); if (p && p.annShow) repAnnShow = Object.assign(repAnnShow, p.annShow); } catch {}
-const repAnn = { key: null, changes: [], notes: [], historyFrom: null, warning: "", loading: false, openIdx: null, token: 0, collapsed: false };
+const repAnn = { key: null, changes: [], notes: [], historyFrom: null, warning: "", loading: false, openIdx: null, openKey: null, token: 0, collapsed: false };
 let repAnnBuckets = [], repAnnBars = [];
 const p2d = n => String(n).padStart(2, "0");
 const ymd = d => d.getFullYear() + "-" + p2d(d.getMonth() + 1) + "-" + p2d(d.getDate());
@@ -4492,7 +4494,7 @@ async function loadRepAnnotations(force) {
   const key = accounts.map(a => a.id).join(",") + "|" + from + "|" + to;
   if (!force && key === repAnn.key) return;
   repAnn.key = key; const token = ++repAnn.token;
-  repAnn.loading = true; repAnn.openIdx = null;
+  repAnn.loading = true; repAnn.openKey = null; renderRepAnnPanel(null); // new data: close any open list
   const changes = [], notes = [], hist = [], warns = [];
   let i = 0;
   const worker = async () => {
@@ -4571,7 +4573,9 @@ function repAnnTip(e, i) {
 }
 
 function openRepAnnPanel(i) {
-  repAnn.openIdx = repAnn.openIdx === i ? null : i;
+  const key = repAnnBars[i] ? repGranularity + "|" + repAnnBars[i].sortKey : null;
+  repAnn.openKey = repAnn.openKey === key ? null : key;
+  repAnn.openIdx = repAnn.openKey ? i : null;
   repAnn.collapsed = false; // a newly opened marker always shows its list
   renderRepAnnPanel(repAnn.openIdx);
 }
@@ -4585,7 +4589,8 @@ function toggleRepAnnPanel() {
 function renderRepAnnPanel(i) {
   const el = document.getElementById("repAnnPanel");
   const items = i == null ? [] : (repAnnBuckets[i] || []);
-  if (!items.length) { el.hidden = true; repAnn.openIdx = null; return; }
+  if (!items.length) { el.hidden = true; el.innerHTML = ""; repAnn.openIdx = null; repAnn.openKey = null; return; }
+  repAnn.openIdx = i;
   el.hidden = false;
   el.classList.toggle("collapsed", repAnn.collapsed);
   const t = repAnn.collapsed ? "Expand" : "Collapse";
