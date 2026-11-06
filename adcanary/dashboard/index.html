@@ -289,7 +289,9 @@
   .rep-ann-item .what { color: var(--ink); }
   .rep-ann-item .who { color: var(--muted); font-size: 12px; }
   .rep-ann-item .del { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 12px; text-decoration: underline; }
-  .rep-datalabel { fill: var(--ink); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; stroke-linejoin: round; }
+  .rep-hover-col { fill: transparent; cursor: default; }
+  .rep-hover-col:hover { fill: var(--ink); fill-opacity: .05; }
+  .rep-datalabel { pointer-events: none; fill: var(--ink); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; stroke-linejoin: round; }
   .rep-datalabel.on-bar { fill: #fff; stroke: var(--accent); }
   .rep-datalabel.on-bar.l2 { fill: #eab308; font-weight: 650; } /* yellow-line labels keep the line's colour on a blue bar */
   .rep-datalabel.on-bar2 { fill: #422006; stroke: #eab308; }
@@ -4337,8 +4339,7 @@ function renderRepChartSvg(bars, metric, metric2) {
     const p = clampY([+a, +b]), q = clampY([+c, +d]); return "C" + p[0] + "," + p[1].toFixed(1) + " " + q[0] + "," + q[1].toFixed(1);
   });
   const step = bars.length <= 16 ? 1 : Math.ceil(bars.length / 16);
-  const fmtTip = b => escapeHtml(b.label + ": " + (b.value == null ? "\u2014" : metric.fmt(b.value)) +
-    (metric2 ? "  \u00b7  " + metric2.label + ": " + (b.value2 == null ? "\u2014" : metric2.fmt(b.value2)) : ""));
+  const fmtTip = b => escapeHtml(repTipDate(b.sortKey));
   const tipAttr = b => ' data-tip="' + fmtTip(b) + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"';
   let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="bp-chart-svg" preserveAspectRatio="xMidYMid meet">';
   for (let t = 0; t <= 4; t++) {
@@ -4359,6 +4360,8 @@ function renderRepChartSvg(bars, metric, metric2) {
     bars.forEach((b, i) => { s += '<circle cx="' + cx(i).toFixed(1) + '" cy="' + sr.y(sr.val(b) || 0).toFixed(1) + '" r="' + sr.r + '" class="' + sr.dot + '"' + tipAttr(b) + "></circle>"; });
   });
   bars.forEach((b, i) => { if (i % step === 0) s += '<text x="' + cx(i).toFixed(1) + '" y="' + (base + 15) + '" text-anchor="middle" class="bp-chart-xlabel">' + escapeHtml(b.label) + "</text>"; });
+  // Hover anywhere in a period's column (like Google Ads) to see its date.
+  bars.forEach((b, i) => { s += '<rect x="' + (mL + i * slot).toFixed(1) + '" y="' + mT + '" width="' + slot.toFixed(1) + '" height="' + ph.toFixed(1) + '" class="rep-hover-col"' + tipAttr(b) + "></rect>"; });
 
   // Data labels — drawn last so they sit above bars and lines. Rules: no overlaps between the two
   // series' labels, no text straddling a bar's top edge, and text that sits on a bar is recoloured.
@@ -4434,6 +4437,28 @@ function renderRepChartSvg(bars, metric, metric2) {
   return s;
 }
 
+// Hover date, Google Ads style: "Mon 2 Nov 2026"; longer periods show their first and last day,
+// trimmed to the selected date range.
+function repTipDate(sortKey) {
+  const D = s => s.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  const Y = s => s.getFullYear();
+  const span = (a, b) => D(a) + (Y(a) !== Y(b) ? " " + Y(a) : "") + " \u2013 " + D(b) + " " + Y(b);
+  const r = repRangeBounds();
+  const clamp = (a, b) => [a < r.start ? r.start : a, b > r.end ? r.end : b];
+  if (repGranularity === "day") { const d = parseRepDate(sortKey); return D(d) + " " + Y(d); }
+  if (repGranularity === "week") {
+    const a = parseRepDate(sortKey), b = new Date(a); b.setDate(a.getDate() + 6);
+    return span(...clamp(a, b));
+  }
+  if (repGranularity === "quarter") {
+    const [y, q] = sortKey.split("-").map(Number);
+    const [a, b] = clamp(new Date(y, (q - 1) * 3, 1), new Date(y, q * 3, 0));
+    return "Q" + q + " " + y + " (" + span(a, b) + ")";
+  }
+  const [y, m] = sortKey.split("-").map(Number);
+  const [a, b] = clamp(new Date(y, m - 1, 1), new Date(y, m, 0));
+  return a.toLocaleDateString("en-GB", { month: "long", year: "numeric" }) + " (" + span(a, b) + ")";
+}
 function repBarTip(e, rect) {
   const tip = document.getElementById("repChartTip");
   if (!tip) return;
