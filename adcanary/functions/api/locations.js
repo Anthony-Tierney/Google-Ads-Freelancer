@@ -101,7 +101,45 @@ export async function onRequestGet(context) {
   if (endedR.status === "fulfilled") endedR.value.forEach((r) => { if (r.campaign?.servingStatus === "ENDED") ended.add(String(r.campaign.id)); });
   const coordStore = (kvR.status === "fulfilled" && kvR.value) || {};
 
-  // Aggregate to one row per city per campaign (user_location_view also splits by country /
+  // Region level: Google's region segment isn't one consistent tier (in the UK it returns a mix
+  // of nations, counties and council areas). Roll every location up through its parents to the
+  // first level below the country — England / Scotland / Wales / Northern Ireland for the UK.
+  let mapRn = (rn) => rn;
+  if (level === "region") {
+    const info = new Map(); // rn -> { parent, type }
+    let todo = [...new Set(geoRows.map((r) => used.read(r)).filter(Boolean))];
+    for (let round = 0; round < 5 && todo.length; round++) {
+      const next = new Set();
+      for (let i = 0; i < todo.length; i += 400) {
+        const chunk = todo.slice(i, i + 400);
+        try {
+          (await search(`SELECT geo_target_constant.resource_name, geo_target_constant.parent_geo_target, geo_target_constant.target_type FROM geo_target_constant WHERE geo_target_constant.resource_name IN (${chunk.map((rn) => `'${rn}'`).join(", ")})`))
+            .forEach((g) => {
+              const c = g.geoTargetConstant || {};
+              info.set(c.resourceName, { parent: c.parentGeoTarget || "", type: c.targetType || "" });
+              if (c.parentGeoTarget && !info.has(c.parentGeoTarget)) next.add(c.parentGeoTarget);
+            });
+        } catch (e) { warnings.push("Couldn't group some locations into regions."); round = 99; break; }
+      }
+      todo = [...next].filter((rn) => !info.has(rn));
+    }
+    const top = new Map();
+    mapRn = (rn) => {
+      if (top.has(rn)) return top.get(rn);
+      let cur = rn;
+      for (let i = 0; i < 6; i++) {
+        const me = info.get(cur);
+        if (!me || me.type === "Country" || !me.parent) break;
+        const parent = info.get(me.parent);
+        if (!parent || parent.type === "Country") break; // cur sits directly under the country
+        cur = me.parent;
+      }
+      top.set(rn, cur);
+      return cur;
+    };
+  }
+
+  // Aggregate to one row per location per campaign (user_location_view also splits by country /
   // targeted-or-not, so rows are summed).
   const byKey = new Map();
   const unattributed = { impressions: 0, clicks: 0, cost: 0, conversions: 0 };
@@ -109,7 +147,7 @@ export async function onRequestGet(context) {
   for (const r of geoRows) {
     const m = r.metrics || {};
     const v = { impressions: Number(m.impressions) || 0, clicks: Number(m.clicks) || 0, cost: (Number(m.costMicros) || 0) / 1e6, conversions: Number(m.conversions) || 0 };
-    const rn = used.read(r);
+    const rn = used.read(r) ? mapRn(used.read(r)) : "";
     if (!rn) { for (const k in v) unattributed[k] += v[k]; continue; }
     cityRns.add(rn);
     const geoId = idOf(rn), cid = String(r.campaign?.id || "");
