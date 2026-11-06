@@ -2388,7 +2388,7 @@
               </div>
             </div>
           </div>
-          <div class="foot-note" style="margin-top:10px;">Locations are where people were <strong>physically located</strong> when they saw or clicked your ads (the Google Ads &ldquo;Where your users were&rdquo; report) &mdash; locations of interest are not included. Traffic Google can&rsquo;t attribute at the chosen level is excluded from the table. Google doesn&rsquo;t supply map positions for locations, so new ones are looked up on OpenStreetMap (about one a second, busiest first) and saved, so they appear instantly from then on.</div>
+          <div class="foot-note" style="margin-top:10px;">Locations are where people were <strong>physically located</strong> when they saw or clicked your ads (the Google Ads &ldquo;Where your users were&rdquo; report) &mdash; locations of interest are not included. Traffic Google can&rsquo;t attribute at the chosen level is excluded from the table. Google doesn&rsquo;t supply map positions for locations, so new ones are looked up on OpenStreetMap (about one a second, busiest first) and saved, so they appear instantly from then on. Search impression share, top impression share and click share appear at <strong>Country level only</strong> &mdash; Google doesn&rsquo;t provide them for smaller areas &mdash; and cover Search campaigns on Google Search, combined across campaigns by eligible impressions.</div>
         </section>
       </section>
 
@@ -7833,9 +7833,37 @@ const LOC_COLUMNS = [
   { key: "conversions", label: "Conv.", align: "clk", width: 85, group: "Metrics", fmt: r => fmtDec(r.conversions) },
   { key: "convRate", label: "Conv. Rate", align: "clk", width: 95, group: "Metrics", fmt: r => fmtPct(r.convRate) },
   { key: "cpa", label: "Cost / Conv.", align: "clk", width: 105, group: "Metrics", fmt: r => r.conversions ? fmtCurrency(r.cpa) : "—" },
+  // Google only provides these split by location at Country level, so they're hidden at other levels.
+  { key: "searchIS", label: "Search Impr. Share", align: "clk", width: 120, group: "Competitive (Country level)", countryOnly: true, fmt: r => locFmtShare(r.searchIS) },
+  { key: "topIS", label: "Search Top IS", align: "clk", width: 110, group: "Competitive (Country level)", countryOnly: true, fmt: r => locFmtShare(r.topIS) },
+  { key: "clickShare", label: "Click Share", align: "clk", width: 100, group: "Competitive (Country level)", countryOnly: true, fmt: r => locFmtShare(r.clickShare) },
 ];
-const LOC_DEFAULT_VISIBLE = ["clicks", "cost", "conversions", "cpa"];
+const LOC_IS_KEYS = ["searchIS", "topIS", "clickShare"];
+// Google reports anything under 10% as 9.99%, so mirror its "< 10%" display.
+function locFmtShare(v) { return v == null ? "\u2014" : v < 0.1 ? "< 10%" : fmtPct(v); }
+// Sum rows (campaign rows into a location, or locations into the total) and work out the rates.
+// Impression share is combined by weighting with eligible impressions/clicks, not averaged.
+function locSum(rows, into) {
+  const t = into || { impressions: 0, clicks: 0, cost: 0, conversions: 0 };
+  rows.forEach(r => {
+    t.impressions += r.impressions || 0; t.clicks += r.clicks || 0; t.cost += r.cost || 0; t.conversions += r.conversions || 0;
+    ["isImpr", "isElig", "topImpr", "topElig", "csClicks", "csElig"].forEach(k => { if (r[k]) t[k] = (t[k] || 0) + r[k]; });
+  });
+  return t;
+}
+function locRates(t) {
+  return Object.assign(t, {
+    ctr: t.impressions ? t.clicks / t.impressions : 0, avgCpc: t.clicks ? t.cost / t.clicks : 0,
+    convRate: t.clicks ? t.conversions / t.clicks : 0, cpa: t.conversions ? t.cost / t.conversions : 0,
+    searchIS: t.isElig ? Math.min(1, t.isImpr / t.isElig) : null,
+    topIS: t.topElig ? Math.min(1, t.topImpr / t.topElig) : null,
+    clickShare: t.csElig ? Math.min(1, t.csClicks / t.csElig) : null,
+  });
+}
+const LOC_DEFAULT_VISIBLE = ["clicks", "cost", "conversions", "cpa", ...LOC_IS_KEYS];
 locState.visible = new Set(savedColVisible("locations") || LOC_DEFAULT_VISIBLE);
+// One-off: switch the new impression-share columns on for people who'd already saved column choices.
+try { if (!(uiGet("locations") || {}).isColsAdded) { LOC_IS_KEYS.forEach(k => locState.visible.add(k)); setColVisible("locations", locState.visible); uiSave("locations", { isColsAdded: true }); } } catch {}
 locState.openColGroups = new Set(["locColsPop_g0"]);
 try {
   const p = uiGet("locations");
@@ -7856,7 +7884,11 @@ try {
   }
 } catch {}
 const LOC_STATUS_BOXES = [["locStatusEnabled", "ENABLED"], ["locStatusPaused", "PAUSED"], ["locStatusEnded", "ENDED"]];
-function locShownCols() { LOC_COLUMNS[0].label = locLevel()[1]; return LOC_COLUMNS.filter(c => c.locked || locState.visible.has(c.key)); }
+function locShownCols() {
+  LOC_COLUMNS[0].label = locLevel()[1];
+  const country = locState.level === "country";
+  return LOC_COLUMNS.filter(c => c.locked || (locState.visible.has(c.key) && (!c.countryOnly || country)));
+}
 function renderLocLevelPop() {
   const pop = document.getElementById("locLevelPop");
   pop.innerHTML = LOC_LEVELS.map(([id, name]) => {
@@ -7874,7 +7906,7 @@ function renderLocLevelPop() {
   }));
 }
 function renderLocColsPop() {
-  renderGroupedCols("locColsPop", LOC_COLUMNS.filter(c => !c.locked), ["Metrics"], locState.visible, locState.openColGroups, key => {
+  renderGroupedCols("locColsPop", LOC_COLUMNS.filter(c => !c.locked), ["Metrics", "Competitive (Country level)"], locState.visible, locState.openColGroups, key => {
     locState.visible.has(key) ? locState.visible.delete(key) : locState.visible.add(key);
     setColVisible("locations", locState.visible);
     document.getElementById("locColsCount").textContent = locState.visible.size;
@@ -8054,12 +8086,9 @@ function locAggregate() {
       c = { geoId: r.geoId, label: city.name || ("Location " + r.geoId), sub: parts.slice(1).join(", "), impressions: 0, clicks: 0, cost: 0, conversions: 0 };
       by.set(r.geoId, c);
     }
-    c.impressions += r.impressions; c.clicks += r.clicks; c.cost += r.cost; c.conversions += r.conversions;
+    locSum([r], c);
   });
-  return [...by.values()].filter(c => c.clicks >= (f.minClicks || 0) && c.conversions >= (f.minConv || 0) && (c.impressions || c.clicks || c.conversions)).map(c => Object.assign(c, {
-    ctr: c.impressions ? c.clicks / c.impressions : 0, avgCpc: c.clicks ? c.cost / c.clicks : 0,
-    convRate: c.clicks ? c.conversions / c.clicks : 0, cpa: c.conversions ? c.cost / c.conversions : 0,
-  }));
+  return [...by.values()].filter(c => c.clicks >= (f.minClicks || 0) && c.conversions >= (f.minConv || 0) && (c.impressions || c.clicks || c.conversions)).map(locRates);
 }
 
 function renderLocations() {
@@ -8097,13 +8126,11 @@ function renderLocTable() {
   document.getElementById("loc-tbody").innerHTML = rows.length
     ? pageRows.map(r => '<tr class="loc-row' + (locState.selected === r.geoId ? " sel" : "") + '" data-geo="' + escapeHtml(r.geoId) + '">' + cols.map(c => c.locked
         ? '<td data-col="label">' + escapeHtml(r.label) + (r.sub ? '<span class="loc-sub">' + escapeHtml(r.sub) + "</span>" : "") + "</td>"
-        : '<td class="clk" data-col="' + c.key + '"' + (c.key === "cpa" && !r.conversions ? "" : heat(c.key, r[c.key])) + ">" + c.fmt(r) + "</td>").join("") + "</tr>").join("")
+        : '<td class="clk" data-col="' + c.key + '"' + ((c.key === "cpa" && !r.conversions) || r[c.key] == null ? "" : heat(c.key, r[c.key])) + ">" + c.fmt(r) + "</td>").join("") + "</tr>").join("")
     : '<tr><td class="empty" colspan="' + cols.length + '">No " + locLevel()[1].toLowerCase() + " data for these filters and dates.</td></tr>';
   // Summary row: totals across every city that passes the filters (all pages), with the
   // rate metrics recalculated from the totals — same approach as Overview.
-  const T = rows.reduce((a, r) => { a.impressions += r.impressions; a.clicks += r.clicks; a.cost += r.cost; a.conversions += r.conversions; return a; }, { impressions: 0, clicks: 0, cost: 0, conversions: 0 });
-  T.ctr = T.impressions ? T.clicks / T.impressions : 0; T.avgCpc = T.clicks ? T.cost / T.clicks : 0;
-  T.convRate = T.clicks ? T.conversions / T.clicks : 0; T.cpa = T.conversions ? T.cost / T.conversions : 0;
+  const T = locRates(locSum(rows));
   document.getElementById("loc-tfoot").innerHTML = rows.length ? "<tr>" + cols.map(c => c.locked
     ? '<td data-col="label">Total \u00b7 ' + locPlural(rows.length) + "</td>"
     : '<td class="clk" data-col="' + c.key + '">' + c.fmt(T) + "</td>").join("") + "</tr>" : "";
@@ -8304,13 +8331,12 @@ function exportLocations(fmt) {
   const rows = locState.view || [], cols = locState.viewCols || LOC_COLUMNS;
   if (!rows.length) { showToast("Nothing to export."); return; }
   const header = [locLevel()[1], "Region / Country", ...cols.filter(c => !c.locked).map(c => c.label)];
-  const data = rows.map(r => [r.label, r.sub || "", ...cols.filter(c => !c.locked).map(c =>
-    c.key === "ctr" || c.key === "convRate" ? fmtPct(r[c.key] || 0) : c.key === "cpa" ? (r.conversions ? +r.cpa.toFixed(2) : "") : ["cost", "avgCpc"].includes(c.key) ? +(r[c.key] || 0).toFixed(2) : c.key === "conversions" ? +(r.conversions || 0).toFixed(2) : r[c.key] || 0)]);
-  const T = rows.reduce((a, r) => { a.impressions += r.impressions; a.clicks += r.clicks; a.cost += r.cost; a.conversions += r.conversions; return a; }, { impressions: 0, clicks: 0, cost: 0, conversions: 0 });
-  T.ctr = T.impressions ? T.clicks / T.impressions : 0; T.avgCpc = T.clicks ? T.cost / T.clicks : 0;
-  T.convRate = T.clicks ? T.conversions / T.clicks : 0; T.cpa = T.conversions ? T.cost / T.conversions : 0;
-  data.push(["Total (" + locPlural(rows.length) + ")", "", ...cols.filter(c => !c.locked).map(c =>
-    c.key === "ctr" || c.key === "convRate" ? fmtPct(T[c.key]) : c.key === "cpa" ? (T.conversions ? +T.cpa.toFixed(2) : "") : ["cost", "avgCpc", "conversions"].includes(c.key) ? +T[c.key].toFixed(2) : T[c.key])]);
+  const cell = (o, c) => LOC_IS_KEYS.includes(c.key) ? locFmtShare(o[c.key]) :
+    c.key === "ctr" || c.key === "convRate" ? fmtPct(o[c.key] || 0) : c.key === "cpa" ? (o.conversions ? +o.cpa.toFixed(2) : "") :
+    ["cost", "avgCpc", "conversions"].includes(c.key) ? +(o[c.key] || 0).toFixed(2) : o[c.key] || 0;
+  const data = rows.map(r => [r.label, r.sub || "", ...cols.filter(c => !c.locked).map(c => cell(r, c))]);
+  const T = locRates(locSum(rows));
+  data.push(["Total (" + locPlural(rows.length) + ")", "", ...cols.filter(c => !c.locked).map(c => cell(T, c))]);
   exportMatrix(fmt, "locations-" + locState.level + "-" + new Date().toISOString().slice(0, 10), "Locations (" + locLevel()[1] + ")", header, data);
 }
 
