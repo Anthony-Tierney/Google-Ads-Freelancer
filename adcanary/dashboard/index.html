@@ -122,6 +122,8 @@
   .loc-bubble-legend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--muted); }
   .loc-bubble-legend .b { display: inline-block; border-radius: 50%; border: 2px solid; opacity: .85; vertical-align: middle; }
   .loc-geo-status { margin-left: auto; font-size: 12px; color: var(--muted); }
+  .loc-shade { display: inline-flex; align-items: center; gap: 6px; }
+  .loc-shade .bar { width: 120px; height: 10px; border-radius: 3px; border: 1px solid var(--line); }
   #locSide { flex-basis: 640px; }
   #locSide .geo-table-wrap { max-height: none; }
   #loc-tfoot td { padding: 10px; font-variant-numeric: tabular-nums; border-bottom: none; }
@@ -2262,7 +2264,7 @@
         <section id="locSignedIn" hidden>
           <div class="rep-intro">
             <h2 class="rep-intro-title">Locations</h2>
-            <p class="rep-intro-text">Performance by location for the selected account and date range &mdash; choose Country, Region, County, City or Postcode with the Level button. Bubbles on the map are sized by clicks or conversions &mdash; switch between them in Filters. Click a row to find it on the map.</p>
+            <p class="rep-intro-text">Performance by location for the selected account and date range &mdash; choose Country, Region, County, City or Postcode with the Level button. The map shades each country or region by clicks or conversions, and shows smaller areas as sized bubbles &mdash; switch the metric in Filters. Click a row to find it on the map.</p>
           </div>
           <div class="controls-row account" id="locControls" hidden>
             <div>
@@ -7813,11 +7815,14 @@ const LOC_COORDS_LS = "locCityCoords_v1";
 // Level switch: [id, column/label name, plural]
 const LOC_LEVELS = [["country", "Country", "countries"], ["region", "Region", "regions"], ["county", "County", "counties"], ["city", "City", "cities"], ["postcode", "Postcode", "postcodes"]];
 function locLevel() { return LOC_LEVELS.find(l => l[0] === locState.level) || LOC_LEVELS[3]; }
+// Levels drawn as shaded outlines (choropleth) instead of bubbles.
+const LOC_SHAPE_LEVELS = new Set(["country", "region"]);
 function locPlural(n) { const l = locLevel(); return fmtInt(n) + " " + (n === 1 ? l[1].toLowerCase() : l[2]); }
 const locState = { rows: [], cities: {}, unattributed: null, loadedKey: null, map: null, layer: null, markers: new Map(),
   sort: { key: "conversions", dir: "desc" }, columnWidths: {}, heatmap: false, sideWidth: null, wired: false, pageSize: 10, currentPage: 1, level: "city",
   filters: { metric: "conversions", status: new Set(["ENABLED"]), minClicks: 0, minConv: 1 }, view: [], selected: null,
-  geo: { token: 0, total: 0, done: 0, running: false, pending: {} }, fitNext: true };
+  geo: { token: 0, total: 0, done: 0, running: false, pending: {} }, fitNext: true,
+  shapes: {}, shapeRun: { token: 0, running: false, tried: new Set() } };
 const LOC_COLUMNS = [
   { key: "label", label: "City", align: "txt", width: 230, locked: true },
   { key: "impressions", label: "Impr.", align: "clk", width: 95, group: "Metrics", fmt: r => fmtInt(r.impressions) },
@@ -8122,14 +8127,33 @@ function renderLocMap() {
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxZoom: 19 }).addTo(locState.map);
   }
   locState.map.invalidateSize();
+  // Keep an open popup open across redraws (the map redraws as positions/outlines arrive).
+  const reopen = locState.popupFor, reopenAt = reopen && locState.map._popup ? locState.map._popup.getLatLng() : null;
+  locState.redrawing = true;
   if (locState.layer) locState.layer.remove();
+  locState.redrawing = false;
   const group = L.featureGroup().addTo(locState.map);
   locState.layer = group; locState.markers = new Map();
   const metric = locState.filters.metric, color = LOC_METRIC_COLOR[metric];
-  const placed = locState.view.filter(r => { const c = locState.cities[r.geoId]; return c && c.lat != null && (r[metric] || 0) > 0; });
-  const max = Math.max(1, ...placed.map(r => r[metric] || 0));
+  const shapeMode = LOC_SHAPE_LEVELS.has(locState.level);
+  const hasShape = r => shapeMode && locState.shapes[r.geoId];
+  const withValue = locState.view.filter(r => (r[metric] || 0) > 0);
+  const shaped = withValue.filter(hasShape);
+  const placed = withValue.filter(r => { if (hasShape(r)) return false; const c = locState.cities[r.geoId]; return c && c.lat != null; });
+  const max = Math.max(1, ...withValue.filter(r => hasShape(r) || placed.includes(r)).map(r => r[metric] || 0));
   const radius = v => 4 + 22 * Math.sqrt((v || 0) / max);
-  // Largest first so smaller bubbles stay clickable on top.
+  const opacity = v => 0.12 + 0.5 * Math.min(1, (v || 0) / max);
+  const tip = r => '<div class="loc-tip"><strong>' + escapeHtml(r.label) + "</strong>" + (r.sub ? escapeHtml(r.sub) + "<br>" : "") +
+    "Clicks: " + fmtInt(r.clicks) + " \u00b7 Conv: " + fmtDec(r.conversions) + "<br>Cost: " + fmtCurrency(r.cost) + (r.conversions ? " \u00b7 CPA: " + fmtCurrency(r.cpa) : "") + "</div>";
+  // Outlines (Country / Region): darker fill = more clicks or conversions. Largest drawn first.
+  [...shaped].sort((a, b) => (b[metric] || 0) - (a[metric] || 0)).forEach(r => {
+    const m = L.geoJSON(locState.shapes[r.geoId], { style: { color, weight: 1.5, fillColor: color, fillOpacity: opacity(r[metric]) } })
+      .bindPopup(tip(r)).addTo(group);
+    m.on("click", () => locSelectRow(r.geoId, false));
+    locTrackPopup(m, r.geoId);
+    locState.markers.set(r.geoId, m);
+  });
+  // Bubbles (other levels, or outlines not loaded yet). Largest first so smaller stay clickable on top.
   [...placed].sort((a, b) => (b[metric] || 0) - (a[metric] || 0)).forEach(r => {
     const c = locState.cities[r.geoId];
     const m = L.circleMarker([c.lat, c.lng], { radius: radius(r[metric]), color, weight: 1.5, fillColor: color, fillOpacity: 0.35 })
@@ -8137,17 +8161,27 @@ function renderLocMap() {
         "Clicks: " + fmtInt(r.clicks) + " · Conv: " + fmtDec(r.conversions) + "<br>Cost: " + fmtCurrency(r.cost) + (r.conversions ? " · CPA: " + fmtCurrency(r.cpa) : "") + "</div>")
       .addTo(group);
     m.on("click", () => locSelectRow(r.geoId, false));
+    locTrackPopup(m, r.geoId);
     locState.markers.set(r.geoId, m);
   });
-  if (locState.fitNext && placed.length) { locState.fitNext = false; try { locState.map.fitBounds(group.getBounds().pad(0.15), { maxZoom: 9 }); } catch {} }
+  if (reopen && locState.markers.has(reopen)) { const m = locState.markers.get(reopen); m.openPopup(m.getBounds ? (reopenAt || m.getBounds().getCenter()) : undefined); }
+  if (locState.fitNext && (placed.length || shaped.length)) { locState.fitNext = false; try { locState.map.fitBounds(group.getBounds().pad(shaped.length ? 0.05 : 0.15), { maxZoom: 9 }); } catch {} }
   // Legend: three reference bubble sizes + lookup progress.
   const label = metric === "conversions" ? "Conversions" : "Clicks";
   const refs = [max, max / 4, max / 16].filter((v, i, a) => v >= 1 && (i === 0 || Math.round(v) !== Math.round(a[i - 1])));
   const g = locState.geo, missing = locState.view.filter(r => { const c = locState.cities[r.geoId]; return c && c.lat == null && !c.noGeo; }).length;
-  const status = g.running ? "Placing " + locLevel()[2] + " on the map… " + g.done + " of " + g.total : (missing ? locPlural(missing) + " not yet on the map" : "");
-  document.getElementById("locLegend").innerHTML = "Bubble size = <strong>" + label + "</strong>" +
-    (placed.length ? refs.map(v => { const d = Math.round(radius(v) * 2); return '<span class="b" style="width:' + d + "px;height:" + d + "px;border-color:" + color + ";background:" + color + '33"></span>' + (metric === "conversions" ? fmtDec(v) : fmtInt(Math.round(v))); }).join(" ") : "") +
+  const sr = locState.shapeRun;
+  const status = sr.running ? "Loading " + locLevel()[1].toLowerCase() + " outlines\u2026" : g.running ? "Placing " + locLevel()[2] + " on the map\u2026 " + g.done + " of " + g.total : (missing && !shaped.length ? locPlural(missing) + " not yet on the map" : "");
+  const fmtV = v => metric === "conversions" ? fmtDec(v) : fmtInt(Math.round(v));
+  document.getElementById("locLegend").innerHTML = (shapeMode
+    ? 'Shading = <strong>' + label + '</strong><span class="loc-shade">' + fmtV(0) + '<span class="bar" style="background:linear-gradient(90deg,' + color + "1f," + color + 'a0)"></span>' + fmtV(max) + "</span>"
+    : "Bubble size = <strong>" + label + "</strong>" +
+    (placed.length ? refs.map(v => { const d = Math.round(radius(v) * 2); return '<span class="b" style="width:' + d + "px;height:" + d + "px;border-color:" + color + ";background:" + color + '33"></span>' + (metric === "conversions" ? fmtDec(v) : fmtInt(Math.round(v))); }).join(" ") : "")) +
     '<span class="loc-geo-status">' + escapeHtml(status) + "</span>";
+}
+function locTrackPopup(m, geoId) {
+  m.on("popupopen", () => { locState.popupFor = geoId; });
+  m.on("popupclose", () => { if (!locState.redrawing && locState.popupFor === geoId) locState.popupFor = null; });
 }
 function locSelectRow(geoId, scroll) {
   locState.selected = geoId;
@@ -8163,16 +8197,48 @@ function locSelectRow(geoId, scroll) {
 function locFocusCity(geoId) {
   locSelectRow(geoId, false);
   const m = locState.markers.get(geoId);
-  if (m) { locState.map.flyTo(m.getLatLng(), Math.max(locState.map.getZoom(), 9), { duration: 0.6 }); m.openPopup(); }
+  if (m && m.getBounds) { const b = m.getBounds(); locState.map.flyToBounds(b.pad(0.05), { maxZoom: 8, duration: 0.6 }); m.openPopup(b.getCenter()); }
+  else if (m) { locState.map.flyTo(m.getLatLng(), Math.max(locState.map.getZoom(), 9), { duration: 0.6 }); m.openPopup(); }
   else {
     const c = locState.cities[geoId] || {};
     const what = "This " + locLevel()[1].toLowerCase();
-    showToast(c.noGeo ? what + " couldn’t be found on the map." : c.lat == null ? what + " hasn’t been placed on the map yet." : "No " + (locState.filters.metric === "conversions" ? "conversions" : "clicks") + " to show for this city.");
+    showToast(c.noGeo ? what + " couldn’t be found on the map." : c.lat == null ? what + " hasn’t been placed on the map yet." : "No " + (locState.filters.metric === "conversions" ? "conversions" : "clicks") + " to show here.");
   }
 }
 
 // ----- City position lookups (OpenStreetMap Nominatim, ~1 per second, busiest first) -----
+// Outlines for Country / Region, fetched (and cached server-side) a batch at a time.
+function locLoadShapes() {
+  if (!LOC_SHAPE_LEVELS.has(locState.level) || GLOBAL_ACCOUNT === "ALL") return;
+  const sr = locState.shapeRun;
+  const metric = locState.filters.metric;
+  let ids = locAggregate().sort((a, b) => (b[metric] || 0) - (a[metric] || 0)).map(r => r.geoId).filter(id => !(id in locState.shapes) && !sr.tried.has(id));
+  if (!ids.length || sr.running) return;
+  ids.forEach(id => sr.tried.add(id));
+  const token = ++sr.token, account = GLOBAL_ACCOUNT;
+  sr.running = true; renderLocMap();
+  (async () => {
+    for (let round = 0; round < 8 && ids.length; round++) {
+      const batch = ids.slice(0, 20);
+      let data;
+      try {
+        const res = await fetch("/api/locations?customerId=" + encodeURIComponent(account) + "&mode=shapes&ids=" + batch.join(","), { credentials: "same-origin" });
+        data = await res.json();
+      } catch { break; }
+      if (token !== sr.token) return;
+      Object.assign(locState.shapes, data.shapes || {});
+      const pending = new Set(data.pending || []);
+      ids = [...pending, ...ids.slice(20)];
+      if (!Object.keys(data.shapes || {}).length && pending.size === batch.length) break; // no progress
+      locState.fitNext = !locState.userMoved && !locState.selected;
+      if (currentHashPage() === "locations") renderLocMap();
+    }
+    sr.running = false;
+    if (currentHashPage() === "locations") { renderLocMap(); locLoadShapes(); } // pick up a level switched mid-load
+  })();
+}
 function locStartGeocode() {
+  locLoadShapes();
   const g = locState.geo;
   if (g.running) { g.restart = true; g.token++; return; } // the running loop stops, then starts afresh
   const metric = locState.filters.metric;
