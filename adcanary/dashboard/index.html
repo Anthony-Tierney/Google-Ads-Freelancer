@@ -301,6 +301,12 @@
   .rep-bar { fill: var(--accent); transition: opacity .1s; }
   .rep-bar:hover { opacity: .82; }
   .rep-chart-tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--panel); font-size: 12px; padding: 4px 8px; border-radius: 6px; white-space: nowrap; z-index: 5; box-shadow: var(--shadow); }
+  /* Annotation tooltip: capped width, wraps, sits to the left of the marker with a pointer. */
+  .rep-chart-tip.ann { white-space: normal; width: max-content; max-width: 280px; padding: 7px 10px; line-height: 1.4; }
+  .rep-chart-tip.ann .t-meta { opacity: .75; font-size: 11.5px; overflow-wrap: anywhere; }
+  .rep-chart-tip.ann .t-what { font-weight: 600; margin-top: 2px; }
+  .rep-chart-tip.ann .t-more { opacity: .75; font-size: 11.5px; margin-top: 4px; }
+  .rep-chart-tip.ann::after { content: ""; position: absolute; right: -5px; top: 50%; margin-top: -5px; border: 5px solid transparent; border-right: 0; border-left-color: var(--ink); }
   .rep-chart-empty { padding: 40px; text-align: center; color: var(--muted); }
   tbody td.cann-list { white-space: normal; padding-top: 8px; padding-bottom: 8px; }
   .cann-list .cann-badge { margin-bottom: 4px; }
@@ -4419,6 +4425,7 @@ function renderRepChartSvg(bars, metric, metric2) {
 function repBarTip(e, rect) {
   const tip = document.getElementById("repChartTip");
   if (!tip) return;
+  tip.classList.remove("ann");
   tip.textContent = rect.getAttribute("data-tip");
   tip.hidden = false;
   const wrap = tip.parentElement.getBoundingClientRect();
@@ -4510,15 +4517,27 @@ function repAnnWho(it) { return it.kind === "note" ? "Note" : (it.user || it.sou
 
 function repAnnTip(e, i) {
   const items = repAnnBuckets[i] || [];
-  const tip = document.getElementById("repChartTip"); if (!tip) return;
-  tip.textContent = items.length === 1
-    ? fmtAnnDate(items[0].date) + " \u00b7 " + repAnnWhere(items[0]) + " \u2014 " + repAnnText(items[0])
-    : items.length + " changes " + (repGranularity === "day" ? "on " : repGranularity === "week" ? "in the week of " : "in ") + (repAnnBars[i] ? repAnnBars[i].label : "this period") + " \u2014 click for details";
+  const tip = document.getElementById("repChartTip"); if (!tip || !items.length) return;
+  tip.classList.add("ann");
+  if (items.length === 1) {
+    const it = items[0];
+    tip.innerHTML = '<div class="t-meta">' + escapeHtml(fmtAnnDate(it.date) + " \u00b7 " + repAnnWhere(it)) + "</div>" +
+      '<div class="t-what">' + escapeHtml(repAnnText(it)) + "</div>";
+  } else {
+    const when = (repGranularity === "day" ? "on " : repGranularity === "week" ? "in the week of " : "in ") + (repAnnBars[i] ? repAnnBars[i].label : "this period");
+    tip.innerHTML = '<div class="t-what">' + items.length + " changes " + escapeHtml(when) + "</div>" +
+      items.slice(0, 3).map(it => '<div class="t-meta">' + escapeHtml(REP_ANN_TYPES[it.kind].short + ": " + repAnnText(it)) + "</div>").join("") +
+      '<div class="t-more">' + (items.length > 3 ? "+" + (items.length - 3) + " more \u2014 " : "") + "Click for details</div>";
+  }
   tip.hidden = false;
+  // Always to the LEFT of the marker circle, vertically centred on it.
   const wrap = tip.parentElement.getBoundingClientRect();
-  let left = e.clientX - wrap.left + 12;
-  if (left > wrap.width - 260) left = e.clientX - wrap.left - 260;
-  tip.style.left = Math.max(0, left) + "px"; tip.style.top = (e.clientY - wrap.top + 14) + "px";
+  const circle = (e.currentTarget && e.currentTarget.querySelector("circle")) || e.target;
+  const c = circle.getBoundingClientRect();
+  const left = c.left - wrap.left - tip.offsetWidth - 10;
+  const top = c.top - wrap.top + c.height / 2 - tip.offsetHeight / 2;
+  tip.style.left = Math.max(0, left) + "px";
+  tip.style.top = Math.max(0, top) + "px";
 }
 
 function openRepAnnPanel(i) { repAnn.openIdx = repAnn.openIdx === i ? null : i; renderRepAnnPanel(repAnn.openIdx); }
