@@ -6,16 +6,25 @@
 //
 // Normalised change:
 //   { id, ts: "YYYY-MM-DD HH:MM:SS", date: "YYYY-MM-DD",
-//     type: "budget" | "bidding" | "status",
+//     type: "budget" | "bidding" | "status" | "landing",
 //     campaigns: [{ id, name }],      // campaigns affected (a shared budget/portfolio → several)
 //     label,                          // e.g. "Daily budget", "Target CPA", "Bid strategy", "Status"
-//     from, to, unit: "money" | "pct" | "text",
-//     scope?,                         // e.g. portfolio or shared budget name
+//     from, to, unit: "money" | "pct" | "text" | "url",
+//     scope?,                         // e.g. portfolio or shared budget name, sitelink text
+//     adGroup?,                       // landing page changes: the ad group involved
 //     user, source }                  // who / what made it
+//
+// Landing pages come from two places:
+//   1. Google's change history — ad final URL edits, new ads using a URL that ad group hasn't used
+//      before, and sitelink / other asset URL edits (with who made them).
+//   2. A daily snapshot of every live landing page per campaign (ads, Performance Max asset groups,
+//      sitelinks), compared with the previous day — catches anything the history doesn't cover,
+//      notably Performance Max. Skipped where the change history already recorded the same change.
 
 const LOG_KEY = (cid) => "annlog:v1:" + cid;
 const NOTES_KEY = (cid) => "annnotes:v1:" + cid;
-const LOG_CAP = 4000;
+const LOG_CAP = 8000;
+const SNAP_KEY = (cid) => "lpsnap:v1:" + cid;
 const NOTES_CAP = 1000;
 
 const STRATEGY_NAMES = {
@@ -36,6 +45,8 @@ const SOURCE_NAMES = {
 
 const idOf = (rn) => String(rn || "").split("/").pop();
 const micros = (v) => (v == null || v === "" ? null : Number(v) / 1e6);
+// Compare URLs loosely: case-insensitive host, no trailing slash.
+export const normUrl = (u) => String(u || "").trim().replace(/^(https?:\/\/[^/?#]+)/i, (m) => m.toLowerCase()).replace(/\/+(?=$|[?#])/, "");
 const fieldsOf = (cf) => String(cf || "").split(",").map((f) => f.trim().replace(/_([a-z])/g, (m, c) => c.toUpperCase())).filter(Boolean);
 
 function strategyOf(c) {
@@ -70,17 +81,25 @@ export async function fetchChanges(search, startDate, endDate) {
   let evRows, firstErr;
   try {
     evRows = await search(`SELECT ${FIELDS}, change_event.campaign FROM change_event
-      WHERE ${RANGE} AND change_event.change_resource_type IN ('CAMPAIGN', 'CAMPAIGN_BUDGET')
+      WHERE ${RANGE} AND change_event.change_resource_type IN ('CAMPAIGN', 'CAMPAIGN_BUDGET', 'AD', 'AD_GROUP_AD', 'ASSET')
       ORDER BY change_event.change_date_time DESC LIMIT 10000`);
   } catch (e) {
     // Fallback: simplest form of the query; filter and sort here instead.
     firstErr = e;
     try {
       evRows = (await search(`SELECT ${FIELDS} FROM change_event WHERE ${RANGE} LIMIT 10000`))
-        .filter((r) => ["CAMPAIGN", "CAMPAIGN_BUDGET"].includes(r.changeEvent?.changeResourceType))
+        .filter((r) => ["CAMPAIGN", "CAMPAIGN_BUDGET", "AD", "AD_GROUP_AD", "ASSET"].includes(r.changeEvent?.changeResourceType))
         .sort((a, b) => (String(a.changeEvent?.changeDateTime) < String(b.changeEvent?.changeDateTime) ? 1 : -1));
     } catch { throw new Error(adsErrorReason(firstErr)); }
   }
+  if (!evRows.length) return [];
+  // Ad / asset events only matter when they touch a URL — drop the rest early.
+  evRows = evRows.filter((r) => {
+    const e = r.changeEvent || {};
+    if (!["AD", "AD_GROUP_AD", "ASSET"].includes(e.changeResourceType)) return true;
+    if (e.changeResourceType === "AD_GROUP_AD") return e.resourceChangeOperation === "CREATE";
+    return e.resourceChangeOperation === "UPDATE" && /final_?urls/i.test(String(e.changedFields || ""));
+  });
   if (!evRows.length) return [];
 
   // Campaign names, plus which campaigns use each budget / portfolio strategy.
@@ -95,6 +114,30 @@ export async function fetchChanges(search, startDate, endDate) {
         if (c.campaignBudget) { budgetAmt.set(c.campaignBudget, micros(r.campaignBudget?.amountMicros)); budgetName.set(c.campaignBudget, r.campaignBudget?.name || ""); }
       });
   } catch { /* names fall back to ids */ }
+  // Landing page lookups: every ad (any status, so a re-created ad using an existing URL isn't
+  // mistaken for a new page), ad group names/parents, and which campaigns each asset is linked to.
+  const adInfo = new Map(), agInfo = new Map(), assetCamps = new Map(), assetField = new Map(), assetText = new Map();
+  const needAds = evRows.some((r) => ["AD", "AD_GROUP_AD"].includes(r.changeEvent?.changeResourceType));
+  const assetRns = [...new Set(evRows.filter((r) => r.changeEvent?.changeResourceType === "ASSET").map((r) => r.changeEvent.changeResourceName).filter(Boolean))].slice(0, 300);
+  const assetIds = assetRns.map(idOf);
+  if (needAds || assetIds.length) {
+    try { (await search(`SELECT ad_group.id, ad_group.name, campaign.id FROM ad_group WHERE ad_group.status != 'REMOVED'`)).forEach((r) => agInfo.set(String(r.adGroup?.id), { name: r.adGroup?.name || "", campId: String(r.campaign?.id || "") })); } catch {}
+  }
+  if (needAds) {
+    try {
+      (await search(`SELECT ad_group_ad.ad.id, ad_group_ad.ad.final_urls, ad_group.id, campaign.id FROM ad_group_ad`)).forEach((r) => {
+        adInfo.set(String(r.adGroupAd?.ad?.id), { url: normUrl((r.adGroupAd?.ad?.finalUrls || [])[0]), raw: (r.adGroupAd?.ad?.finalUrls || [])[0] || "", agId: String(r.adGroup?.id || ""), campId: String(r.campaign?.id || "") });
+      });
+    } catch {}
+  }
+  if (assetIds.length) {
+    const inList = (field) => `${field} IN (${assetRns.map((rn) => `'${rn}'`).join(", ")})`;
+    const link = (id, camp, ft) => { if (!assetCamps.has(id)) assetCamps.set(id, new Map()); if (camp) assetCamps.get(id).set(camp.id, camp); if (ft && !assetField.has(id)) assetField.set(id, ft); };
+    try { (await search(`SELECT campaign_asset.campaign, campaign_asset.asset, campaign_asset.field_type FROM campaign_asset WHERE campaign_asset.status != 'REMOVED' AND ${inList("campaign_asset.asset")}`)).forEach((r) => { const c = idOf(r.campaignAsset?.campaign); link(idOf(r.campaignAsset?.asset), { id: c, name: campName.get(c) || "" }, r.campaignAsset?.fieldType); }); } catch {}
+    try { (await search(`SELECT ad_group_asset.ad_group, ad_group_asset.asset, ad_group_asset.field_type FROM ad_group_asset WHERE ad_group_asset.status != 'REMOVED' AND ${inList("ad_group_asset.asset")}`)).forEach((r) => { const ag = agInfo.get(idOf(r.adGroupAsset?.adGroup)); link(idOf(r.adGroupAsset?.asset), ag ? { id: ag.campId, name: campName.get(ag.campId) || "" } : null, r.adGroupAsset?.fieldType); }); } catch {}
+    try { (await search(`SELECT customer_asset.asset, customer_asset.field_type FROM customer_asset WHERE customer_asset.status != 'REMOVED' AND ${inList("customer_asset.asset")}`)).forEach((r) => { const id = idOf(r.customerAsset?.asset); link(id, null, r.customerAsset?.fieldType); if (!assetCamps.get(id).has("account")) assetCamps.get(id).set("account", null); }); } catch {}
+    try { (await search(`SELECT asset.id, asset.sitelink_asset.link_text FROM asset WHERE asset.id IN (${assetIds.join(", ")})`)).forEach((r) => assetText.set(String(r.asset?.id), r.asset?.sitelinkAsset?.linkText || "")); } catch {}
+  }
   let portfolioName = new Map();
   if (evRows.some((r) => r.changeEvent?.changeResourceType === "BIDDING_STRATEGY")) {
     try { (await search(`SELECT bidding_strategy.resource_name, bidding_strategy.name FROM bidding_strategy`)).forEach((r) => portfolioName.set(r.biddingStrategy?.resourceName, r.biddingStrategy?.name || "")); } catch {}
@@ -103,7 +146,8 @@ export async function fetchChanges(search, startDate, endDate) {
   const out = [];
   for (const r of evRows) {
     const e = r.changeEvent || {};
-    if (e.resourceChangeOperation && e.resourceChangeOperation !== "UPDATE") continue; // creations/removals of whole resources aren't "levers"
+    const isNewAd = e.changeResourceType === "AD_GROUP_AD" && e.resourceChangeOperation === "CREATE";
+    if (!isNewAd && e.resourceChangeOperation && e.resourceChangeOperation !== "UPDATE") continue; // creations/removals of whole resources aren't "levers"
     const ts = String(e.changeDateTime || "").slice(0, 19), date = ts.slice(0, 10);
     const fields = fieldsOf(e.changedFields).map((f) => f.toLowerCase());
     const has = (s) => fields.some((f) => f.includes(s.toLowerCase()));
@@ -117,6 +161,41 @@ export async function fetchChanges(search, startDate, endDate) {
       if (has("amount") && to != null && from !== to) {
         const camps = byBudget.get(e.changeResourceName) || (e.campaign ? [{ id: idOf(e.campaign), name: campName.get(idOf(e.campaign)) || "" }] : []);
         push("budget", { type: "budget", campaigns: camps, label: "Daily budget", from, to, unit: "money", scope: camps.length > 1 ? (budgetName.get(e.changeResourceName) || "Shared budget") : "" });
+      }
+      continue;
+    }
+
+    // ---- Landing pages ----
+    if (e.changeResourceType === "AD") {                     // final URL edited on an existing ad
+      const adId = idOf(e.changeResourceName), info = adInfo.get(adId) || {};
+      const from = (oldR.ad?.finalUrls || [])[0] || "", to = (newR.ad?.finalUrls || [])[0] || "";
+      if (to && normUrl(from) !== normUrl(to)) {
+        const ag = agInfo.get(info.agId) || {}, campId = info.campId || ag.campId || idOf(e.campaign);
+        push("adurl", { type: "landing", campaigns: [{ id: campId, name: campName.get(campId) || "" }], adGroup: ag.name || "", label: "Ad URL", from: from || null, to, unit: "url" });
+      }
+      continue;
+    }
+    if (isNewAd) {                                            // new ad — only if its URL is new to that ad group
+      const adId = String(e.changeResourceName || "").split("~").pop(), info = adInfo.get(adId) || {};
+      const raw = (newR.adGroupAd?.ad?.finalUrls || [])[0] || info.raw || "", url = normUrl(raw);
+      const agId = info.agId || String(e.changeResourceName || "").split("/").pop().split("~")[0];
+      const usedBefore = [...adInfo.entries()].some(([id, a]) => id !== adId && a.agId === agId && a.url && a.url === url);
+      if (url && !usedBefore) {
+        const ag = agInfo.get(agId) || {}, campId = info.campId || ag.campId || idOf(e.campaign);
+        push("newad", { type: "landing", campaigns: [{ id: campId, name: campName.get(campId) || "" }], adGroup: ag.name || "", label: "New ad", from: null, to: raw, unit: "url" });
+      }
+      continue;
+    }
+    if (e.changeResourceType === "ASSET") {                   // sitelink (or other asset) URL edited
+      const aid = idOf(e.changeResourceName);
+      const from = (oldR.asset?.finalUrls || [])[0] || "", to = (newR.asset?.finalUrls || [])[0] || "";
+      if (to && normUrl(from) !== normUrl(to)) {
+        const links = assetCamps.get(aid) || new Map();
+        const camps = [...links.values()].filter(Boolean);
+        const ft = assetField.get(aid) || (newR.asset?.sitelinkAsset || oldR.asset?.sitelinkAsset ? "SITELINK" : "");
+        const kind = ft === "SITELINK" ? "Sitelink" : ft === "PROMOTION" ? "Promotion" : ft === "PRICE" ? "Price" : "Asset";
+        push("asseturl", { type: "landing", campaigns: camps, label: kind + " URL", from: from || null, to, unit: "url",
+          scope: [assetText.get(aid) || newR.asset?.sitelinkAsset?.linkText || "", links.has("account") ? "account-level" : ""].filter(Boolean).join(", ") });
       }
       continue;
     }
@@ -182,11 +261,69 @@ export async function mergeIntoLog(env, cid, fresh, windowStart) {
   return log;
 }
 
-// Fetch the live window and save it — used by the digest cron to keep every account's log current.
+// Daily landing page snapshot: every live landing page per campaign, compared with the previous
+// snapshot. Runs at most once a day per account. Returns the (possibly updated) log.
+export async function snapshotLandingPages(env, search, cid, log) {
+  const today = new Date().toISOString().slice(0, 10);
+  let prev = null;
+  try { prev = await env.SESSIONS.get(SNAP_KEY(cid), "json"); } catch {}
+  if (prev && prev.date === today) return log;
+
+  const urls = new Map(); // campaignId | "account" -> Map(normUrl -> raw)
+  const add = (camp, raw) => { const u = normUrl(raw); if (!u) return; if (!urls.has(camp)) urls.set(camp, new Map()); urls.get(camp).set(u, raw); };
+  const names = new Map(), agCamp = new Map(), assetUrl = new Map();
+  (await search(`SELECT campaign.id, campaign.name FROM campaign WHERE campaign.status != 'REMOVED'`)).forEach((r) => names.set(String(r.campaign?.id), r.campaign?.name || ""));
+  (await search(`SELECT campaign.id, ad_group_ad.ad.final_urls FROM ad_group_ad WHERE campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_ad.status = 'ENABLED'`))
+    .forEach((r) => (r.adGroupAd?.ad?.finalUrls || []).forEach((u) => add(String(r.campaign?.id), u)));
+  try {
+    (await search(`SELECT campaign.id, asset_group.final_urls FROM asset_group WHERE campaign.status != 'REMOVED' AND asset_group.status = 'ENABLED'`))
+      .forEach((r) => (r.assetGroup?.finalUrls || []).forEach((u) => add(String(r.campaign?.id), u)));
+  } catch { /* no Performance Max */ }
+  try {
+    (await search(`SELECT asset.id, asset.final_urls FROM asset WHERE asset.type = 'SITELINK'`)).forEach((r) => assetUrl.set(String(r.asset?.id), r.asset?.finalUrls || []));
+    (await search(`SELECT ad_group.id, campaign.id FROM ad_group WHERE ad_group.status != 'REMOVED'`)).forEach((r) => agCamp.set(String(r.adGroup?.id), String(r.campaign?.id)));
+    (await search(`SELECT campaign_asset.campaign, campaign_asset.asset FROM campaign_asset WHERE campaign_asset.field_type = 'SITELINK' AND campaign_asset.status = 'ENABLED'`))
+      .forEach((r) => (assetUrl.get(idOf(r.campaignAsset?.asset)) || []).forEach((u) => add(idOf(r.campaignAsset?.campaign), u)));
+    (await search(`SELECT ad_group_asset.ad_group, ad_group_asset.asset FROM ad_group_asset WHERE ad_group_asset.field_type = 'SITELINK' AND ad_group_asset.status = 'ENABLED'`))
+      .forEach((r) => { const c = agCamp.get(idOf(r.adGroupAsset?.adGroup)); if (c) (assetUrl.get(idOf(r.adGroupAsset?.asset)) || []).forEach((u) => add(c, u)); });
+    (await search(`SELECT customer_asset.asset FROM customer_asset WHERE customer_asset.field_type = 'SITELINK' AND customer_asset.status = 'ENABLED'`))
+      .forEach((r) => (assetUrl.get(idOf(r.customerAsset?.asset)) || []).forEach((u) => add("account", u)));
+  } catch { /* sitelinks are a bonus */ }
+
+  const snap = { date: today, map: Object.fromEntries([...urls].map(([k, m]) => [k, [...m.entries()]])) };
+  try { await env.SESSIONS.put(SNAP_KEY(cid), JSON.stringify(snap)); } catch {}
+  if (!prev || !prev.map) return log; // first snapshot: nothing to compare yet
+
+  // Skip anything the change history already recorded in the last few days.
+  const DAY = 86400000, since = new Date(Date.now() - 3 * DAY).toISOString().slice(0, 10);
+  const known = new Set();
+  (log.events || []).filter((e) => e.type === "landing" && e.date >= since && e.source !== "Daily check").forEach((e) => {
+    (e.campaigns || []).forEach((c) => { if (e.to) known.add("+" + c.id + "|" + normUrl(e.to)); if (e.from) known.add("-" + c.id + "|" + normUrl(e.from)); });
+  });
+  const fresh = [];
+  const ts = today + " 00:00:00";
+  const camps = new Set([...Object.keys(prev.map), ...urls.keys()]);
+  for (const camp of camps) {
+    if (camp !== "account" && !names.has(camp)) continue; // campaign removed: its URLs going isn't a landing page change
+    const before = new Map(prev.map[camp] || []), now = urls.get(camp) || new Map();
+    const campaigns = camp === "account" ? [] : [{ id: camp, name: names.get(camp) || "" }];
+    const scope = camp === "account" ? "account-level sitelinks" : "";
+    for (const [u, raw] of now) if (!before.has(u) && !known.has("+" + camp + "|" + u))
+      fresh.push({ id: "snap:" + today + ":+" + camp + ":" + u, ts, date: today, type: "landing", campaigns, label: "New landing page", from: null, to: raw, unit: "url", scope, user: "", source: "Daily check" });
+    for (const [u, raw] of before) if (!now.has(u) && !known.has("-" + camp + "|" + u))
+      fresh.push({ id: "snap:" + today + ":-" + camp + ":" + u, ts, date: today, type: "landing", campaigns, label: "Landing page no longer used", from: raw, to: null, unit: "url", scope, user: "", source: "Daily check" });
+  }
+  return fresh.length ? mergeIntoLog(env, cid, fresh, null) : log;
+}
+
+// Fetch the live window, save it, then take the daily landing page snapshot — used by the digest
+// cron (and the annotations endpoint) to keep every account's log current.
 export async function refreshLog(env, search, cid) {
   const w = liveWindow();
   const fresh = await fetchChanges(search, w.start, w.end);
-  return mergeIntoLog(env, cid, fresh, w.start);
+  let log = await mergeIntoLog(env, cid, fresh, w.start);
+  try { log = await snapshotLandingPages(env, search, cid, log); } catch { /* snapshot is best-effort */ }
+  return log;
 }
 
 export async function readNotes(env, cid) {
