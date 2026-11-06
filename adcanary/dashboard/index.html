@@ -290,6 +290,7 @@
   .rep-ann-item .del { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 12px; text-decoration: underline; }
   .rep-datalabel { fill: var(--ink); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; stroke-linejoin: round; }
   .rep-datalabel.on-bar { fill: #fff; stroke: var(--accent); }
+  .rep-datalabel.on-bar.l2 { fill: #eab308; font-weight: 650; } /* yellow-line labels keep the line's colour on a blue bar */
   .rep-datalabel.on-bar2 { fill: #422006; stroke: #eab308; }
   .rep-bar2 { fill: #eab308; transition: opacity .1s; }
   .rep-bar2:hover { opacity: .82; }
@@ -4401,7 +4402,7 @@ function renderRepChartSvg(bars, metric, metric2) {
       L.forEach(lab => {
         if (!lab) return;
         const on = under(lab, lab.base);
-        const cls = on ? (on.n === 1 ? " on-bar" : " on-bar2") : (lab.sr.n === 2 ? " rep-datalabel2" : "");
+        const cls = on ? (on.n === 1 ? " on-bar" + (lab.sr.n === 2 ? " l2" : "") : " on-bar2") : (lab.sr.n === 2 ? " rep-datalabel2" : "");
         labels += '<text x="' + lab.x.toFixed(1) + '" y="' + lab.base.toFixed(1) + '" text-anchor="middle" class="rep-datalabel' + cls + '">' + lab.text + "</text>";
       });
     });
