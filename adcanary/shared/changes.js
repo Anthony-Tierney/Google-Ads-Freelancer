@@ -48,15 +48,39 @@ function tcpaOf(o) { if (!o) return null; const v = o.targetCpa?.targetCpaMicros
 function troasOf(o) { if (!o) return null; const v = o.targetRoas?.targetRoas ?? o.maximizeConversionValue?.targetRoas; return v == null ? null : Number(v); }
 
 // Pull and normalise changes between two dates (YYYY-MM-DD, both within Google's 30-day window).
+// Turn a Google Ads API error into its specific reason (the first line is usually just
+// "Request contains an invalid argument"; the useful part is in details[].errors[]).
+export function adsErrorReason(e) {
+  const msg = String(e && e.message ? e.message : e);
+  const msgs = [...msg.matchAll(/"message":\s*"([^"]+)"/g)].map((m) => m[1]).filter((m) => !/invalid argument/i.test(m));
+  const code = /"errorCode":\s*\{\s*"(\w+)":\s*"(\w+)"/.exec(msg);
+  const parts = [];
+  if (code) parts.push(code[1] + ": " + code[2]);
+  if (msgs.length) parts.push(msgs[msgs.length - 1]);
+  return parts.length ? parts.join(" \u2014 ") : msg.slice(0, 200);
+}
+
 export async function fetchChanges(search, startDate, endDate) {
-  const evRows = await search(`SELECT change_event.resource_name, change_event.change_date_time, change_event.change_resource_type,
+  // Note: change_event only reports certain resource types — campaigns and campaign budgets are
+  // in, portfolio bidding strategies are NOT (asking for BIDDING_STRATEGY rejects the whole query).
+  const FIELDS = `change_event.resource_name, change_event.change_date_time, change_event.change_resource_type,
       change_event.change_resource_name, change_event.resource_change_operation, change_event.changed_fields,
-      change_event.old_resource, change_event.new_resource, change_event.user_email, change_event.client_type, change_event.campaign
-    FROM change_event
-    WHERE change_event.change_date_time >= '${startDate}' AND change_event.change_date_time <= '${endDate}'
-      AND change_event.change_resource_type IN ('CAMPAIGN', 'CAMPAIGN_BUDGET', 'BIDDING_STRATEGY')
-    ORDER BY change_event.change_date_time DESC
-    LIMIT 10000`);
+      change_event.old_resource, change_event.new_resource, change_event.user_email, change_event.client_type`;
+  const RANGE = `change_event.change_date_time >= '${startDate}' AND change_event.change_date_time <= '${endDate}'`;
+  let evRows, firstErr;
+  try {
+    evRows = await search(`SELECT ${FIELDS}, change_event.campaign FROM change_event
+      WHERE ${RANGE} AND change_event.change_resource_type IN ('CAMPAIGN', 'CAMPAIGN_BUDGET')
+      ORDER BY change_event.change_date_time DESC LIMIT 10000`);
+  } catch (e) {
+    // Fallback: simplest form of the query; filter and sort here instead.
+    firstErr = e;
+    try {
+      evRows = (await search(`SELECT ${FIELDS} FROM change_event WHERE ${RANGE} LIMIT 10000`))
+        .filter((r) => ["CAMPAIGN", "CAMPAIGN_BUDGET"].includes(r.changeEvent?.changeResourceType))
+        .sort((a, b) => (String(a.changeEvent?.changeDateTime) < String(b.changeEvent?.changeDateTime) ? 1 : -1));
+    } catch { throw new Error(adsErrorReason(firstErr)); }
+  }
   if (!evRows.length) return [];
 
   // Campaign names, plus which campaigns use each budget / portfolio strategy.
@@ -111,7 +135,7 @@ export async function fetchChanges(search, startDate, endDate) {
 
     // CAMPAIGN
     const o = oldR.campaign || {}, n = newR.campaign || {};
-    const cid = idOf(e.campaign || e.changeResourceName);
+    const cid = idOf(e.campaign || e.changeResourceName); // changeResourceName = customers/x/campaigns/<id>
     const camps = [{ id: cid, name: campName.get(cid) || n.name || o.name || "Campaign " + cid }];
     if (has("status") && n.status && o.status !== n.status) {
       const word = { ENABLED: "Enabled", PAUSED: "Paused", REMOVED: "Removed" };
