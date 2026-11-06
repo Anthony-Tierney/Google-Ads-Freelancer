@@ -1,11 +1,14 @@
 // /api/budgets
-//   GET  -> { budgets: { [customerId]: amount } }   (all saved monthly budgets)
-//   POST -> body { customerId, amount }              (save; amount null/0 clears it)
+//   GET  -> { budgets: { [customerId]: amount } }   (saved monthly budgets for the accounts
+//                                                     the signed-in person can access)
+//   POST -> body { customerId, amount }              (save; amount null/0 clears it — only for
+//                                                     an account they can access, else 403)
 //
 // Budgets are stored in the SESSIONS KV namespace under keys "budget:{customerId}",
 // with no expiry, so they persist across devices and logins.
 
 import { getRefreshToken, json } from "../../shared/google.js";
+import { accessibleIds, canAccess } from "../../shared/access.js";
 
 const PREFIX = "budget:";
 
@@ -17,8 +20,10 @@ export async function onRequestGet(context) {
 
   const budgets = {};
   try {
+    const mine = new Set(await accessibleIds(env, refreshToken));
     const list = await env.SESSIONS.list({ prefix: PREFIX });
     for (const key of list.keys) {
+      if (!mine.has(key.name.slice(PREFIX.length))) continue; // only accounts this person can access
       const value = await env.SESSIONS.get(key.name);
       if (value != null) budgets[key.name.slice(PREFIX.length)] = Number(value);
     }
@@ -41,6 +46,7 @@ export async function onRequestPost(context) {
 
   const customerId = String(body.customerId || "").replace(/-/g, "");
   if (!customerId) return json({ error: "Missing customerId" }, 400);
+  if (!(await canAccess(env, refreshToken, customerId))) return json({ error: "You don't have access to this Google Ads account" }, 403);
 
   const amount = body.amount;
   try {
