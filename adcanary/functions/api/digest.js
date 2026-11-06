@@ -12,6 +12,7 @@
 // and CPA drift (achieved CPA well under target — the target likely needs adjusting).
 
 import { getAccessToken, adsRequest, json, formatId } from "../../shared/google.js";
+import { refreshLog } from "../../shared/changes.js";
 
 const CPA_UNDER = 0.8; // achieved CPA <= target * 0.8 → flag
 
@@ -100,6 +101,10 @@ async function auditAccount(env, accessToken, id, budgets, mi) {
   if (cust.manager) return { id, name: cust.descriptiveName || formatId(id), issues: [] }; // MCCs have no campaigns of their own
   const name = cust.descriptiveName || formatId(id);
   const issues = [];
+
+  // Save this account's recent budget / bidding / status changes to its permanent change log
+  // (Google only keeps 30 days), so Performance Overview annotations reach further back over time.
+  try { await refreshLog(env, async (q) => (await search(q)).results || [], id); } catch { /* non-fatal */ }
 
   // 1) Account suspended
   if ((cust.status || "").toUpperCase() === "SUSPENDED") {
