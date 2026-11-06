@@ -10,7 +10,7 @@
 // Every action first checks the signed-in person can access that Google Ads account (403 if not).
 
 import { getRefreshToken, getAccessToken, adsRequest, json } from "../../shared/google.js";
-import { fetchChanges, liveWindow, mergeIntoLog, readLog, readNotes, writeNotes, adsErrorReason } from "../../shared/changes.js";
+import { fetchChanges, liveWindow, mergeIntoLog, readLog, readNotes, writeNotes, adsErrorReason, snapshotLandingPages } from "../../shared/changes.js";
 import { canAccess } from "../../shared/access.js";
 
 const NO_ACCESS = () => json({ error: "You don't have access to this Google Ads account" }, 403);
@@ -46,6 +46,8 @@ export async function onRequestGet(context) {
       };
       const fresh = await fetchChanges(search, w.start, w.end);
       log = await mergeIntoLog(env, cid, fresh, w.start);
+      // Once a day per account: compare live landing pages with yesterday's (catches Performance Max etc.).
+      try { log = await snapshotLandingPages(env, search, cid, log); } catch { /* best-effort */ }
     } catch (e) { liveError = adsErrorReason(e).slice(0, 300); }
   }
   const inRange = (d) => d >= from && d <= to;
