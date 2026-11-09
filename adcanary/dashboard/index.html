@@ -118,6 +118,14 @@
   .nav-heading.open .nh-chevron { transform: rotate(90deg); }
   .nav-section-items { overflow: hidden; }
   .nav-section-items.collapsed { display: none; }
+  /* Suggested Negatives */
+  .neg-summary { margin: 0 0 12px; font-size: 14px; color: var(--ink); }
+  .neg-summary strong { font-variant-numeric: tabular-nums; }
+  .neg-tag { display: inline-block; font-size: 11.5px; font-weight: 560; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .neg-tag.open { background: #fee2e2; color: #991b1b; }
+  .neg-tag.partly { background: #fef3c7; color: #92400e; }
+  .neg-tag.blocked { background: var(--line-soft); color: var(--muted); }
+  .neg-sub { display: block; font-size: 11.5px; color: var(--muted); }
   /* Locations page: bubble map */
   .loc-bubble-legend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--muted); }
   .loc-bubble-legend .b { display: inline-block; border-radius: 50%; border: 2px solid; opacity: .85; vertical-align: middle; }
@@ -908,6 +916,7 @@
     <div class="nav-section-items" data-section="audit">
       <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies<span class="nav-warn" id="bidNavWarn" hidden title="CPA running below target on one or more campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
       <a href="#" class="nav-item nav-sub" data-page="cannibalization">Cannibalization</a>
+      <a href="#" class="nav-item nav-sub" data-page="negatives">Suggested Negatives</a>
       <a href="#" class="nav-item nav-sub" data-page="adcopy">Ad Copy</a>
       <a href="#" class="nav-item nav-sub" data-page="callouts">Callouts</a>
       <a href="#" class="nav-item nav-sub" data-page="audit">Policy Issues<span class="nav-warn" id="auditNavWarn" hidden title="Policy issues found"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
@@ -1697,6 +1706,130 @@
             <div class="pagination" id="acPagination" hidden></div>
           </div>
           <div class="foot-note" style="margin-top:10px;">Headline and Description assets from enabled Responsive Search Ads in enabled ad groups/campaigns. Use View to choose the rollup level — Account-level combines identical copy across every campaign and ad group in the account; Ad-level breaks it back out per individual ad. CTR, impressions and clicks are summed to match whichever level is selected.</div>
+        </section>
+      </section>
+
+      <!-- Suggested Negatives Page (Audit) -->
+      <section id="negatives" class="page">
+        <section id="negSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to find search terms that spend without converting.</p>
+            <a class="btn-primary" href="/api/auth">Sign in with Google</a>
+          </div>
+        </section>
+        <section id="negSignedIn" hidden>
+          <div class="rep-intro">
+            <h2 class="rep-intro-title">Suggested Negatives</h2>
+            <p class="rep-intro-text">Search terms that are racking up clicks and spend with no conversions &mdash; candidates for negative keywords. Each term is checked against the account&rsquo;s current negatives, so ones you&rsquo;ve already blocked are hidden by default.</p>
+          </div>
+          <div class="controls-row account" id="negControls" hidden>
+            <div>
+              <label class="field-label" for="negDateSelect">Date range</label>
+              <select id="negDateSelect" onchange="onNegDateRangeChange()">
+                <option value="allTime" selected>All Time</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="14days">Last 14 Days</option>
+                <option value="30days">Last 30 Days</option>
+                <option value="thisMonth">This Month</option>
+                <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
+                <option value="custom">Custom...</option>
+              </select>
+            </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters" id="negViewGroup" hidden>
+                <button class="filters-btn" id="negViewBtn" aria-haspopup="true" title="Rollup level">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                  View: <span id="negViewLabel">Campaign-level</span>
+                </button>
+                <div class="pop col-pop" id="negViewPop" hidden></div>
+              </div>
+              <div class="filters">
+                <button class="filters-btn" id="negHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                  Heatmap
+                </button>
+              </div>
+              <div class="filters" id="negFilterGroup">
+                <button class="filters-btn" id="negFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  Filters <span class="count" id="negFilterCount" hidden>0</span>
+                </button>
+                <div class="pop filters-menu" id="negFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('neg-group-clicks', event)"><span class="toggle">−</span>Minimum Clicks</div>
+                  <div class="filter-group-items" id="neg-group-clicks">
+                    <div class="filter-section"><input type="number" id="negfMinClicks" min="0" step="1" value="100" style="width:100%" /></div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('neg-group-conv', event)"><span class="toggle">−</span>Maximum Conversions</div>
+                  <div class="filter-group-items" id="neg-group-conv">
+                    <div class="filter-section"><input type="number" id="negfMaxConv" min="0" step="1" value="0" style="width:100%" /></div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('neg-group-cost', event)"><span class="toggle">+</span>Minimum Cost</div>
+                  <div class="filter-group-items" id="neg-group-cost" hidden>
+                    <div class="filter-section"><input type="number" id="negfMinCost" min="0" step="1" value="0" style="width:100%" /></div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('neg-group-status', event)"><span class="toggle">+</span>Negative Status</div>
+                  <div class="filter-group-items" id="neg-group-status" hidden>
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="negfStOpen" checked /><label for="negfStOpen">Not blocked</label></div>
+                        <div class="check-row"><input type="checkbox" id="negfStPartly" checked /><label for="negfStPartly">Partly blocked</label></div>
+                        <div class="check-row"><input type="checkbox" id="negfStBlocked" /><label for="negfStBlocked">Blocked</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('neg-group-term', event)"><span class="toggle">+</span>Search Term</div>
+                  <div class="filter-group-items" id="neg-group-term" hidden>
+                    <div class="filter-section cnf">
+                      <select id="negfTermOp" class="cnf-op"></select>
+                      <label class="cnf-sublabel">Any of the following values</label>
+                      <textarea id="negfTerm" class="cnf-value" autocomplete="off" placeholder="Value" rows="3"></textarea>
+                      <div class="cnf-hint">Enter one value per line</div>
+                    </div>
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetNegFilters()">Reset</button>
+                    <button class="apply" onclick="applyNegFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
+              <div class="filters" id="negExportGroup">
+                <button class="filters-btn" id="negExportBtn" title="Export current view">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                </button>
+                <div class="pop col-pop" id="negExportPop" hidden>
+                  <button class="pop-row" data-negfmt="csv">Download CSV</button>
+                  <button class="pop-row" data-negfmt="pdf">Download PDF</button>
+                  <button class="pop-row" data-negfmt="sheets">Copy for Google Sheets</button>
+                </div>
+              </div>
+              <div class="filters" id="negColsGroup">
+                <button class="filters-btn" id="negColsBtn" aria-haspopup="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
+                  Columns <span class="count" id="negColsCount">0</span>
+                </button>
+                <div class="pop col-pop" id="negColsPop" hidden></div>
+              </div>
+            </div>
+          </div>
+          <div id="negWarn" class="as-warn" hidden></div>
+          <p class="neg-summary" id="negSummary" hidden></p>
+          <div class="panel">
+            <div id="negLoading" class="state" hidden><div class="spinner"></div>Loading search terms… (All Time can take a little longer)</div>
+            <div id="negPrompt" class="state" hidden><div class="big">Choose a single account</div>Suggested Negatives looks at one account at a time &mdash; pick a specific account from the selector above.</div>
+            <div id="negError" class="state" hidden></div>
+            <div id="negEmpty" class="state" hidden><div class="big">Nothing to suggest</div>No search terms match these filters for this date range. Try lowering Minimum Clicks or widening the date range.</div>
+            <div class="scroll"><table id="negTable" hidden>
+              <colgroup id="neg-colgroup"></colgroup><thead id="neg-thead"></thead><tbody id="neg-tbody"></tbody><tfoot id="neg-tfoot"></tfoot>
+            </table></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+            <div class="pagination" id="negPagination" hidden></div>
+          </div>
+          <div class="foot-note" style="margin-top:10px;">With <strong>All campaigns</strong> selected, each search term is one row combining every campaign and ad group it appeared in. Pick a campaign in the top bar to break terms down by campaign or ad group with View. <strong>Negative status</strong> checks today&rsquo;s campaign, ad group and shared-list negatives (exact / phrase / broad, no close variants): <em>Partly blocked</em> means it&rsquo;s blocked in some places it appeared but can still show in others. Paused, removed or ended campaigns and ad groups count as blocked.</div>
         </section>
       </section>
 
@@ -2817,6 +2950,7 @@ function globalRefresh() {
     case "bidding": loadBidding(true); break;
     case "geocoverage": if (GLOBAL_ACCOUNT !== "ALL") loadGeoCoverage(GLOBAL_ACCOUNT); break;
     case "cannibalization": if (GLOBAL_ACCOUNT !== "ALL") loadCannibalization(true); break;
+    case "negatives": if (GLOBAL_ACCOUNT !== "ALL") loadNegatives(); break;
     case "callouts": loadCallouts(true); break;
     case "structure": loadStructure(true); break;
     case "reporting": repAnn.key = null; loadReporting(); break;
@@ -2948,7 +3082,7 @@ function persistUi(table, st) {
   uiSave(table, o);
 }
 // Map a table's tbody id to its prefs key, so a column resize can persist widths.
-const TBODY_TO_TBL = { tbody: "campaigns", "acc-tbody": "accounts", "lp-tbody": "landingpages", "assets-tbody": "assets", "us-tbody": "underspend", "bid-tbody": "bidding", "aud-tbody": "audit", "geo-tbody": "geocoverage", "ac-tbody": "adcopy" };
+const TBODY_TO_TBL = { tbody: "campaigns", "acc-tbody": "accounts", "lp-tbody": "landingpages", "assets-tbody": "assets", "us-tbody": "underspend", "bid-tbody": "bidding", "aud-tbody": "audit", "geo-tbody": "geocoverage", "ac-tbody": "adcopy", "neg-tbody": "negatives" };
 // Copy saved prefs onto each state at boot (before the first render of any page).
 function restoreUiPrefs() {
   const apply = (table, st, keys) => {
@@ -3491,6 +3625,7 @@ function cancelCustomDate() {
   else if (state.calendarTarget === "cann") syncCannDateSelect();
   else if (state.calendarTarget === "co") syncCoDateSelect();
   else if (state.calendarTarget === "loc") syncDateSelectEl("locDateSelect", SHARED_DATE_RANGE);
+  else if (state.calendarTarget === "neg") syncNegDateSelect();
   else if (state.calendarTarget !== "compare") syncDateSelect();
 }
 
@@ -3506,6 +3641,16 @@ function applyCustomDate() {
     saveFilters();
     updateCompareUI();
     loadCampaigns();
+    return;
+  }
+
+  // Suggested Negatives keeps its own range (default All Time), so it doesn't touch the shared one.
+  if (state.calendarTarget === "neg") {
+    closeCustomDateModal();
+    negState.dateRange = { label: from + " to " + to, from, to };
+    uiSave("negatives", { dateRange: negState.dateRange });
+    syncNegDateSelect();
+    loadNegatives();
     return;
   }
 
@@ -3878,13 +4023,14 @@ function ensureRepTable() {
 // Pages under the "Accounts" menu category share the account + campaign selection.
 // Add future Accounts-category pages to this list.
 // Pages that show the shared account + campaign topbar picker.
-const ACCOUNTS_PAGES = ["allaccounts", "reporting", "adcopy", "structure", "locations"];
+const ACCOUNTS_PAGES = ["allaccounts", "reporting", "adcopy", "structure", "locations", "negatives"];
 function isAccountsPage(p) { return ACCOUNTS_PAGES.includes(p || currentHashPage()); }
 function refreshAccountsPage() {
   const p = currentHashPage();
   if (p === "allaccounts") renderAccountsTable();
   else if (p === "reporting") loadReporting();
   else if (p === "adcopy") renderAdCopyTable();
+  else if (p === "negatives") { if (GLOBAL_ACCOUNT === "ALL") initNegatives(); else if (negState.loadedKey !== negKey()) loadNegatives(); else renderNegatives(); }
   else if (p === "structure") renderStructure();
   else if (p === "locations") { renderLocations(); locStartGeocode(); }
 }
@@ -3914,6 +4060,7 @@ function routeFromHash() {
   else if (page === "assets") initAssets();
   else if (page === "landingpages") initLandingPages();
   else if (page === "adcopy") initAdCopy();
+  else if (page === "negatives") initNegatives();
   else if (page === "budgeting") initUnderspend();
   else if (page === "bidding") initBidding();
   else if (page === "geocoverage") initGeoCoverage();
@@ -4802,6 +4949,7 @@ function onGlobalAccountChange(val) {
   else if (page === "assets") initAssets();
   else if (page === "landingpages") initLandingPages();
   else if (page === "adcopy") initAdCopy();
+  else if (page === "negatives") initNegatives();
   else if (page === "budgeting") { if (underspendState.loaded) renderUnderspendTable(); else initUnderspend(); }
   else if (page === "bidding") { if (biddingState.loaded) renderBiddingTable(); else initBidding(); }
   else if (page === "geocoverage") initGeoCoverage();
@@ -5024,7 +5172,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu", "repAnnPop", "locFiltersMenu", "locColsPop", "locExportPop", "locLevelPop"].forEach(id => {
+  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu", "repAnnPop", "locFiltersMenu", "locColsPop", "locExportPop", "locLevelPop", "negFiltersMenu", "negViewPop", "negColsPop", "negExportPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -6181,6 +6329,10 @@ function populateAccCampaignFilter() {
     } else if (currentHashPage() === "structure") {
       (structState.campaigns || []).forEach(c => {
         if (c.name && !seen.has(c.name)) { seen.add(c.name); list.push({ name: c.name, status: c.status === "Enabled" ? "ENABLED" : c.status === "Ended" ? "ENDED" : "PAUSED" }); }
+      });
+    } else if (currentHashPage() === "negatives") {
+      (negState.rows || []).forEach(r => {
+        if (r.campaign && !seen.has(r.campaign)) { seen.add(r.campaign); list.push({ name: r.campaign, status: (r.campaignStatus || "Enabled").toUpperCase() }); }
       });
     } else if (currentHashPage() === "adcopy") {
       (acState.rows || []).forEach(r => {
@@ -7666,6 +7818,288 @@ function renderLpViewPop() {
     lpState.currentPage = 1;
     renderLandingPagesTable();
   }));
+}
+
+/* ============================ Suggested Negatives page ============================ */
+// Search terms spending without converting. Rows come from /api/suggestednegatives as one row per
+// term × ad group; they're combined here according to the campaign picker:
+//   • All campaigns  → one row per search term (every campaign + ad group summed)
+//   • One campaign   → View: Campaign-level (one row per term) or Ad Group-level (term × ad group)
+// Each source row carries `blocked` (reason, or "" if it can still show); combined rows become
+// Not blocked / Partly blocked / Blocked.
+const NEG_STATUS = { open: "Not blocked", partly: "Partly blocked", blocked: "Blocked" };
+const NEG_STATUS_BOXES = [["negfStOpen", "open"], ["negfStPartly", "partly"], ["negfStBlocked", "blocked"]];
+const NEG_VIEW_LEVELS = [["campaign", "Campaign-level"], ["adgroup", "Ad Group-level"]];
+const NEG_DEFAULT_FILTERS = () => ({ minClicks: 100, maxConv: 0, minCost: 0, status: new Set(["open", "partly"]), term: "", termOp: "contains" });
+
+const NEG_COL_TERM = { key: "term", label: "Search Term", align: "txt", width: 260, always: true,
+  cell: r => '<span title="' + escapeHtml(r.term) + '">' + escapeHtml(r.term) + "</span>" +
+    (r.campaignCount > 1 ? '<span class="neg-sub" title="' + escapeHtml(r.campaignNames.join(", ")) + '">' + r.campaignCount + " campaigns \u00b7 " + r.adGroupCount + " ad groups</span>" : "") };
+const NEG_COL_CAMPAIGN = { key: "campaign", label: "Campaign", align: "txt", width: 200, always: true, cell: r => escapeHtml(r.campaign || "") };
+const NEG_COL_ADGROUP = { key: "adGroup", label: "Ad Group", align: "txt", width: 180, always: true, cell: r => escapeHtml(r.adGroup || "") };
+const NEG_COLUMNS = [
+  { key: "impressions", label: "Impr.", align: "num", width: 95, group: "Metrics", cls: "tabnum", cell: r => fmtInt(r.impressions) },
+  { key: "clicks", label: "Clicks", align: "num", width: 85, group: "Metrics", cls: "tabnum", cell: r => fmtInt(r.clicks) },
+  { key: "ctr", label: "CTR", align: "num", width: 85, group: "Metrics", cls: "tabnum", cell: r => fmtPct(r.ctr) },
+  { key: "cost", label: "Cost", align: "num", width: 105, group: "Metrics", cls: "tabnum", cell: r => fmtCurrency(r.cost) },
+  { key: "avgCpc", label: "Avg. CPC", align: "num", width: 95, group: "Metrics", cls: "tabnum", cell: r => fmtCurrency(r.avgCpc) },
+  { key: "conversions", label: "Conv.", align: "num", width: 80, group: "Metrics", cls: "tabnum", cell: r => fmtDec(r.conversions) },
+  { key: "convRate", label: "Conv. Rate", align: "num", width: 95, group: "Metrics", cls: "tabnum", cell: r => fmtPct(r.convRate) },
+  { key: "cpa", label: "Cost / Conv.", align: "num", width: 105, group: "Metrics", cls: "tabnum",
+    sort: r => r.conversions ? r.cpa : Infinity, cell: r => r.conversions ? fmtCurrency(r.cpa) : "\u2014" },
+  { key: "convValue", label: "Conv. Value", align: "num", width: 105, group: "Metrics", cls: "tabnum", cell: r => fmtCurrency(r.convValue) },
+  { key: "negStatus", label: "Negative Status", align: "txt", width: 150, group: "Negatives",
+    sort: r => ({ open: 0, partly: 1, blocked: 2 })[r.negStatus],
+    cell: r => '<span class="neg-tag ' + r.negStatus + '" title="' + escapeHtml(r.reasons.length ? r.reasons.join("\n") : "Can still show for this search term") + '">' + NEG_STATUS[r.negStatus] + "</span>" },
+];
+const NEG_DEFAULT_VISIBLE = ["impressions", "clicks", "ctr", "cost", "avgCpc", "conversions", "negStatus"];
+const negState = { rows: [], loadedKey: null, loadedFloor: null, sort: { key: "cost", dir: "desc" }, columnWidths: {}, currentPage: 1, pageSize: 25,
+  visible: new Set(savedColVisible("negatives") || NEG_DEFAULT_VISIBLE), openColGroups: new Set(["negColsPop_g0"]), heatmap: false,
+  viewLevel: "campaign", dateRange: { type: "allTime" }, filters: NEG_DEFAULT_FILTERS(), wired: false, token: 0 };
+try {
+  const p = uiGet("negatives");
+  if (p) {
+    if (p.sort) negState.sort = p.sort;
+    if (p.columnWidths) negState.columnWidths = p.columnWidths;
+    if ([10, 25, 50, 100, 500].includes(p.pageSize)) negState.pageSize = p.pageSize;
+    if (typeof p.heatmap === "boolean") negState.heatmap = p.heatmap;
+    if (p.viewLevel === "campaign" || p.viewLevel === "adgroup") negState.viewLevel = p.viewLevel;
+    if (p.dateRange && (p.dateRange.type === "allTime" || p.dateRange.days || p.dateRange.type || (p.dateRange.from && p.dateRange.to))) negState.dateRange = p.dateRange;
+  }
+  const f = loadPageFilters("negatives");
+  if (f) negState.filters = { minClicks: f.minClicks >= 0 ? +f.minClicks : 100, maxConv: f.maxConv >= 0 ? +f.maxConv : 0, minCost: f.minCost >= 0 ? +f.minCost : 0,
+    status: new Set(Array.isArray(f.status) ? f.status : ["open", "partly"]), term: f.term || "", termOp: f.termOp || "contains" };
+} catch {}
+
+const negGaql = r => r && r.type === "allTime" ? "ALL_TIME" : dateRangeToGAQL(r);
+const negKey = () => GLOBAL_ACCOUNT + "|" + negGaql(negState.dateRange);
+function syncNegDateSelect() {
+  syncDateSelectEl("negDateSelect", negState.dateRange);
+  if (negState.dateRange && negState.dateRange.type === "allTime") document.getElementById("negDateSelect").value = "allTime";
+}
+function onNegDateRangeChange() {
+  const val = document.getElementById("negDateSelect").value;
+  if (val === "customApplied") return;
+  if (val === "custom") {
+    state.calendarTarget = "neg";
+    state.calendarFromDate = new Date(); state.calendarToDate = new Date();
+    document.getElementById("calendarTitle").textContent = "Custom date range";
+    renderCalendar("from"); renderCalendar("to");
+    document.getElementById("customDateModal").setAttribute("open", "");
+    return;
+  }
+  negState.dateRange = val === "allTime" ? { type: "allTime" } : DATE_PRESET_MAP[val];
+  uiSave("negatives", { dateRange: negState.dateRange });
+  syncNegDateSelect();
+  loadNegatives();
+}
+
+function initNegatives() {
+  document.getElementById("negSignedOut").hidden = signedIn;
+  document.getElementById("negSignedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  if (!negState.wired) {
+    negState.wired = true;
+    const wirePop = (btnId, popId, onOpen) => {
+      const btn = document.getElementById(btnId), pop = document.getElementById(popId);
+      btn.addEventListener("click", e => { e.stopPropagation(); const open = pop.hidden; closeAllMenus(); if (open) { if (onOpen) onOpen(); pop.hidden = false; } });
+      pop.addEventListener("click", e => e.stopPropagation());
+    };
+    wirePop("negFiltersBtn", "negFiltersMenu", syncNegFilterBoxes);
+    wirePop("negColsBtn", "negColsPop", renderNegColsPop);
+    wirePop("negViewBtn", "negViewPop", renderNegViewPop);
+    wirePop("negExportBtn", "negExportPop");
+    document.querySelectorAll("#negExportPop [data-negfmt]").forEach(b => b.addEventListener("click", () => { document.getElementById("negExportPop").hidden = true; exportNegatives(b.dataset.negfmt); }));
+    const hb = document.getElementById("negHeatmapBtn");
+    const syncHb = () => { hb.classList.toggle("toggled", negState.heatmap); hb.setAttribute("aria-pressed", negState.heatmap ? "true" : "false"); };
+    hb.addEventListener("click", e => { e.stopPropagation(); negState.heatmap = !negState.heatmap; syncHb(); persistUi("negatives", negState); renderNegatives(); });
+    syncHb();
+    const op = document.getElementById("negfTermOp"); if (op && !op.options.length) op.innerHTML = TEXT_OP_OPTIONS;
+    document.getElementById("negColsCount").textContent = negState.visible.size;
+    document.getElementById("negViewLabel").textContent = NEG_VIEW_LEVELS.find(([id]) => id === negState.viewLevel)[1];
+    updateNegFilterCount();
+  }
+  syncNegDateSelect();
+  if (GLOBAL_ACCOUNT === "ALL") {
+    document.getElementById("negControls").hidden = true;
+    ["negLoading", "negTable", "negError", "negWarn", "negEmpty", "negSummary", "negPagination"].forEach(id => showEl(id, false));
+    showEl("negPrompt", true);
+    return;
+  }
+  document.getElementById("negControls").hidden = false;
+  showEl("negPrompt", false);
+  if (negState.loadedKey !== negKey() || (negState.loadedFloor != null && negState.filters.minClicks < negState.loadedFloor)) loadNegatives();
+  else renderNegatives();
+}
+
+async function loadNegatives() {
+  if (GLOBAL_ACCOUNT === "ALL") { initNegatives(); return; }
+  const key = negKey(), token = ++negState.token;
+  const floor = negState.filters.minClicks;
+  negState.loadedKey = key;
+  ["negPrompt", "negError", "negTable", "negWarn", "negEmpty", "negSummary", "negPagination"].forEach(id => showEl(id, false));
+  showEl("negLoading", true);
+  try {
+    const ctrl = new AbortController(), tmo = setTimeout(() => ctrl.abort(), 90000);
+    let res;
+    try { res = await fetch("/api/suggestednegatives?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(negGaql(negState.dateRange)) + "&minClicks=" + floor, { credentials: "same-origin", signal: ctrl.signal }); }
+    catch (e) { throw new Error(e && e.name === "AbortError" ? "This took longer than 90 seconds. Try a shorter date range." : (e.message || "Request failed")); }
+    finally { clearTimeout(tmo); }
+    if (res.status === 401) { showSignedOut(); return; }
+    const raw = await res.text();
+    let data; try { data = JSON.parse(raw); } catch { throw new Error("The server returned a page instead of data (HTTP " + res.status + "). Try a shorter date range."); }
+    if (data.error) throw new Error(data.error + (data.detail ? " \u2014 " + data.detail : ""));
+    if (token !== negState.token) return;
+    negState.rows = data.rows || [];
+    negState.loadedFloor = floor;
+    showEl("negLoading", false);
+    const w = document.getElementById("negWarn"); w.hidden = !data.warning; if (data.warning) w.textContent = data.warning;
+    negState.currentPage = 1;
+    renderNegatives();
+    setLastRefresh("negatives");
+    if (typeof populateAccCampaignFilter === "function") populateAccCampaignFilter();
+  } catch (e) {
+    if (token !== negState.token) return;
+    negState.loadedKey = null;
+    showEl("negLoading", false);
+    const el = document.getElementById("negError"); el.hidden = false;
+    el.innerHTML = '<div class="big">Couldn\u2019t load search terms</div>' + escapeHtml(e.message || "Please try again.");
+  }
+}
+
+// Combine source rows to the current level, then apply the filters.
+function negViewRows() {
+  const f = negState.filters, pick = getCampPickerValue();
+  const level = !pick ? "term" : negState.viewLevel;
+  const by = new Map();
+  negState.rows.forEach(r => {
+    if (pick && r.campaign !== pick) return;
+    if (!matchTextFilter(r.term, f.termOp, f.term)) return;
+    const k = level === "adgroup" ? r.term + "\u0001" + r.adGroupId : r.term;
+    let g = by.get(k);
+    if (!g) { g = { term: r.term, campaign: r.campaign, adGroup: r.adGroup, impressions: 0, clicks: 0, cost: 0, conversions: 0, convValue: 0, places: 0, blockedPlaces: 0, reasons: new Set(), camps: new Set(), ags: new Set() }; by.set(k, g); }
+    g.impressions += r.impressions; g.clicks += r.clicks; g.cost += r.cost; g.conversions += r.conversions; g.convValue += r.convValue;
+    g.places++; if (r.blocked) { g.blockedPlaces++; g.reasons.add((level === "term" ? r.campaign + ": " : "") + r.blocked); }
+    g.camps.add(r.campaign); g.ags.add(r.campaignId + "|" + r.adGroupId);
+  });
+  return [...by.values()].map(g => {
+    const negStatus = g.blockedPlaces === 0 ? "open" : g.blockedPlaces === g.places ? "blocked" : "partly";
+    return Object.assign(g, {
+      negStatus, reasons: [...g.reasons], campaignCount: g.camps.size, adGroupCount: g.ags.size, campaignNames: [...g.camps].sort(),
+      ctr: g.impressions ? g.clicks / g.impressions : 0, avgCpc: g.clicks ? g.cost / g.clicks : 0,
+      convRate: g.clicks ? g.conversions / g.clicks : 0, cpa: g.conversions ? g.cost / g.conversions : 0,
+    });
+  }).filter(g => g.clicks >= f.minClicks && g.conversions <= f.maxConv + 1e-9 && g.cost >= f.minCost && f.status.has(g.negStatus));
+}
+
+function renderNegatives() {
+  if (GLOBAL_ACCOUNT === "ALL" || negState.loadedKey == null) return;
+  // Lowered Minimum Clicks below what was fetched → fetch more.
+  if (negState.loadedFloor != null && negState.filters.minClicks < negState.loadedFloor) { loadNegatives(); return; }
+  const pick = getCampPickerValue();
+  const level = !pick ? "term" : negState.viewLevel;
+  document.getElementById("negViewGroup").hidden = !pick;
+  const rows = negViewRows();
+  showEl("negEmpty", !rows.length); showEl("negTable", !!rows.length);
+  // Headline: how much these terms have cost.
+  const sum = document.getElementById("negSummary");
+  if (rows.length) {
+    const cost = rows.reduce((a, r) => a + r.cost, 0), clicks = rows.reduce((a, r) => a + r.clicks, 0);
+    const convTxt = negState.filters.maxConv > 0 ? "no more than " + fmtDec(negState.filters.maxConv) + " conversion" + (negState.filters.maxConv === 1 ? "" : "s") + " each" : "no conversions";
+    sum.innerHTML = "<strong>" + fmtInt(rows.length) + "</strong> search term" + (rows.length === 1 ? " has" : "s have") + " cost <strong>" + escapeHtml(fmtCurrency(cost)) + "</strong> across <strong>" + fmtInt(clicks) + "</strong> clicks with " + convTxt + (pick ? " in " + escapeHtml(pick) : "") + ".";
+    sum.hidden = false;
+  } else sum.hidden = true;
+  if (!rows.length) { showEl("negPagination", false); return; }
+  renderDataTable({
+    state: negState,
+    columns: () => [NEG_COL_TERM].concat(level === "term" ? [] : [NEG_COL_CAMPAIGN], level === "adgroup" ? [NEG_COL_ADGROUP] : [], NEG_COLUMNS),
+    colOrderKey: "negatives",
+    prefKey: "negatives",
+    heatmap: true,
+    resetPageOnSort: true,
+    ids: { colgroup: "neg-colgroup", thead: "neg-thead", tbody: "neg-tbody", tfoot: "neg-tfoot", pagination: "negPagination" },
+    rerender: renderNegatives,
+    rows: () => rows,
+    footer: (all, cols) => {
+      const T = all.reduce((a, r) => { a.impressions += r.impressions; a.clicks += r.clicks; a.cost += r.cost; a.conversions += r.conversions; a.convValue += r.convValue; return a; }, { impressions: 0, clicks: 0, cost: 0, conversions: 0, convValue: 0 });
+      Object.assign(T, { ctr: T.impressions ? T.clicks / T.impressions : 0, avgCpc: T.clicks ? T.cost / T.clicks : 0, convRate: T.clicks ? T.conversions / T.clicks : 0, cpa: T.conversions ? T.cost / T.conversions : 0 });
+      return "<tr>" + cols.map((c, i) => {
+        if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total \u00b7 ' + fmtInt(all.length) + " term" + (all.length === 1 ? "" : "s") + "</td>";
+        if (c.align === "num") return '<td class="num tabnum" data-col="' + c.key + '">' + c.cell(T) + "</td>";
+        return '<td data-col="' + c.key + '"></td>';
+      }).join("") + "</tr>";
+    },
+  });
+}
+
+function renderNegViewPop() {
+  const pop = document.getElementById("negViewPop");
+  pop.innerHTML = NEG_VIEW_LEVELS.map(([id, name]) => {
+    const active = negState.viewLevel === id;
+    return '<button class="pop-row" data-negview="' + id + '"><span' + (active ? ' style="color:var(--accent);font-weight:560"' : "") + ">" + escapeHtml(name) + "</span>" + (active ? '<span class="active-dot">\u2713</span>' : "") + "</button>";
+  }).join("");
+  pop.querySelectorAll("[data-negview]").forEach(row => row.addEventListener("click", () => {
+    negState.viewLevel = row.dataset.negview;
+    document.getElementById("negViewLabel").textContent = NEG_VIEW_LEVELS.find(([id]) => id === negState.viewLevel)[1];
+    uiSave("negatives", { viewLevel: negState.viewLevel });
+    pop.hidden = true;
+    negState.currentPage = 1;
+    renderNegatives();
+  }));
+}
+function renderNegColsPop() {
+  renderGroupedCols("negColsPop", NEG_COLUMNS, ["Metrics", "Negatives"], negState.visible, negState.openColGroups, key => {
+    negState.visible.has(key) ? negState.visible.delete(key) : negState.visible.add(key);
+    setColVisible("negatives", negState.visible);
+    document.getElementById("negColsCount").textContent = negState.visible.size;
+    renderNegColsPop(); renderNegatives();
+  });
+}
+function syncNegFilterBoxes() {
+  const f = negState.filters;
+  document.getElementById("negfMinClicks").value = f.minClicks;
+  document.getElementById("negfMaxConv").value = f.maxConv;
+  document.getElementById("negfMinCost").value = f.minCost;
+  NEG_STATUS_BOXES.forEach(([id, v]) => { document.getElementById(id).checked = f.status.has(v); });
+  document.getElementById("negfTerm").value = f.term;
+  const op = document.getElementById("negfTermOp"); if (op) op.value = f.termOp;
+}
+function applyNegFilters() {
+  const num = (id, d) => { const v = parseFloat(document.getElementById(id).value); return isFinite(v) && v >= 0 ? v : d; };
+  negState.filters = {
+    minClicks: Math.round(num("negfMinClicks", 0)), maxConv: num("negfMaxConv", 0), minCost: num("negfMinCost", 0),
+    status: new Set(NEG_STATUS_BOXES.filter(([id]) => document.getElementById(id).checked).map(([, v]) => v)),
+    term: document.getElementById("negfTerm").value, termOp: document.getElementById("negfTermOp").value || "contains",
+  };
+  savePageFilters("negatives", { minClicks: negState.filters.minClicks, maxConv: negState.filters.maxConv, minCost: negState.filters.minCost, status: [...negState.filters.status], term: negState.filters.term, termOp: negState.filters.termOp });
+  document.getElementById("negFiltersMenu").hidden = true;
+  negState.currentPage = 1;
+  updateNegFilterCount();
+  renderNegatives();
+}
+function resetNegFilters() { negState.filters = NEG_DEFAULT_FILTERS(); syncNegFilterBoxes(); applyNegFilters(); }
+function updateNegFilterCount() {
+  const f = negState.filters, termOn = (f.term || "").trim() ? 1 : 0;
+  const n = (f.minClicks > 0 ? 1 : 0) + 1 /* max conversions always applies */ + (f.minCost > 0 ? 1 : 0) + (f.status.size < 3 ? 1 : 0) + termOn;
+  const el = document.getElementById("negFilterCount"); el.textContent = n; el.hidden = !n;
+  markFilterGroup("neg-group-clicks", f.minClicks > 0 ? 1 : 0);
+  markFilterGroup("neg-group-conv", 1);
+  markFilterGroup("neg-group-cost", f.minCost > 0 ? 1 : 0);
+  markFilterGroup("neg-group-status", f.status.size < 3 ? f.status.size : 0);
+  markFilterGroup("neg-group-term", termOn);
+}
+function exportNegatives(fmt) {
+  const rows = negState.viewRows || [], cols = negState.viewCols || [];
+  if (!rows.length) { showToast("Nothing to export."); return; }
+  const header = cols.map(c => c.label);
+  const data = rows.map(r => cols.map(c => {
+    if (c.key === "negStatus") return NEG_STATUS[r.negStatus] + (r.reasons.length ? " (" + r.reasons.join("; ") + ")" : "");
+    if (c.key === "ctr" || c.key === "convRate") return fmtPct(r[c.key] || 0);
+    if (c.key === "cpa") return r.conversions ? +r.cpa.toFixed(2) : "";
+    if (["cost", "avgCpc", "convValue", "conversions"].includes(c.key)) return +(r[c.key] || 0).toFixed(2);
+    return r[c.key] != null ? r[c.key] : "";
+  }));
+  exportMatrix(fmt, "suggested-negatives-" + new Date().toISOString().slice(0, 10), "Suggested Negatives", header, data);
 }
 
 /* ============================ Ad Copy page ============================ */
