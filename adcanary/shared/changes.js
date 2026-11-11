@@ -250,10 +250,15 @@ export async function readLog(env, cid) {
 // Merge freshly fetched changes into the saved log. `windowStart` = earliest date the fetch covered.
 export async function mergeIntoLog(env, cid, fresh, windowStart) {
   const log = await readLog(env, cid);
+  // Refresh campaign names on changes already saved (campaigns get renamed).
+  const names = new Map();
+  fresh.forEach((e) => (e.campaigns || []).forEach((x) => { if (x.id && x.name) names.set(String(x.id), x.name); }));
+  let renamed = false;
+  log.events.forEach((e) => (e.campaigns || []).forEach((x) => { const n = names.get(String(x.id)); if (n && n !== x.name) { x.name = n; renamed = true; } }));
   const seen = new Set(log.events.map((e) => e.id));
   const added = fresh.filter((e) => !seen.has(e.id));
   const since = !log.since || (windowStart && windowStart < log.since) ? windowStart : log.since;
-  if (added.length || since !== log.since) {
+  if (added.length || since !== log.since || renamed) {
     log.events = log.events.concat(added).sort((a, b) => (a.ts < b.ts ? 1 : -1)).slice(0, LOG_CAP);
     log.since = since;
     try { await env.SESSIONS.put(LOG_KEY(cid), JSON.stringify(log)); } catch {}
