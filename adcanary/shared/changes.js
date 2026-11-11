@@ -280,11 +280,12 @@ export async function snapshotLandingPages(env, search, cid, log) {
   (await search(`SELECT campaign.id, campaign.name FROM campaign WHERE campaign.status != 'REMOVED'`)).forEach((r) => names.set(String(r.campaign?.id), r.campaign?.name || ""));
   (await search(`SELECT campaign.id, ad_group_ad.ad.final_urls FROM ad_group_ad WHERE campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_ad.status = 'ENABLED'`))
     .forEach((r) => (r.adGroupAd?.ad?.finalUrls || []).forEach((u) => add(String(r.campaign?.id), u)));
-  try {
+  // Every lookup must succeed. If any one fails (e.g. Google times out, or the daily run hits
+  // Cloudflare's request limit), the whole check is skipped for today rather than saving a partial
+  // list — a partial list makes pages look "no longer used" one day and "new" the next.
+  {
     (await search(`SELECT campaign.id, asset_group.final_urls FROM asset_group WHERE campaign.status != 'REMOVED' AND asset_group.status = 'ENABLED'`))
       .forEach((r) => (r.assetGroup?.finalUrls || []).forEach((u) => add(String(r.campaign?.id), u)));
-  } catch { /* no Performance Max */ }
-  try {
     (await search(`SELECT asset.id, asset.final_urls FROM asset WHERE asset.type = 'SITELINK'`)).forEach((r) => assetUrl.set(String(r.asset?.id), r.asset?.finalUrls || []));
     (await search(`SELECT ad_group.id, campaign.id FROM ad_group WHERE ad_group.status != 'REMOVED'`)).forEach((r) => agCamp.set(String(r.adGroup?.id), String(r.campaign?.id)));
     (await search(`SELECT campaign_asset.campaign, campaign_asset.asset FROM campaign_asset WHERE campaign_asset.field_type = 'SITELINK' AND campaign_asset.status = 'ENABLED'`))
@@ -293,7 +294,7 @@ export async function snapshotLandingPages(env, search, cid, log) {
       .forEach((r) => { const c = agCamp.get(idOf(r.adGroupAsset?.adGroup)); if (c) (assetUrl.get(idOf(r.adGroupAsset?.asset)) || []).forEach((u) => add(c, u)); });
     (await search(`SELECT customer_asset.asset FROM customer_asset WHERE customer_asset.field_type = 'SITELINK' AND customer_asset.status = 'ENABLED'`))
       .forEach((r) => (assetUrl.get(idOf(r.customerAsset?.asset)) || []).forEach((u) => add("account", u)));
-  } catch { /* sitelinks are a bonus */ }
+  }
 
   const snap = { date: today, map: Object.fromEntries([...urls].map(([k, m]) => [k, [...m.entries()]])) };
   try { await env.SESSIONS.put(SNAP_KEY(cid), JSON.stringify(snap)); } catch {}
@@ -336,4 +337,19 @@ export async function readNotes(env, cid) {
 }
 export async function writeNotes(env, cid, notes) {
   await env.SESSIONS.put(NOTES_KEY(cid), JSON.stringify(notes.slice(-NOTES_CAP)));
+}
+
+// Daily-check blips: a page reported "no longer used" and then "new" again for the same campaign
+// within 3 days is almost always a failed check, not a real change — hide both halves.
+export function dropLandingBlips(events) {
+  const DAY = 86400000, gone = new Map(), drop = new Set();
+  const key = (e) => ((e.campaigns || [])[0]?.id || "account") + "|" + normUrl(e.from || e.to);
+  const daily = (events || []).filter((e) => e.type === "landing" && e.source === "Daily check").sort((a, b) => (a.date < b.date ? -1 : 1));
+  for (const e of daily) {
+    const k = key(e);
+    if (e.from && !e.to) { gone.set(k, e); continue; }
+    const g = gone.get(k);
+    if (e.to && !e.from && g && Date.parse(e.date) - Date.parse(g.date) <= 3 * DAY) { drop.add(g.id); drop.add(e.id); gone.delete(k); }
+  }
+  return drop.size ? events.filter((e) => !drop.has(e.id)) : events;
 }
