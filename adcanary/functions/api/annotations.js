@@ -10,7 +10,7 @@
 // Every action first checks the signed-in person can access that Google Ads account (403 if not).
 
 import { getRefreshToken, getAccessToken, adsRequest, json } from "../../shared/google.js";
-import { fetchChanges, liveWindow, mergeIntoLog, readLog, readNotes, writeNotes, adsErrorReason, snapshotLandingPages } from "../../shared/changes.js";
+import { fetchChanges, liveWindow, mergeIntoLog, readLog, readNotes, writeNotes, adsErrorReason, snapshotLandingPages, dropLandingBlips } from "../../shared/changes.js";
 import { canAccess } from "../../shared/access.js";
 
 const NO_ACCESS = () => json({ error: "You don't have access to this Google Ads account" }, 403);
@@ -52,7 +52,7 @@ export async function onRequestGet(context) {
   }
   const inRange = (d) => d >= from && d <= to;
   const notes = (await readNotes(env, cid)).filter((n) => inRange(n.date));
-  const payload = { changes: log.events.filter((e) => inRange(e.date)), notes, historyFrom: log.since || w.start };
+  const payload = { changes: dropLandingBlips(log.events).filter((e) => inRange(e.date)), notes, historyFrom: log.since || w.start };
   if (liveError) payload.warning = "Couldn't load the latest changes from Google: " + liveError;
   return json(payload);
 }
