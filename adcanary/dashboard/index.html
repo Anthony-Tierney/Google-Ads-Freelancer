@@ -1728,6 +1728,8 @@
               <label class="field-label" for="negDateSelect">Date range</label>
               <select id="negDateSelect" onchange="onNegDateRangeChange()">
                 <option value="allTime" selected>All Time</option>
+                <option value="last365">Last 12 Months</option>
+                <option value="last90">Last 90 Days</option>
                 <option value="yesterday">Yesterday</option>
                 <option value="7days">Last 7 Days</option>
                 <option value="14days">Last 14 Days</option>
@@ -3570,6 +3572,28 @@ function bpBarTip(e, day, value, future) {
 }
 function bpBarTipHide() { const t = document.getElementById("bpChartTip"); if (t) t.hidden = true; }
 
+// Y-axis scale for the Performance Overview graph: 3–6 gridlines with clean steps
+// (1, 2, 2.5, 5 × 10ⁿ), choosing the count that leaves the least empty space above the data.
+// With two metrics, both axes share the gridlines, so the count that fits BOTH best wins.
+// intOnly1/2: that axis's labels are shown without decimals, so steps must be whole numbers.
+function repAxisScale(max1, max2, intOnly1, intOnly2) {
+  const niceStep = (x, intOnly) => {
+    if (!(x > 0)) return 1;
+    if (intOnly && x <= 1) return 1;
+    const mag = Math.pow(10, Math.floor(Math.log10(x))), n = x / mag;
+    // 2.5 only where it gives whole numbers (25, 250…), so rounded axis labels stay accurate.
+    const steps = mag >= 10 ? [1, 2, 2.5, 5, 10] : [1, 2, 5, 10];
+    return steps.find(st => st >= n - 1e-9) * mag;
+  };
+  const fit = (max, n, intOnly) => { const st = niceStep(max / n, intOnly); return { top: st * n, fill: max > 0 ? max / (st * n) : 1 }; };
+  let best = null;
+  for (let n = 2; n <= 6; n++) {
+    const a = fit(max1, n, intOnly1), b = max2 != null ? fit(max2, n, intOnly2) : { top: 1, fill: 1 };
+    const score = a.fill + b.fill - n * 0.001 - (n === 2 ? 0.05 : 0); // tie → fewer gridlines; 2 only when clearly better
+    if (!best || score > best.score) best = { score, ticks: n, max1: a.top, max2: b.top };
+  }
+  return best;
+}
 function bpNiceCeil(v) {
   if (v <= 0) return 1;
   const mag = Math.pow(10, Math.floor(Math.log10(v))), n = v / mag;
@@ -3648,7 +3672,8 @@ function applyCustomDate() {
   if (state.calendarTarget === "neg") {
     closeCustomDateModal();
     negState.dateRange = { label: from + " to " + to, from, to };
-    uiSave("negatives", { dateRange: negState.dateRange });
+    negState.rangeSet = true; negState.autoNote = "";
+    uiSave("negatives", { dateRange: negState.dateRange, rangeSet: true });
     syncNegDateSelect();
     loadNegatives();
     return;
@@ -4469,8 +4494,9 @@ function renderRepChartSvg(bars, metric, metric2) {
   const W = 900, H = 316 + (annOn ? 22 : 0), mL = 88, mR = metric2 ? 88 : 18, mT = (repShowLabels ? 30 : 22) + (annOn ? 22 : 0), mB = 60;
   const pw = W - mL - mR, ph = H - mT - mB, base = mT + ph;
   const t1 = repTypeFor(metric.key, 1), t2 = metric2 ? repTypeFor(metric2.key, 2) : null;
-  const niceMax = bpNiceCeil(Math.max(0.0000001, ...bars.map(b => b.value || 0)));
-  const niceMax2 = metric2 ? bpNiceCeil(Math.max(0.0000001, ...bars.map(b => b.value2 || 0))) : 1;
+  const wholeOnly = m => !/\d[.,]\d/.test(String(m.fmt(0.5))); // labels shown without decimals
+  const ax = repAxisScale(Math.max(0, ...bars.map(b => b.value || 0)), metric2 ? Math.max(0, ...bars.map(b => b.value2 || 0)) : null, wholeOnly(metric), metric2 ? wholeOnly(metric2) : false);
+  const niceMax = ax.max1, niceMax2 = ax.max2, ticks = ax.ticks;
   const slot = pw / bars.length;
   const y1 = v => base - ((v || 0) / niceMax) * ph;
   const y2 = v => base - ((v || 0) / niceMax2) * ph;
@@ -4489,11 +4515,11 @@ function renderRepChartSvg(bars, metric, metric2) {
   const fmtTip = b => escapeHtml(repTipDate(b.sortKey));
   const tipAttr = b => ' data-tip="' + fmtTip(b) + '" onmousemove="repBarTip(event,this)" onmouseleave="repBarTipHide()"';
   let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="bp-chart-svg" preserveAspectRatio="xMidYMid meet">';
-  for (let t = 0; t <= 4; t++) {
-    const yy = y1(niceMax * t / 4);
+  for (let t = 0; t <= ticks; t++) {
+    const yy = y1(niceMax * t / ticks);
     s += '<line x1="' + mL + '" y1="' + yy.toFixed(1) + '" x2="' + (W - mR) + '" y2="' + yy.toFixed(1) + '" stroke="var(--line-soft)" />';
-    s += '<text x="' + (mL - 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end" class="bp-chart-ylabel">' + metric.fmt(niceMax * t / 4) + "</text>";
-    if (metric2) s += '<text x="' + (W - mR + 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="start" class="bp-chart-ylabel">' + metric2.fmt(niceMax2 * t / 4) + "</text>";
+    s += '<text x="' + (mL - 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end" class="bp-chart-ylabel">' + metric.fmt(niceMax * t / ticks) + "</text>";
+    if (metric2) s += '<text x="' + (W - mR + 8) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="start" class="bp-chart-ylabel">' + metric2.fmt(niceMax2 * t / ticks) + "</text>";
   }
   const series = [{ n: 1, type: t1, val: b => b.value, y: y1, cls: "rep-bar", line: "var(--accent)", dot: "rep-dot", r: 3 }];
   if (metric2) series.push({ n: 2, type: t2, val: b => b.value2, y: y2, cls: "rep-bar2", line: "#eab308", dot: "rep-dot2", r: 3.5 });
@@ -7855,7 +7881,7 @@ const NEG_COLUMNS = [
 const NEG_DEFAULT_VISIBLE = ["impressions", "clicks", "ctr", "cost", "avgCpc", "conversions", "negStatus"];
 const negState = { rows: [], loadedKey: null, loadedFloor: null, sort: { key: "cost", dir: "desc" }, columnWidths: {}, currentPage: 1, pageSize: 25,
   visible: new Set(savedColVisible("negatives") || NEG_DEFAULT_VISIBLE), openColGroups: new Set(["negColsPop_g0"]), heatmap: false,
-  viewLevel: "campaign", dateRange: { type: "allTime" }, filters: NEG_DEFAULT_FILTERS(), wired: false, token: 0 };
+  viewLevel: "campaign", dateRange: { type: "allTime" }, rangeSet: false, autoNote: "", filters: NEG_DEFAULT_FILTERS(), wired: false, token: 0 };
 try {
   const p = uiGet("negatives");
   if (p) {
@@ -7864,18 +7890,43 @@ try {
     if ([10, 25, 50, 100, 500].includes(p.pageSize)) negState.pageSize = p.pageSize;
     if (typeof p.heatmap === "boolean") negState.heatmap = p.heatmap;
     if (p.viewLevel === "campaign" || p.viewLevel === "adgroup") negState.viewLevel = p.viewLevel;
-    if (p.dateRange && (p.dateRange.type === "allTime" || p.dateRange.days || p.dateRange.type || (p.dateRange.from && p.dateRange.to))) negState.dateRange = p.dateRange;
+    // Only a range the user picked is restored; otherwise the automatic default applies.
+    if (p.rangeSet && p.dateRange && (p.dateRange.type || p.dateRange.days || p.dateRange.preset || (p.dateRange.from && p.dateRange.to))) { negState.dateRange = p.dateRange; negState.rangeSet = true; }
   }
   const f = loadPageFilters("negatives");
   if (f) negState.filters = { minClicks: f.minClicks >= 0 ? +f.minClicks : 100, maxConv: f.maxConv >= 0 ? +f.maxConv : 0, minCost: f.minCost >= 0 ? +f.minCost : 0,
     status: new Set(Array.isArray(f.status) ? f.status : ["open", "partly"]), term: f.term || "", termOp: f.termOp || "contains" };
 } catch {}
 
-const negGaql = r => r && r.type === "allTime" ? "ALL_TIME" : dateRangeToGAQL(r);
+// Rolling ranges are worked out from today each time, so "Last 12 Months" never goes stale.
+const NEG_ROLLING = { last365: { label: "Last 12 Months", days: 365 }, last90: { label: "Last 90 Days", days: 90 } };
+function negGaql(r) {
+  if (r && r.type === "allTime") return "ALL_TIME";
+  if (r && NEG_ROLLING[r.preset]) {
+    const end = new Date(); end.setDate(end.getDate() - 1);
+    const start = new Date(end); start.setDate(end.getDate() - NEG_ROLLING[r.preset].days + 1);
+    return "segments.date >= '" + formatDateForGAQL(start) + "' AND segments.date <= '" + formatDateForGAQL(end) + "'";
+  }
+  return dateRangeToGAQL(r);
+}
+// Automatic default: All Time, stepping down for accounts with too many search terms.
+// The step that worked is remembered per account (this browser).
+const NEG_AUTO_CHAIN = [{ type: "allTime" }, { preset: "last365" }, { preset: "last90" }, { days: 30, label: "Last 30 Days" }];
+const NEG_AUTO_LS = "negAutoRange_v1";
+function negAutoStep(account, set) {
+  let m = {}; try { m = JSON.parse(localStorage.getItem(NEG_AUTO_LS) || "{}"); } catch {}
+  if (set === undefined) return Math.min(NEG_AUTO_CHAIN.length - 1, m[account] || 0);
+  m[account] = set; try { localStorage.setItem(NEG_AUTO_LS, JSON.stringify(m)); } catch {}
+  return set;
+}
+function negRangeName(r) { return r.type === "allTime" ? "All Time" : NEG_ROLLING[r.preset] ? NEG_ROLLING[r.preset].label : (r.label || prettyRangeLabel(r)); }
 const negKey = () => GLOBAL_ACCOUNT + "|" + negGaql(negState.dateRange);
 function syncNegDateSelect() {
-  syncDateSelectEl("negDateSelect", negState.dateRange);
-  if (negState.dateRange && negState.dateRange.type === "allTime") document.getElementById("negDateSelect").value = "allTime";
+  const r = negState.dateRange || {};
+  syncDateSelectEl("negDateSelect", r.preset ? null : r);
+  const sel = document.getElementById("negDateSelect");
+  if (r.type === "allTime") sel.value = "allTime";
+  else if (r.preset) sel.value = r.preset;
 }
 function onNegDateRangeChange() {
   const val = document.getElementById("negDateSelect").value;
@@ -7888,8 +7939,9 @@ function onNegDateRangeChange() {
     document.getElementById("customDateModal").setAttribute("open", "");
     return;
   }
-  negState.dateRange = val === "allTime" ? { type: "allTime" } : DATE_PRESET_MAP[val];
-  uiSave("negatives", { dateRange: negState.dateRange });
+  negState.dateRange = val === "allTime" ? { type: "allTime" } : NEG_ROLLING[val] ? { preset: val } : DATE_PRESET_MAP[val];
+  negState.rangeSet = true; negState.autoNote = "";
+  uiSave("negatives", { dateRange: negState.dateRange, rangeSet: true });
   syncNegDateSelect();
   loadNegatives();
 }
@@ -7919,6 +7971,7 @@ function initNegatives() {
     document.getElementById("negViewLabel").textContent = NEG_VIEW_LEVELS.find(([id]) => id === negState.viewLevel)[1];
     updateNegFilterCount();
   }
+  if (!negState.rangeSet && GLOBAL_ACCOUNT !== "ALL") negState.dateRange = NEG_AUTO_CHAIN[negAutoStep(GLOBAL_ACCOUNT)];
   syncNegDateSelect();
   if (GLOBAL_ACCOUNT === "ALL") {
     document.getElementById("negControls").hidden = true;
@@ -7934,6 +7987,8 @@ function initNegatives() {
 
 async function loadNegatives() {
   if (GLOBAL_ACCOUNT === "ALL") { initNegatives(); return; }
+  if (!negState.rangeSet) { negState.dateRange = NEG_AUTO_CHAIN[negAutoStep(GLOBAL_ACCOUNT)]; syncNegDateSelect(); }
+  if (negState.noteFor !== GLOBAL_ACCOUNT) { negState.autoNote = ""; negState.noteFor = GLOBAL_ACCOUNT; }
   const key = negKey(), token = ++negState.token;
   const floor = negState.filters.minClicks;
   negState.loadedKey = key;
@@ -7943,17 +7998,25 @@ async function loadNegatives() {
     const ctrl = new AbortController(), tmo = setTimeout(() => ctrl.abort(), 90000);
     let res;
     try { res = await fetch("/api/suggestednegatives?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(negGaql(negState.dateRange)) + "&minClicks=" + floor, { credentials: "same-origin", signal: ctrl.signal }); }
-    catch (e) { throw new Error(e && e.name === "AbortError" ? "This took longer than 90 seconds. Try a shorter date range." : (e.message || "Request failed")); }
+    catch (e) { const err = new Error(e && e.name === "AbortError" ? "This took longer than 90 seconds." : (e.message || "Request failed")); err.timeout = e && e.name === "AbortError"; throw err; }
     finally { clearTimeout(tmo); }
     if (res.status === 401) { showSignedOut(); return; }
     const raw = await res.text();
-    let data; try { data = JSON.parse(raw); } catch { throw new Error("The server returned a page instead of data (HTTP " + res.status + "). Try a shorter date range."); }
-    if (data.error) throw new Error(data.error + (data.detail ? " \u2014 " + data.detail : ""));
+    let data;
+    try { data = JSON.parse(raw); }
+    catch {
+      if (res.status === 404) { const e = new Error("The Suggested Negatives service wasn\u2019t found (HTTP 404). Check suggestednegatives.js is in adcanary/functions/api/ and negatives.js is in adcanary/shared/ on GitHub, then wait a minute for Cloudflare to publish."); e.fatal = true; throw e; }
+      const e = new Error("The server couldn\u2019t finish this request (HTTP " + res.status + ") \u2014 usually too much data for the date range."); e.tooBig = true; throw e;
+    }
+    if (data.error) { const e = new Error(data.error + (data.detail ? " \u2014 " + data.detail : "")); e.tooBig = res.status >= 500; throw e; }
     if (token !== negState.token) return;
+    // Automatic default only: an incomplete read means this range is too big for the account — step down.
+    if (data.truncated && !negState.rangeSet && negStepDown()) return;
     negState.rows = data.rows || [];
     negState.loadedFloor = floor;
     showEl("negLoading", false);
-    const w = document.getElementById("negWarn"); w.hidden = !data.warning; if (data.warning) w.textContent = data.warning;
+    const msg = [negState.autoNote, data.warning].filter(Boolean).join(" ");
+    const w = document.getElementById("negWarn"); w.hidden = !msg; if (msg) w.textContent = msg;
     negState.currentPage = 1;
     renderNegatives();
     setLastRefresh("negatives");
@@ -7961,10 +8024,25 @@ async function loadNegatives() {
   } catch (e) {
     if (token !== negState.token) return;
     negState.loadedKey = null;
+    // Too much data / timed out on the automatic default → try the next shorter range.
+    if ((e.tooBig || e.timeout) && !e.fatal && !negState.rangeSet && negStepDown()) return;
     showEl("negLoading", false);
     const el = document.getElementById("negError"); el.hidden = false;
-    el.innerHTML = '<div class="big">Couldn\u2019t load search terms</div>' + escapeHtml(e.message || "Please try again.");
+    el.innerHTML = '<div class="big">Couldn\u2019t load search terms</div>' + escapeHtml(e.message || "Please try again.") +
+      ((e.tooBig || e.timeout) && negState.rangeSet ? "<br>Try a shorter date range." : "");
   }
+}
+// Move the automatic default one step shorter for this account and reload. False if already shortest.
+function negStepDown() {
+  const from = negState.dateRange, step = negAutoStep(GLOBAL_ACCOUNT);
+  if (step >= NEG_AUTO_CHAIN.length - 1) return false;
+  negAutoStep(GLOBAL_ACCOUNT, step + 1);
+  negState.dateRange = NEG_AUTO_CHAIN[step + 1];
+  if (!negState.autoNote) negState.autoFrom = negRangeName(from); // keep naming the range we started from
+  negState.autoNote = negState.autoFrom + " was too much data for this account, so this shows " + negRangeName(negState.dateRange) + ". Choose a longer range above to try again.";
+  syncNegDateSelect();
+  loadNegatives();
+  return true;
 }
 
 // Combine source rows to the current level, then apply the filters.
