@@ -65,11 +65,12 @@ export async function onRequestPost(context) {
   const cid = cleanCid(body.customerId);
   const text = String(body.text || "").trim().slice(0, 300);
   const campaign = String(body.campaign || "").slice(0, 200);
+  const campaignId = /^\d{1,15}$/.test(String(body.campaignId || "")) ? String(body.campaignId) : "";
   if (!/^\d{6,12}$/.test(cid)) return json({ error: "Select a single account" }, 400);
   if (!isDate(body.date)) return json({ error: "Pick a date" }, 400);
   if (!text) return json({ error: "Write a note" }, 400);
   if (!(await canAccess(env, refreshToken, cid))) return NO_ACCESS();
-  const note = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: body.date, text, campaign, createdAt: new Date().toISOString() };
+  const note = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: body.date, text, campaign, campaignId, createdAt: new Date().toISOString() };
   const notes = await readNotes(env, cid);
   notes.push(note);
   try { await writeNotes(env, cid, notes); } catch { return json({ error: "Couldn't save the note" }, 500); }
