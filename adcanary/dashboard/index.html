@@ -4706,11 +4706,24 @@ async function loadRepAnnotations(force) {
   if (currentHashPage() === "reporting") renderReportingChart();
 }
 
+// Campaign names change (e.g. notes like "[tCPA60>55, NOV6]" added to the name), so annotations are
+// matched to the picked campaign by ID, and shown with each campaign's current name.
+function repCampNames() {
+  const m = new Map();
+  if (GLOBAL_ACCOUNT !== "ALL") (state.campaigns || []).forEach(c => { if (c.id != null) m.set(String(c.id), c.name || ""); });
+  return m;
+}
+function repPickedCampaignId(pick) {
+  if (!pick || GLOBAL_ACCOUNT === "ALL") return null;
+  const c = (state.campaigns || []).find(x => x.name === pick);
+  return c && c.id != null ? String(c.id) : null;
+}
 function repAnnVisible() {
-  const pick = getCampPickerValue();
+  const pick = getCampPickerValue(), pickId = repPickedCampaignId(pick);
+  const isPicked = x => (pickId && String(x.id) === pickId) || x.name === pick;
   const out = [], groups = new Map();
   repAnn.changes.forEach(c => {
-    if (!repAnnShow[c.kind] || (pick && !(c.campaigns || []).some(x => x.name === pick))) return;
+    if (!repAnnShow[c.kind] || (pick && !(c.campaigns || []).some(isPicked))) return;
     if (c.kind !== "landing") { out.push(c); return; }
     // One URL change often touches many ads at once — show it as one entry.
     const k = [c.accountId, c.date, c.label, (c.campaigns || []).map(x => x.id).join("+"), c.from || "", c.to || "", c.scope || ""].join("|");
@@ -4719,7 +4732,7 @@ function repAnnVisible() {
     const item = Object.assign({}, c, { count: 1, adGroups: new Set(c.adGroup ? [c.adGroup] : []) });
     groups.set(k, item); out.push(item);
   });
-  repAnn.notes.forEach(n => { if (repAnnShow.note && (!pick || !n.campaign || n.campaign === pick)) out.push(n); });
+  repAnn.notes.forEach(n => { if (repAnnShow.note && (!pick || !n.campaign || (pickId && String(n.campaignId || "") === pickId) || n.campaign === pick)) out.push(n); });
   return out.sort((a, b) => (a.ts || a.date) < (b.ts || b.date) ? -1 : 1);
 }
 
@@ -4750,14 +4763,15 @@ function repShortUrl(u) {
 }
 function repAnnWhere(it) {
   const acct = GLOBAL_ACCOUNT === "ALL" && it.accountName ? it.accountName + " \u00b7 " : "";
+  const cur = repCampNames(), nameOf = c => cur.get(String(c.id)) || c.name;
   if (it.kind === "landing") {
-    const camp = (it.campaigns || []).map(c => c.name).filter(Boolean);
+    const camp = (it.campaigns || []).map(nameOf).filter(Boolean);
     const campTxt = camp.length > 3 ? camp.slice(0, 3).join(", ") + " +" + (camp.length - 3) + " more" : camp.join(", ") || (it.scope && /account/.test(it.scope) ? "All campaigns" : "Campaign");
     const ags = it.adGroups ? [...it.adGroups] : [];
     return acct + campTxt + (ags.length === 1 ? " \u203a " + ags[0] : ags.length > 1 ? " \u00b7 " + ags.length + " ad groups" : "");
   }
-  if (it.kind === "note") return acct + (it.campaign || "All campaigns");
-  const names = (it.campaigns || []).map(c => c.name).filter(Boolean);
+  if (it.kind === "note") return acct + (it.campaign ? (it.campaignId && cur.get(String(it.campaignId))) || it.campaign : "All campaigns");
+  const names = (it.campaigns || []).map(nameOf).filter(Boolean);
   return acct + (names.length > 3 ? names.slice(0, 3).join(", ") + " +" + (names.length - 3) + " more" : names.join(", ") || "Campaign");
 }
 function repAnnWho(it) { return it.kind === "note" ? "Note" : it.source === "Daily check" ? "Spotted by AdCanary\u2019s daily check" : (it.user || it.source || ""); }
@@ -4865,7 +4879,7 @@ async function saveRepNote() {
   if (!date) { showToast("Pick a date for the note."); return; }
   if (!text) { showToast("Write the note first."); return; }
   try {
-    const res = await fetch("/api/annotations", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customerId: GLOBAL_ACCOUNT, date, text, campaign }) });
+    const res = await fetch("/api/annotations", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customerId: GLOBAL_ACCOUNT, date, text, campaign, campaignId: (state.campaigns || []).find(c => c.name === campaign)?.id || "" }) });
     const d = await res.json();
     if (d.error) throw new Error(d.error);
     const b = repRangeBounds();
