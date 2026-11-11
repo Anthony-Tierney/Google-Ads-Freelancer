@@ -156,6 +156,9 @@
   .nav-warn svg { width: 15px; height: 15px; }
   .nav-ok { display: inline-flex; vertical-align: middle; color: #16a34a; margin-left: 5px; }
   .nav-ok svg { width: 15px; height: 15px; }
+  .rep-delta { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 11px; min-height: 16px; }
+  .rep-delta .delta { margin-left: 0; }
+  .rep-delta-prev { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .acc-cmp-dates { position: absolute; top: calc(100% + 5px); left: 2px; font-size: 10.5px; line-height: 1.2; color: var(--muted); white-space: nowrap; pointer-events: none; }
   path.geo-excl-shape { fill: url(#geoHatch) !important; }
   .rep-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 4px; }
@@ -894,7 +897,7 @@
       <svg class="nh-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
     </button>
     <div class="nav-section-items" data-section="accounts">
-      <a href="#" class="nav-item nav-sub" data-page="allaccounts">Overview</a>
+      <a href="#" class="nav-item nav-sub" data-page="reporting">Performance Overview</a>
       <a href="#" class="nav-item nav-sub" data-page="structure">Structure</a>
       <a href="#" class="nav-item nav-sub" data-page="geocoverage">Geo Coverage</a>
     </div>
@@ -904,7 +907,6 @@
       <svg class="nh-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
     </button>
     <div class="nav-section-items" data-section="reporting">
-      <a href="#" class="nav-item nav-sub" data-page="reporting">Performance Overview</a>
       <a href="#" class="nav-item nav-sub" data-page="locations">Locations</a>
     </div>
     <button class="nav-heading" data-section="audit">
@@ -1265,7 +1267,7 @@
           <div class="foot-note" style="margin-top:10px;">Removed campaigns and ad groups are not shown. Performance Max campaigns use asset groups rather than ad groups, so they appear without ad groups here. "Ended" campaigns are enabled but past their end date.</div>
         </section>
       </section>
-      <section id="reporting" class="page">
+      <section id="reporting" class="page active">
         <section id="repSignedOut" hidden>
           <div class="gate">
             <h1>Connect a Google Ads account</h1>
@@ -1290,6 +1292,22 @@
                 <option value="thisYear">This Year</option>
                 <option value="custom">Custom...</option>
               </select>
+            </div>
+            <div>
+              <label class="field-label">&nbsp;</label>
+              <div class="filters">
+                <button class="filters-btn" id="accCompareBtn" title="Compare to another period">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6 4 4 6-6M14 7h6v6"/></svg>
+                  <span class="acc-cmp-label">Compare</span>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+                </button>
+                <div class="pop col-pop" id="accComparePop" hidden>
+                  <button class="pop-row" data-acccmp="off">No comparison</button>
+                  <button class="pop-row" data-acccmp="previous">Previous period</button>
+                  <button class="pop-row" data-acccmp="custom">Custom range…</button>
+                </div>
+                <div class="acc-cmp-dates" id="accCmpDates" hidden></div>
+              </div>
             </div>
             <div class="grow"></div>
             <div class="toolset">
@@ -1335,7 +1353,7 @@
       </section>
 
       <!-- All Accounts Page -->
-      <section id="allaccounts" class="page active">
+      <section id="allaccounts" class="page">
         <section id="accSignedOut" hidden>
           <div class="gate">
             <h1>Connect a Google Ads account</h1>
@@ -1361,22 +1379,6 @@
                 <option value="thisYear">This Year</option>
                 <option value="custom">Custom...</option>
               </select>
-            </div>
-            <div>
-              <label class="field-label">&nbsp;</label>
-              <div class="filters">
-                <button class="filters-btn" id="accCompareBtn" title="Compare to another period">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6 4 4 6-6M14 7h6v6"/></svg>
-                  <span class="acc-cmp-label">Compare</span>
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
-                </button>
-                <div class="pop col-pop" id="accComparePop" hidden>
-                  <button class="pop-row" data-acccmp="off">No comparison</button>
-                  <button class="pop-row" data-acccmp="previous">Previous period</button>
-                  <button class="pop-row" data-acccmp="custom">Custom range…</button>
-                </div>
-                <div class="acc-cmp-dates" id="accCmpDates" hidden></div>
-              </div>
             </div>
             <div class="grow"></div>
             <span id="accToolsetHome" hidden></span>
@@ -3650,12 +3652,23 @@ function cancelCustomDate() {
   else if (state.calendarTarget === "co") syncCoDateSelect();
   else if (state.calendarTarget === "loc") syncDateSelectEl("locDateSelect", SHARED_DATE_RANGE);
   else if (state.calendarTarget === "neg") syncNegDateSelect();
-  else if (state.calendarTarget !== "compare") syncDateSelect();
+  else if (state.calendarTarget !== "compare" && state.calendarTarget !== "acccompare") syncDateSelect();
 }
 
 function applyCustomDate() {
   const from = formatDateForGAQL(state.calendarFromDate);
   const to = formatDateForGAQL(state.calendarToDate);
+
+  if (state.calendarTarget === "acccompare") {
+    accState.compareCustom = { from, to };
+    accState.comparePeriod = "custom";
+    accState.compareEnabled = true;
+    closeCustomDateModal();
+    persistUi("accounts", accState);
+    updateAccCompareUI();
+    reloadAfterAccCompare();
+    return;
+  }
 
   if (state.calendarTarget === "compare") {
     state.compareCustom = { from, to };
@@ -4009,15 +4022,14 @@ function initTheme() {
 // Navigation (hash-based, so refresh and bookmarks keep the current page)
 function currentHashPage() {
   const h = (location.hash || "").replace(/^#/, "");
-  return (document.getElementById(h) && document.querySelector('.nav-item[data-page="' + h + '"]')) ? h : "allaccounts";
+  return (document.getElementById(h) && document.querySelector('.nav-item[data-page="' + h + '"]')) ? h : "reporting";
 }
 
 // The metric-cell deltas follow whichever page you're on: Overview uses its own
 // Compare toggle, every other page uses the campaigns Compare toggle.
 function comparingNow() {
   const p = currentHashPage();
-  if (p === "reporting") return false; // Reporting has no Compare control
-  return p === "allaccounts" ? accState.compareEnabled : state.compareEnabled;
+  return (p === "allaccounts" || p === "reporting") ? accState.compareEnabled : state.compareEnabled;
 }
 
 // The Overview table + its toolbar (Heatmap, Filters, Views, Columns, Export) are lent to the
@@ -4164,11 +4176,21 @@ async function loadReporting() {
   try {
     const campaign = getCampPickerValue();
     const params = "customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(rangeToGAQL(SHARED_DATE_RANGE)) + (campaign ? "&campaign=" + encodeURIComponent(campaign) : "");
-    const res = await fetch("/api/reporting?" + params, { credentials: "same-origin" });
+    if (!accState.wired) { accState.wired = true; wireAccountsControls(); restoreAccFilters(); }
+    updateAccCompareUI();
+    const cmpRange = accState.compareEnabled ? getAccCompareRange() : null;
+    const cmpParams = cmpRange ? params.replace(/dateRange=[^&]*/, "dateRange=" + encodeURIComponent(cmpRange)) : null;
+    const [res, cmpRes] = await Promise.all([
+      fetch("/api/reporting?" + params, { credentials: "same-origin" }),
+      cmpParams ? fetch("/api/reporting?" + cmpParams, { credentials: "same-origin" }).catch(() => null) : Promise.resolve(null),
+    ]);
     if (res.status === 401) { showSignedOut(); return; }
     const d = await res.json();
     if (d.error) throw new Error(d.error);
     repSeries = d.series || [];
+    repPrevSeries = null;
+    if (cmpRes && cmpRes.ok) { const c = await cmpRes.json().catch(() => ({})); if (!c.error) repPrevSeries = c.series || []; }
+    if (cmpParams && !repPrevSeries) showToast("Couldn\u2019t load the comparison period for the scorecards.");
     renderReportingCards();
     renderReportingChart();
     loadRepAnnotations();
@@ -4197,6 +4219,19 @@ const REP_METRICS = [
 ];
 const REP_BUCKET_KEYS = ["clicks", "impressions", "cost", "conversions", "impShareW", "clickShareW", "shareWeight"];
 let repSeries = [];
+let repPrevSeries = null; // comparison period's daily series (only while Compare is on)
+// Scorecard keys → the table's keys, so "is lower better?" matches the table's arrows.
+const REP_DELTA_KEY = { avgcpc: "avgCpc", cpa: "cpa", cost: "cost" };
+// The comparison change for a metric: { pct, cls: "up" | "down" | "flat", isNew } or null.
+function repDelta(key, cur, prev) {
+  if (cur == null || prev == null) return null;
+  if (prev === 0) return cur ? { isNew: true, cls: "flat" } : null;
+  const pct = Math.round(((cur - prev) / Math.abs(prev)) * 1000) / 10;
+  if (!isFinite(pct)) return null;
+  const k = REP_DELTA_KEY[key] || key;
+  const cls = pct === 0 || NEUTRAL_METRICS.has(k) ? "flat" : ((LOWER_IS_BETTER.has(k) ? pct < 0 : pct > 0) ? "up" : "down");
+  return { pct, cls };
+}
 // First visit: Clicks (main) + Conversions (second). After that, the user's last selection is remembered.
 let repSelectedMetric = "clicks";
 let repSecondMetric = "conversions"; // optional second metric: yellow line on the right-hand axis
@@ -4282,6 +4317,7 @@ function onRepGranChange() {
 
 function renderReportingCards() {
   const total = repSumBucket(repSeries);
+  const prevTotal = accState.compareEnabled && repPrevSeries ? repSumBucket(repPrevSeries) : null;
   document.getElementById("repCards").innerHTML = REP_METRICS.map(m => {
     const v = m.val(total);
     const on = m.key === repSelectedMetric, on2 = m.key === repSecondMetric;
@@ -4292,8 +4328,17 @@ function renderReportingCards() {
       tbtn("lines", "Show as a line", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c4-1 5-9 9-9s5 6 9 3"/></svg>') + "</div>" : "";
     return '<div class="rep-card' + (on ? " on" : on2 ? " on2" : "") + '" role="button" tabindex="0" aria-pressed="' + (on || on2) + '" data-metric="' + m.key + '" onclick="selectRepMetric(\'' + m.key + '\')" onkeydown="onRepCardKey(event, \'' + m.key + '\')">' + toggle +
       '<div class="rep-label">' + m.label + (m.sub ? ' <span class="rep-sub">' + m.sub + "</span>" : "") + "</div>" +
-      '<div class="rep-value">' + (v == null ? "\u2014" : m.fmt(v)) + "</div></div>";
+      '<div class="rep-value">' + (v == null ? "\u2014" : m.fmt(v)) + "</div>" + (prevTotal ? repCardDelta(m, v, m.val(prevTotal)) : "") + "</div>";
   }).join("");
+}
+
+function repCardDelta(m, cur, prev) {
+  if (cur == null && prev == null) return '<div class="rep-delta"></div>';
+  const d = repDelta(m.key, cur, prev);
+  const was = '<span class="rep-delta-prev">vs ' + (prev == null ? "\u2014" : m.fmt(prev)) + "</span>";
+  if (!d) return '<div class="rep-delta">' + was + "</div>";
+  const txt = d.isNew ? "new" : d.pct === 0 ? "0.0%" : (d.pct > 0 ? "\u25b2 " : "\u25bc ") + Math.abs(d.pct).toFixed(1) + "%";
+  return '<div class="rep-delta"><span class="delta ' + d.cls + '">' + txt + "</span>" + was + "</div>";
 }
 
 function repBucketKey(dateStr, gran) {
@@ -4403,9 +4448,13 @@ async function exportReportingPdf() {
   const acct = sel && sel.selectedOptions[0] ? sel.selectedOptions[0].text : "All Accounts";
   const camp = getCampPickerValue() || "All campaigns";
   const range = SHARED_DATE_RANGE.label || (typeof prettyRangeLabel === "function" ? prettyRangeLabel(SHARED_DATE_RANGE) : "");
+  const cmpOn = !!accState.compareEnabled;
+  const prevTotal = cmpOn && repPrevSeries ? repSumBucket(repPrevSeries) : null;
+  const DCOL = { up: [21, 128, 61], down: [185, 28, 28], flat: [100, 116, 139] };
+  const dText = d => d.isNew ? "new" : (d.pct > 0 ? "+" : d.pct < 0 ? "-" : "") + Math.abs(d.pct).toFixed(1) + "%";
   doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(20); doc.text("Performance Overview", M, 40);
   doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(100);
-  doc.text(acct + "   \u00b7   " + camp + "   \u00b7   " + range, M, 56);
+  doc.text(acct + "   \u00b7   " + camp + "   \u00b7   " + range + (cmpOn ? "   vs   " + accCompareRangeLabel() : ""), M, 56);
   // Scorecards (2 rows x 5)
   const total = repSumBucket(repSeries);
   const gap = 8, cw = (PW - 2 * M - gap * 4) / 5, ch = 44;
@@ -4418,8 +4467,18 @@ async function exportReportingPdf() {
     doc.setFontSize(7); doc.setTextColor(110); doc.text((m.label + (m.sub ? "  " + m.sub : "")).toUpperCase(), x + 8, y + 14);
     const v = m.val(total);
     doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(...(on ? ACC : on2 ? YEL : [20, 20, 20]));
-    doc.text(v == null ? "\u2014" : m.fmt(v), x + 8, y + 33);
+    const vTxt = v == null ? "\u2014" : m.fmt(v);
+    doc.text(vTxt, x + 8, y + 33);
+    const vw = doc.getTextWidth(vTxt);
     doc.setFont("helvetica", "normal");
+    if (prevTotal && !(v == null && m.val(prevTotal) == null)) {
+      const pv = m.val(prevTotal), d = repDelta(m.key, v, pv);
+      let dx = x + 8 + vw + 6;
+      doc.setFontSize(7.5);
+      if (d) { doc.setFont("helvetica", "bold"); doc.setTextColor(...DCOL[d.cls]); doc.text(dText(d), dx, y + 33); dx += doc.getTextWidth(dText(d)) + 4; doc.setFont("helvetica", "normal"); }
+      const vsTxt = "vs " + (pv == null ? "\u2014" : m.fmt(pv));
+      if (dx + doc.getTextWidth(vsTxt) <= x + cw - 6) { doc.setTextColor(120); doc.text(vsTxt, dx, y + 33); } // drop it if the card is too narrow
+    }
   });
   // Graph
   let y = 70 + 2 * (ch + gap) + 10;
@@ -4463,11 +4522,33 @@ async function exportReportingPdf() {
     const tot = accTotals(rows);
     body.push(cols.map((c, i) => i === 0 ? "Total \u00b7 " + rows.length : (c.align === "num" ? formatCell(c.type, tot[c.key]) : "")));
     const lastRow = body.length - 1;
+    // With Compare on, each metric cell gets its % change on a second line (same arrows as on screen).
+    const cellDelta = (r, c) => {
+      if (!cmpOn || !r || !r._prev || c.align !== "num" || !c.type || c.key === "budget") return null;
+      const cur = r[c.key], prev = r._prev[c.key];
+      if (cur == null) return null;
+      if (prev == null || prev === 0) return cur ? { isNew: true, cls: "flat" } : null;
+      const pct = Math.round(((cur - prev) / Math.abs(prev)) * 1000) / 10;
+      if (!isFinite(pct)) return null;
+      return { pct, cls: pct === 0 || NEUTRAL_METRICS.has(c.key) ? "flat" : ((LOWER_IS_BETTER.has(c.key) ? pct < 0 : pct > 0) ? "up" : "down") };
+    };
     doc.autoTable({
       head, body, startY: y, margin: { left: M, right: M },
       styles: { fontSize: 7, cellPadding: 3, overflow: "linebreak" },
       headStyles: { fillColor: ACC, textColor: 255, fontSize: 7 },
-      didParseCell: d => { if (d.section === "body" && d.row.index === lastRow) { d.cell.styles.fontStyle = "bold"; d.cell.styles.fillColor = [241, 245, 249]; } },
+      didParseCell: d => {
+        if (d.section !== "body") return;
+        if (d.row.index === lastRow) { d.cell.styles.fontStyle = "bold"; d.cell.styles.fillColor = [241, 245, 249]; return; }
+        const dl = cellDelta(rows[d.row.index], cols[d.column.index]);
+        if (dl) { d.cell._delta = dl; d.cell.text = [].concat(d.cell.text, " "); }
+      },
+      didDrawCell: d => {
+        const dl = d.section === "body" && d.cell._delta;
+        if (!dl) return;
+        doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...DCOL[dl.cls]);
+        doc.text(dText(dl), d.cell.x + d.cell.padding("left"), d.cell.y + d.cell.height - d.cell.padding("bottom") - 1.5);
+        doc.setFont("helvetica", "normal");
+      },
     });
   }
   doc.save("performance-overview-" + new Date().toISOString().slice(0, 10) + ".pdf");
@@ -6062,15 +6143,32 @@ function wireAccountsControls() {
     const v = b.dataset.acccmp;
     if (v === "off") { accState.compareEnabled = false; accState.comparePeriod = null; }
     else if (v === "previous") { accState.compareEnabled = true; accState.comparePeriod = "previous"; }
-    else if (v === "custom") { state.calendarTarget = "acc"; openCompareCustom(); return; }
+    else if (v === "custom") { openAccCompareCustom(); return; }
     updateAccCompareUI(); persistUi("accounts", accState);
-    accState.loaded = false;
-    loadAllAccounts();
+    reloadAfterAccCompare();
   }));
   updateAccCompareUI();
 
   syncAccColsCount();
   updateAccFilterCount();
+}
+
+// After the comparison changes: refetch the table's comparison data and the scorecards'.
+function reloadAfterAccCompare() {
+  accState.loaded = false;
+  if (currentHashPage() === "reporting") loadReporting();
+  else loadAllAccounts();
+}
+function openAccCompareCustom() {
+  state.calendarTarget = "acccompare";
+  const m = /'(\d{8})' AND segments\.date <= '(\d{8})'/.exec(getAccCompareRange());
+  const today = new Date();
+  state.calendarFromDate = m ? parseGAQLDate(m[1]) : today;
+  state.calendarToDate = m ? parseGAQLDate(m[2]) : today;
+  document.getElementById("calendarTitle").textContent = "Comparison date range";
+  renderCalendar("from");
+  renderCalendar("to");
+  document.getElementById("customDateModal").setAttribute("open", "");
 }
 
 function updateAccCompareUI() {
@@ -6507,7 +6605,7 @@ function logoHtml(accountId, name) {
 // Once logos arrive, re-render whichever account-bearing view is currently showing.
 function refreshLogosInView() {
   const page = currentHashPage();
-  if (page === "allaccounts" && accState.rows && accState.rows.length) renderAccountsTable();
+  if ((page === "allaccounts" || page === "reporting") && accState.rows && accState.rows.length) renderAccountsTable();
   else if (page === "budgetpacing" && bpState.rows && bpState.rows.length) renderBudgetPacing();
   else if (page === "campaigns" && state.campaigns && state.campaigns.length) renderTable();
   else if (page === "budgeting" && underspendState.loaded) renderUnderspendTable();
