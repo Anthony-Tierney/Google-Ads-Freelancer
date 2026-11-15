@@ -479,7 +479,7 @@
 
   main { max-width: 1180px; margin: 0 auto; padding: 22px; flex: 1; }
   /* Keywords & Negatives tabs: keep the same width on both tabs, even when one is empty. */
-  main:has(#cannibalization.active), main:has(#negatives.active), main:has(#adschedule.active) { width: 100%; }
+  main:has(#cannibalization.active), main:has(#negatives.active), main:has(#ngrams.active), main:has(#adschedule.active) { width: 100%; }
 
   .gate {
     max-width: 420px; margin: 12vh auto 0; text-align: center;
@@ -930,7 +930,7 @@
     </button>
     <div class="nav-section-items" data-section="audit">
       <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies<span class="nav-warn" id="bidNavWarn" hidden title="CPA running below target on one or more campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
-      <a href="#" class="nav-item nav-sub" data-page="cannibalization" data-pages="cannibalization negatives" id="navKwNeg">Keywords &amp; Negatives<span class="nav-warn red" id="kwnegNavWarn" hidden title="High-priority cannibalization: search terms where campaigns are competing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
+      <a href="#" class="nav-item nav-sub" data-page="cannibalization" data-pages="cannibalization negatives ngrams" id="navKwNeg">Keywords &amp; Negatives<span class="nav-warn red" id="kwnegNavWarn" hidden title="High-priority cannibalization: search terms where campaigns are competing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
       <a href="#" class="nav-item nav-sub" data-page="adschedule">Ad Scheduling</a>
       <a href="#" class="nav-item nav-sub" data-page="adcopy">Ad Copy</a>
       <a href="#" class="nav-item nav-sub" data-page="callouts">Callouts</a>
@@ -1739,6 +1739,7 @@
             <div class="kn-tabs" role="tablist">
               <a href="#cannibalization" class="kn-tab" role="tab">Cannibalization<span class="nav-warn red kn-tab-warn" hidden title="High-priority cannibalization: search terms where campaigns are competing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
               <a href="#negatives" class="kn-tab active" aria-selected="true" role="tab">Suggested Negatives</a>
+              <a href="#ngrams" class="kn-tab" role="tab">Ngrams</a>
             </div>
             <p class="rep-intro-text">Search terms that are racking up clicks and spend with no conversions &mdash; candidates for negative keywords. Each term is checked against the account&rsquo;s current negatives, so ones you&rsquo;ve already blocked are hidden by default.</p>
           </div>
@@ -1851,6 +1852,133 @@
             <div class="pagination" id="negPagination" hidden></div>
           </div>
           <div class="foot-note" style="margin-top:10px;">With <strong>All campaigns</strong> selected, each search term is one row combining every campaign and ad group it appeared in. Pick a campaign in the top bar to break terms down by campaign or ad group with View. <strong>Negative status</strong> checks today&rsquo;s campaign, ad group and shared-list negatives (exact / phrase / broad, no close variants): <em>Partly blocked</em> means it&rsquo;s blocked in some places it appeared but can still show in others. Paused, removed or ended campaigns and ad groups count as blocked.</div>
+        </section>
+      </section>
+
+      <!-- Ngrams (Keywords & Negatives tab) -->
+      <section id="ngrams" class="page">
+        <section id="ngSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to see which words in your search terms drive spend and conversions.</p>
+            <a class="btn-primary" href="/api/auth">Sign in with Google</a>
+          </div>
+        </section>
+        <section id="ngSignedIn" hidden>
+          <div class="rep-intro kn-head">
+            <h2 class="rep-intro-title">Keywords &amp; Negatives</h2>
+            <div class="kn-tabs" role="tablist">
+              <a href="#cannibalization" class="kn-tab" role="tab">Cannibalization<span class="nav-warn red kn-tab-warn" hidden title="High-priority cannibalization: search terms where campaigns are competing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
+              <a href="#negatives" class="kn-tab" role="tab">Suggested Negatives</a>
+              <a href="#ngrams" class="kn-tab active" aria-selected="true" role="tab">Ngrams</a>
+            </div>
+            <p class="rep-intro-text">Search terms broken into single words and 2&ndash;3 word phrases, with the combined performance of every search term containing them &mdash; spot words that waste spend across many terms (negative keyword candidates) or that reliably convert.</p>
+          </div>
+          <div class="controls-row account" id="ngControls" hidden>
+            <div>
+              <label class="field-label" for="ngDateSelect">Date range</label>
+              <select id="ngDateSelect" onchange="onNgDateRangeChange()">
+                <option value="yesterday">Yesterday</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="14days">Last 14 Days</option>
+                <option value="30days" selected>Last 30 Days</option>
+                <option value="thisMonth">This Month</option>
+                <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
+                <option value="custom">Custom...</option>
+              </select>
+            </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="ngSizeBtn" aria-haspopup="true" title="Phrase length">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                  <span id="ngSizeLabel">1 word</span>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+                </button>
+                <div class="pop col-pop" id="ngSizePop" hidden></div>
+              </div>
+              <div class="filters">
+                <button class="filters-btn" id="ngHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                  Heatmap
+                </button>
+              </div>
+              <div class="filters" id="ngFilterGroup">
+                <button class="filters-btn" id="ngFiltersBtn" aria-haspopup="true" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  Filters <span class="count" id="ngFilterCount" hidden>0</span>
+                </button>
+                                <div class="pop filters-menu" id="ngFiltersMenu" hidden>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('ng-group-clicks', event)"><span class="toggle">−</span>Minimum Clicks</div>
+                  <div class="filter-group-items" id="ng-group-clicks">
+                    <div class="filter-section"><input type="number" id="ngfMinClicks" min="0" step="1" value="0" style="width:100%" /></div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('ng-group-cost', event)"><span class="toggle">+</span>Minimum Cost</div>
+                  <div class="filter-group-items" id="ng-group-cost" hidden>
+                    <div class="filter-section"><input type="number" id="ngfMinCost" min="0" step="1" value="0" style="width:100%" /></div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('ng-group-conv', event)"><span class="toggle">+</span>Maximum Conversions</div>
+                  <div class="filter-group-items" id="ng-group-conv" hidden>
+                    <div class="filter-section"><input type="number" id="ngfMaxConv" min="0" step="1" placeholder="Any" style="width:100%" /></div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('ng-group-text', event)"><span class="toggle">+</span>Ngram</div>
+                  <div class="filter-group-items" id="ng-group-text" hidden>
+                    <div class="filter-section cnf">
+                      <select id="ngfTextOp" class="cnf-op"></select>
+                      <label class="cnf-sublabel">Any of the following values</label>
+                      <textarea id="ngfText" class="cnf-value" autocomplete="off" placeholder="Value" rows="3"></textarea>
+                      <div class="cnf-hint">Enter one value per line</div>
+                    </div>
+                  </div>
+                  <div class="filter-group-header" onclick="toggleFilterGroup('ng-group-stop', event)"><span class="toggle">+</span>Common Words</div>
+                  <div class="filter-group-items" id="ng-group-stop" hidden>
+                    <div class="filter-section">
+                      <div class="status-checks">
+                        <div class="check-row"><input type="checkbox" id="ngfStop" checked /><label for="ngfStop">Hide common words (the, in, for, near&hellip;) in 1-word view</label></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-buttons">
+                    <button onclick="resetNgFilters()">Reset</button>
+                    <button class="apply" onclick="applyNgFilters()">Apply</button>
+                  </div>
+                </div>
+              </div>
+              <div class="filters" id="ngExportGroup">
+                <button class="filters-btn" id="ngExportBtn" title="Export current view">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                </button>
+                <div class="pop col-pop" id="ngExportPop" hidden>
+                  <button class="pop-row" data-ngfmt="csv">Download CSV</button>
+                  <button class="pop-row" data-ngfmt="pdf">Download PDF</button>
+                  <button class="pop-row" data-ngfmt="sheets">Copy for Google Sheets</button>
+                </div>
+              </div>
+              <div class="filters" id="ngColsGroup">
+                <button class="filters-btn" id="ngColsBtn" aria-haspopup="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
+                  Columns <span class="count" id="ngColsCount">0</span>
+                </button>
+                <div class="pop col-pop" id="ngColsPop" hidden></div>
+              </div>
+            </div>
+          </div>
+          <div id="ngWarn" class="as-warn" hidden></div>
+          <p class="neg-summary" id="ngSummary" hidden></p>
+          <div class="panel">
+            <div id="ngLoading" class="state" hidden><div class="spinner"></div>Reading search terms and building ngrams…</div>
+            <div id="ngPrompt" class="state" hidden><div class="big">Choose a single account</div>Ngrams looks at one account at a time &mdash; pick a specific account from the selector above.</div>
+            <div id="ngError" class="state" hidden></div>
+            <div id="ngEmpty" class="state" hidden><div class="big">No ngrams</div>Nothing matches these filters for this date range.</div>
+            <div class="scroll"><table id="ngTable" hidden>
+              <colgroup id="ng-colgroup"></colgroup><thead id="ng-thead"></thead><tbody id="ng-tbody"></tbody><tfoot id="ng-tfoot"></tfoot>
+            </table></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+            <div class="pagination" id="ngPagination" hidden></div>
+          </div>
+          <div class="foot-note" style="margin-top:10px;">Each ngram&rsquo;s figures are the totals of every search term containing it, so one search term counts towards several ngrams and the rows don&rsquo;t add up to the account total. Hover an ngram to see its costliest search terms. Pick a campaign in the top bar to see just that campaign.</div>
         </section>
       </section>
 
@@ -2340,6 +2468,7 @@
             <div class="kn-tabs" role="tablist">
               <a href="#cannibalization" class="kn-tab active" aria-selected="true" role="tab">Cannibalization<span class="nav-warn red kn-tab-warn" hidden title="High-priority cannibalization: search terms where campaigns are competing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
               <a href="#negatives" class="kn-tab" role="tab">Suggested Negatives</a>
+              <a href="#ngrams" class="kn-tab" role="tab">Ngrams</a>
             </div>
             <p class="rep-intro-text">Search terms that triggered ads in more than one campaign &mdash; campaigns competing with each other for the same searches.</p>
           </div>
@@ -3065,6 +3194,7 @@ function globalRefresh() {
     case "reporting": repAnn.key = null; loadReporting(); break;
     case "locations": if (GLOBAL_ACCOUNT !== "ALL") loadLocations(); break;
     case "adschedule": if (GLOBAL_ACCOUNT !== "ALL") loadAdSchedule(); break;
+    case "ngrams": if (GLOBAL_ACCOUNT !== "ALL") loadNgrams(); break;
   }
 }
 const TYPE_CHECKBOXES = [
@@ -3231,11 +3361,12 @@ function setSharedDateRange(dr) {
   if (typeof geoState !== "undefined") { geoState.dateRange = dr; geoState.loadedAccount = "__stale__"; }
   if (typeof locState !== "undefined") locState.loadedKey = null;
   if (typeof schState !== "undefined") schState.loadedKey = null;
+  if (typeof ngState !== "undefined") ngState.loadedKey = null;
   if (typeof cannState !== "undefined") setTimeout(cannBackgroundCheck, 1500);
   syncAllDateSelects();
 }
 function syncAllDateSelects() {
-  [["dateSelect", "syncDateSelect"], ["accDateSelect", "syncAccDateSelect"], ["lpDateSelect", "syncLpDateSelect"], ["acDateSelect", "syncAcDateSelect"], ["geoDateSelect", "syncGeoDateSelect"], ["repDateSelect", "syncRepDateSelect"], ["cannDateSelect", ""], ["coDateSelect", ""], ["locDateSelect", ""], ["schDateSelect", ""]].forEach(([id]) => {
+  [["dateSelect", "syncDateSelect"], ["accDateSelect", "syncAccDateSelect"], ["lpDateSelect", "syncLpDateSelect"], ["acDateSelect", "syncAcDateSelect"], ["geoDateSelect", "syncGeoDateSelect"], ["repDateSelect", "syncRepDateSelect"], ["cannDateSelect", ""], ["coDateSelect", ""], ["locDateSelect", ""], ["schDateSelect", ""], ["ngDateSelect", ""]].forEach(([id]) => {
     if (document.getElementById(id)) syncDateSelectEl(id, SHARED_DATE_RANGE);
   });
 }
@@ -3760,6 +3891,7 @@ function cancelCustomDate() {
   else if (state.calendarTarget === "co") syncCoDateSelect();
   else if (state.calendarTarget === "loc") syncDateSelectEl("locDateSelect", SHARED_DATE_RANGE);
   else if (state.calendarTarget === "sch") syncDateSelectEl("schDateSelect", SHARED_DATE_RANGE);
+  else if (state.calendarTarget === "ng") syncDateSelectEl("ngDateSelect", SHARED_DATE_RANGE);
   else if (state.calendarTarget === "neg") syncNegDateSelect();
   else if (state.calendarTarget !== "compare" && state.calendarTarget !== "acccompare") syncDateSelect();
 }
@@ -3818,6 +3950,7 @@ function applyCustomDate() {
   else if (t === "co") loadCallouts(false);
   else if (t === "loc") loadLocations();
   else if (t === "sch") loadAdSchedule();
+  else if (t === "ng") loadNgrams();
   else { if (state.compareEnabled) updateCompareUI(); loadCampaigns(); }
 }
 
@@ -4141,8 +4274,9 @@ function currentHashPage() {
 const KWNEG_TAB_LS = "kwnegTab";
 function syncKwNegTab(page) {
   const item = document.getElementById("navKwNeg");
-  if (page === "cannibalization" || page === "negatives") { try { localStorage.setItem(KWNEG_TAB_LS, page); } catch {} if (item) item.dataset.page = page; }
-  else if (item) { let t = null; try { t = localStorage.getItem(KWNEG_TAB_LS); } catch {} item.dataset.page = t === "negatives" ? "negatives" : "cannibalization"; }
+  const TABS = ["cannibalization", "negatives", "ngrams"];
+  if (TABS.includes(page)) { try { localStorage.setItem(KWNEG_TAB_LS, page); } catch {} if (item) item.dataset.page = page; }
+  else if (item) { let t = null; try { t = localStorage.getItem(KWNEG_TAB_LS); } catch {} item.dataset.page = TABS.includes(t) ? t : "cannibalization"; }
 }
 
 // The metric-cell deltas follow whichever page you're on: Overview uses its own
@@ -4180,7 +4314,7 @@ function ensureRepTable() {
 // Pages under the "Accounts" menu category share the account + campaign selection.
 // Add future Accounts-category pages to this list.
 // Pages that show the shared account + campaign topbar picker.
-const ACCOUNTS_PAGES = ["allaccounts", "reporting", "adcopy", "structure", "locations", "negatives", "adschedule"];
+const ACCOUNTS_PAGES = ["allaccounts", "reporting", "adcopy", "structure", "locations", "negatives", "adschedule", "ngrams"];
 function isAccountsPage(p) { return ACCOUNTS_PAGES.includes(p || currentHashPage()); }
 function refreshAccountsPage() {
   const p = currentHashPage();
@@ -4190,6 +4324,7 @@ function refreshAccountsPage() {
   else if (p === "negatives") { if (GLOBAL_ACCOUNT === "ALL") initNegatives(); else if (negState.loadedKey !== negKey()) loadNegatives(); else renderNegatives(); }
   else if (p === "structure") renderStructure();
   else if (p === "locations") { renderLocations(); locStartGeocode(); }
+  else if (p === "ngrams") { if (GLOBAL_ACCOUNT === "ALL" || ngState.loadedKey !== ngKey()) initNgrams(); else renderNgrams(); }
   else if (p === "adschedule") { if (GLOBAL_ACCOUNT === "ALL" || schState.loadedKey !== schKey()) initAdSchedule(); else renderAdSchedule(); }
 }
 
@@ -4230,6 +4365,7 @@ function routeFromHash() {
   else if (page === "reporting") initReporting();
   else if (page === "locations") initLocations();
   else if (page === "adschedule") initAdSchedule();
+  else if (page === "ngrams") initNgrams();
 }
 
 function initDashboard() {
@@ -5205,6 +5341,7 @@ function onGlobalAccountChange(val) {
   else if (page === "reporting") initReporting();
   else if (page === "locations") initLocations();
   else if (page === "adschedule") initAdSchedule();
+  else if (page === "ngrams") initNgrams();
 }
 
 // ---------- Sidebar collapse ----------
@@ -5421,7 +5558,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["schBreakPop", "schExportPop", "schColsPop", "filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu", "repAnnPop", "locFiltersMenu", "locColsPop", "locExportPop", "locLevelPop", "negFiltersMenu", "negViewPop", "negColsPop", "negExportPop"].forEach(id => {
+  ["schBreakPop", "schExportPop", "schColsPop", "ngSizePop", "ngFiltersMenu", "ngExportPop", "ngColsPop", "filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu", "repAnnPop", "locFiltersMenu", "locColsPop", "locExportPop", "locLevelPop", "negFiltersMenu", "negViewPop", "negColsPop", "negExportPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -6599,6 +6736,10 @@ function populateAccCampaignFilter() {
     } else if (currentHashPage() === "negatives") {
       (negState.rows || []).forEach(r => {
         if (r.campaign && !seen.has(r.campaign)) { seen.add(r.campaign); list.push({ name: r.campaign, status: (r.campaignStatus || "Enabled").toUpperCase() }); }
+      });
+    } else if (currentHashPage() === "ngrams") {
+      (ngState.campaigns || []).forEach(c => {
+        if (c.name && !seen.has(c.name)) { seen.add(c.name); list.push({ name: c.name, status: (c.status || "Enabled").toUpperCase() }); }
       });
     } else if (currentHashPage() === "adschedule") {
       (schState.rows || []).forEach(r => {
@@ -8422,6 +8563,248 @@ function exportNegatives(fmt) {
     return r[c.key] != null ? r[c.key] : "";
   }));
   exportMatrix(fmt, "suggested-negatives-" + new Date().toISOString().slice(0, 10), "Suggested Negatives", header, data);
+}
+
+/* ============================ Ngrams (Keywords & Negatives tab) ============================ */
+// /api/ngrams returns 1-, 2- and 3-word phrases with the summed metrics of every search term that
+// contains them (for the account, or the campaign picked in the top bar). The size switch and
+// filters work on what's loaded; account, date range or campaign changes fetch again.
+const NG_SIZES = [[1, "1 word"], [2, "2 words"], [3, "3 words"]];
+const NG_STOP = new Set(("a an and are as at be by for from how i in is it me my near of on or the to what when where which who why with " +
+  "you your can do does i'm im vs").split(" "));
+const NG_DEFAULT_FILTERS = () => ({ minClicks: 0, minCost: 0, maxConv: null, text: "", textOp: "contains", hideStop: true });
+const NG_COL_GRAM = { key: "g", label: "Ngram", align: "txt", width: 240, always: true,
+  cell: r => '<span title="' + escapeHtml("Costliest search terms:\n" + (r.ex || []).join("\n")) + '">' + escapeHtml(r.g) + "</span>" };
+const NG_COLUMNS = [
+  { key: "terms", label: "Search Terms", align: "num", width: 110, group: "Metrics", cls: "tabnum", cell: r => fmtInt(r.terms) },
+  { key: "impressions", label: "Impr.", align: "num", width: 95, group: "Metrics", cls: "tabnum", cell: r => fmtInt(r.impressions) },
+  { key: "clicks", label: "Clicks", align: "num", width: 85, group: "Metrics", cls: "tabnum", cell: r => fmtInt(r.clicks) },
+  { key: "ctr", label: "CTR", align: "num", width: 85, group: "Metrics", cls: "tabnum", cell: r => fmtPct(r.ctr) },
+  { key: "cost", label: "Cost", align: "num", width: 105, group: "Metrics", cls: "tabnum", cell: r => fmtCurrency(r.cost) },
+  { key: "avgCpc", label: "Avg. CPC", align: "num", width: 95, group: "Metrics", cls: "tabnum", cell: r => fmtCurrency(r.avgCpc) },
+  { key: "conversions", label: "Conv.", align: "num", width: 80, group: "Metrics", cls: "tabnum", cell: r => fmtDec(r.conversions) },
+  { key: "convRate", label: "Conv. Rate", align: "num", width: 95, group: "Metrics", cls: "tabnum", cell: r => fmtPct(r.convRate) },
+  { key: "cpa", label: "Cost / Conv.", align: "num", width: 105, group: "Metrics", cls: "tabnum",
+    sort: r => r.conversions ? r.cpa : Infinity, cell: r => r.conversions ? fmtCurrency(r.cpa) : "—" },
+  { key: "convValue", label: "Conv. Value", align: "num", width: 105, group: "Metrics", cls: "tabnum", cell: r => fmtCurrency(r.convValue) },
+  { key: "roas", label: "ROAS", align: "num", width: 85, group: "Metrics", cls: "tabnum", cell: r => (r.roas || 0).toFixed(2) + "×" },
+];
+const NG_DEFAULT_VISIBLE = ["terms", "impressions", "clicks", "ctr", "cost", "conversions", "convRate", "cpa"];
+const ngState = { rows: [], campaigns: [], loadedKey: null, sort: { key: "cost", dir: "desc" }, columnWidths: {}, currentPage: 1, pageSize: 25,
+  visible: new Set(savedColVisible("ngrams") || NG_DEFAULT_VISIBLE), openColGroups: new Set(["ngColsPop_g0"]), heatmap: true,
+  size: 1, filters: NG_DEFAULT_FILTERS(), wired: false, token: 0, termCount: 0 };
+try {
+  const p = uiGet("ngrams");
+  if (p) {
+    if (p.sort) ngState.sort = p.sort;
+    if (p.columnWidths) ngState.columnWidths = p.columnWidths;
+    if ([10, 25, 50, 100, 500].includes(p.pageSize)) ngState.pageSize = p.pageSize;
+    if (typeof p.heatmap === "boolean") ngState.heatmap = p.heatmap;
+    if ([1, 2, 3].includes(p.size)) ngState.size = p.size;
+  }
+  const f = loadPageFilters("ngrams");
+  if (f) ngState.filters = { minClicks: f.minClicks >= 0 ? +f.minClicks : 0, minCost: f.minCost >= 0 ? +f.minCost : 0, maxConv: f.maxConv != null && f.maxConv >= 0 ? +f.maxConv : null,
+    text: f.text || "", textOp: f.textOp || "contains", hideStop: f.hideStop !== false };
+} catch {}
+// The picked campaign's ID (the server filters by ID).
+function ngCampaignId() {
+  const pick = getCampPickerValue();
+  if (!pick) return "";
+  const c = (ngState.campaigns || []).find(x => x.name === pick) || (state.campaigns || []).find(x => x.name === pick);
+  return c && c.id != null ? String(c.id) : "";
+}
+const ngKey = () => GLOBAL_ACCOUNT + "|" + rangeToGAQL(SHARED_DATE_RANGE) + "|" + ngCampaignId();
+
+function onNgDateRangeChange() {
+  const val = document.getElementById("ngDateSelect").value;
+  if (val === "customApplied") return;
+  if (val === "custom") {
+    state.calendarTarget = "ng";
+    state.calendarFromDate = new Date(); state.calendarToDate = new Date();
+    document.getElementById("calendarTitle").textContent = "Custom date range";
+    renderCalendar("from"); renderCalendar("to");
+    document.getElementById("customDateModal").setAttribute("open", "");
+    return;
+  }
+  setSharedDateRange(DATE_PRESET_MAP[val]);
+  loadNgrams();
+}
+
+function initNgrams() {
+  document.getElementById("ngSignedOut").hidden = signedIn;
+  document.getElementById("ngSignedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  if (!ngState.wired) {
+    ngState.wired = true;
+    const wirePop = (btnId, popId, onOpen) => {
+      const btn = document.getElementById(btnId), pop = document.getElementById(popId);
+      btn.addEventListener("click", e => { e.stopPropagation(); const open = pop.hidden; closeAllMenus(); if (open) { if (onOpen) onOpen(); pop.hidden = false; } });
+      pop.addEventListener("click", e => e.stopPropagation());
+    };
+    wirePop("ngSizeBtn", "ngSizePop", renderNgSizePop);
+    wirePop("ngFiltersBtn", "ngFiltersMenu", syncNgFilterBoxes);
+    wirePop("ngColsBtn", "ngColsPop", renderNgColsPop);
+    wirePop("ngExportBtn", "ngExportPop");
+    document.querySelectorAll("#ngExportPop [data-ngfmt]").forEach(b => b.addEventListener("click", () => { document.getElementById("ngExportPop").hidden = true; exportNgrams(b.dataset.ngfmt); }));
+    const hb = document.getElementById("ngHeatmapBtn");
+    const syncHb = () => { hb.classList.toggle("toggled", ngState.heatmap); hb.setAttribute("aria-pressed", ngState.heatmap ? "true" : "false"); };
+    hb.addEventListener("click", e => { e.stopPropagation(); ngState.heatmap = !ngState.heatmap; syncHb(); persistUi("ngrams", ngState); renderNgrams(); });
+    syncHb();
+    const op = document.getElementById("ngfTextOp"); if (op && !op.options.length) op.innerHTML = TEXT_OP_OPTIONS;
+    document.getElementById("ngColsCount").textContent = ngState.visible.size;
+    updateNgFilterCount();
+  }
+  document.getElementById("ngSizeLabel").textContent = NG_SIZES.find(([n]) => n === ngState.size)[1];
+  syncDateSelectEl("ngDateSelect", SHARED_DATE_RANGE);
+  if (GLOBAL_ACCOUNT === "ALL") {
+    document.getElementById("ngControls").hidden = true;
+    ["ngLoading", "ngTable", "ngError", "ngEmpty", "ngWarn", "ngSummary", "ngPagination"].forEach(id => showEl(id, false));
+    showEl("ngPrompt", true);
+    return;
+  }
+  document.getElementById("ngControls").hidden = false;
+  showEl("ngPrompt", false);
+  if (ngState.loadedKey !== ngKey()) loadNgrams();
+  else renderNgrams();
+}
+
+async function loadNgrams() {
+  if (GLOBAL_ACCOUNT === "ALL") { initNgrams(); return; }
+  if (ngState.loadedFor !== GLOBAL_ACCOUNT) { ngState.campaigns = []; ngState.loadedFor = GLOBAL_ACCOUNT; }
+  const key = ngKey(), token = ++ngState.token, camp = ngCampaignId();
+  ngState.loadedKey = key;
+  ["ngPrompt", "ngError", "ngTable", "ngEmpty", "ngWarn", "ngSummary", "ngPagination"].forEach(id => showEl(id, false));
+  showEl("ngLoading", true);
+  try {
+    const res = await fetch("/api/ngrams?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(rangeToGAQL(SHARED_DATE_RANGE)) + (camp ? "&campaignId=" + camp : ""), { credentials: "same-origin" });
+    if (res.status === 401) { showSignedOut(); return; }
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error(res.status === 404 ? "The Ngrams service wasn’t found (HTTP 404). Check ngrams.js is in adcanary/functions/api/ on GitHub, then wait a minute for Cloudflare to redeploy." : "The server couldn’t finish this request (HTTP " + res.status + ") — try a shorter date range or a single campaign."); }
+    if (data.error) throw new Error(data.error + (data.detail ? " — " + data.detail : ""));
+    if (token !== ngState.token) return;
+    ngState.rows = (data.ngrams || []).map(r => Object.assign(r, {
+      ctr: r.impressions ? r.clicks / r.impressions : 0, avgCpc: r.clicks ? r.cost / r.clicks : 0,
+      convRate: r.clicks ? r.conversions / r.clicks : 0, cpa: r.conversions ? r.cost / r.conversions : 0, roas: r.cost ? r.convValue / r.cost : 0,
+    }));
+    if (data.campaigns && data.campaigns.length) ngState.campaigns = data.campaigns;
+    ngState.termCount = data.termCount || 0;
+    showEl("ngLoading", false);
+    const w = document.getElementById("ngWarn"); w.hidden = !data.warning; w.textContent = data.warning || "";
+    ngState.currentPage = 1;
+    renderNgrams();
+    setLastRefresh("ngrams");
+    if (typeof populateAccCampaignFilter === "function") populateAccCampaignFilter();
+  } catch (e) {
+    if (token !== ngState.token) return;
+    ngState.loadedKey = null;
+    showEl("ngLoading", false);
+    const el = document.getElementById("ngError"); el.hidden = false;
+    el.innerHTML = '<div class="big">Couldn’t build ngrams</div>' + escapeHtml(e.message || "Please try again.");
+  }
+}
+
+function ngViewRows() {
+  const f = ngState.filters, n = ngState.size;
+  return ngState.rows.filter(r => r.n === n &&
+    !(n === 1 && f.hideStop && NG_STOP.has(r.g)) &&
+    r.clicks >= f.minClicks && r.cost >= f.minCost && (f.maxConv == null || r.conversions <= f.maxConv + 1e-9) &&
+    matchTextFilter(r.g, f.textOp, f.text));
+}
+
+function renderNgrams() {
+  if (GLOBAL_ACCOUNT === "ALL" || ngState.loadedKey == null || !document.getElementById("ngLoading").hidden) return;
+  // A different campaign picked since loading → fetch for it.
+  if (ngState.loadedKey !== ngKey()) { loadNgrams(); return; }
+  const rows = ngViewRows();
+  showEl("ngEmpty", !rows.length); showEl("ngTable", !!rows.length);
+  const sum = document.getElementById("ngSummary");
+  sum.hidden = !ngState.termCount;
+  sum.innerHTML = "<strong>" + fmtInt(rows.length) + "</strong> " + (ngState.size === 1 ? "single-word" : ngState.size + "-word") + " ngram" + (rows.length === 1 ? "" : "s") +
+    " from <strong>" + fmtInt(ngState.termCount) + "</strong> search terms" + (getCampPickerValue() ? " in <strong>" + escapeHtml(getCampPickerValue()) + "</strong>" : "") + ".";
+  if (!rows.length) { showEl("ngPagination", false); return; }
+  renderDataTable({
+    state: ngState,
+    columns: () => [NG_COL_GRAM].concat(NG_COLUMNS),
+    colOrderKey: "ngrams",
+    prefKey: "ngrams",
+    heatmap: true,
+    resetPageOnSort: true,
+    ids: { colgroup: "ng-colgroup", thead: "ng-thead", tbody: "ng-tbody", tfoot: "ng-tfoot", pagination: "ngPagination" },
+    rerender: renderNgrams,
+    rows: () => rows,
+  });
+}
+
+function renderNgSizePop() {
+  const pop = document.getElementById("ngSizePop");
+  pop.innerHTML = NG_SIZES.map(([n, name]) => {
+    const active = ngState.size === n;
+    return '<button class="pop-row" data-ngsize="' + n + '"><span' + (active ? ' style="color:var(--accent);font-weight:560"' : "") + ">" + name + "</span>" + (active ? '<span class="active-dot">✓</span>' : "") + "</button>";
+  }).join("");
+  pop.querySelectorAll("[data-ngsize]").forEach(row => row.addEventListener("click", () => {
+    ngState.size = +row.dataset.ngsize;
+    document.getElementById("ngSizeLabel").textContent = NG_SIZES.find(([n]) => n === ngState.size)[1];
+    uiSave("ngrams", { size: ngState.size });
+    pop.hidden = true;
+    ngState.currentPage = 1;
+    renderNgrams();
+  }));
+}
+function renderNgColsPop() {
+  renderGroupedCols("ngColsPop", NG_COLUMNS, ["Metrics"], ngState.visible, ngState.openColGroups, key => {
+    ngState.visible.has(key) ? ngState.visible.delete(key) : ngState.visible.add(key);
+    setColVisible("ngrams", ngState.visible);
+    document.getElementById("ngColsCount").textContent = ngState.visible.size;
+    renderNgColsPop(); renderNgrams();
+  });
+}
+function syncNgFilterBoxes() {
+  const f = ngState.filters;
+  document.getElementById("ngfMinClicks").value = f.minClicks;
+  document.getElementById("ngfMinCost").value = f.minCost;
+  document.getElementById("ngfMaxConv").value = f.maxConv == null ? "" : f.maxConv;
+  document.getElementById("ngfText").value = f.text;
+  const op = document.getElementById("ngfTextOp"); if (op) op.value = f.textOp;
+  document.getElementById("ngfStop").checked = f.hideStop;
+}
+function applyNgFilters() {
+  const num = (id, d) => { const v = parseFloat(document.getElementById(id).value); return isFinite(v) && v >= 0 ? v : d; };
+  const mc = document.getElementById("ngfMaxConv").value.trim();
+  ngState.filters = {
+    minClicks: Math.round(num("ngfMinClicks", 0)), minCost: num("ngfMinCost", 0), maxConv: mc === "" ? null : num("ngfMaxConv", null),
+    text: document.getElementById("ngfText").value, textOp: document.getElementById("ngfTextOp").value || "contains",
+    hideStop: document.getElementById("ngfStop").checked,
+  };
+  savePageFilters("ngrams", Object.assign({}, ngState.filters));
+  document.getElementById("ngFiltersMenu").hidden = true;
+  ngState.currentPage = 1;
+  updateNgFilterCount();
+  renderNgrams();
+}
+function resetNgFilters() { ngState.filters = NG_DEFAULT_FILTERS(); syncNgFilterBoxes(); applyNgFilters(); }
+function updateNgFilterCount() {
+  const f = ngState.filters, textOn = (f.text || "").trim() ? 1 : 0;
+  const n = (f.minClicks > 0 ? 1 : 0) + (f.minCost > 0 ? 1 : 0) + (f.maxConv != null ? 1 : 0) + textOn + (f.hideStop ? 1 : 0);
+  const el = document.getElementById("ngFilterCount"); el.textContent = n; el.hidden = !n;
+  markFilterGroup("ng-group-clicks", f.minClicks > 0 ? 1 : 0);
+  markFilterGroup("ng-group-cost", f.minCost > 0 ? 1 : 0);
+  markFilterGroup("ng-group-conv", f.maxConv != null ? 1 : 0);
+  markFilterGroup("ng-group-text", textOn);
+  markFilterGroup("ng-group-stop", f.hideStop ? 1 : 0);
+}
+function exportNgrams(fmt) {
+  const rows = ngState.viewRows || [], cols = ngState.viewCols || [];
+  if (!rows.length) { showToast("Nothing to export."); return; }
+  const header = cols.map(c => c.label);
+  const data = rows.map(r => cols.map(c => {
+    if (c.key === "ctr" || c.key === "convRate") return fmtPct(r[c.key] || 0);
+    if (c.key === "cpa") return r.conversions ? +r.cpa.toFixed(2) : "";
+    if (["cost", "avgCpc", "convValue", "conversions", "roas"].includes(c.key)) return +(r[c.key] || 0).toFixed(2);
+    return r[c.key] != null ? r[c.key] : "";
+  }));
+  exportMatrix(fmt, "ngrams-" + ngState.size + "-word-" + new Date().toISOString().slice(0, 10), "Ngrams (" + NG_SIZES.find(([n]) => n === ngState.size)[1] + ")", header, data);
 }
 
 /* ============================ Ad Scheduling page ============================ */
