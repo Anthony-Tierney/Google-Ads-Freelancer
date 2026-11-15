@@ -10,9 +10,17 @@
 //   { terms: [{ term, campaignCount, activeCount, resolution: "open"|"partial"|"resolved",
 //               impressions, clicks, cost, conversions,
 //               campaigns: [{ name, impressions, clicks, cost, conversions, active, reason }] }],
-//     _errors? }
+//     truncated?, warning?, _errors? }
+//
+// Big accounts can have hundreds of thousands of search-term rows, so the rows are read in pages
+// and folded into per-term totals as they arrive (nothing is held page-to-page), the query asks
+// only for IDs + metrics (names and statuses come from small lookups), and reading stops after
+// MAX_PAGES — the reply then says it's incomplete instead of the server running out of memory.
 
 import { getRefreshToken, getAccessToken, adsRequest, json } from "../../shared/google.js";
+import { canAccess } from "../../shared/access.js";
+
+const MAX_PAGES = 15; // × 10,000 rows
 
 const norm = (s) => String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
 const words = (s) => norm(s).split(" ").filter(Boolean);
@@ -45,10 +53,13 @@ export async function onRequestGet(context) {
   const customerId = url.searchParams.get("customerId");
   if (!customerId || customerId === "ALL") return json({ error: "Select a single account" }, 400);
   const cleanId = customerId.replace(/-/g, "");
+  if (!(await canAccess(env, refreshToken, cleanId))) return json({ error: "You don't have access to this Google Ads account" }, 403);
 
   const drParam = url.searchParams.get("dateRange") || "LAST_30_DAYS";
   const drFixed = drParam.replace(/'(\d{4})(\d{2})(\d{2})'/g, "'$1-$2-$3'");
-  const dateClause = /segments\.date/i.test(drFixed) ? drFixed : "segments.date DURING " + drFixed;
+  const explicit = /^segments\.date >= '\d{4}-\d{2}-\d{2}' AND segments\.date <= '\d{4}-\d{2}-\d{2}'$/.test(drFixed);
+  if (!explicit && !/^[A-Z0-9_]+$/.test(drFixed)) return json({ error: "Invalid date range" }, 400);
+  const dateClause = explicit ? drFixed : "segments.date DURING " + drFixed;
 
   const accessToken = await getAccessToken(env, refreshToken);
   const search = async (query) => {
@@ -67,21 +78,52 @@ export async function onRequestGet(context) {
     catch (e) { errors.push(label + ": " + String(e && e.message ? e.message : e).slice(0, 160)); return []; }
   };
 
-  // 1) Search terms (historical) — with ad group + current statuses.
-  let stRows;
+  // 1) Search terms: folded page by page into term -> campaign -> totals (+ ad groups served from).
+  const byTerm = new Map();
+  let truncated = false;
   try {
-    stRows = await search(`SELECT search_term_view.search_term, campaign.id, campaign.name, campaign.status, ad_group.id, ad_group.status, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions FROM search_term_view WHERE ${dateClause}`);
+    const q = `SELECT search_term_view.search_term, campaign.id, ad_group.id, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions FROM search_term_view WHERE ${dateClause} AND metrics.impressions > 0`;
+    let pageToken, pages = 0;
+    do {
+      const r = await adsRequest(env, accessToken, `customers/${cleanId}/googleAds:search`, pageToken ? { query: q, pageToken } : { query: q });
+      for (const row of r.results || []) {
+        const term = row.searchTermView?.searchTerm, cid = String(row.campaign?.id || "");
+        if (!term || !cid) continue;
+        const m = row.metrics || {};
+        let camps = byTerm.get(term);
+        if (!camps) { camps = new Map(); byTerm.set(term, camps); }
+        let c = camps.get(cid);
+        if (!c) { c = { id: cid, adGroups: new Set(), impressions: 0, clicks: 0, cost: 0, conversions: 0 }; camps.set(cid, c); }
+        if (row.adGroup?.id) c.adGroups.add(String(row.adGroup.id));
+        c.impressions += Number(m.impressions) || 0;
+        c.clicks += Number(m.clicks) || 0;
+        c.cost += (Number(m.costMicros) || 0) / 1e6;
+        c.conversions += Number(m.conversions) || 0;
+      }
+      pageToken = r.nextPageToken;
+    } while (pageToken && ++pages < MAX_PAGES);
+    truncated = !!pageToken;
   } catch (e) {
     return json({ terms: [], error: "Could not load search terms", detail: String(e && e.message ? e.message : e).slice(0, 200) }, 200);
   }
+  // Only terms seen in 2+ campaigns matter from here on.
+  for (const [term, camps] of byTerm) if (camps.size < 2) byTerm.delete(term);
+
+  // Names and current statuses (small lookups instead of repeating them on every row).
+  const campInfo = new Map(), agStatus = new Map();
+  const [campRows, agRows] = await Promise.all([
+    safe("campaigns", "SELECT campaign.id, campaign.name, campaign.status, campaign.serving_status FROM campaign WHERE campaign.status != 'REMOVED'"),
+    safe("ad groups", "SELECT ad_group.id, ad_group.status FROM ad_group WHERE campaign.status != 'REMOVED' AND ad_group.status != 'ENABLED'"),
+  ]);
+  campRows.forEach((r) => campInfo.set(String(r.campaign?.id), r.campaign || {}));
+  agRows.forEach((r) => agStatus.set(String(r.adGroup?.id), r.adGroup?.status || ""));
 
   // 2) Current negatives — each source independent so one failure doesn't sink the page.
-  const [campNegRows, agNegRows, linkRows, sharedRows, ended] = await Promise.all([
+  const [campNegRows, agNegRows, linkRows, sharedRows] = await Promise.all([
     safe("campaign negatives", "SELECT campaign.id, campaign_criterion.keyword.text, campaign_criterion.keyword.match_type FROM campaign_criterion WHERE campaign_criterion.negative = TRUE AND campaign_criterion.type = 'KEYWORD' AND campaign_criterion.status != 'REMOVED'"),
     safe("ad group negatives", "SELECT ad_group.id, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type FROM ad_group_criterion WHERE ad_group_criterion.negative = TRUE AND ad_group_criterion.type = 'KEYWORD' AND ad_group_criterion.status != 'REMOVED'"),
     safe("shared list links", "SELECT campaign.id, shared_set.id, shared_set.type, campaign_shared_set.status FROM campaign_shared_set WHERE shared_set.type = 'NEGATIVE_KEYWORDS' AND campaign_shared_set.status = 'ENABLED'"),
     safe("shared list keywords", "SELECT shared_set.id, shared_set.name, shared_set.type, shared_criterion.keyword.text, shared_criterion.keyword.match_type FROM shared_criterion WHERE shared_set.type = 'NEGATIVE_KEYWORDS'"),
-    endedCampaignIds(search),
   ]);
 
   const push = (map, k, v) => { if (!map.has(k)) map.set(k, []); map.get(k).push(v); };
@@ -95,21 +137,12 @@ export async function onRequestGet(context) {
     if (kw?.text) push(setNeg, id, { text: kw.text, matchType: kw.matchType });
   });
 
-  // 3) Aggregate term -> campaign, remembering which ad groups each term served from.
-  const byTerm = new Map();
-  for (const r of stRows) {
-    const term = r.searchTermView?.searchTerm, cid = String(r.campaign?.id || "");
-    if (!term || !cid) continue;
-    const m = r.metrics || {};
-    let camps = byTerm.get(term);
-    if (!camps) { camps = new Map(); byTerm.set(term, camps); }
-    let c = camps.get(cid);
-    if (!c) { c = { id: cid, name: r.campaign?.name || "", status: r.campaign?.status === "ENABLED" && ended.has(cid) ? "ENDED" : (r.campaign?.status || ""), adGroups: new Map(), impressions: 0, clicks: 0, cost: 0, conversions: 0 }; camps.set(cid, c); }
-    if (r.adGroup?.id) c.adGroups.set(String(r.adGroup.id), r.adGroup.status || "");
-    c.impressions += Number(m.impressions) || 0;
-    c.clicks += Number(m.clicks) || 0;
-    c.cost += (Number(m.costMicros) || 0) / 1e6;
-    c.conversions += Number(m.conversions) || 0;
+  // 3) Fill in names + statuses. Campaigns missing from the lookup were removed (it skips REMOVED).
+  for (const camps of byTerm.values()) for (const c of camps.values()) {
+    const info = campInfo.get(c.id);
+    c.name = info?.name || "(removed campaign)";
+    c.status = !info ? "REMOVED" : info.status === "ENABLED" && info.servingStatus === "ENDED" ? "ENDED" : (info.status || "");
+    c.adGroups = new Map([...c.adGroups].map((id) => [id, agStatus.get(id) || "ENABLED"]));
   }
 
   // Can this campaign still show for this term today? Returns null if yes, else the reason.
@@ -147,18 +180,10 @@ export async function onRequestGet(context) {
   terms.sort((a, b) => b.impressions - a.impressions);
 
   const payload = { terms };
+  if (truncated) {
+    payload.truncated = true;
+    payload.warning = "This account has more search terms than can be read in one go for this date range, so some may be missing. Choose a shorter date range for a complete picture.";
+  }
   if (errors.length) payload._errors = errors;
   return json(payload);
-}
-
-// Ended = an ENABLED campaign past its end date. The API only shows this via
-// campaign.serving_status, so it's fetched separately and best-effort: if it fails,
-// campaigns simply keep their normal status.
-async function endedCampaignIds(search) {
-  const ended = new Set();
-  try {
-    const r = await search(`SELECT campaign.id, campaign.serving_status FROM campaign WHERE campaign.status = 'ENABLED'`);
-    (Array.isArray(r) ? r : (r.results || [])).forEach((x) => { if (x.campaign?.servingStatus === "ENDED") ended.add(String(x.campaign.id)); });
-  } catch { /* leave empty */ }
-  return ended;
 }
