@@ -8428,10 +8428,11 @@ function exportNegatives(fmt) {
 const SCH_DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
 const SCH_DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const SCH_BREAKS = [["day", "Day"], ["hour", "Hour"], ["dayhour", "Day & hour"]];
-const schHourLabel = h => String(h).padStart(2, "0") + ":00";
+// Same as Google Ads' "When ads showed" report: "08 – 09" (the last hour of the day is "23 – 00").
+const schHourLabel = h => String(h).padStart(2, "0") + " \u2013 " + String((h + 1) % 24).padStart(2, "0");
 const SCH_COL_DAY = { key: "day", label: "Day", align: "txt", width: 130, always: true, sort: r => r.dayIdx * 24 + r.hour, cell: r => SCH_DAY_NAMES[r.dayIdx] };
 const SCH_COL_HOUR = { key: "hour", label: "Hour", align: "txt", width: 110, always: true, sort: r => r.hour,
-  cell: r => '<span title="' + schHourLabel(r.hour) + "–" + schHourLabel((r.hour + 1) % 24) + '">' + schHourLabel(r.hour) + "</span>" };
+  cell: r => '<span title="' + String(r.hour).padStart(2, "0") + ":00 to " + String((r.hour + 1) % 24).padStart(2, "0") + ':00">' + schHourLabel(r.hour) + "</span>" };
 const SCH_COLUMNS = [
   { key: "impressions", label: "Impr.", align: "num", width: 95, group: "Metrics", cls: "tabnum", cell: r => fmtInt(r.impressions) },
   { key: "clicks", label: "Clicks", align: "num", width: 85, group: "Metrics", cls: "tabnum", cell: r => fmtInt(r.clicks) },
