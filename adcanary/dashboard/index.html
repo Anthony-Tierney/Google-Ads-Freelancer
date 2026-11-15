@@ -257,6 +257,10 @@
   .rep-table-tools { margin-bottom: 10px; }
   .rep-intro-title { margin: 0 0 4px; font-size: 18px; font-weight: 640; color: var(--ink); }
   .rep-intro-text { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .kn-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin: 8px 0 12px; }
+  .kn-tab { padding: 8px 14px; font-size: 13.5px; font-weight: 560; color: var(--muted); text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; border-radius: 6px 6px 0 0; }
+  .kn-tab:hover { color: var(--ink); background: var(--line-soft); }
+  .kn-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
   .rep-chart-wrap { margin-top: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 16px; }
   .rep-chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 12px; }
   .rep-chart-tools { display: flex; align-items: center; gap: 8px; }
@@ -467,6 +471,8 @@
   .logout-btn svg { width: 15px; height: 15px; }
 
   main { max-width: 1180px; margin: 0 auto; padding: 22px; flex: 1; }
+  /* Keywords & Negatives tabs: keep the same width on both tabs, even when one is empty. */
+  main:has(#cannibalization.active), main:has(#negatives.active), main:has(#adschedule.active) { width: 100%; }
 
   .gate {
     max-width: 420px; margin: 12vh auto 0; text-align: center;
@@ -917,8 +923,8 @@
     </button>
     <div class="nav-section-items" data-section="audit">
       <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies<span class="nav-warn" id="bidNavWarn" hidden title="CPA running below target on one or more campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
-      <a href="#" class="nav-item nav-sub" data-page="cannibalization">Cannibalization</a>
-      <a href="#" class="nav-item nav-sub" data-page="negatives">Suggested Negatives</a>
+      <a href="#" class="nav-item nav-sub" data-page="cannibalization" data-pages="cannibalization negatives" id="navKwNeg">Keywords &amp; Negatives</a>
+      <a href="#" class="nav-item nav-sub" data-page="adschedule">Ad Scheduling</a>
       <a href="#" class="nav-item nav-sub" data-page="adcopy">Ad Copy</a>
       <a href="#" class="nav-item nav-sub" data-page="callouts">Callouts</a>
       <a href="#" class="nav-item nav-sub" data-page="audit">Policy Issues<span class="nav-warn" id="auditNavWarn" hidden title="Policy issues found"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
@@ -1721,8 +1727,12 @@
           </div>
         </section>
         <section id="negSignedIn" hidden>
-          <div class="rep-intro">
-            <h2 class="rep-intro-title">Suggested Negatives</h2>
+          <div class="rep-intro kn-head">
+            <h2 class="rep-intro-title">Keywords &amp; Negatives</h2>
+            <div class="kn-tabs" role="tablist">
+              <a href="#cannibalization" class="kn-tab" role="tab">Cannibalization</a>
+              <a href="#negatives" class="kn-tab active" aria-selected="true" role="tab">Suggested Negatives</a>
+            </div>
             <p class="rep-intro-text">Search terms that are racking up clicks and spend with no conversions &mdash; candidates for negative keywords. Each term is checked against the account&rsquo;s current negatives, so ones you&rsquo;ve already blocked are hidden by default.</p>
           </div>
           <div class="controls-row account" id="negControls" hidden>
@@ -1834,6 +1844,85 @@
             <div class="pagination" id="negPagination" hidden></div>
           </div>
           <div class="foot-note" style="margin-top:10px;">With <strong>All campaigns</strong> selected, each search term is one row combining every campaign and ad group it appeared in. Pick a campaign in the top bar to break terms down by campaign or ad group with View. <strong>Negative status</strong> checks today&rsquo;s campaign, ad group and shared-list negatives (exact / phrase / broad, no close variants): <em>Partly blocked</em> means it&rsquo;s blocked in some places it appeared but can still show in others. Paused, removed or ended campaigns and ad groups count as blocked.</div>
+        </section>
+      </section>
+
+      <!-- Ad Scheduling Page -->
+      <section id="adschedule" class="page">
+        <section id="schSignedOut" hidden>
+          <div class="gate">
+            <h1>Connect a Google Ads account</h1>
+            <p>Sign in with Google to see performance by day and hour.</p>
+            <a class="btn-primary" href="/api/auth">Sign in with Google</a>
+          </div>
+        </section>
+        <section id="schSignedIn" hidden>
+          <div class="rep-intro">
+            <h2 class="rep-intro-title">Ad Scheduling</h2>
+            <p class="rep-intro-text">When your ads showed and how they performed, by day of the week and hour of the day &mdash; use it to decide where to add bid adjustments or trim the ad schedule. Hours are in the account&rsquo;s time zone.</p>
+          </div>
+          <div class="controls-row account" id="schControls" hidden>
+            <div>
+              <label class="field-label" for="schDateSelect">Date range</label>
+              <select id="schDateSelect" onchange="onSchDateRangeChange()">
+                <option value="yesterday">Yesterday</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="14days">Last 14 Days</option>
+                <option value="30days" selected>Last 30 Days</option>
+                <option value="thisMonth">This Month</option>
+                <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
+                <option value="custom">Custom...</option>
+              </select>
+            </div>
+            <div class="grow"></div>
+            <div class="toolset">
+              <div class="filters">
+                <button class="filters-btn" id="schBreakBtn" aria-haspopup="true" title="Break down by">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                  <span id="schBreakLabel">Day</span>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+                </button>
+                <div class="pop col-pop" id="schBreakPop" hidden></div>
+              </div>
+              <div class="filters">
+                <button class="filters-btn" id="schHeatmapBtn" title="Toggle heatmap shading on the metric columns" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                  Heatmap
+                </button>
+              </div>
+              <div class="filters" id="schExportGroup">
+                <button class="filters-btn" id="schExportBtn" title="Export current view">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                </button>
+                <div class="pop col-pop" id="schExportPop" hidden>
+                  <button class="pop-row" data-schfmt="csv">Download CSV</button>
+                  <button class="pop-row" data-schfmt="pdf">Download PDF</button>
+                  <button class="pop-row" data-schfmt="sheets">Copy for Google Sheets</button>
+                </div>
+              </div>
+              <div class="filters" id="schColsGroup">
+                <button class="filters-btn" id="schColsBtn" aria-haspopup="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
+                  Columns <span class="count" id="schColsCount">0</span>
+                </button>
+                <div class="pop col-pop" id="schColsPop" hidden></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div id="schLoading" class="state" hidden><div class="spinner"></div>Loading performance by day and hour…</div>
+            <div id="schPrompt" class="state" hidden><div class="big">Choose a single account</div>Ad Scheduling looks at one account at a time &mdash; pick a specific account from the selector above.</div>
+            <div id="schError" class="state" hidden></div>
+            <div id="schEmpty" class="state" hidden><div class="big">No data</div>No impressions for this date range and campaign selection.</div>
+            <div class="scroll"><table id="schTable" hidden>
+              <colgroup id="sch-colgroup"></colgroup><thead id="sch-thead"></thead><tbody id="sch-tbody"></tbody><tfoot id="sch-tfoot"></tfoot>
+            </table></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+            <div class="pagination" id="schPagination" hidden></div>
+          </div>
+          <div class="foot-note" style="margin-top:10px;">Covers every campaign with impressions in the date range. Pick a campaign in the top bar to see just that campaign. Day and hour are the account&rsquo;s time zone, matching the &ldquo;When ads showed&rdquo; report in Google Ads.</div>
         </section>
       </section>
 
@@ -2239,6 +2328,14 @@
           </div>
         </section>
         <section id="cannSignedIn" hidden>
+          <div class="rep-intro kn-head">
+            <h2 class="rep-intro-title">Keywords &amp; Negatives</h2>
+            <div class="kn-tabs" role="tablist">
+              <a href="#cannibalization" class="kn-tab active" aria-selected="true" role="tab">Cannibalization</a>
+              <a href="#negatives" class="kn-tab" role="tab">Suggested Negatives</a>
+            </div>
+            <p class="rep-intro-text">Search terms that triggered ads in more than one campaign &mdash; campaigns competing with each other for the same searches.</p>
+          </div>
           <div class="controls-row account">
             <div>
               <label class="field-label" for="cannDateSelect">Date range</label>
@@ -2959,6 +3056,7 @@ function globalRefresh() {
     case "structure": loadStructure(true); break;
     case "reporting": repAnn.key = null; loadReporting(); break;
     case "locations": if (GLOBAL_ACCOUNT !== "ALL") loadLocations(); break;
+    case "adschedule": if (GLOBAL_ACCOUNT !== "ALL") loadAdSchedule(); break;
   }
 }
 const TYPE_CHECKBOXES = [
@@ -3124,10 +3222,11 @@ function setSharedDateRange(dr) {
   if (typeof acState !== "undefined") { acState.dateRange = dr; acState.currentPage = 1; acState.loadedAccount = "__stale__"; }
   if (typeof geoState !== "undefined") { geoState.dateRange = dr; geoState.loadedAccount = "__stale__"; }
   if (typeof locState !== "undefined") locState.loadedKey = null;
+  if (typeof schState !== "undefined") schState.loadedKey = null;
   syncAllDateSelects();
 }
 function syncAllDateSelects() {
-  [["dateSelect", "syncDateSelect"], ["accDateSelect", "syncAccDateSelect"], ["lpDateSelect", "syncLpDateSelect"], ["acDateSelect", "syncAcDateSelect"], ["geoDateSelect", "syncGeoDateSelect"], ["repDateSelect", "syncRepDateSelect"], ["cannDateSelect", ""], ["coDateSelect", ""], ["locDateSelect", ""]].forEach(([id]) => {
+  [["dateSelect", "syncDateSelect"], ["accDateSelect", "syncAccDateSelect"], ["lpDateSelect", "syncLpDateSelect"], ["acDateSelect", "syncAcDateSelect"], ["geoDateSelect", "syncGeoDateSelect"], ["repDateSelect", "syncRepDateSelect"], ["cannDateSelect", ""], ["coDateSelect", ""], ["locDateSelect", ""], ["schDateSelect", ""]].forEach(([id]) => {
     if (document.getElementById(id)) syncDateSelectEl(id, SHARED_DATE_RANGE);
   });
 }
@@ -3651,6 +3750,7 @@ function cancelCustomDate() {
   else if (state.calendarTarget === "cann") syncCannDateSelect();
   else if (state.calendarTarget === "co") syncCoDateSelect();
   else if (state.calendarTarget === "loc") syncDateSelectEl("locDateSelect", SHARED_DATE_RANGE);
+  else if (state.calendarTarget === "sch") syncDateSelectEl("schDateSelect", SHARED_DATE_RANGE);
   else if (state.calendarTarget === "neg") syncNegDateSelect();
   else if (state.calendarTarget !== "compare" && state.calendarTarget !== "acccompare") syncDateSelect();
 }
@@ -3708,6 +3808,7 @@ function applyCustomDate() {
   else if (t === "cann") loadCannibalization();
   else if (t === "co") loadCallouts(false);
   else if (t === "loc") loadLocations();
+  else if (t === "sch") loadAdSchedule();
   else { if (state.compareEnabled) updateCompareUI(); loadCampaigns(); }
 }
 
@@ -4020,9 +4121,19 @@ function initTheme() {
 }
 
 // Navigation (hash-based, so refresh and bookmarks keep the current page)
+function navItemFor(page) {
+  return page ? document.querySelector('.nav-item[data-page="' + page + '"], .nav-item[data-pages~="' + page + '"]') : null;
+}
 function currentHashPage() {
   const h = (location.hash || "").replace(/^#/, "");
-  return (document.getElementById(h) && document.querySelector('.nav-item[data-page="' + h + '"]')) ? h : "reporting";
+  return (document.getElementById(h) && navItemFor(h)) ? h : "reporting";
+}
+// Keywords & Negatives: the menu item reopens whichever tab was used last.
+const KWNEG_TAB_LS = "kwnegTab";
+function syncKwNegTab(page) {
+  const item = document.getElementById("navKwNeg");
+  if (page === "cannibalization" || page === "negatives") { try { localStorage.setItem(KWNEG_TAB_LS, page); } catch {} if (item) item.dataset.page = page; }
+  else if (item) { let t = null; try { t = localStorage.getItem(KWNEG_TAB_LS); } catch {} item.dataset.page = t === "negatives" ? "negatives" : "cannibalization"; }
 }
 
 // The metric-cell deltas follow whichever page you're on: Overview uses its own
@@ -4060,7 +4171,7 @@ function ensureRepTable() {
 // Pages under the "Accounts" menu category share the account + campaign selection.
 // Add future Accounts-category pages to this list.
 // Pages that show the shared account + campaign topbar picker.
-const ACCOUNTS_PAGES = ["allaccounts", "reporting", "adcopy", "structure", "locations", "negatives"];
+const ACCOUNTS_PAGES = ["allaccounts", "reporting", "adcopy", "structure", "locations", "negatives", "adschedule"];
 function isAccountsPage(p) { return ACCOUNTS_PAGES.includes(p || currentHashPage()); }
 function refreshAccountsPage() {
   const p = currentHashPage();
@@ -4070,13 +4181,16 @@ function refreshAccountsPage() {
   else if (p === "negatives") { if (GLOBAL_ACCOUNT === "ALL") initNegatives(); else if (negState.loadedKey !== negKey()) loadNegatives(); else renderNegatives(); }
   else if (p === "structure") renderStructure();
   else if (p === "locations") { renderLocations(); locStartGeocode(); }
+  else if (p === "adschedule") { if (GLOBAL_ACCOUNT === "ALL" || schState.loadedKey !== schKey()) initAdSchedule(); else renderAdSchedule(); }
 }
 
 function showPage(page) {
   if (page === "allaccounts") mountAccTable("home");
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   (document.getElementById(page) || document.getElementById('allaccounts')).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  syncKwNegTab(page);
+  const activeItem = navItemFor(page);
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n === activeItem));
   ensureNavSectionOpen(page);
 }
 
@@ -4106,6 +4220,7 @@ function routeFromHash() {
   else if (page === "structure") initStructure();
   else if (page === "reporting") initReporting();
   else if (page === "locations") initLocations();
+  else if (page === "adschedule") initAdSchedule();
 }
 
 function initDashboard() {
@@ -5079,6 +5194,7 @@ function onGlobalAccountChange(val) {
   else if (page === "structure") initStructure();
   else if (page === "reporting") initReporting();
   else if (page === "locations") initLocations();
+  else if (page === "adschedule") initAdSchedule();
 }
 
 // ---------- Sidebar collapse ----------
@@ -5124,7 +5240,7 @@ function applyNavSections(open) {
   });
 }
 function ensureNavSectionOpen(page) {
-  const item = document.querySelector('.nav-item[data-page="' + page + '"]');
+  const item = navItemFor(page);
   if (!item) return;
   const items = item.closest(".nav-section-items");
   if (!items) return;
@@ -5293,7 +5409,7 @@ function showApp(accounts) {
 }
 
 function closeAllMenus() {
-  ["filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu", "repAnnPop", "locFiltersMenu", "locColsPop", "locExportPop", "locLevelPop", "negFiltersMenu", "negViewPop", "negColsPop", "negExportPop"].forEach(id => {
+  ["schBreakPop", "schExportPop", "schColsPop", "filtersMenu", "colsPop", "viewsPop", "comparePop", "exportPop", "accColsPop", "accViewsPop", "accExportPop", "accFiltersMenu", "accComparePop", "assetsFiltersMenu", "underspendFiltersMenu", "biddingFiltersMenu", "assetsExportPop", "usExportPop", "bidExportPop", "lpFiltersMenu", "lpExportPop", "lpColsPop", "lpViewPop", "geoFiltersMenu", "acFiltersMenu", "acViewPop", "acExportPop", "acColsPop", "campPickerPop", "cannFiltersMenu", "geoColsPop", "coFiltersMenu", "coViewPop", "coExportPop", "stFiltersMenu", "repAnnPop", "locFiltersMenu", "locColsPop", "locExportPop", "locLevelPop", "negFiltersMenu", "negViewPop", "negColsPop", "negExportPop"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   });
@@ -6470,6 +6586,10 @@ function populateAccCampaignFilter() {
       });
     } else if (currentHashPage() === "negatives") {
       (negState.rows || []).forEach(r => {
+        if (r.campaign && !seen.has(r.campaign)) { seen.add(r.campaign); list.push({ name: r.campaign, status: (r.campaignStatus || "Enabled").toUpperCase() }); }
+      });
+    } else if (currentHashPage() === "adschedule") {
+      (schState.rows || []).forEach(r => {
         if (r.campaign && !seen.has(r.campaign)) { seen.add(r.campaign); list.push({ name: r.campaign, status: (r.campaignStatus || "Enabled").toUpperCase() }); }
       });
     } else if (currentHashPage() === "adcopy") {
@@ -8290,6 +8410,217 @@ function exportNegatives(fmt) {
     return r[c.key] != null ? r[c.key] : "";
   }));
   exportMatrix(fmt, "suggested-negatives-" + new Date().toISOString().slice(0, 10), "Suggested Negatives", header, data);
+}
+
+/* ============================ Ad Scheduling page ============================ */
+// Performance by day of week and hour of day (account time zone). /api/adschedule returns one row
+// per campaign × day × hour; here they're filtered to the picked campaign and summed into the
+// chosen breakdown: Day (7 rows), Hour (24 rows) or Day & hour (168 rows).
+const SCH_DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
+const SCH_DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const SCH_BREAKS = [["day", "Day"], ["hour", "Hour"], ["dayhour", "Day & hour"]];
+const schHourLabel = h => String(h).padStart(2, "0") + ":00";
+const SCH_COL_DAY = { key: "day", label: "Day", align: "txt", width: 130, always: true, sort: r => r.dayIdx * 24 + r.hour, cell: r => SCH_DAY_NAMES[r.dayIdx] };
+const SCH_COL_HOUR = { key: "hour", label: "Hour", align: "txt", width: 110, always: true, sort: r => r.hour,
+  cell: r => '<span title="' + schHourLabel(r.hour) + "–" + schHourLabel((r.hour + 1) % 24) + '">' + schHourLabel(r.hour) + "</span>" };
+const SCH_COLUMNS = [
+  { key: "impressions", label: "Impr.", align: "num", width: 95, group: "Metrics", cls: "tabnum", cell: r => fmtInt(r.impressions) },
+  { key: "clicks", label: "Clicks", align: "num", width: 85, group: "Metrics", cls: "tabnum", cell: r => fmtInt(r.clicks) },
+  { key: "ctr", label: "CTR", align: "num", width: 85, group: "Metrics", cls: "tabnum", cell: r => fmtPct(r.ctr) },
+  { key: "cost", label: "Cost", align: "num", width: 105, group: "Metrics", cls: "tabnum", cell: r => fmtCurrency(r.cost) },
+  { key: "avgCpc", label: "Avg. CPC", align: "num", width: 95, group: "Metrics", cls: "tabnum", cell: r => fmtCurrency(r.avgCpc) },
+  { key: "conversions", label: "Conv.", align: "num", width: 80, group: "Metrics", cls: "tabnum", cell: r => fmtDec(r.conversions) },
+  { key: "convRate", label: "Conv. Rate", align: "num", width: 95, group: "Metrics", cls: "tabnum", cell: r => fmtPct(r.convRate) },
+  { key: "cpa", label: "Cost / Conv.", align: "num", width: 105, group: "Metrics", cls: "tabnum",
+    sort: r => r.conversions ? r.cpa : Infinity, cell: r => r.conversions ? fmtCurrency(r.cpa) : "—" },
+  { key: "convValue", label: "Conv. Value", align: "num", width: 105, group: "Metrics", cls: "tabnum", cell: r => fmtCurrency(r.convValue) },
+  { key: "roas", label: "ROAS", align: "num", width: 85, group: "Metrics", cls: "tabnum", cell: r => (r.roas || 0).toFixed(2) + "×" },
+];
+const SCH_DEFAULT_VISIBLE = ["impressions", "clicks", "ctr", "cost", "avgCpc", "conversions", "convRate", "cpa"];
+const schState = { rows: [], loadedKey: null, sort: { key: "day", dir: "asc" }, columnWidths: {}, currentPage: 1, pageSize: 25,
+  visible: new Set(savedColVisible("adschedule") || SCH_DEFAULT_VISIBLE), openColGroups: new Set(["schColsPop_g0"]), heatmap: true,
+  breakdown: "day", wired: false, token: 0 };
+try {
+  const p = uiGet("adschedule");
+  if (p) {
+    if (p.sort) schState.sort = p.sort;
+    if (p.columnWidths) schState.columnWidths = p.columnWidths;
+    if ([10, 25, 50, 100, 500].includes(p.pageSize)) schState.pageSize = p.pageSize;
+    if (typeof p.heatmap === "boolean") schState.heatmap = p.heatmap;
+    if (SCH_BREAKS.some(([id]) => id === p.breakdown)) schState.breakdown = p.breakdown;
+  }
+} catch {}
+const schKey = () => GLOBAL_ACCOUNT + "|" + rangeToGAQL(SHARED_DATE_RANGE);
+
+function onSchDateRangeChange() {
+  const val = document.getElementById("schDateSelect").value;
+  if (val === "customApplied") return;
+  if (val === "custom") {
+    state.calendarTarget = "sch";
+    state.calendarFromDate = new Date(); state.calendarToDate = new Date();
+    document.getElementById("calendarTitle").textContent = "Custom date range";
+    renderCalendar("from"); renderCalendar("to");
+    document.getElementById("customDateModal").setAttribute("open", "");
+    return;
+  }
+  setSharedDateRange(DATE_PRESET_MAP[val]);
+  loadAdSchedule();
+}
+
+function initAdSchedule() {
+  document.getElementById("schSignedOut").hidden = signedIn;
+  document.getElementById("schSignedIn").hidden = !signedIn;
+  if (!signedIn) return;
+  if (!schState.wired) {
+    schState.wired = true;
+    const wirePop = (btnId, popId, onOpen) => {
+      const btn = document.getElementById(btnId), pop = document.getElementById(popId);
+      btn.addEventListener("click", e => { e.stopPropagation(); const open = pop.hidden; closeAllMenus(); if (open) { if (onOpen) onOpen(); pop.hidden = false; } });
+      pop.addEventListener("click", e => e.stopPropagation());
+    };
+    wirePop("schBreakBtn", "schBreakPop", renderSchBreakPop);
+    wirePop("schColsBtn", "schColsPop", renderSchColsPop);
+    wirePop("schExportBtn", "schExportPop");
+    document.querySelectorAll("#schExportPop [data-schfmt]").forEach(b => b.addEventListener("click", () => { document.getElementById("schExportPop").hidden = true; exportAdSchedule(b.dataset.schfmt); }));
+    const hb = document.getElementById("schHeatmapBtn");
+    const syncHb = () => { hb.classList.toggle("toggled", schState.heatmap); hb.setAttribute("aria-pressed", schState.heatmap ? "true" : "false"); };
+    hb.addEventListener("click", e => { e.stopPropagation(); schState.heatmap = !schState.heatmap; syncHb(); persistUi("adschedule", schState); renderAdSchedule(); });
+    syncHb();
+    document.getElementById("schColsCount").textContent = schState.visible.size;
+  }
+  document.getElementById("schBreakLabel").textContent = SCH_BREAKS.find(([id]) => id === schState.breakdown)[1];
+  syncDateSelectEl("schDateSelect", SHARED_DATE_RANGE);
+  if (GLOBAL_ACCOUNT === "ALL") {
+    document.getElementById("schControls").hidden = true;
+    ["schLoading", "schTable", "schError", "schEmpty", "schPagination"].forEach(id => showEl(id, false));
+    showEl("schPrompt", true);
+    return;
+  }
+  document.getElementById("schControls").hidden = false;
+  showEl("schPrompt", false);
+  if (schState.loadedKey !== schKey()) loadAdSchedule();
+  else renderAdSchedule();
+}
+
+async function loadAdSchedule() {
+  if (GLOBAL_ACCOUNT === "ALL") { initAdSchedule(); return; }
+  const key = schKey(), token = ++schState.token;
+  schState.loadedKey = key;
+  ["schPrompt", "schError", "schTable", "schEmpty", "schPagination"].forEach(id => showEl(id, false));
+  showEl("schLoading", true);
+  try {
+    const res = await fetch("/api/adschedule?customerId=" + encodeURIComponent(GLOBAL_ACCOUNT) + "&dateRange=" + encodeURIComponent(rangeToGAQL(SHARED_DATE_RANGE)), { credentials: "same-origin" });
+    if (res.status === 401) { showSignedOut(); return; }
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error(res.status === 404 ? "The Ad Scheduling service wasn’t found (HTTP 404). Check adschedule.js is in adcanary/functions/api/ on GitHub, then wait a minute for Cloudflare to redeploy." : "The server couldn’t finish this request (HTTP " + res.status + ")."); }
+    if (data.error) throw new Error(data.error + (data.detail ? " — " + data.detail : ""));
+    if (token !== schState.token) return;
+    schState.rows = data.rows || [];
+    showEl("schLoading", false);
+    schState.currentPage = 1;
+    renderAdSchedule();
+    setLastRefresh("adschedule");
+    if (typeof populateAccCampaignFilter === "function") populateAccCampaignFilter();
+  } catch (e) {
+    if (token !== schState.token) return;
+    schState.loadedKey = null;
+    showEl("schLoading", false);
+    const el = document.getElementById("schError"); el.hidden = false;
+    el.innerHTML = '<div class="big">Couldn’t load ad schedule data</div>' + escapeHtml(e.message || "Please try again.");
+  }
+}
+
+const schRates = g => Object.assign(g, {
+  ctr: g.impressions ? g.clicks / g.impressions : 0, avgCpc: g.clicks ? g.cost / g.clicks : 0,
+  convRate: g.clicks ? g.conversions / g.clicks : 0, cpa: g.conversions ? g.cost / g.conversions : 0, roas: g.cost ? g.convValue / g.cost : 0,
+});
+// Sum the source rows into the current breakdown. Every day / hour appears, even with no data,
+// so gaps in the schedule are visible.
+function schViewRows() {
+  const pick = getCampPickerValue(), b = schState.breakdown;
+  const blank = (dayIdx, hour) => ({ dayIdx, hour, impressions: 0, clicks: 0, cost: 0, conversions: 0, convValue: 0 });
+  const by = new Map();
+  const keyOf = (d, h) => b === "day" ? String(d) : b === "hour" ? String(h) : d + "|" + h;
+  if (b !== "hour") SCH_DAYS.forEach((_, d) => { if (b === "day") by.set(keyOf(d, 0), blank(d, 0)); else for (let h = 0; h < 24; h++) by.set(keyOf(d, h), blank(d, h)); });
+  else for (let h = 0; h < 24; h++) by.set(keyOf(0, h), blank(0, h));
+  schState.rows.forEach(r => {
+    if (pick && r.campaign !== pick) return;
+    const d = SCH_DAYS.indexOf(r.day); if (d < 0) return;
+    const g = by.get(keyOf(d, r.hour)); if (!g) return;
+    g.impressions += r.impressions; g.clicks += r.clicks; g.cost += r.cost; g.conversions += r.conversions; g.convValue += r.convValue;
+  });
+  return [...by.values()].map(schRates);
+}
+
+function renderAdSchedule() {
+  if (GLOBAL_ACCOUNT === "ALL" || schState.loadedKey == null || document.getElementById("schLoading").hidden === false) return;
+  const b = schState.breakdown;
+  const rows = schViewRows();
+  const any = rows.some(r => r.impressions);
+  showEl("schEmpty", !any); showEl("schTable", any);
+  if (!any) { showEl("schPagination", false); return; }
+  renderDataTable({
+    state: schState,
+    columns: () => (b === "hour" ? [] : [SCH_COL_DAY]).concat(b === "day" ? [] : [SCH_COL_HOUR], SCH_COLUMNS),
+    colOrderKey: "adschedule",
+    prefKey: "adschedule",
+    heatmap: true,
+    resetPageOnSort: true,
+    ids: { colgroup: "sch-colgroup", thead: "sch-thead", tbody: "sch-tbody", tfoot: "sch-tfoot", pagination: "schPagination" },
+    rerender: renderAdSchedule,
+    rows: () => rows,
+    footer: (all, cols) => {
+      const T = schRates(all.reduce((a, r) => { a.impressions += r.impressions; a.clicks += r.clicks; a.cost += r.cost; a.conversions += r.conversions; a.convValue += r.convValue; return a; }, { impressions: 0, clicks: 0, cost: 0, conversions: 0, convValue: 0 }));
+      return "<tr>" + cols.map((c, i) => {
+        if (i === 0) return '<td class="txt" data-col="' + c.key + '">Total</td>';
+        if (c.align === "num") return '<td class="num tabnum" data-col="' + c.key + '">' + c.cell(T) + "</td>";
+        return '<td data-col="' + c.key + '"></td>';
+      }).join("") + "</tr>";
+    },
+  });
+}
+
+function renderSchBreakPop() {
+  const pop = document.getElementById("schBreakPop");
+  pop.innerHTML = SCH_BREAKS.map(([id, name]) => {
+    const active = schState.breakdown === id;
+    return '<button class="pop-row" data-schbreak="' + id + '"><span' + (active ? ' style="color:var(--accent);font-weight:560"' : "") + ">" + escapeHtml(name) + "</span>" + (active ? '<span class="active-dot">✓</span>' : "") + "</button>";
+  }).join("");
+  pop.querySelectorAll("[data-schbreak]").forEach(row => row.addEventListener("click", () => {
+    schState.breakdown = row.dataset.schbreak;
+    document.getElementById("schBreakLabel").textContent = SCH_BREAKS.find(([id]) => id === schState.breakdown)[1];
+    // Sorted by Day / Hour → keep time order (Monday 00:00 first) for the new breakdown.
+    if (schState.sort.key === "day" || schState.sort.key === "hour")
+      schState.sort = { key: schState.breakdown === "hour" ? "hour" : "day", dir: "asc" };
+    uiSave("adschedule", { breakdown: schState.breakdown });
+    pop.hidden = true;
+    schState.currentPage = 1;
+    renderAdSchedule();
+  }));
+}
+function renderSchColsPop() {
+  renderGroupedCols("schColsPop", SCH_COLUMNS, ["Metrics"], schState.visible, schState.openColGroups, key => {
+    schState.visible.has(key) ? schState.visible.delete(key) : schState.visible.add(key);
+    setColVisible("adschedule", schState.visible);
+    document.getElementById("schColsCount").textContent = schState.visible.size;
+    renderSchColsPop(); renderAdSchedule();
+  });
+}
+function exportAdSchedule(fmt) {
+  const rows = schState.viewRows || [], cols = schState.viewCols || [];
+  if (!rows.length) { showToast("Nothing to export."); return; }
+  const header = cols.map(c => c.label);
+  const data = rows.map(r => cols.map(c => {
+    if (c.key === "day") return SCH_DAY_NAMES[r.dayIdx];
+    if (c.key === "hour") return schHourLabel(r.hour);
+    if (c.key === "ctr" || c.key === "convRate") return fmtPct(r[c.key] || 0);
+    if (c.key === "cpa") return r.conversions ? +r.cpa.toFixed(2) : "";
+    if (["cost", "avgCpc", "convValue", "conversions", "roas"].includes(c.key)) return +(r[c.key] || 0).toFixed(2);
+    return r[c.key] != null ? r[c.key] : "";
+  }));
+  exportMatrix(fmt, "ad-scheduling-" + new Date().toISOString().slice(0, 10), "Ad Scheduling", header, data);
 }
 
 /* ============================ Ad Copy page ============================ */
