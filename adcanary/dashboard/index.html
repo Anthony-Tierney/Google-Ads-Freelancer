@@ -338,7 +338,10 @@
   .rep-chart-tip.ann::after { content: ""; position: absolute; right: -5px; top: 50%; margin-top: -5px; border: 5px solid transparent; border-right: 0; border-left-color: var(--ink); }
   .rep-chart-empty { padding: 40px; text-align: center; color: var(--muted); }
   tbody td.cann-list { white-space: normal; padding-top: 8px; padding-bottom: 8px; }
-  .cann-list .cann-badge { margin-bottom: 4px; }
+  .cann-list .cann-head { height: 22px; margin-bottom: 2px; line-height: 20px; }
+  .cann-total { font-weight: 600; }
+  .cann-split { color: var(--muted); }
+  .cann-split.off { opacity: .6; }
   .cann-list-item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.6; }
   .cann-list-share { display: inline-block; min-width: 54px; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
   .cann-pri { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 12px; font-weight: 600; }
@@ -10144,6 +10147,11 @@ async function cannBackgroundCheck() {
   finally { if (cannState.bg === key) cannState.bg = null; }
 }
 
+function cannSplitCell(r, key, fmt) {
+  return '<div class="cann-head cann-total">' + fmt(r[key] || 0) + "</div>" + r.campaigns.map(c =>
+    '<div class="cann-list-item cann-split' + (c.active === false ? " off" : "") + '" title="' + escapeHtml(c.name) + '">' + fmt(c[key] || 0) + "</div>").join("");
+}
+
 function cannPriorityRank(t) {
   if (t.resolution === "resolved") return 0;
   const act = t.campaigns.filter(c => c.active !== false);
@@ -10352,17 +10360,19 @@ function renderCannibalization() {
       { key: "priority", label: "Priority", align: "txt", width: 100, always: true, sort: r => r.priority,
         cell: r => '<span class="cann-pri cann-pri-' + CANN_PRIORITY[r.priority].toLowerCase() + '">' + CANN_PRIORITY[r.priority] + "</span>" },
       { key: "campaignCount", label: "Competing Campaigns", align: "txt", width: 420, always: true, cls: "cann-list",
-        cell: r => '<span class="cann-badge">' + r.campaignCount + "</span>" + r.campaigns.map(c => {
+        cell: r => '<div class="cann-head"><span class="cann-badge">' + r.campaignCount + "</span></div>" + r.campaigns.map(c => {
           const share = r.impressions ? c.impressions / r.impressions : 0;
           const off = c.active === false;
           const tag = off ? '<span class="cann-fix-tag">' + (/ended/i.test(c.reason) ? "Ended" : /paused|removed/i.test(c.reason) ? "Paused" : "Negative") + "</span>" : "";
           return '<div class="cann-list-item' + (off ? " off" : "") + '" title="' + escapeHtml(c.name + " \u2014 " + fmtInt(c.impressions) + " impr, " + fmtInt(c.clicks) + " clicks, " + fmtCurrency0(c.cost) + ", " + fmtInt(c.conversions) + " conv" + (off ? "\nNo longer competing: " + c.reason : "")) + '">' +
             '<span class="cann-list-share">' + fmtPct(share) + "</span>" + tag + '<span class="cann-list-name">' + escapeHtml(c.name) + "</span></div>";
         }).join("") },
-      { key: "impressions", label: "Impressions", align: "num", width: 110, always: true, cls: "tabnum", cell: r => fmtInt(r.impressions) },
-      { key: "clicks", label: "Clicks", align: "num", width: 90, always: true, cls: "tabnum", cell: r => fmtInt(r.clicks) },
-      { key: "cost", label: "Cost", align: "num", width: 100, always: true, cls: "tabnum", cell: r => fmtCurrency0(r.cost) },
-      { key: "conversions", label: "Conv.", align: "num", width: 80, always: true, cls: "tabnum", cell: r => fmtInt(r.conversions) },
+      // Metric cells: the term's total on top, then each campaign's figure on the same line as
+      // that campaign in Competing Campaigns.
+      { key: "impressions", label: "Impressions", align: "num", width: 110, always: true, cls: "tabnum cann-list", cell: r => cannSplitCell(r, "impressions", fmtInt) },
+      { key: "clicks", label: "Clicks", align: "num", width: 90, always: true, cls: "tabnum cann-list", cell: r => cannSplitCell(r, "clicks", fmtInt) },
+      { key: "cost", label: "Cost", align: "num", width: 100, always: true, cls: "tabnum cann-list", cell: r => cannSplitCell(r, "cost", fmtCurrency0) },
+      { key: "conversions", label: "Conv.", align: "num", width: 80, always: true, cls: "tabnum cann-list", cell: r => cannSplitCell(r, "conversions", fmtInt) },
     ],
     colOrderKey: "cannibalization",
     prefKey: "cannibalization",
