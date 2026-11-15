@@ -2421,6 +2421,7 @@
               </div>
             </div>
           </div>
+          <div id="cannWarn" class="as-warn" hidden></div>
           <div class="cann-summary" id="cannSummary" hidden></div>
           <div class="panel">
             <div id="cannPrompt" class="state" hidden><div class="big">Select an account</div>Choose a single account above to see which of its campaigns compete for the same search terms.</div>
@@ -10204,7 +10205,7 @@ async function loadCannibalization(force) {
   document.getElementById("cannSignedOut").hidden = true;
   document.getElementById("cannSignedIn").hidden = false;
   const show = (id, on) => { const el = document.getElementById(id); if (el) el.hidden = !on; };
-  ["cannPrompt", "cannLoading", "cannError", "cannEmpty", "cannTable", "cannSummary", "cannPagination"].forEach(id => show(id, false));
+  ["cannPrompt", "cannLoading", "cannError", "cannEmpty", "cannTable", "cannSummary", "cannPagination", "cannWarn"].forEach(id => show(id, false));
   if (GLOBAL_ACCOUNT === "ALL") { show("cannPrompt", true); return; }
   const key = GLOBAL_ACCOUNT + "|" + rangeToGAQL(SHARED_DATE_RANGE);
   if (!force && cannState.loadedKey === key) { showCannResults(); return; }
@@ -10218,12 +10219,13 @@ async function loadCannibalization(force) {
     catch {
       const cf = (raw.match(/Error\s*(\d{3,4})/) || [])[1];
       throw new Error("The server returned a page instead of data (HTTP " + res.status + (cf ? ", Cloudflare error " + cf : "") + "). " +
-        (res.status === 404 || /<title>[^<]*AdCanary/i.test(raw) ? "The Cannibalization endpoint may not be deployed." : "The request may have exceeded Cloudflare's limits \u2014 try a shorter date range."));
+        (res.status === 404 ? "The Cannibalization service wasn\u2019t found \u2014 check cannibalization.js is in adcanary/functions/api/ on GitHub." : "The server most likely ran out of memory or time reading this account\u2019s search terms \u2014 try a shorter date range."));
     }
     show("cannLoading", false);
     if (data.error && !(data.terms && data.terms.length)) { if (data.error === "Select a single account") { show("cannPrompt", true); return; } throw new Error(data.detail || data.error); }
     cannState.terms = data.terms || [];
     cannState.loadedKey = key;
+    cannState.warning = data.warning || "";
     cannState.currentPage = 1;
     setLastRefresh("cannibalization");
     showCannResults();
@@ -10235,6 +10237,8 @@ async function loadCannibalization(force) {
 }
 function showCannResults() {
   const show = (id, on) => { const el = document.getElementById(id); if (el) el.hidden = !on; };
+  const w = document.getElementById("cannWarn");
+  if (w) { w.hidden = !cannState.warning; w.textContent = cannState.warning || ""; }
   if (!cannState.terms.length) { show("cannEmpty", true); return; }
   show("cannTable", true); show("cannSummary", true);
   renderCannibalization();
