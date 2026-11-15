@@ -154,6 +154,10 @@
   .nav-warn { display: inline-flex; vertical-align: middle; color: #d97706; margin-left: 5px; }
   .nav-warn.red { color: #dc2626; }
   .nav-warn svg { width: 15px; height: 15px; }
+  #navKwNeg { white-space: nowrap; }
+  #navKwNeg .nav-warn { margin-left: 4px; }
+  .kn-tab .nav-warn { margin-left: 6px; }
+  .kn-tab .nav-warn svg { width: 14px; height: 14px; margin-top: -2px; }
   .nav-ok { display: inline-flex; vertical-align: middle; color: #16a34a; margin-left: 5px; }
   .nav-ok svg { width: 15px; height: 15px; }
   .rep-delta { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 11px; min-height: 16px; }
@@ -923,7 +927,7 @@
     </button>
     <div class="nav-section-items" data-section="audit">
       <a href="#" class="nav-item nav-sub" data-page="bidding">Bidding Strategies<span class="nav-warn" id="bidNavWarn" hidden title="CPA running below target on one or more campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
-      <a href="#" class="nav-item nav-sub" data-page="cannibalization" data-pages="cannibalization negatives" id="navKwNeg">Keywords &amp; Negatives</a>
+      <a href="#" class="nav-item nav-sub" data-page="cannibalization" data-pages="cannibalization negatives" id="navKwNeg">Keywords &amp; Negatives<span class="nav-warn red" id="kwnegNavWarn" hidden title="High-priority cannibalization: search terms where campaigns are competing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
       <a href="#" class="nav-item nav-sub" data-page="adschedule">Ad Scheduling</a>
       <a href="#" class="nav-item nav-sub" data-page="adcopy">Ad Copy</a>
       <a href="#" class="nav-item nav-sub" data-page="callouts">Callouts</a>
@@ -1730,7 +1734,7 @@
           <div class="rep-intro kn-head">
             <h2 class="rep-intro-title">Keywords &amp; Negatives</h2>
             <div class="kn-tabs" role="tablist">
-              <a href="#cannibalization" class="kn-tab" role="tab">Cannibalization</a>
+              <a href="#cannibalization" class="kn-tab" role="tab">Cannibalization<span class="nav-warn red kn-tab-warn" hidden title="High-priority cannibalization: search terms where campaigns are competing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
               <a href="#negatives" class="kn-tab active" aria-selected="true" role="tab">Suggested Negatives</a>
             </div>
             <p class="rep-intro-text">Search terms that are racking up clicks and spend with no conversions &mdash; candidates for negative keywords. Each term is checked against the account&rsquo;s current negatives, so ones you&rsquo;ve already blocked are hidden by default.</p>
@@ -2331,7 +2335,7 @@
           <div class="rep-intro kn-head">
             <h2 class="rep-intro-title">Keywords &amp; Negatives</h2>
             <div class="kn-tabs" role="tablist">
-              <a href="#cannibalization" class="kn-tab active" aria-selected="true" role="tab">Cannibalization</a>
+              <a href="#cannibalization" class="kn-tab active" aria-selected="true" role="tab">Cannibalization<span class="nav-warn red kn-tab-warn" hidden title="High-priority cannibalization: search terms where campaigns are competing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></a>
               <a href="#negatives" class="kn-tab" role="tab">Suggested Negatives</a>
             </div>
             <p class="rep-intro-text">Search terms that triggered ads in more than one campaign &mdash; campaigns competing with each other for the same searches.</p>
@@ -3224,6 +3228,7 @@ function setSharedDateRange(dr) {
   if (typeof geoState !== "undefined") { geoState.dateRange = dr; geoState.loadedAccount = "__stale__"; }
   if (typeof locState !== "undefined") locState.loadedKey = null;
   if (typeof schState !== "undefined") schState.loadedKey = null;
+  if (typeof cannState !== "undefined") setTimeout(cannBackgroundCheck, 1500);
   syncAllDateSelects();
 }
 function syncAllDateSelects() {
@@ -5162,6 +5167,7 @@ function resetAccountScopedFilters() {
 
 function onGlobalAccountChange(val) {
   GLOBAL_ACCOUNT = val;
+  setTimeout(cannBackgroundCheck, 1500);
   try { localStorage.setItem("globalAccount", val); } catch {}
   // Campaign selection is account-specific — always clear it when the account changes,
   // on every page (the campaign picker is shared across the Accounts category).
@@ -5295,6 +5301,7 @@ async function init() {
         signedIn = true;
         showApp(ACCOUNTS);
         routeFromHash();
+        updateCannWarning(); setTimeout(cannBackgroundCheck, 2500);
         updateBpNavWarning();
         updateUnderspendNavWarning();
         updateAssetsNavWarning();
@@ -5318,6 +5325,7 @@ async function init() {
     signedIn = true;
     showApp(data.accounts);
     routeFromHash();
+    updateCannWarning(); setTimeout(cannBackgroundCheck, 2500);
     saveDataCache(); // cache the account list right away
     loadBudgetPacing(false);  // background load so the side-nav pace warning is accurate
     loadAudit(false);         // background load so the Policy Issues nav icon (smiley / triangle) is accurate
@@ -7352,7 +7360,7 @@ function setNavWarn(id, level) {
 function syncSectionWarnings() {
   // Map: sectionId -> array of child warning element IDs to check
   const SECTION_WARNS = {
-    audit:     ["auditNavWarn", "assetsNavWarn", "bidNavWarn"],
+    audit:     ["auditNavWarn", "assetsNavWarn", "bidNavWarn", "kwnegNavWarn"],
     tools:     ["bpNavWarn", "usNavWarn"],
   };
   Object.entries(SECTION_WARNS).forEach(([sec, ids]) => {
@@ -10086,6 +10094,55 @@ const CANN_COL_KEYS = ["term", "priority", "campaignCount", "impressions", "clic
 const CANN_PRIORITY = { 3: "High", 2: "Medium", 1: "Low", 0: "Resolved" };
 // Resolved = at most one campaign can still show for the term (negatives added / paused).
 // Otherwise the split is measured across the campaigns that can STILL compete.
+// Red ! on the menu item and the Cannibalization tab when the account has any High-priority
+// term (with the page's Campaign Status + Impressions filters, ignoring the Priority filter).
+// The result is remembered per account + date range for 12 hours, so the warning shows on other
+// pages without re-reading search terms; cannBackgroundCheck() fills it in when it's unknown.
+const CANN_WARN_LS = "cannHigh_v1", CANN_WARN_TTL = 12 * 3600 * 1000;
+function cannWarnStore(key, high) {
+  let m = {}; try { m = JSON.parse(localStorage.getItem(CANN_WARN_LS) || "{}"); } catch {}
+  if (high === undefined) { const e = m[key]; return e && Date.now() - e.at < CANN_WARN_TTL ? e : null; }
+  const now = Date.now();
+  Object.keys(m).forEach(k => { if (now - m[k].at > CANN_WARN_TTL) delete m[k]; });
+  m[key] = { high, at: now };
+  try { localStorage.setItem(CANN_WARN_LS, JSON.stringify(m)); } catch {}
+}
+const cannWarnKey = () => GLOBAL_ACCOUNT + "|" + rangeToGAQL(SHARED_DATE_RANGE);
+function showCannWarning(on) {
+  setNavWarn("kwnegNavWarn", on ? 2 : 0);
+  document.querySelectorAll(".kn-tab-warn").forEach(el => { el.hidden = !on; });
+}
+function updateCannWarning() {
+  if (GLOBAL_ACCOUNT === "ALL") { showCannWarning(false); return; }
+  if (cannState.loadedKey === cannWarnKey()) {
+    const high = cannFilteredTerms().some(t => cannPriorityRank(t) === 3);
+    cannWarnStore(cannWarnKey(), high);
+    showCannWarning(high);
+    return;
+  }
+  const e = cannWarnStore(cannWarnKey());
+  showCannWarning(!!(e && e.high));
+}
+// Quietly read search terms for the current account if the warning isn't known yet.
+async function cannBackgroundCheck() {
+  updateCannWarning();
+  // On the Cannibalization tab the page loads the data itself (and updates the warning).
+  if (!signedIn || GLOBAL_ACCOUNT === "ALL" || currentHashPage() === "cannibalization" || cannWarnStore(cannWarnKey()) || cannState.bg) return;
+  const key = cannWarnKey(), acct = GLOBAL_ACCOUNT;
+  cannState.bg = key;
+  try {
+    const res = await fetch("/api/cannibalization?customerId=" + encodeURIComponent(acct) + "&dateRange=" + encodeURIComponent(rangeToGAQL(SHARED_DATE_RANGE)), { credentials: "same-origin" });
+    const data = await res.json().catch(() => null);
+    if (!data || data.error || cannWarnKey() !== key) return;
+    // Keep the result for the page too, unless it has loaded something newer meanwhile.
+    if (cannState.loadedKey !== key) {
+      cannState.terms = data.terms || []; cannState.loadedKey = key; cannState.warning = data.warning || ""; cannState.currentPage = 1;
+    }
+    updateCannWarning();
+  } catch { /* best-effort */ }
+  finally { if (cannState.bg === key) cannState.bg = null; }
+}
+
 function cannPriorityRank(t) {
   if (t.resolution === "resolved") return 0;
   const act = t.campaigns.filter(c => c.active !== false);
@@ -10226,6 +10283,7 @@ async function loadCannibalization(force) {
     cannState.terms = data.terms || [];
     cannState.loadedKey = key;
     cannState.warning = data.warning || "";
+    updateCannWarning();
     cannState.currentPage = 1;
     setLastRefresh("cannibalization");
     showCannResults();
@@ -10266,6 +10324,7 @@ function cannFilteredTerms() {
 }
 function renderCannibalization() {
   const terms = cannFilteredTerms();
+  updateCannWarning();
   const nRes = terms.filter(t => t.resolution === "resolved").length;
   const nPart = terms.filter(t => t.resolution === "partial").length;
   document.getElementById("cannSummary").textContent = terms.length + " search term" + (terms.length === 1 ? "" : "s") + " match your filters and triggered more than one campaign in this period" +
