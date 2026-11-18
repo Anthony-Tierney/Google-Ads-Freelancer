@@ -4427,6 +4427,16 @@ function repDateClause() {
   return map[v] || map["30days"];
 }
 
+// When a server request returns a web page instead of data, name the Cloudflare error so the
+// message says what went wrong (e.g. "Cloudflare error 1102: Worker exceeded resource limits").
+function cfErrorText(res, raw) {
+  const code = (String(raw).match(/Error\s*(?:code:?\s*)?(\d{4})/i) || [])[1];
+  const title = ((String(raw).match(/<title>([^<]*)<\/title>/i) || [])[1] || "").replace(/\s*\|\s*Cloudflare.*$/i, "").trim();
+  const hint = { "1101": "the server code crashed", "1102": "the request used more CPU time or memory than Cloudflare allows",
+    "1027": "the daily Cloudflare request limit has been reached", "1015": "Cloudflare is rate limiting requests" }[code];
+  return "HTTP " + res.status + (code ? ", Cloudflare error " + code : "") + (hint ? " \u2014 " + hint : title && !/adcanary/i.test(title) ? " \u2014 " + title : "");
+}
+
 async function loadReporting() {
   if (!signedIn) { initReporting(); return; }
   ensureRepTable();
@@ -4445,7 +4455,10 @@ async function loadReporting() {
       cmpParams ? fetch("/api/reporting?" + cmpParams, { credentials: "same-origin" }).catch(() => null) : Promise.resolve(null),
     ]);
     if (res.status === 401) { showSignedOut(); return; }
-    const d = await res.json();
+    const raw = await res.text();
+    let d;
+    try { d = JSON.parse(raw); }
+    catch { throw new Error("The server returned an error page instead of data (" + cfErrorText(res, raw) + "). Try Refresh in a minute; if it keeps happening, check the Cloudflare dashboard."); }
     if (d.error) throw new Error(d.error);
     repSeries = d.series || [];
     repPrevSeries = null;
@@ -4459,6 +4472,7 @@ async function loadReporting() {
     setLastRefresh("reporting");
   } catch (e) {
     showEl("repLoading", false);
+    document.getElementById("repChartWrap").hidden = true; // don't show the previous range's graph under an error
     const el = document.getElementById("repError"); el.hidden = false;
     el.innerHTML = '<div class="big">Couldn\u2019t load reporting</div>' + escapeHtml(e.message || "Please try again.");
   }
@@ -5032,7 +5046,7 @@ async function loadRepAnnotations(force) {
         const raw = await res.text();
         let d;
         try { d = JSON.parse(raw); }
-        catch { warns.push("Annotations couldn\u2019t load (HTTP " + res.status + (res.status === 404 ? " \u2014 /api/annotations not found; check annotations.js is uploaded" : res.status >= 500 ? " \u2014 server error; check shared/changes.js and shared/access.js are uploaded" : "") + ")"); continue; }
+        catch { warns.push("Annotations couldn\u2019t load (" + (res.status === 404 ? "HTTP 404 \u2014 /api/annotations not found; check annotations.js is uploaded" : cfErrorText(res, raw)) + ")"); continue; }
         if (d.error) { warns.push((a.name ? a.name + ": " : "") + d.error); continue; }
         (d.changes || []).forEach(c => changes.push(Object.assign({ kind: c.type, accountId: a.id, accountName: a.name }, c)));
         (d.notes || []).forEach(n => notes.push(Object.assign({ kind: "note", accountId: a.id, accountName: a.name }, n)));
